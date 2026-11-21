@@ -81,6 +81,9 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
   </aside>
   <div class="utama">
     <div class="topbar">
+      <button type="button" class="tombol-samping" id="tombol-samping" aria-label="Tampilkan / sembunyikan menu samping" title="Menu samping">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
       <form class="cari" method="get" action="<?= base_url('bahan') ?>">
         <span aria-hidden="true">⌕</span>
         <input type="text" name="q" placeholder="Cari bahan…" value="<?= esc($_GET['q'] ?? '') ?>">
@@ -103,5 +106,18 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
   </div>
 </div>
 <script src="<?= base_url('assets/paginasi.js') ?>"></script>
+<script>
+// Toggle menu samping gaya TailAdmin — pilihan tersimpan di peramban.
+(function () {
+  const kerangka = document.querySelector('.kerangka');
+  const tombol = document.getElementById('tombol-samping');
+  if (!kerangka || !tombol) return;
+  if (localStorage.getItem('ap-samping') === 'tutup') kerangka.classList.add('samping-tutup');
+  tombol.addEventListener('click', function () {
+    const tutup = kerangka.classList.toggle('samping-tutup');
+    localStorage.setItem('ap-samping', tutup ? 'tutup' : 'buka');
+  });
+})();
+</script>
 </body>
 </html>

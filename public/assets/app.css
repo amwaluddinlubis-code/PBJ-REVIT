@@ -12,7 +12,7 @@
   --ta-garis-2: var(--ina-stroke-secondary, #a3a3a3);
   --ta-latar: #f9fafb;
 }
-body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, sans-serif; background: var(--ta-latar); color: var(--ta-teks); }
+body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, sans-serif; background: var(--ta-latar); color: var(--ta-teks); font-size: 12.8px; /* skala huruf global 80% */ }
 a { color: var(--ta-biru); text-decoration: none; }
 a:hover { text-decoration: underline; }
 .kerangka { display: flex; min-height: 100vh; }
@@ -20,33 +20,33 @@ a:hover { text-decoration: underline; }
 /* ===== Sidebar TailAdmin (terang) ===== */
 .samping { width: 248px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--ta-garis); padding: 16px 14px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
 .logo { display: flex; align-items: center; gap: 10px; padding: 2px 8px 14px; border-bottom: 1px solid var(--ina-neutral-100, #f2f2f2); margin-bottom: 12px; }
-.kotak-logo { width: 38px; height: 38px; border-radius: 10px; background: var(--ta-biru); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; flex-shrink: 0; }
-.nama-logo { font-weight: 700; font-size: 15px; line-height: 1.15; }
-.nama-logo small { display: block; font-weight: 500; color: var(--ta-teks-3); font-size: 11px; margin-top: 2px; }
-.label-samping { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ta-teks-3); margin: 2px 8px 5px; }
+.kotak-logo { width: 38px; height: 38px; border-radius: 10px; background: var(--ta-biru); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0; }
+.nama-logo { font-weight: 700; font-size: 12px; line-height: 1.15; }
+.nama-logo small { display: block; font-weight: 500; color: var(--ta-teks-3); font-size: 8.8px; margin-top: 2px; }
+.label-samping { display: block; font-size: 8.8px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ta-teks-3); margin: 2px 8px 5px; }
 .samping select { margin: 0 0 6px; }
-.samping .grup { margin: 16px 10px 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ta-teks-3); }
-.samping nav a { display: flex; align-items: center; gap: 10px; color: var(--ta-teks-2); padding: 8px 10px; border-radius: 8px; margin-bottom: 2px; font-size: 14px; font-weight: 500; }
+.samping .grup { margin: 16px 10px 6px; font-size: 8.8px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ta-teks-3); }
+.samping nav a { display: flex; align-items: center; gap: 10px; color: var(--ta-teks-2); padding: 8px 10px; border-radius: 8px; margin-bottom: 2px; font-size: 11.2px; font-weight: 500; }
 .samping nav a svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.8; flex-shrink: 0; }
 .samping nav a:hover { background: var(--ina-neutral-50, #f8f8f7); color: var(--ta-teks); text-decoration: none; }
 .samping nav a.aktif { background: var(--ta-biru-50); color: var(--ta-biru); font-weight: 600; }
-.samping nav a .hitung { margin-left: auto; background: var(--ta-biru); color: #fff; font-size: 11px; font-weight: 600; border-radius: 20px; padding: 1px 8px; }
+.samping nav a .hitung { margin-left: auto; background: var(--ta-biru); color: #fff; font-size: 8.8px; font-weight: 600; border-radius: 20px; padding: 1px 8px; }
 .profil { margin-top: auto; display: flex; gap: 10px; align-items: center; padding: 14px 8px 2px; border-top: 1px solid var(--ina-neutral-100, #f2f2f2); }
-.profil .ava, .topbar .ava { width: 38px; height: 38px; border-radius: 50%; background: var(--ta-biru); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
-.profil .siapa { font-size: 13px; font-weight: 600; line-height: 1.25; min-width: 0; }
-.profil .siapa small { display: block; color: var(--ta-teks-3); font-weight: 500; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.profil .ava, .topbar .ava { width: 38px; height: 38px; border-radius: 50%; background: var(--ta-biru); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 10.4px; flex-shrink: 0; }
+.profil .siapa { font-size: 10.4px; font-weight: 600; line-height: 1.25; min-width: 0; }
+.profil .siapa small { display: block; color: var(--ta-teks-3); font-weight: 500; font-size: 9.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ===== Topbar & isi ===== */
 .utama { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .topbar { display: flex; align-items: center; gap: 14px; background: #fff; border-bottom: 1px solid var(--ta-garis); padding: 11px 22px; position: sticky; top: 0; z-index: 30; }
 .topbar .cari { display: flex; align-items: center; gap: 8px; background: var(--ina-neutral-50, #f8f8f7); border: 1px solid var(--ta-garis); border-radius: 8px; padding: 4px 12px; width: min(340px, 50vw); color: var(--ta-teks-3); }
-.topbar .cari input { border: 0; background: transparent; margin: 0; padding: 5px 0; box-shadow: none; font-size: 13.5px; }
+.topbar .cari input { border: 0; background: transparent; margin: 0; padding: 5px 0; box-shadow: none; font-size: 10.8px; }
 .topbar .cari input:focus { box-shadow: none; border: 0; }
 .topbar-kanan { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-.cip-top { background: var(--ta-biru-50); color: var(--ta-biru); border-radius: 20px; padding: 5px 13px; font-size: 12.5px; font-weight: 600; }
+.cip-top { background: var(--ta-biru-50); color: var(--ta-biru); border-radius: 20px; padding: 5px 13px; font-size: 10px; font-weight: 600; }
 .isi { padding: 20px 24px 44px; }
-.atas { font-size: 19px; font-weight: 700; margin-bottom: 14px; }
-.pesan { padding: 11px 15px; border-radius: 10px; margin-bottom: 14px; font-size: 14px; border: 1px solid transparent; }
+.atas { font-size: 15.2px; font-weight: 700; margin-bottom: 14px; }
+.pesan { padding: 11px 15px; border-radius: 10px; margin-bottom: 14px; font-size: 11.2px; border: 1px solid transparent; }
 .pesan.sukses { background: var(--ina-green-50, #eefbf0); border-color: var(--ina-green-300, #8ce99a); color: var(--ina-green-700, #1e6b2a); }
 .pesan.galat { background: var(--ina-red-100, #fdeded); border-color: var(--ina-red-300, #ffa0a0); color: var(--ina-red-700, #a61e1e); }
 
@@ -57,21 +57,21 @@ a:hover { text-decoration: underline; }
 .kpi:nth-child(2)::before { background-color: #f1efff; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b3df0' stroke-width='1.8'%3E%3Cpath d='M4 21V8l8-5 8 5v13'/%3E%3Cpath d='M2 21h20'/%3E%3C/svg%3E"); }
 .kpi:nth-child(3)::before { background-color: var(--ina-green-50, #eefbf0); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23288034' stroke-width='1.8'%3E%3Cpath d='M4 19V5m0 14h16'/%3E%3Cpath d='M8 15l3.5-4 3 2.5L19 8'/%3E%3C/svg%3E"); }
 .kpi:nth-child(4)::before { background-color: #fdf3e0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b96f00' stroke-width='1.8'%3E%3Ccircle cx='9' cy='20' r='1.6'/%3E%3Ccircle cx='17' cy='20' r='1.6'/%3E%3Cpath d='M3 3h2l2.4 12h10.4l2.2-9H6'/%3E%3C/svg%3E"); }
-.kpi .label { font-size: 13px; color: var(--ta-teks-3); font-weight: 500; }
-.kpi .nilai { font-size: 20px; font-weight: 700; margin-top: 3px; }
+.kpi .label { font-size: 10.4px; color: var(--ta-teks-3); font-weight: 500; }
+.kpi .nilai { font-size: 16px; font-weight: 700; margin-top: 3px; }
 
 /* ===== Panel & tabel ===== */
 .panel { background: #fff; border: 1px solid var(--ta-garis); border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
-.panel h2 { margin: 0 0 12px; font-size: 15.5px; font-weight: 600; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th { text-align: left; font-size: 12px; font-weight: 600; color: var(--ta-teks-3); padding: 9px 11px; border-top: 1px solid var(--ina-neutral-100, #f2f2f2); border-bottom: 1px solid var(--ina-neutral-100, #f2f2f2); background: #fcfcfd; }
+.panel h2 { margin: 0 0 12px; font-size: 12.4px; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; font-size: 11.2px; }
+th { text-align: left; font-size: 9.6px; font-weight: 600; color: var(--ta-teks-3); padding: 9px 11px; border-top: 1px solid var(--ina-neutral-100, #f2f2f2); border-bottom: 1px solid var(--ina-neutral-100, #f2f2f2); background: #fcfcfd; }
 td { padding: 9px 11px; border-bottom: 1px solid var(--ina-neutral-100, #f2f2f2); vertical-align: top; }
 td.angka, th.angka { text-align: right; font-variant-numeric: tabular-nums; }
 tr.negatif td { background: var(--ina-red-100, #fdeded); }
 tr.total td, tr.total th { font-weight: 700; background: var(--ina-neutral-50, #f8f8f7); }
 .peringatan { border: 1px solid #f3cd72; background: #fffaf0; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
-.peringatan h2 { margin: 0 0 8px; font-size: 15px; }
-.lencana { display: inline-flex; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.peringatan h2 { margin: 0 0 8px; font-size: 12px; }
+.lencana { display: inline-flex; padding: 2px 10px; border-radius: 20px; font-size: 9.6px; font-weight: 500; }
 .lencana.biru { background: var(--ta-biru-50); color: var(--ta-biru); }
 .lencana.hijau { background: var(--ina-green-50, #eefbf0); color: var(--ina-green-700, #1e6b2a); }
 .lencana.abu { background: var(--ina-neutral-100, #f2f2f2); color: var(--ta-teks-2); }
@@ -80,21 +80,21 @@ tr.total td, tr.total th { font-weight: 700; background: var(--ina-neutral-50, #
 .bar > div { height: 100%; border-radius: 6px; background: var(--ta-biru-500); }
 .bar.hijau > div { background: #3cc14e; }
 .tab { display: flex; gap: 2px; border-bottom: 1px solid var(--ta-garis); margin-bottom: 16px; flex-wrap: wrap; }
-.tab a, .tab span { padding: 9px 13px; font-size: 14px; color: var(--ta-teks-2); border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; }
+.tab a, .tab span { padding: 9px 13px; font-size: 11.2px; color: var(--ta-teks-2); border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; }
 .tab a:hover { text-decoration: none; color: var(--ta-biru); }
 .tab .aktif { color: var(--ta-biru); font-weight: 600; border-bottom-color: var(--ta-biru); }
 
 /* ===== Tombol & form ===== */
-button, .tombol { background: var(--ta-biru); color: #fff; border: 1px solid var(--ta-biru); border-radius: 8px; padding: 8px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-block; font-family: inherit; }
+button, .tombol { background: var(--ta-biru); color: #fff; border: 1px solid var(--ta-biru); border-radius: 8px; padding: 8px 16px; font-size: 11.2px; font-weight: 500; cursor: pointer; display: inline-block; font-family: inherit; }
 button:hover, .tombol:hover { background: #003a94; text-decoration: none; }
 button:focus-visible, .tombol:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ta-biru-500); }
 button.bahaya { background: var(--ina-red-500, #f02d2d); border-color: var(--ina-red-500, #f02d2d); }
-button.kecil, .tombol.kecil { padding: 5px 11px; font-size: 13px; }
+button.kecil, .tombol.kecil { padding: 5px 11px; font-size: 10.4px; }
 button.abu, .tombol.abu { background: #fff; color: var(--ta-teks); border-color: var(--ta-garis-2); }
 button.abu:hover, .tombol.abu:hover { background: var(--ina-neutral-100, #f2f2f2); }
 button:disabled { opacity: .5; cursor: default; }
-label { display: block; font-size: 13px; color: var(--ta-teks-2); font-weight: 500; }
-input, select, textarea { width: 100%; padding: 8px 11px; border: 1px solid var(--ta-garis-2); border-radius: 8px; font-size: 14px; margin-top: 4px; background: #fff; font-family: inherit; color: var(--ta-teks); }
+label { display: block; font-size: 10.4px; color: var(--ta-teks-2); font-weight: 500; }
+input, select, textarea { width: 100%; padding: 8px 11px; border: 1px solid var(--ta-garis-2); border-radius: 8px; font-size: 11.2px; margin-top: 4px; background: #fff; font-family: inherit; color: var(--ta-teks); }
 input:focus, select:focus, textarea:focus { border-color: var(--ta-biru-500); outline: none; box-shadow: 0 0 0 3px var(--ina-blue-100, #dbeafe); }
 .aksi { display: flex; gap: 8px; margin-top: 14px; }
 form.inline { display: inline; }
@@ -106,51 +106,58 @@ form.inline button { margin: 0; }
 .login-form-side { display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
 .login-form-wrap { width: 100%; max-width: 420px; }
 .login-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 42px; }
-.login-form-wrap h1 { margin: 0 0 8px; font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
-.login-form-wrap .sub { color: var(--ta-teks-3); margin: 0 0 24px; font-size: 14.5px; line-height: 1.55; }
-.login-form-wrap label { margin-top: 16px; font-size: 13.5px; color: var(--ta-teks); }
+.login-form-wrap h1 { margin: 0 0 8px; font-size: 22.4px; font-weight: 700; letter-spacing: -.01em; }
+.login-form-wrap .sub { color: var(--ta-teks-3); margin: 0 0 24px; font-size: 11.6px; line-height: 1.55; }
+.login-form-wrap label { margin-top: 16px; font-size: 10.8px; color: var(--ta-teks); }
 .login-field { position: relative; margin-top: 6px; }
 .login-field > svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; stroke: var(--ta-teks-3); fill: none; stroke-width: 1.8; pointer-events: none; }
-.login-field input { margin-top: 0; padding: 11px 42px 11px 42px; border-radius: 10px; font-size: 14.5px; }
+.login-field input { margin-top: 0; padding: 11px 42px 11px 42px; border-radius: 10px; font-size: 11.6px; }
 .login-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent; border: none; box-shadow: none; padding: 6px; cursor: pointer; border-radius: 8px; }
 .login-eye:hover { background: var(--ina-neutral-50, #f8f8f7); box-shadow: none; transform: translateY(-50%); }
 .login-eye svg { width: 19px; height: 19px; stroke: var(--ta-teks-3); fill: none; stroke-width: 1.8; display: block; }
 .login-eye.aktif svg { stroke: var(--ta-biru); }
-.login-submit { width: 100%; margin-top: 24px; padding: 12px; font-size: 15px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.login-submit { width: 100%; margin-top: 24px; padding: 12px; font-size: 12px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .login-submit svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-.login-foot { margin-top: 34px; text-align: center; font-size: 12.5px; color: var(--ta-teks-3); line-height: 1.6; }
+.login-foot { margin-top: 34px; text-align: center; font-size: 10px; color: var(--ta-teks-3); line-height: 1.6; }
 .login-brand-side { position: relative; overflow: hidden; color: #fff; background: radial-gradient(720px 460px at 88% -8%, rgba(0, 180, 216, .38), transparent 60%), radial-gradient(560px 420px at -10% 108%, rgba(9, 104, 246, .5), transparent 55%), linear-gradient(155deg, #081c3a, #0b2a56 52%, var(--ta-biru)); display: flex; align-items: center; padding: 48px 56px; }
 .login-brand-side::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .055) 1px, transparent 1px); background-size: 44px 44px; mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, #000 30%, transparent 75%); }
 .login-brand-inner { position: relative; max-width: 480px; }
 .login-brand-logo { display: flex; align-items: center; gap: 13px; margin-bottom: 46px; }
-.kotak-logo.besar { width: 46px; height: 46px; border-radius: 12px; font-size: 17px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .25); backdrop-filter: blur(4px); }
-.login-brand-nama { font-size: 19px; font-weight: 700; line-height: 1.2; }
-.login-brand-sub { font-size: 12.5px; color: rgba(255, 255, 255, .72); margin-top: 2px; }
-.login-brand-inner h2 { margin: 0 0 14px; font-size: 33px; line-height: 1.22; font-weight: 700; letter-spacing: -.01em; }
-.login-brand-teks { margin: 0 0 30px; font-size: 14.5px; line-height: 1.65; color: rgba(255, 255, 255, .82); }
+.kotak-logo.besar { width: 46px; height: 46px; border-radius: 12px; font-size: 13.6px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .25); backdrop-filter: blur(4px); }
+.login-brand-nama { font-size: 15.2px; font-weight: 700; line-height: 1.2; }
+.login-brand-sub { font-size: 10px; color: rgba(255, 255, 255, .72); margin-top: 2px; }
+.login-brand-inner h2 { margin: 0 0 14px; font-size: 26.4px; line-height: 1.22; font-weight: 700; letter-spacing: -.01em; }
+.login-brand-teks { margin: 0 0 30px; font-size: 11.6px; line-height: 1.65; color: rgba(255, 255, 255, .82); }
 .login-fitur { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
 .login-fitur li { display: flex; gap: 13px; align-items: flex-start; }
 .login-fitur-ikon { width: 40px; height: 40px; flex-shrink: 0; border-radius: 11px; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .18); display: flex; align-items: center; justify-content: center; }
 .login-fitur-ikon svg { width: 19px; height: 19px; stroke: #fff; fill: none; stroke-width: 1.8; }
-.login-fitur b { display: block; font-size: 14.5px; font-weight: 600; }
-.login-fitur small { display: block; font-size: 12.5px; color: rgba(255, 255, 255, .7); line-height: 1.5; margin-top: 1px; }
+.login-fitur b { display: block; font-size: 11.6px; font-weight: 600; }
+.login-fitur small { display: block; font-size: 10px; color: rgba(255, 255, 255, .7); line-height: 1.5; margin-top: 1px; }
 @media (max-width: 900px) {
   .login-grid { grid-template-columns: 1fr; }
   .login-brand-side { order: -1; padding: 30px 24px; }
   .login-brand-logo { margin-bottom: 18px; }
-  .login-brand-inner h2 { font-size: 24px; }
+  .login-brand-inner h2 { font-size: 19.2px; }
   .login-brand-teks { margin-bottom: 18px; }
   .login-fitur { display: none; }
   .login-form-side { padding: 30px 20px 40px; }
   .login-brand { display: none; }
 }
-.kecil-teks { font-size: 12px; color: var(--ta-teks-3); }
+.kecil-teks { font-size: 9.6px; color: var(--ta-teks-3); }
 
 /* ===== Paginasi ===== */
-.paginasi { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-top: 13px; font-size: 13px; color: var(--ta-teks-2); }
+.paginasi { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-top: 13px; font-size: 10.4px; color: var(--ta-teks-2); }
 .paginasi .tombol-halaman { display: flex; gap: 5px; align-items: center; }
 .paginasi button { background: #fff; color: var(--ta-teks); border: 1px solid var(--ta-garis-2); padding: 6px 12px; font-weight: 500; }
 .paginasi button:hover:not(:disabled) { background: var(--ina-neutral-100, #f2f2f2); }
 .paginasi button.aktif { background: var(--ta-biru); border-color: var(--ta-biru); color: #fff; font-weight: 600; }
 .paginasi select { width: auto; margin-top: 0; padding: 6px 9px; }
 @media (max-width: 760px) { .samping { display: none; } .isi { padding: 14px; } }
+
+/* ===== Toggle menu samping (TailAdmin) ===== */
+.samping { transition: width .25s ease, padding .25s ease, opacity .2s ease; }
+.kerangka.samping-tutup .samping { width: 0; padding-left: 0; padding-right: 0; opacity: 0; border-right: 0; overflow: hidden; }
+.tombol-samping { background: #fff; color: var(--ta-teks-2); border: 1px solid var(--ta-garis); border-radius: 9px; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tombol-samping:hover { background: var(--ina-neutral-50, #f8f8f7); color: var(--ta-teks); }
+.tombol-samping svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.9; }
