@@ -210,7 +210,7 @@ class ParserTemplate
         }
         $hargaAnalisa = $this->hargaPerAnalisa();
         $perGedung = [];
-        foreach ($this->barisData($p, 'BOQ', 6, 'gedung') as $sel) {
+        foreach ($this->barisData($p, 'BOQ', 7, 'gedung') as $sel) {
             $gedung = trim((string) ($sel[0] ?? ''));
             $nama = trim((string) ($sel[2] ?? ''));
             if ($gedung === '' || $nama === '' || str_starts_with(strtoupper($gedung), 'CONTOH')) {
@@ -218,7 +218,10 @@ class ParserTemplate
             }
             $kode = ParserPerencana::kanonKode(trim((string) ($sel[3] ?? '')));
             $volume = (float) ($sel[4] ?? 0);
-            $harga = $kode !== '' ? ($hargaAnalisa[$kode] ?? 0.0) : 0.0;
+            // Kolom Harga Satuan (opsional): bila diisi, dipakai apa adanya
+            // (mis. ekspor dari dokumen resmi) — mengalahkan hitungan analisa.
+            $hargaIsi = (float) ($sel[6] ?? 0);
+            $harga = $hargaIsi > 0 ? $hargaIsi : ($kode !== '' ? ($hargaAnalisa[$kode] ?? 0.0) : 0.0);
             $perGedung[$gedung][] = [
                 'bab' => trim((string) ($sel[1] ?? '')) ?: null,
                 'nama' => $nama, 'kode_analisa' => $kode !== '' ? $kode : null,
@@ -328,6 +331,18 @@ class ParserTemplate
     {
         $sk = mb_strtolower(trim((string) $satuanKomponen));
         $sb = mb_strtolower(trim((string) ($bahan['satuan'] ?? '')));
+        // Dokumen perencana tidak mencantumkan satuan beli (bahan hasil impor
+        // bersatuan '-'): tebak satuan beli dari nama bahan agar konversi jalan.
+        if ($sb === '' || $sb === '-') {
+            $nb = mb_strtolower((string) ($bahan['nama'] ?? ''));
+            if (str_contains($nb, 'semen')) {
+                $sb = 'zak';
+            } elseif (str_contains($nb, 'pasir') || str_contains($nb, 'kerikil') || str_contains($nb, 'batu')) {
+                $sb = 'm3';
+            } elseif (str_contains($nb, 'keramik')) {
+                $sb = 'ktk';
+            }
+        }
         if ($sk === 'kg') {
             if (str_contains($sb, 'zak')) {
                 return 1 / 50;

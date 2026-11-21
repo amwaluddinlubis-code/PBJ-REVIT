@@ -86,10 +86,11 @@ class PenulisTemplate
         // BOQ (datar per pekerjaan)
         $ws = $ss->createSheet();
         $ws->setTitle('BOQ');
-        self::kepala($ws, 'BOQ — DAFTAR PEKERJAAN PER GEDUNG', ['Gedung *', 'Bab / Kelompok', 'Uraian Pekerjaan *', 'Kode Analisa', 'Volume *', 'Satuan'], [24, 22, 46, 13, 12, 10]);
+        self::kepala($ws, 'BOQ — DAFTAR PEKERJAAN PER GEDUNG', ['Gedung *', 'Bab / Kelompok', 'Uraian Pekerjaan *', 'Kode Analisa', 'Volume *', 'Satuan', 'Harga Satuan (opsional)'], [24, 22, 46, 13, 12, 10, 17]);
         $r = 5;
         foreach ($boq as $row) {
-            $ws->fromArray([$row['gedung'], $row['bab'], $row['nama'], $row['kode_analisa'], (float) $row['volume'], $row['satuan']], null, 'A' . $r++);
+            $hargaIsi = isset($row['harga_satuan']) && (float) $row['harga_satuan'] > 0 ? (float) $row['harga_satuan'] : null;
+            $ws->fromArray([$row['gedung'], $row['bab'], $row['nama'], $row['kode_analisa'], (float) $row['volume'], $row['satuan'], $hargaIsi], null, 'A' . $r++);
         }
         $ss->setActiveSheetIndex(0);
         return $ss;
@@ -119,6 +120,7 @@ class PenulisTemplate
             'Aturan: jangan mengubah nama sheet dan baris judul (baris 4); data dibaca mulai baris 5.',
             'Kode analisa di BOQ harus sama dengan di Analisa. Nama bahan/upah di Analisa harus sama dengan di Harga.',
             'Baris yang kolom pertamanya diawali CONTOH dilewati saat impor.',
+            'Kolom Harga Satuan (opsional) di BOQ: bila diisi, nilai itu yang dipakai apa adanya; bila dikosongkan, harga dihitung dari Analisa.',
         ];
         foreach ($teks as $i => $t) {
             $ws->setCellValue('A' . ($i + 1), $t);

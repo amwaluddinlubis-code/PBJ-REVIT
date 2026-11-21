@@ -131,6 +131,18 @@ abstract class BaseController extends Controller
     {
         $sk = mb_strtolower(trim((string) $satuanKomponen));
         $sb = mb_strtolower(trim((string) ($bahan['satuan'] ?? '')));
+        // Dokumen perencana tidak mencantumkan satuan beli (bahan hasil impor
+        // bersatuan '-'): tebak satuan beli dari nama bahan agar konversi jalan.
+        if ($sb === '' || $sb === '-') {
+            $nb = mb_strtolower((string) ($bahan['nama'] ?? ''));
+            if (str_contains($nb, 'semen')) {
+                $sb = 'zak';
+            } elseif (str_contains($nb, 'pasir') || str_contains($nb, 'kerikil') || str_contains($nb, 'batu')) {
+                $sb = 'm3';
+            } elseif (str_contains($nb, 'keramik')) {
+                $sb = 'ktk';
+            }
+        }
         if ($sk === 'kg') {
             if (str_contains($sb, 'zak')) {
                 return 1 / 50;

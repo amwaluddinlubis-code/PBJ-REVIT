@@ -151,7 +151,7 @@ class ParserPerencana
 
         // 3) Analisa AHSP (+ komponen tertaut ke bahan/upah)
         $sudahKode = [];
-        foreach (['Analisa', 'Analisa 2'] as $nama) {
+        foreach (['Analisa', 'Analisa 2', 'Analisa (2)'] as $nama) {
             if (! $p->adaSheet($nama)) {
                 continue;
             }

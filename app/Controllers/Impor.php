@@ -194,7 +194,7 @@ class Impor extends BaseController
             $analisa[] = $a;
         }
         $boq = $db->query(
-            'SELECT g.nama AS gedung, p.bab, p.nama, p.kode_analisa, p.volume, p.satuan
+            'SELECT g.nama AS gedung, p.bab, p.nama, p.kode_analisa, p.volume, p.satuan, p.harga_satuan
              FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
              WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 ORDER BY g.urutan, p.urutan',
             [$sid]
