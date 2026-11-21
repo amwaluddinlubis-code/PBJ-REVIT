@@ -50,18 +50,18 @@ Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** di
 - Dropdown user: `aria-expanded` (true/false) diperbarui saat buka/tutup; fokus terlihat saat mobile sudah via `focus-visible`.
 - Tambah override `--ina-neutral-*` gelap (di P2).
 
-### P6 — Feedback saat impor berjalan (UX baru)
+### P6 — Feedback saat impor berjalan (UX baru) — sudah selesai & diverifikasi (2026-11-21)
 - Cara 1/3 proses synchronous, workbook 8MB+ bisa "berjalan beberapa detik sampai ±1 menit". Tanpa feedback — user rela refresh/menunggu.
-- **Saran**: `onsubmit` → disable button + indikasi animasi ("Mengimpor… workbook besar bisa berlangsung hingga ±1 menit"). Tidak ada spinner saat ini.
+- **Terlakukan**: `onsubmit` pada 3 form impor → `muatAwal(form)` — disable tombol + ubah teks menjadi "Mengimpor…"; verifikasi di browser: `btnDisabled: true` + `btnText` berubah.
 
 ### P7 — Cara 2/3 duplikat & imajinal — prefer Cara 1
 - Tiga "Cara" di halaman itu tanpa prioritas visual; harus discan dulu.
 - **Saran**: progressive disclosure — tampilkan Cara 1 secara default (utama), Cara 2 & 3 di `<details>`/collapse; atau wizard: 1 langkah. Balik urutan agar yang paling mudah ditemukan muncul paling dulu. Template panel juga boleh collapse (jarang dipakai).
 
-### P8 — Small polish (opsional)
+### P8 — Small polish (opsional) — sudah selesai (2026-11-21)
 - Cara 1: badge file Cards terlalu panjang waktu render buat workbook besar — fokus default dulu Cara 1.
 - Error: `galat` untuk error upload ada — ok, bisa lanjut hubungkan garis: spansi size → Cara 1 secara otomatis? (optional)
-- Ajak: tambah "untuk kali berikutnya — cara yang dipilih" storage (opsional).
+- Ajak (storage): cara terakhir dipakai tersimpan (`ap-impor-cara`); nudge "Terakhir dipakai: Cara N." tampil saat buka halaman — diimplementasikan.
 - `writable/impor/Taruh berkas xlsx di folder ini.txt` — memang agak tersembunyi; usul direktori sudah ada. OK.
 
 ## Bagian yang perlu dikembangkan (menurut urgensi)
@@ -71,7 +71,7 @@ Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** di
 ~~3.~~ **Overflow-x tabel** (P3) — **sudah selesai & diverifikasi** (2026-11-21): `.panel { overflow-x: auto }` — tabel di dalam panel mempunyai scroll horizontal (termasuk tabel impor baru).
 ~~4.~~ **Touch target 44px** (P4) — **sudah selesai & diverifikasi** (2026-11-21): computed `44px` pada akses sidebar & menu parent>child (diperiksa di browser).
 ~~5.~~ **A11y polis** (P5) — **sudah selesai & diverifikasi** (2026-11-21): aria-label pencarian, `aria-expanded` pada tombol user (diperiksa: true saat buka, false saat tutup), fokus via `focus-visible`.
-6. **Feedback impor (P6)** — disable + spinner pada saat proses impor.
+~~6.~~ **Feedback impor (P6)** — **sudah selesai & diverifikasi** (2026-11-21): `onsubmit` pada 3 form impor → `muatAwal(form)` — disable tombol + teks "Mengimpor…"; diuji di browser.
 7. **Progressive disclosure Cara 2/3** (P7) — default show Cara 1 + collapse lainnya.
 
 ## Pertanyaan untuk pemilik desain (opsional)

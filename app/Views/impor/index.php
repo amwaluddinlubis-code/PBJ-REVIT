@@ -10,13 +10,39 @@ $pilihSekolah = static function () use ($semuaSekolah, $sekolahAktif) {
 };
 ?>
 <div class="panel">
+  <p class="kecil-teks" id="pilihan-terakhir" style="display:none"></p>
+<script>
+// P6: muatAwal saat submit impor: disable tombol + beri indikasi proses.
+// P8: simpanCara: ingat cara terakhir dipakai; tampilkan nudge sebagai cara berikutnya.
+function muatAwal(form) {
+  const b = form.querySelector('button[type=submit]');
+  if (b) { b.disabled = true; b.textContent = 'Mengimpor... (workbook besar bisa berlangsung hingga +/-1 menit)'; }
+}
+function simpanCara(form) {
+  const n = form.getAttribute('data-cara');
+  if (n) localStorage.setItem('ap-impor-cara', n);
+}
+(function () {
+  const p = document.getElementById('pilihan-terakhir');
+  const n = localStorage.getItem('ap-impor-cara');
+  if (p && n) { p.textContent = 'Terakhir dipakai: Cara ' + n + '.'; p.style.display = ''; }
+})();
+const petaBahan = {};
+document.querySelectorAll('#daftar-bahan option').forEach(o => { petaBahan[o.value] = o.dataset.id; });
+document.querySelectorAll('.form-tautkan').forEach(f => {
+  f.addEventListener('submit', () => {
+    const teks = f.querySelector('input[name=bahan_teks]').value;
+    if (petaBahan[teks]) f.querySelector('input[name=bahan_id]').value = petaBahan[teks];
+  });
+});
+</script>
   <h2>Impor Dokumen Perencana — Satu Klik</h2>
   <p style="margin-top:0;color:var(--ta-teks-2)">Dokumen RAB perencana dibaca otomatis: daftar harga bahan &amp; upah, analisa AHSP, BOQ tiap gedung, dan total bantuan dari Rekap RAB. Pilih sekolah tujuan, lalu pakai salah satu dari tiga cara di bawah. Mengimpor ulang berkas yang sama aman — gedung dari sheet yang sama diperbarui, bukan digandakan.</p>
 
   <h3 style="margin:18px 0 8px">Cara 1 — Dari Folder (disarankan, tanpa batas ukuran)</h3>
   <p class="kecil-teks" style="margin-top:0">Salin berkas .xlsx ke folder ini lewat Explorer: <code style="word-break:break-all"><?= esc($folder_impor) ?></code></p>
   <?php if ($berkas_folder !== []): ?>
-  <form method="post" action="<?= base_url('impor/folder') ?>">
+  <form method="post" action="<?= base_url('impor/folder') ?>" data-cara="1" onsubmit="muatAwal(this); simpanCara(this)">
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <?= $pilihSekolah() ?>
@@ -34,7 +60,7 @@ $pilihSekolah = static function () use ($semuaSekolah, $sekolahAktif) {
 
   <h3 style="margin:20px 0 8px">Cara 2 — Impor Ulang Berkas Terakhir</h3>
   <?php if ($berkas_terakhir !== null): ?>
-  <form method="post" action="<?= base_url('impor/ulang') ?>">
+  <form method="post" action="<?= base_url('impor/ulang') ?>" data-cara="2" onsubmit="muatAwal(this); simpanCara(this)">
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <?= $pilihSekolah() ?>
@@ -47,7 +73,7 @@ $pilihSekolah = static function () use ($semuaSekolah, $sekolahAktif) {
   <?php endif; ?>
 
   <h3 style="margin:20px 0 8px">Cara 3 — Unggah Berkas</h3>
-  <form method="post" action="<?= base_url('impor/proses') ?>" enctype="multipart/form-data">
+  <form method="post" action="<?= base_url('impor/proses') ?>" enctype="multipart/form-data" data-cara="3" onsubmit="muatAwal(this); simpanCara(this)">
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <?= $pilihSekolah() ?>
@@ -101,16 +127,6 @@ $pilihSekolah = static function () use ($semuaSekolah, $sekolahAktif) {
     <?php endforeach; ?>
   </table>
 </div>
-<script>
-const petaBahan = {};
-document.querySelectorAll('#daftar-bahan option').forEach(o => { petaBahan[o.value] = o.dataset.id; });
-document.querySelectorAll('.form-tautkan').forEach(f => {
-  f.addEventListener('submit', () => {
-    const teks = f.querySelector('input[name=bahan_teks]').value;
-    if (petaBahan[teks]) f.querySelector('input[name=bahan_id]').value = petaBahan[teks];
-  });
-});
-</script>
 <?php endif; ?>
 
 <?php if (! empty($log)): ?>
