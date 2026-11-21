@@ -128,5 +128,36 @@ Pendidikan 2026 (Direktorat SMP) yang kini diterapkan aplikasi:
 - **Bea materai**: pengingat materai Rp10.000 untuk kuitansi pembayaran
   Rp5 juta ke atas (di Jurnal Pembayaran, detail SPK, dan cetak Invoice).
 
+Pengembangan lanjutan berdasarkan Juknis (migrasi 000008–000011):
+
+- **Pembukuan (menu Buku Kas)**: Buku Kas Umum, Buku Bank, dan Buku
+  Pembantu Kas Tunai yang ditutup setiap akhir bulan, tergabung otomatis
+  dari pembayaran invoice (bank), pembayaran upah (tunai), bukti setor,
+  dan transaksi kas manual; cetak mengikuti format dokumen Juknis.
+- **Penerimaan Dana**: pencairan bertahap Tahap 1 (70%) dan Tahap 2 (30%,
+  syarat kemajuan fisik ≥ 50%) dengan target, status, peringatan jatuh
+  tempo di Dashboard, dan cetak Kuitansi Penerimaan Uang format Juknis.
+- **Laporan Kemajuan & Laporan Akhir**: pernyataan kemajuan penyelesaian
+  pekerjaan untuk pengajuan tahap 2 (dilampiri rincian per gedung dan
+  dokumentasi foto) dan laporan akhir 100% berisi dana awal, dana yang
+  digunakan, dan sisa dana.
+- **Foto Progres**: dokumentasi foto kondisi sebelum, selama (proses),
+  dan akhir pekerjaan per gedung sebagai lampiran laporan.
+- **Bukti Setor & Pajak**: kewajiban pajak per jenis dan masa (PPh 22,
+  PPN, PPh 21, PPh 23, PPh 4 ayat 2) dibandingkan bukti setor e-billing/
+  NTPN; sisa dana bantuan dan pengembaliannya ke kas negara via SIMPONI
+  terpantau di halaman yang sama.
+- **Ceklis Kelengkapan Dokumen per SPK**: status otomatis dari modul
+  survei, negosiasi, BAP, BAST, invoice, dan pembayaran, ditambah penanda
+  manual dokumen perencanaan dan kuitansi fisik.
+- **Kurva S**: jadwal pelaksanaan per gedung — garis rencana berbentuk S
+  dibandingkan realisasi kumulatif mingguan beserta deviasinya.
+- **Berita Acara Revisi Pekerjaan**: pencatatan dan cetak BA setiap
+  perubahan volume/biaya pekerjaan.
+- **BAST Aset** per gedung (di halaman LPJ Gedung), **Papan Nama
+  Kegiatan** (di halaman BAP & BAST), **cetak Daftar Pembayaran Upah**
+  bulanan dengan kolom tanda tangan penerima, dan **deteksi pola
+  pemecahan pembelian** di Dashboard.
+
 Langkah sesudah `git pull` versi ini: jalankan `php spark migrate`
-(migrasi 000007).
+(migrasi 000007–000011).
