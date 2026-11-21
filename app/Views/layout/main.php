@@ -106,6 +106,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
         <a href="<?= base_url('material') ?>"<?= $aktif('material') ?>>Buku Material</a>
         <a href="<?= base_url('sisa-bahan') ?>"<?= $aktif('sisa-bahan') ?>>Sisa Bahan</a>
         <a href="<?= base_url('lpj') ?>"<?= $aktif('lpj') ?>>LPJ &amp; Realisasi</a>
+        <a href="<?= base_url('laporan-kemajuan') ?>"<?= $aktif('laporan-kemajuan') ?>>Laporan Kemajuan</a>
         <a href="<?= base_url('laporan') ?>"<?= $aktif('laporan') ?>>Laporan &amp; Ekspor</a>
       <?= $tutupInduk() ?>
       <?php $induk('pengaturan', 'gear', 'Pengaturan'); ?>
