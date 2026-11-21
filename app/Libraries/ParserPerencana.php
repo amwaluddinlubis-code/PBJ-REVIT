@@ -26,7 +26,7 @@ class ParserPerencana
     public static function normal(string $s): string
     {
         $s = mb_strtolower(trim($s));
-        $s = str_replace(['.', ',', '(', ')', '"', "'"], ' ', $s);
+        $s = str_replace(['.', ',', '(', ')', '"', "'", '*'], ' ', $s);
         $s = preg_replace('/\s+/', ' ', $s);
         return trim($s);
     }
