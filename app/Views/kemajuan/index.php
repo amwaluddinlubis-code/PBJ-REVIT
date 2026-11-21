@@ -14,6 +14,7 @@
   </div>
   <?php if ($fisik < 50): ?><p class="kecil-teks">Kemajuan fisik saat ini <?= number_format($fisik, 1, ',', '.') ?>% — belum mencapai syarat 50% untuk pengajuan tahap 2.</p><?php endif; ?>
   <?php if ($setor_sisa > 0): ?><p class="kecil-teks">Sisa dana yang sudah disetor kembali ke kas negara: <?= $rp($setor_sisa) ?> (lihat menu Bukti Setor &amp; Pajak).</p><?php endif; ?>
+  <p class="kecil-teks">Dokumentasi foto terlampir: sebelum <?= (int) ($foto['sebelum'] ?? 0) ?> · proses <?= (int) ($foto['proses'] ?? 0) ?> · akhir <?= (int) ($foto['akhir'] ?? 0) ?> — kelola di menu <a href="<?= base_url('foto-progres') ?>">Foto Progres</a>.</p>
 </div>
 
 <div class="panel">

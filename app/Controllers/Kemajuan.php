@@ -29,7 +29,18 @@ class Kemajuan extends BaseController
         foreach ($this->db()->table('bukti_setor')->where(['sekolah_id' => $this->sid(), 'jenis' => 'sisa_dana', 'is_deleted' => 0])->get()->getResultArray() as $b) {
             $setorSisa += (float) $b['jumlah'];
         }
+        $foto = ['sebelum' => 0, 'proses' => 0, 'akhir' => 0];
+        try {
+            foreach ($this->db()->table('foto_progres')->select('tahap, COUNT(*) AS j')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->groupBy('tahap')->get()->getResultArray() as $f) {
+                if (isset($foto[$f['tahap']])) {
+                    $foto[$f['tahap']] = (int) $f['j'];
+                }
+            }
+        } catch (\Throwable $e) {
+            // tabel foto_progres belum dimigrasi — abaikan
+        }
         return [
+            'foto' => $foto,
             'gedung' => $gedung, 'total_boq' => $totalBoq, 'total_realisasi' => $totalRealisasi,
             'fisik' => $fisik, 'diterima' => $diterima, 'digunakan' => $digunakan,
             'sisa' => $diterima - $digunakan, 'setor_sisa' => $setorSisa,
