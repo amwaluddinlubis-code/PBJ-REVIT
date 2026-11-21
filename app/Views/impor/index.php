@@ -84,9 +84,30 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
   </form>
 </div>
 
+<?php if (isset($verifikasi)): ?>
+<div class="panel">
+  <h2>Verifikasi Anggaran — <?= esc($sekolahAktif['nama_sekolah'] ?? 'Sekolah Aktif') ?></h2>
+  <table>
+    <tr><th>Uraian</th><th class="angka">Nilai</th></tr>
+    <tr><td>Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung aktif</b> (penjumlahan biaya semua gedung yang aktif)</td><td class="angka"><b><?= $rp($verifikasi['total_boq']) ?></b></td></tr>
+    <tr><td>Pagu anggaran (diisi di <a href="<?= base_url('pengaturan') ?>">Pengaturan</a>)</td><td class="angka"><b><?= $rp($verifikasi['pagu']) ?></b></td></tr>
+    <tr><td>Selisih (pagu − total BOQ)</td><td class="angka"><b><?= $rp($verifikasi['selisih']) ?></b></td></tr>
+  </table>
+  <?php if (($verifikasi['pagu'] ?? 0) <= 0): ?>
+    <p class="kecil-teks" style="margin-bottom:0;color:var(--ina-yellow-700,#a15c00)"><b>Pagu belum diatur</b> — isi total anggaran di Pengaturan agar perbandingan ini bermakna.</p>
+  <?php elseif ($verifikasi['selisih'] == 0): ?>
+    <p class="kecil-teks" style="margin-bottom:0;color:var(--ina-green-700,#1e6b2a)"><b>Sesuai</b> — total BOQ gedung aktif persis sama dengan pagu anggaran.</p>
+  <?php elseif ($verifikasi['selisih'] > 0): ?>
+    <p class="kecil-teks" style="margin-bottom:0;color:var(--ina-green-700,#1e6b2a)"><b>Di bawah pagu</b> — total BOQ gedung aktif masih di bawah pagu anggaran.</p>
+  <?php else: ?>
+    <p class="kecil-teks" style="margin-bottom:0;color:var(--ina-red-700,#a61e1e)"><b>Melebihi pagu</b> — total BOQ gedung aktif melebihi pagu anggaran. Periksa kembali gedung yang aktif atau sesuaikan pagu di Pengaturan.</p>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
+
 <div class="panel">
   <h2>Template Manual — Jalur Pasti untuk RAB Format Apa Pun</h2>
-  <p style="margin-top:0;color:var(--ta-teks-2)">Bila workbook perencana tidak terbaca rapi (format perencana lain, PDF, atau hitungan manual), isi <b>template 4 sheet</b> (Sekolah, Harga, Analisa, BOQ) lalu impor berkasnya lewat salah satu cara di atas — aplikasi mengenali format template secara otomatis. Sebaliknya, data sekolah aktif juga bisa <b>dieksper sebagai template terisi</b> untuk diperiksa/dikoreksi di Excel lalu diimpor kembali.</p>
+  <p style="margin-top:0;color:var(--ta-teks-2)">Bila workbook perencana tidak terbaca rapi (format perencana lain, PDF, atau hitungan manual), isi <b>template 6 sheet</b> (Sekolah, Harga, Analisa, Harsat, BOQ, dan Petunjuk) lalu impor berkasnya lewat salah satu cara di atas — aplikasi mengenali format template secara otomatis. Sebaliknya, data sekolah aktif juga bisa <b>dieksper sebagai template terisi</b> untuk diperiksa/dikoreksi di Excel lalu diimpor kembali.</p>
   <div class="aksi" style="justify-content:flex-start;gap:10px">
     <a class="tombol" href="<?= base_url('impor/unduh-template') ?>">Unduh Template Kosong</a>
     <a class="tombol" href="<?= base_url('impor/ekspor-template') ?>">Ekspor Template Terisi (Sekolah Aktif)</a>

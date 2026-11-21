@@ -52,6 +52,7 @@ class Impor extends BaseController
         }
 
         [$takTertaut, $semuaBahan, $jumlahMassal] = $this->dataTakTertaut();
+        $verifikasi = $this->verifikasiAnggaran();
 
         return $this->tampil('impor/index', [
             'log' => $log,
@@ -61,6 +62,7 @@ class Impor extends BaseController
             'tak_tertaut' => $takTertaut,
             'semua_bahan' => $semuaBahan,
             'jumlah_massal' => $jumlahMassal,
+            'verifikasi' => $verifikasi,
         ], 'Impor Dokumen Perencana');
     }
 
@@ -145,6 +147,19 @@ class Impor extends BaseController
                     count($r['gedung']), $r['analisa'], $r['komponen'], $r['bahan_baru']
                 );
             }
+            $v = $this->verifikasiAnggaran($sekolahId);
+            $r['verifikasi'] = $v;
+            $statusV = $v['pagu'] <= 0
+                ? 'pagu belum diatur di Pengaturan'
+                : ($v['selisih'] == 0 ? 'persis sama dengan pagu' : ($v['selisih'] > 0 ? 'di bawah pagu' : 'MELEBIHI pagu'));
+            $pesan .= sprintf(
+                ' Verifikasi anggaran: total BOQ %d gedung aktif Rp %s vs pagu Rp %s — selisih Rp %s (%s).',
+                $v['gedung'],
+                number_format($v['total_boq'], 0, ',', '.'),
+                number_format($v['pagu'], 0, ',', '.'),
+                number_format($v['selisih'], 0, ',', '.'),
+                $statusV
+            );
         } catch (\Throwable $e) {
             return redirect()->to('/impor')->with('galat', 'Impor gagal: ' . $e->getMessage());
         }

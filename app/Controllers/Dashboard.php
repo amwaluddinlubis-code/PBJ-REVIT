@@ -58,6 +58,7 @@ class Dashboard extends BaseController
             'invoiceCek'  => $invoiceCek,
             'sisaNegatif' => $sisaNegatif,
             'perSpk'      => $perSpk,
+            'verifikasi'  => $this->verifikasiAnggaran(),
         ], 'Dashboard — Analisa Perencana');
     }
 }

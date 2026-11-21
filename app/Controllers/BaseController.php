@@ -288,6 +288,41 @@ abstract class BaseController extends Controller
         return (float) ($inv['t'] ?? 0) + (float) ($upah['jumlah'] ?? 0);
     }
 
+    /** Total nilai BOQ semua gedung AKTIF sebuah sekolah (volume x harga satuan pekerjaan aktif). */
+    protected function totalBoqAktif(?int $sid = null): float
+    {
+        $sid = $sid ?? $this->sid();
+        $row = $this->db()->query(
+            'SELECT COALESCE(SUM(p.volume * p.harga_satuan), 0) AS t
+             FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
+             WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0',
+            [$sid]
+        )->getRowArray();
+        return (float) ($row['t'] ?? 0);
+    }
+
+    /**
+     * Verifikasi anggaran: total BOQ gedung aktif dibandingkan pagu sekolah.
+     * Mengembalikan [total_boq, pagu, selisih (pagu - total), gedung (jumlah aktif)].
+     */
+    protected function verifikasiAnggaran(?int $sid = null): array
+    {
+        $sid = $sid ?? $this->sid();
+        $sekolah = $this->db()->table('sekolah')->where('id', $sid)->get()->getRowArray() ?: [];
+        $n = $this->db()->query(
+            'SELECT COUNT(*) AS n FROM gedung WHERE sekolah_id = ? AND is_deleted = 0',
+            [$sid]
+        )->getRowArray();
+        $total = $this->totalBoqAktif($sid);
+        $pagu = (float) ($sekolah['total_anggaran'] ?? 0);
+        return [
+            'total_boq' => $total,
+            'pagu' => $pagu,
+            'selisih' => $pagu - $total,
+            'gedung' => (int) ($n['n'] ?? 0),
+        ];
+    }
+
     /**
      * Kontrol pagu (Aturan 4): total belanja tidak boleh melebihi total anggaran.
      * Mengembalikan [boleh, sisa_sebelum, total_anggaran].
