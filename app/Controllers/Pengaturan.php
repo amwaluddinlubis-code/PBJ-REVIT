@@ -8,8 +8,9 @@ class Pengaturan extends BaseController
     {
         return $this->tampil('pengaturan/index', [
             'idn' => $this->sekolahAktif(),
+            'terbayar' => $this->totalBelanja(),
             'penyedia' => $this->db()->table('penyedia')->where('sekolah_id', $this->sid())->orderBy('nama')->get()->getResultArray(),
-        ], 'Identitas & Pengaturan — Aplikasi PBJ Sekolah');
+        ], 'Identitas & Pengaturan');
     }
 
     public function simpan()
@@ -24,6 +25,9 @@ class Pengaturan extends BaseController
             $v = $this->request->getPost($k);
             $data[$k] = ($v === '' || $v === null) ? null : $v;
         }
+        // Pagu anggaran: terima ketikan berformat ribuan ("2.540.292.000").
+        $pagu = (string) $this->request->getPost('total_anggaran');
+        $data['total_anggaran'] = (float) str_replace(['.', ','], ['', '.'], preg_replace('/[^0-9.,]/', '', $pagu) ?? '0');
         $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('sekolah')->where('id', $this->sid())->update($data);
         return redirect()->to('pengaturan')->with('sukses', 'Identitas disimpan — kop surat dan dokumen mengikuti otomatis.');

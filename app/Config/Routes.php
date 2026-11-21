@@ -125,3 +125,7 @@ $routes->post('pengguna/(:num)/hapus', 'Pengguna::hapus/$1', ['filter' => 'auth'
 $routes->get('profil', 'Pengguna::profil', ['filter' => 'auth']);
 $routes->post('profil/simpan', 'Pengguna::profilSimpan', ['filter' => 'auth']);
 $routes->post('profil/sandi', 'Pengguna::sandiSimpan', ['filter' => 'auth']);
+$routes->post('impor/folder', 'Impor::folder', ['filter' => 'auth']);
+$routes->post('impor/ulang', 'Impor::ulang', ['filter' => 'auth']);
+$routes->post('impor/tautkan', 'Impor::tautkan', ['filter' => 'auth']);
+$routes->post('impor/tautkan-massal', 'Impor::tautkanMassal', ['filter' => 'auth']);
