@@ -1,8 +1,15 @@
 <?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
-<div class="panel">
-  <h2><?= esc($identitas['nama_sekolah'] ?? 'Sekolah') ?> — <?= esc($identitas['paket_pekerjaan'] ?? '') ?></h2>
-  <div class="kecil-teks">Tahun Anggaran <?= esc($identitas['tahun_anggaran'] ?? '') ?> · NPSN <?= esc($identitas['npsn'] ?? '') ?></div>
-</div>
+<section class="dashboard-hero">
+  <div>
+    <span class="dashboard-kicker">Ringkasan aktivitas</span>
+    <h1><?= esc($identitas['nama_sekolah'] ?? 'Sekolah') ?></h1>
+    <p><?= esc($identitas['paket_pekerjaan'] ?? 'Belum ada paket pekerjaan') ?> · Tahun Anggaran <?= esc($identitas['tahun_anggaran'] ?? '') ?> · NPSN <?= esc($identitas['npsn'] ?? '') ?></p>
+  </div>
+  <div class="dashboard-aksi">
+    <a class="tombol abu" href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a>
+    <a class="tombol" href="<?= base_url('impor') ?>">+ Impor Dokumen</a>
+  </div>
+</section>
 <div class="kartu-kpi">
   <div class="kpi"><div class="label">Total RAB</div><div class="nilai"><?= $rp($totalRab) ?></div></div>
   <div class="kpi"><div class="label">Total SPK Terdaftar</div><div class="nilai"><?= $rp($totalSpk) ?></div></div>
