@@ -125,7 +125,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       </button>
       <form class="cari" method="get" action="<?= base_url('bahan') ?>">
         <span aria-hidden="true">⌕</span>
-        <input type="text" name="q" placeholder="Cari bahan…" value="<?= esc($_GET['q'] ?? '') ?>">
+        <input type="text" name="q" aria-label="Cari bahan" placeholder="Cari bahan…" value="<?= esc($_GET['q'] ?? '') ?>">
       </form>
       <div class="topbar-kanan">
         <span class="cip-top"><?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></span>
@@ -138,7 +138,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
           <span class="ikon-bulan"><?= $svg('bulan') ?></span><span class="ikon-matahari"><?= $svg('matahari') ?></span>
         </button>
         <div class="user-menu">
-          <button type="button" class="tombol-user" id="tombol-user" aria-haspopup="true">
+          <button type="button" class="tombol-user" id="tombol-user" aria-haspopup="true" aria-expanded="false">
             <span class="ava"><?= esc(strtoupper(substr($pengguna['nama'] ?? 'A', 0, 1))) ?></span>
             <span class="user-ringkas"><b><?= esc($pengguna['nama'] ?? '') ?></b><small><?= esc(ucfirst($pengguna['peran'] ?? '')) ?></small></span>
             <svg class="panah" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
@@ -226,16 +226,19 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
   const menuUser = document.querySelector('.user-menu');
   const tombolUser = document.getElementById('tombol-user');
   if (menuUser && tombolUser) {
+    const aturAria = () => tombolUser.setAttribute('aria-expanded', menuUser.classList.contains('buka') ? 'true' : 'false');
     tombolUser.addEventListener('click', function (e) {
       e.stopPropagation();
       menuUser.classList.toggle('buka');
+      aturAria();
     });
     document.addEventListener('click', function (e) {
-      if (!menuUser.contains(e.target)) menuUser.classList.remove('buka');
+      if (!menuUser.contains(e.target)) { menuUser.classList.remove('buka'); aturAria(); }
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') menuUser.classList.remove('buka');
+      if (e.key === 'Escape') { menuUser.classList.remove('buka'); aturAria(); }
     });
+    aturAria();
   }
   const tombolTema = document.getElementById('tombol-tema');
   if (tombolTema) {

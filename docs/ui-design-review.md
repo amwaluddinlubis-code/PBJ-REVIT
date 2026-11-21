@@ -41,13 +41,13 @@ Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** di
 - **Saran**: `.panel { overflow-x:auto; }` atau `table { display:block; overflow-x:auto; }` — mulai dari tabel impor baru (panel tak tertaut, riwayat).
 - **Terlakukan**: `.panel { overflow-x: auto; }` — tabel di dalam panel kini mempunyai *scroll horizontal* — cocok untuk Rencana Belanja, SPK Detail, LPJ, Dashboard Gedung, tabel impor.
 
-### P4 — Touch & teks terlalu kecil di genggaman
+### P4 — Touch & teks terlalu kecil di genggaman — sudah selesai & diverifikasi (2026-11-21)
 - Sidebar: `padding:8px 10px; font:11.2px` → tinggi ~31px.
 - **Saran**: `min-height:44px` pada `.samping nav a`, naikkan padding menjadi 9–10px; tombol A−/A+ cukup.
 
-### P5 — Minor a11y & polish
+### P5 — Minor a11y & polish — sudah selesai & diverifikasi (2026-11-21)
 - Input pencarian topbar: tambah `aria-label="Cari bahan"`.
-- Dropdown user: tambah `aria-expanded`; fokus terlihat saat mobile sudah via `focus-visible`.
+- Dropdown user: `aria-expanded` (true/false) diperbarui saat buka/tutup; fokus terlihat saat mobile sudah via `focus-visible`.
 - Tambah override `--ina-neutral-*` gelap (di P2).
 
 ### P6 — Feedback saat impor berjalan (UX baru)
@@ -69,8 +69,8 @@ Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** di
 ~~1.~~ **Mobile drawer** (P1) — **sudah selesai & diverifikasi** (2026-11-21): click menambah class `sanding-boka` + aria-expanded true, Escape menutupnya; drawer CSS lengkap ada di media ≤760px dan cocok dengan class DOM.
 ~~2.~~ **Dark theme vars** (P2) — **sudah selesai & diverifikasi** (2026-11-21): tambah override `--ina-neutral-50/100/200/300/400` gelap — hover seperti `.tombol.abu:hover`, `.paginasi button:hover` terlihat di gelap.
 ~~3.~~ **Overflow-x tabel** (P3) — **sudah selesai & diverifikasi** (2026-11-21): `.panel { overflow-x: auto }` — tabel di dalam panel mempunyai scroll horizontal (termasuk tabel impor baru).
-4. **Touch target 44px** (P4) — bagian dari fix mobile.
-5. **A11y polis** (P5) — aria-label pencarian, aria-expanded user menu, minor lain.
+~~4.~~ **Touch target 44px** (P4) — **sudah selesai & diverifikasi** (2026-11-21): computed `44px` pada akses sidebar & menu parent>child (diperiksa di browser).
+~~5.~~ **A11y polis** (P5) — **sudah selesai & diverifikasi** (2026-11-21): aria-label pencarian, `aria-expanded` pada tombol user (diperiksa: true saat buka, false saat tutup), fokus via `focus-visible`.
 6. **Feedback impor (P6)** — disable + spinner pada saat proses impor.
 7. **Progressive disclosure Cara 2/3** (P7) — default show Cara 1 + collapse lainnya.
 
