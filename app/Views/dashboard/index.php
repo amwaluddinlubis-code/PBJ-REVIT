@@ -17,10 +17,14 @@
   <div class="kpi"><div class="label">Sisa Anggaran</div><div class="nilai"><?= $rp($sisa) ?></div></div>
 </div>
 
-<?php if ($tanpaSpk->j > 0 || $invoiceCek || $sisaNegatif): ?>
+<?php if ($tanpaSpk->j > 0 || $invoiceCek || $sisaNegatif || ! empty($tahap2JatuhTempo)): ?>
 <div class="peringatan">
   <h2>Perlu perhatian</h2>
   <ul>
+    <?php if (! empty($tahap2JatuhTempo)): ?>
+      <li>Kemajuan fisik rata-rata sudah <strong><?= number_format((float) $fisikRata, 1, ',', '.') ?>%</strong> (≥ 50%) tetapi <strong>dana tahap 2 (30%) belum diterima</strong> —
+        siapkan Laporan Kemajuan dan ajukan pencairan tahap 2 lewat menu <a href="<?= base_url('penerimaan-dana') ?>">Penerimaan Dana</a>.</li>
+    <?php endif; ?>
     <?php if ($tanpaSpk->j > 0): ?>
       <li><strong><?= (int) $tanpaSpk->j ?> baris detail</strong> senilai <strong><?= $rp($tanpaSpk->t) ?></strong> belum bernomor SPK —
         <a href="<?= base_url('belum-bernomor') ?>">pasangkan nomornya</a>.</li>

@@ -50,6 +50,18 @@ class Dashboard extends BaseController
 
         $identitas = $this->sekolahAktif();
 
+        // Peringatan tahap 2: kemajuan fisik >= 50% tetapi dana tahap 2 belum diterima
+        $paguDana = (float) ($identitas['total_anggaran'] ?? 0);
+        $perTahap = $this->penerimaanPerTahap();
+        $totalBoq = 0.0;
+        $tertimbang = 0.0;
+        foreach ($this->semuaGedung() as $g) {
+            $totalBoq += (float) $g['nilai_boq'];
+            $tertimbang += (float) $g['nilai_boq'] * (float) $g['persen_fisik'];
+        }
+        $fisikRata = $totalBoq > 0 ? $tertimbang / $totalBoq : 0.0;
+        $tahap2JatuhTempo = $paguDana > 0 && $fisikRata >= 50 && $perTahap[2] <= 0;
+
         return $this->tampil('dashboard/index', [
             'identitas'   => $identitas,
             'totalRab'    => $totalRab,
@@ -61,6 +73,8 @@ class Dashboard extends BaseController
             'sisaNegatif' => $sisaNegatif,
             'perSpk'      => $perSpk,
             'verifikasi'  => $this->verifikasiAnggaran(),
+            'tahap2JatuhTempo' => $tahap2JatuhTempo,
+            'fisikRata' => $fisikRata,
         ], 'Dashboard — Analisa Perencana');
     }
 }
