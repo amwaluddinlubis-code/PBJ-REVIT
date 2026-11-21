@@ -9,7 +9,7 @@ class Auth extends BaseController
         if (session()->get('pengguna_id')) {
             return redirect()->to('/');
         }
-        return view('auth/login', ['judul' => 'Masuk — Aplikasi PBJ Sekolah']);
+        return view('auth/login', ['judul' => 'Masuk — Analisa Perencana']);
     }
 
     public function proses()

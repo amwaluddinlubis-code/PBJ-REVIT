@@ -100,13 +100,50 @@ input:focus, select:focus, textarea:focus { border-color: var(--ta-biru-500); ou
 form.inline { display: inline; }
 form.inline button { margin: 0; }
 
-/* ===== Login ===== */
-.login { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: radial-gradient(800px 480px at 85% -10%, rgba(0, 180, 216, .35), transparent 60%), linear-gradient(150deg, #081c3a, #0b2447 55%, var(--ta-biru)); }
-.kotak-login { background: #fff; border-radius: 16px; padding: 30px; width: min(380px, 94vw); box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .45); }
-.kotak-login h1 { margin: 0 0 4px; font-size: 21px; font-weight: 700; }
-.kotak-login .sub { color: var(--ta-teks-3); margin: 0 0 18px; font-size: 13px; }
-.kotak-login label { margin-bottom: 13px; }
-.kotak-login button { width: 100%; padding: 10px; }
+/* ===== Login (gaya TailAdmin: dua kolom, panel merek IDDS) ===== */
+.login { background: #fff; }
+.login-grid { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+.login-form-side { display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+.login-form-wrap { width: 100%; max-width: 420px; }
+.login-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 42px; }
+.login-form-wrap h1 { margin: 0 0 8px; font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
+.login-form-wrap .sub { color: var(--ta-teks-3); margin: 0 0 24px; font-size: 14.5px; line-height: 1.55; }
+.login-form-wrap label { margin-top: 16px; font-size: 13.5px; color: var(--ta-teks); }
+.login-field { position: relative; margin-top: 6px; }
+.login-field > svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; stroke: var(--ta-teks-3); fill: none; stroke-width: 1.8; pointer-events: none; }
+.login-field input { margin-top: 0; padding: 11px 42px 11px 42px; border-radius: 10px; font-size: 14.5px; }
+.login-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent; border: none; box-shadow: none; padding: 6px; cursor: pointer; border-radius: 8px; }
+.login-eye:hover { background: var(--ina-neutral-50, #f8f8f7); box-shadow: none; transform: translateY(-50%); }
+.login-eye svg { width: 19px; height: 19px; stroke: var(--ta-teks-3); fill: none; stroke-width: 1.8; display: block; }
+.login-eye.aktif svg { stroke: var(--ta-biru); }
+.login-submit { width: 100%; margin-top: 24px; padding: 12px; font-size: 15px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.login-submit svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+.login-foot { margin-top: 34px; text-align: center; font-size: 12.5px; color: var(--ta-teks-3); line-height: 1.6; }
+.login-brand-side { position: relative; overflow: hidden; color: #fff; background: radial-gradient(720px 460px at 88% -8%, rgba(0, 180, 216, .38), transparent 60%), radial-gradient(560px 420px at -10% 108%, rgba(9, 104, 246, .5), transparent 55%), linear-gradient(155deg, #081c3a, #0b2a56 52%, var(--ta-biru)); display: flex; align-items: center; padding: 48px 56px; }
+.login-brand-side::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .055) 1px, transparent 1px); background-size: 44px 44px; mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, #000 30%, transparent 75%); }
+.login-brand-inner { position: relative; max-width: 480px; }
+.login-brand-logo { display: flex; align-items: center; gap: 13px; margin-bottom: 46px; }
+.kotak-logo.besar { width: 46px; height: 46px; border-radius: 12px; font-size: 17px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .25); backdrop-filter: blur(4px); }
+.login-brand-nama { font-size: 19px; font-weight: 700; line-height: 1.2; }
+.login-brand-sub { font-size: 12.5px; color: rgba(255, 255, 255, .72); margin-top: 2px; }
+.login-brand-inner h2 { margin: 0 0 14px; font-size: 33px; line-height: 1.22; font-weight: 700; letter-spacing: -.01em; }
+.login-brand-teks { margin: 0 0 30px; font-size: 14.5px; line-height: 1.65; color: rgba(255, 255, 255, .82); }
+.login-fitur { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+.login-fitur li { display: flex; gap: 13px; align-items: flex-start; }
+.login-fitur-ikon { width: 40px; height: 40px; flex-shrink: 0; border-radius: 11px; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .18); display: flex; align-items: center; justify-content: center; }
+.login-fitur-ikon svg { width: 19px; height: 19px; stroke: #fff; fill: none; stroke-width: 1.8; }
+.login-fitur b { display: block; font-size: 14.5px; font-weight: 600; }
+.login-fitur small { display: block; font-size: 12.5px; color: rgba(255, 255, 255, .7); line-height: 1.5; margin-top: 1px; }
+@media (max-width: 900px) {
+  .login-grid { grid-template-columns: 1fr; }
+  .login-brand-side { order: -1; padding: 30px 24px; }
+  .login-brand-logo { margin-bottom: 18px; }
+  .login-brand-inner h2 { font-size: 24px; }
+  .login-brand-teks { margin-bottom: 18px; }
+  .login-fitur { display: none; }
+  .login-form-side { padding: 30px 20px 40px; }
+  .login-brand { display: none; }
+}
 .kecil-teks { font-size: 12px; color: var(--ta-teks-3); }
 
 /* ===== Paginasi ===== */
