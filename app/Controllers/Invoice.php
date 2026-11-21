@@ -171,6 +171,23 @@ class Invoice extends BaseController
         if ($invoiceId <= 0) {
             return redirect()->to('invoice/jurnal')->with('galat', 'Pilih invoice yang dibayar.');
         }
+        $inv = $this->db()->query(
+            'SELECT i.* FROM invoice i JOIN spk s ON s.id = i.spk_id WHERE i.id = ? AND s.sekolah_id = ?',
+            [$invoiceId, $this->sid()]
+        )->getRowArray();
+        if ($inv === null) {
+            return redirect()->to('invoice/jurnal')->with('galat', 'Invoice tidak ditemukan.');
+        }
+        // Kontrol pagu: total belanja terbayar tidak boleh melewati total anggaran
+        [$boleh, $sisaPagu, $anggaran] = $this->cekPagu((float) $inv['nilai']);
+        if (! $boleh) {
+            return redirect()->to('invoice/jurnal')->with('galat', sprintf(
+                'Pembayaran ditahan: nilai invoice %s melewati sisa pagu anggaran %s dari total anggaran %s.',
+                $this->rp($inv['nilai']),
+                $this->rp(max(0, $sisaPagu)),
+                $this->rp($anggaran)
+            ));
+        }
         $this->db()->transStart();
         $this->db()->table('pembayaran')->insert([
             'invoice_id' => $invoiceId,

@@ -64,3 +64,38 @@ Antarmuka memakai **INA Digital Design System (IDDS)** dikombinasikan dengan **T
 
 Skema: 14 tabel (users, identitas, bahan, penyedia, spk, spk_detail, survei_harga,
 negosiasi, bap, bap_detail, bast, invoice, pembayaran, buku_material).
+
+---
+
+## Modul Analisa Perencana (Dokumen Perencana → Perencanaan → Belanja → LPJ)
+
+Aplikasi ini kini juga membaca **workbook RAB perencana** (BOQ per gedung + analisa AHSP +
+daftar harga bahan & upah) dan menjadikannya dasar seluruh alur:
+
+1. **Impor Dokumen Perencana** (menu tersendiri): unggah workbook .xlsx — aplikasi membaca
+   nilai tersimpan berkas (tanpa mengandalkan hitung ulang rumus) lalu mengimpor daftar harga
+   (bahan tertaut ke master / dibuat baru; upah menjadi Master Tarif), analisa AHSP per kode,
+   BOQ per gedung (setiap sheet gedung menjadi satu menu gedung), dan total anggaran dari
+   lembar rekap. Halaman impor menampilkan verifikasi per gedung: total terhitung aplikasi vs
+   GRAND TOTAL pada sheet.
+2. **Menu Gedung** (sidebar, satu per gedung): tab BOQ (volume dapat diubah — nilai BOQ,
+   kebutuhan, dan rencana belanja ikut berubah), Kebutuhan Bahan (volume BOQ × koefisien AHSP;
+   komponen yang belum tertaut ke master bahan dapat ditautkan dari tab ini), Kebutuhan Upah
+   (orang-hari × tarif), dan Realisasi (catat volume terpasang per pekerjaan → persen fisik).
+3. **Rencana Belanja**: turunan hitungan kebutuhan (bukan daftar bebas) — centang bahan dan
+   atur qty, lalu **Buat SPK dari Pilihan**: SPK terbentuk tertaut ke gedung dengan harga acuan
+   (negosiasi → penawaran → RAB). Upah direncanakan dari kebutuhan OH yang sama.
+4. **Pembayaran Upah**: catat bayar tenaga per gedung/pekerjaan; tarif master dapat diubah.
+5. **Kontrol pagu**: total belanja terbayar (invoice lunas + upah) tidak boleh melewati
+   **Total Anggaran** sekolah — pembayaran yang menembus pagu ditahan aplikasi. Harga satuan
+   belanja boleh melebihi harga dokumen (deviasi tampil sebagai selisih); yang dikunci hanya
+   total keseluruhan. Total anggaran diatur di halaman Sekolah / terisi otomatis saat impor.
+6. **LPJ & Realisasi**: rekap per gedung dan gabungan sekolah (BOQ vs fisik, kebutuhan vs
+   belanja, upah) + cetak LPJ sekolah dan per gedung ber-kop resmi.
+
+Catatan impor: konversi satuan mengikuti praktik AHSP — semen kg→zak (÷50), pasir kg→m³
+(÷1.400), kerikil/batu kg→m³ (÷1.600), keramik bh→ktk (menurut ukuran). Baris yang satuannya
+berbeda tanpa aturan konversi ditandai "satuan beda" agar diperiksa pengguna.
+
+Langkah sesudah `git pull` di PC: jalankan `php spark migrate` (migrasi 000003), lalu buka
+menu **Impor Dokumen Perencana** dan unggah workbook RAB perencana sekolah.

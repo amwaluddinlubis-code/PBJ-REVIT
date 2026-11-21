@@ -91,3 +91,30 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('pengaturan/penyedia-tambah', 'Pengaturan::penyediaTambah');
     $routes->post('pengaturan/penyedia-hapus/(:num)', 'Pengaturan::penyediaHapus/$1');
 });
+
+// Modul Analisa Perencana
+$routes->get('impor', 'Impor::index', ['filter' => 'auth']);
+$routes->post('impor/proses', 'Impor::proses', ['filter' => 'auth']);
+$routes->get('gedung', 'Gedung::index', ['filter' => 'auth']);
+$routes->post('gedung/simpan', 'Gedung::simpan', ['filter' => 'auth']);
+$routes->post('gedung/(:num)/perbarui', 'Gedung::perbarui/$1', ['filter' => 'auth']);
+$routes->post('gedung/(:num)/hapus', 'Gedung::hapus/$1', ['filter' => 'auth']);
+$routes->get('gedung/(:num)', 'Gedung::detail/$1', ['filter' => 'auth']);
+$routes->get('gedung/(:num)/(:segment)', 'Gedung::detail/$1/$2', ['filter' => 'auth']);
+$routes->post('gedung/pekerjaan/simpan', 'Gedung::simpanPekerjaan', ['filter' => 'auth']);
+$routes->post('gedung/pekerjaan/(:num)/volume', 'Gedung::volumePekerjaan/$1', ['filter' => 'auth']);
+$routes->post('gedung/pekerjaan/(:num)/hapus', 'Gedung::hapusPekerjaan/$1', ['filter' => 'auth']);
+$routes->post('gedung/pekerjaan/(:num)/realisasi', 'Gedung::simpanRealisasi/$1', ['filter' => 'auth']);
+$routes->post('gedung/realisasi/(:num)/hapus', 'Gedung::hapusRealisasi/$1', ['filter' => 'auth']);
+$routes->post('gedung/tautkan', 'Gedung::tautkan', ['filter' => 'auth']);
+$routes->get('rencana-belanja', 'Rencana::index', ['filter' => 'auth']);
+$routes->post('rencana-belanja/buat-spk', 'Rencana::buatSpk', ['filter' => 'auth']);
+$routes->get('upah', 'Upah::index', ['filter' => 'auth']);
+$routes->post('upah/simpan', 'Upah::simpan', ['filter' => 'auth']);
+$routes->post('upah/master', 'Upah::masterSimpan', ['filter' => 'auth']);
+$routes->post('upah/tarif/(:num)', 'Upah::tarif/$1', ['filter' => 'auth']);
+$routes->post('upah/(:num)/hapus', 'Upah::hapus/$1', ['filter' => 'auth']);
+$routes->get('lpj', 'Lpj::index', ['filter' => 'auth']);
+$routes->get('lpj/gedung/(:num)', 'Lpj::gedung/$1', ['filter' => 'auth']);
+$routes->get('lpj/cetak', 'Lpj::cetakSekolah', ['filter' => 'auth']);
+$routes->get('lpj/cetak/gedung/(:num)', 'Lpj::cetakGedung/$1', ['filter' => 'auth']);

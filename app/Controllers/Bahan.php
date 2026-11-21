@@ -6,16 +6,21 @@ class Bahan extends BaseController
 {
     public function index()
     {
-        $bahan = $this->db()->query(
-            'SELECT b.*, (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_total,
+        $q = trim((string) ($this->request->getGet('q') ?? ''));
+        $sql = 'SELECT b.*, (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_total,
                     (b.qty_rkb+b.qty_adm+b.qty_toilet)*b.harga_rab AS anggaran,
                     COALESCE(SUM(d.qty),0) AS terpakai
              FROM bahan b LEFT JOIN spk_detail d ON d.bahan_id = b.id
-             WHERE b.sekolah_id = ?
-             GROUP BY b.id ORDER BY b.kode',
-            [$this->sid()]
-        )->getResultArray();
-        return $this->tampil('bahan/index', ['bahan' => $bahan], 'Master Bahan — Aplikasi PBJ Sekolah');
+             WHERE b.sekolah_id = ?';
+        $bind = [$this->sid()];
+        if ($q !== '') {
+            $sql .= ' AND (b.nama LIKE ? OR b.kode LIKE ?)';
+            $bind[] = '%' . $q . '%';
+            $bind[] = '%' . $q . '%';
+        }
+        $sql .= ' GROUP BY b.id ORDER BY b.kode';
+        $bahan = $this->db()->query($sql, $bind)->getResultArray();
+        return $this->tampil('bahan/index', ['bahan' => $bahan, 'q' => $q], 'Master Bahan — Analisa Perencana');
     }
 
     public function baru()

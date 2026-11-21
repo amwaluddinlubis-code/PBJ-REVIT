@@ -28,6 +28,24 @@
 </div>
 <?php endif; ?>
 
+<?php if (! empty($semuaGedung)): ?>
+<div class="panel">
+  <h2>Pembangunan Gedung — Dari Dokumen Perencana</h2>
+  <table>
+    <tr><th>Gedung</th><th class="angka">Nilai BOQ</th><th>Fisik</th><th>Aksi</th></tr>
+    <?php foreach ($semuaGedung as $gd): ?>
+    <tr>
+      <td><b><?= esc($gd['nama']) ?></b></td>
+      <td class="angka"><?= $rp($gd['nilai_boq']) ?></td>
+      <td><div class="bar<?= $gd['persen_fisik'] >= 99.5 ? ' hijau' : '' ?>"><div style="width:<?= min(100, $gd['persen_fisik']) ?>%"></div></div><span class="kecil-teks"><?= number_format($gd['persen_fisik'], 1, ',', '.') ?>%</span></td>
+      <td><a class="tombol kecil" href="<?= base_url('gedung/' . $gd['id']) ?>">Buka</a></td>
+    </tr>
+    <?php endforeach; ?>
+  </table>
+  <p class="kecil-teks" style="margin-bottom:0">Total anggaran (pagu): <b><?= $rp($identitas['total_anggaran'] ?? 0) ?></b> — pantau pemakaiannya di <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a> dan <a href="<?= base_url('lpj') ?>">LPJ &amp; Realisasi</a>.</p>
+</div>
+<?php endif; ?>
+
 <div class="panel">
   <h2>Ringkasan per SPK</h2>
   <table>

@@ -13,6 +13,14 @@
   </label>
   <label>Penyedia Baru (bila belum ada) <input name="penyedia_baru" value=""></label>
   <label>Nama Penandatangan Penyedia <input name="ttd_penyedia" value="<?= esc(old('ttd_penyedia', $s['ttd_penyedia'] ?? '')) ?>"></label>
+  <label>Gedung Tujuan
+    <select name="gedung_id">
+      <option value="">— umum / belum ditentukan —</option>
+      <?php foreach ($semuaGedung ?? [] as $gd): ?>
+        <option value="<?= (int) $gd['id'] ?>"<?= (old('gedung_id', $s['gedung_id'] ?? '') == $gd['id']) ? ' selected' : '' ?>><?= esc($gd['nama']) ?></option>
+      <?php endforeach; ?>
+    </select>
+  </label>
   <label>Paket Pekerjaan <input name="paket" value="<?= esc(old('paket', $s['paket'] ?? '')) ?>"></label>
   <label>Tanggal Mulai <input type="date" name="tgl_mulai" value="<?= esc(old('tgl_mulai', $s['tgl_mulai'] ?? '')) ?>"></label>
   <label>Tanggal Selesai <input type="date" name="tgl_selesai" value="<?= esc(old('tgl_selesai', $s['tgl_selesai'] ?? '')) ?>"></label>

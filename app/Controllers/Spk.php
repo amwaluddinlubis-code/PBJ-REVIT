@@ -170,6 +170,7 @@ class Spk extends BaseController
             'tgl_mulai' => $tgl($r->getPost('tgl_mulai')),
             'tgl_selesai' => $tgl($r->getPost('tgl_selesai')),
             'penyedia_id' => $penyediaId,
+            'gedung_id' => (int) $r->getPost('gedung_id') ?: null,
             'ttd_penyedia' => trim((string) $r->getPost('ttd_penyedia')) ?: null,
             'paket' => trim((string) $r->getPost('paket')) ?: null,
             'status' => (string) $r->getPost('status') ?: 'Aktif',

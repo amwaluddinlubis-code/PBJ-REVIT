@@ -58,6 +58,6 @@ class Dashboard extends BaseController
             'invoiceCek'  => $invoiceCek,
             'sisaNegatif' => $sisaNegatif,
             'perSpk'      => $perSpk,
-        ], 'Dashboard — Aplikasi PBJ Sekolah');
+        ], 'Dashboard — Analisa Perencana');
     }
 }
