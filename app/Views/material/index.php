@@ -26,7 +26,7 @@
       <td><?= esc($r['kode']) ?> — <?= esc($r['nama']) ?> (<?= esc($r['satuan'] ?? '') ?>)</td>
       <td class="angka"><?= $fmt($r['masuk']) ?></td><td class="angka"><?= $fmt($r['keluar']) ?></td>
       <td class="angka"><?= $fmt($r['sisa']) ?></td><td><?= esc($r['keterangan'] ?? '') ?></td>
-      <td><form class="inline" method="post" action="<?= base_url('material/hapus/' . $r['id']) ?>" onsubmit="return confirm('Hapus baris ini?')"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
+      <td><form class="inline" method="post" action="<?= base_url('material/hapus/' . $r['id']) ?>" data-konfirmasi="Hapus baris ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
     </tr>
     <?php endforeach; ?>
     <?php if (! $baris): ?><tr><td colspan="8">Belum ada catatan — sama seperti di workbook, buku material baru berjalan bila mulai dicatat dari sini.</td></tr><?php endif; ?>

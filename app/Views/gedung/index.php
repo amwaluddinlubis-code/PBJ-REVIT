@@ -12,7 +12,7 @@
       <td><?= esc($g['sumber_sheet'] ?? '—') ?></td>
       <td>
         <a class="tombol kecil" href="<?= base_url('gedung/' . $g['id']) ?>">Buka</a>
-        <form class="inline" method="post" action="<?= base_url('gedung/' . $g['id'] . '/hapus') ?>" onsubmit="return confirm('Hapus gedung beserta seluruh BOQ dan realisasinya?')">
+        <form class="inline" method="post" action="<?= base_url('gedung/' . $g['id'] . '/hapus') ?>" data-konfirmasi="Hapus gedung beserta seluruh BOQ dan realisasinya?">
           <?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button>
         </form>
       </td>

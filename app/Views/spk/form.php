@@ -37,7 +37,7 @@
   </div>
 </form>
 <?php if (! empty($s['id'])): ?>
-<form method="post" action="<?= base_url('spk/hapus/' . $s['id']) ?>" onsubmit="return confirm('Hapus SPK ini? Rincian barangnya menjadi belum bernomor.')" style="margin-top:14px">
+<form method="post" action="<?= base_url('spk/hapus/' . $s['id']) ?>" data-konfirmasi="Hapus SPK ini? Rincian barangnya menjadi belum bernomor." style="margin-top:14px">
   <?= csrf_field() ?>
   <button type="submit" class="bahaya kecil">Hapus SPK</button>
 </form>

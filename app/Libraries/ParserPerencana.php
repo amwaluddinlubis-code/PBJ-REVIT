@@ -162,6 +162,17 @@ class ParserPerencana
             $sudahKode = $hasil['kode'];
         }
 
+        // 3b) Referensi bahan & upah DARI ANALISA: sheet Analisa memuat satuan
+        // dan harga setiap komponen — jadikan itu acuan master (daftar harga
+        // dokumen tidak punya kolom satuan). Lalu validasi ke Harsat Pekerjaan.
+        $ringkas['referensi'] = $this->referensiDariAnalisa();
+        $petaHarsat = $this->bacaHarsat($p);
+        foreach ($petaHarsat as $kode => $harga) {
+            $this->db->table('analisa')->where(['sekolah_id' => $this->sid, 'kode' => $kode])
+                ->update(['harga_satuan' => $harga]);
+        }
+        $ringkas['harsat'] = $this->validasiHarsat($petaHarsat);
+
         // 4) Sheet BOQ per gedung
         $bukanBoq = ['harga bahan upah', 'harga bahan upah 2', 'analisa', 'analisa 2',
                      'rekap rab per ruang', 'input data', 'harsat pekerjaan'];
@@ -183,6 +194,237 @@ class ParserPerencana
         }
 
         return $ringkas;
+    }
+
+    /**
+     * Turunkan satuan & harga BELI dari satuan & harga KOMPONEN analisa:
+     * semen kg -> zak (x50), pasir kg -> m3 (x1400), kerikil/batu kg -> m3
+     * (x1600), keramik bh -> ktk (x isi per ukuran). Lainnya apa adanya.
+     * Mengembalikan [satuanBeli, hargaBeli, langsung(bool: satuan komponen
+     * memang sudah satuan beli)].
+     */
+    private static function turunkanBeli(string $nama, ?string $satuanKomp, float $hargaKomp): array
+    {
+        $sk = mb_strtolower(trim((string) $satuanKomp));
+        $n  = mb_strtolower($nama);
+        if ($sk === 'kg') {
+            if (str_contains($n, 'semen')) {
+                return ['zak', $hargaKomp * 50, false];
+            }
+            if (str_contains($n, 'pasir')) {
+                return ['m3', $hargaKomp * 1400, false];
+            }
+            if (str_contains($n, 'kerikil') || str_contains($n, 'batu')) {
+                return ['m3', $hargaKomp * 1600, false];
+            }
+            return ['kg', $hargaKomp, true];
+        }
+        if (in_array($sk, ['bh', 'pcs', 'buah'], true) && str_contains($n, 'keramik')) {
+            $isi = 1;
+            foreach (['40' => 6, '30' => 11, '25' => 16, '20' => 25] as $uk => $per) {
+                if (str_contains($nama, $uk)) {
+                    $isi = $per;
+                    break;
+                }
+            }
+            return $isi > 1 ? ['ktk', $hargaKomp * $isi, false] : ['bh', $hargaKomp, true];
+        }
+        return [trim((string) $satuanKomp) ?: '-', $hargaKomp, true];
+    }
+
+    /** Nilai yang paling sering muncul (dibulatkan ke rupiah). */
+    private static function modusHarga(array $nilai): float
+    {
+        $hitung = [];
+        foreach ($nilai as $v) {
+            $k = (string) (int) round($v);
+            $hitung[$k] = ($hitung[$k] ?? 0) + 1;
+        }
+        arsort($hitung);
+        return (float) array_key_first($hitung);
+    }
+
+    /**
+     * Bangun/perbaiki referensi bahan & upah dari komponen Analisa sekolah ini:
+     * - bahan master bersatuan '-' (hasil daftar harga) diisi satuan+harga beli
+     *   turunan analisa;
+     * - komponen bahan yang belum tertaut dibuatkan master dari analisa lalu
+     *   ditautkan;
+     * - tarif upah_master diisi dari tarif komponen analisa yang terbanyak.
+     */
+    private function referensiDariAnalisa(): array
+    {
+        $db = $this->db;
+        $stat = ['bahan_diperbaiki' => 0, 'bahan_baru' => 0, 'upah_diperbarui' => 0];
+        $komp = $db->query(
+            "SELECT ak.id, ak.jenis, ak.nama, ak.satuan, ak.tarif, ak.bahan_id
+             FROM analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             WHERE a.sekolah_id = ? AND ak.is_deleted = 0",
+            [$this->sid]
+        )->getResultArray();
+
+        // --- Bahan ---
+        $grup = [];
+        foreach ($komp as $k) {
+            if ($k['jenis'] === 'bahan') {
+                $grup[self::normal($k['nama'])][] = $k;
+            }
+        }
+        $maksKode = (int) ($db->query('SELECT COALESCE(MAX(CAST(SUBSTRING(kode,2) AS UNSIGNED)),0) m FROM bahan WHERE sekolah_id = ?', [$this->sid])->getRow()->m ?? 0);
+        foreach ($grup as $rows) {
+            $langsung = []; $konversi = [];
+            foreach ($rows as $k) {
+                if ((float) ($k['tarif'] ?? 0) > 0) {
+                    [$sat, $hrg, $lgs] = self::turunkanBeli($k['nama'], $k['satuan'], (float) $k['tarif']);
+                    $lgs ? $langsung[] = [$sat, $hrg] : $konversi[] = [$sat, $hrg];
+                }
+            }
+            $sumber = $langsung !== [] ? $langsung : $konversi;
+            $satuanBeli = $sumber[0][0] ?? '-';
+            $hargaBeli  = $sumber !== [] ? self::modusHarga(array_column($sumber, 1)) : 0.0;
+            if ($sumber !== []) {
+                // satuan mengikuti kelompok harga modus
+                foreach ($sumber as [$sat, $hrg]) {
+                    if ((int) round($hrg) === (int) $hargaBeli) {
+                        $satuanBeli = $sat;
+                        break;
+                    }
+                }
+            }
+            $bahanId = null;
+            foreach ($rows as $k) {
+                if (! empty($k['bahan_id'])) {
+                    $bahanId = (int) $k['bahan_id'];
+                    break;
+                }
+            }
+            if ($bahanId !== null) {
+                $b = $db->table('bahan')->where('id', $bahanId)->get()->getRowArray();
+                if ($b && (trim((string) $b['satuan']) === '-' || trim((string) $b['satuan']) === '')) {
+                    $db->table('bahan')->where('id', $bahanId)->update([
+                        'satuan' => $satuanBeli, 'harga_rab' => (int) round($hargaBeli),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+                    $stat['bahan_diperbaiki']++;
+                }
+            } else {
+                $maksKode++;
+                $db->table('bahan')->insert([
+                    'sekolah_id' => $this->sid, 'kode' => 'B' . str_pad((string) $maksKode, 3, '0', STR_PAD_LEFT),
+                    'nama' => $rows[0]['nama'], 'satuan' => $satuanBeli, 'harga_rab' => (int) round($hargaBeli),
+                    'qty_rkb' => 0, 'qty_adm' => 0, 'qty_toilet' => 0,
+                    'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+                $bahanId = (int) $db->insertID();
+                $stat['bahan_baru']++;
+            }
+            if ($bahanId !== null) {
+                $ids = array_column($rows, 'id');
+                $db->table('analisa_komponen')->whereIn('id', $ids)->where('bahan_id', null)
+                    ->update(['bahan_id' => $bahanId]);
+            }
+        }
+
+        // --- Upah ---
+        $grupUpah = [];
+        foreach ($komp as $k) {
+            if ($k['jenis'] === 'upah') {
+                $grupUpah[self::normal($k['nama'])][] = $k;
+            }
+        }
+        foreach ($grupUpah as $kunci => $rows) {
+            if (str_contains($kunci, 'peralatan')) {
+                continue; // baris alat yang tercantum di seksi upah dokumen
+            }
+            $tarifRef = 0.0;
+            $positif = array_filter(array_map(static fn ($k) => (float) ($k['tarif'] ?? 0), $rows), static fn ($v) => $v > 0);
+            if ($positif !== []) {
+                $tarifRef = self::modusHarga(array_values($positif));
+            }
+            $ada = $db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $rows[0]['nama'], 'is_deleted' => 0])->get()->getRowArray();
+            if ($ada) {
+                if ((float) $ada['tarif'] <= 0 && $tarifRef > 0) {
+                    $db->table('upah_master')->where('id', $ada['id'])->update(['tarif' => (int) round($tarifRef)]);
+                    $stat['upah_diperbarui']++;
+                }
+            } else {
+                $db->table('upah_master')->insert([
+                    'sekolah_id' => $this->sid, 'jenis' => $rows[0]['nama'], 'satuan' => 'OH',
+                    'tarif' => (int) round($tarifRef),
+                ]);
+                $stat['upah_diperbarui']++;
+            }
+        }
+
+        // Master bahan dari daftar harga yang TIDAK dipakai satu pun komponen
+        // analisa (satuan '-' tanpa referensi) disembunyikan secara lunak —
+        // referensi resmi sekolah ini adalah yang dipakai Analisa.
+        $db->query(
+            "UPDATE bahan b SET b.is_deleted = 1, b.deleted_at = NOW()
+             WHERE b.sekolah_id = ? AND b.is_deleted = 0 AND (b.satuan = '-' OR b.satuan = '')
+               AND NOT EXISTS (SELECT 1 FROM analisa_komponen ak WHERE ak.bahan_id = b.id)
+               AND NOT EXISTS (SELECT 1 FROM spk_detail sd WHERE sd.bahan_id = b.id)",
+            [$this->sid]
+        );
+        $stat['bahan_dibersihkan'] = $db->affectedRows();
+        return $stat;
+    }
+
+    /**
+     * Validasi harga analisa terhadap sheet Harsat Pekerjaan (harga satuan
+     * resmi per kode). Baris #REF!/kosong di dokumen dilewati. Mengembalikan
+     * ringkasan jumlah kode yang cocok (selisih <= 1%) dan yang menyimpang.
+     */
+    /** Peta kode analisa -> harga satuan resmi dari sheet Harsat Pekerjaan. */
+    private function bacaHarsat(PembacaXlsxMentah $p): array
+    {
+        $harsat = [];
+        if (! $p->adaSheet('Harsat Pekerjaan')) {
+            return $harsat;
+        }
+        foreach ($this->baris($p, 'Harsat Pekerjaan', 9) as $sel) {
+            foreach ($sel as $j => $v) {
+                if (self::polaKode(self::teks($v))) {
+                    $harga = self::num($sel[$j + 3] ?? null);
+                    if ($harga > 0) {
+                        $harsat[self::kanonKode(self::teks($v))] = $harga;
+                    }
+                    break;
+                }
+            }
+        }
+        return $harsat;
+    }
+
+    private function validasiHarsat(array $harsat): array
+    {
+        $hasil = ['kode' => 0, 'cocok' => 0, 'selisih' => 0];
+        if ($harsat === []) {
+            return $hasil;
+        }
+        $hitung = [];
+        $rows = $this->db->query(
+            "SELECT a.kode, SUM(ak.koefisien * COALESCE(ak.tarif, 0)) AS total
+             FROM analisa a JOIN analisa_komponen ak ON ak.analisa_id = a.id
+             WHERE a.sekolah_id = ? AND ak.is_deleted = 0 GROUP BY a.kode",
+            [$this->sid]
+        )->getResultArray();
+        foreach ($rows as $r) {
+            $hitung[$r['kode']] = (float) $r['total'];
+        }
+        foreach ($harsat as $kode => $harga) {
+            if (! isset($hitung[$kode])) {
+                continue;
+            }
+            $hasil['kode']++;
+            $selisih = abs($hitung[$kode] - $harga);
+            if ($selisih <= max(150, $harga * 0.01)) {
+                $hasil['cocok']++;
+            } else {
+                $hasil['selisih']++;
+            }
+        }
+        return $hasil;
     }
 
     private function sheetDilewati(string $nama): bool
@@ -327,13 +569,17 @@ class ParserPerencana
                 $this->db->table('analisa')->where('id', $aid)->update(['nama' => $blok['nama'], 'satuan' => $blok['satuan']]);
                 $this->db->table('analisa_komponen')->where('analisa_id', $aid)->delete();
                 foreach ($blok['komponen'] as $k) {
-                    $bahanId = null; $tarif = null;
+                    $bahanId = null;
+                    // Harga satuan komponen dari sheet Analisa adalah acuan utama
+                    // (per satuan komponen); untuk upah, master menjadi cadangan
+                    // bila harga di sheet kosong/0 (mis. Mandor).
+                    $tarif = ($k['harga'] ?? 0) > 0 ? (float) $k['harga'] : null;
                     if ($k['jenis'] === 'bahan') {
                         $bahanId = $petaBahan[self::normal($k['nama'])] ?? $petaBahan[self::normalDasar($k['nama'])] ?? null;
                         if ($bahanId === null) {
                             $nTak++;
                         }
-                    } elseif ($k['jenis'] === 'upah') {
+                    } elseif ($k['jenis'] === 'upah' && $tarif === null) {
                         $tarif = $cariTarif($k['nama']);
                     }
                     $this->db->table('analisa_komponen')->insert([
@@ -393,6 +639,7 @@ class ParserPerencana
                 $blok['komponen'][] = [
                     'jenis' => $mode, 'nama' => $nama, 'koefisien' => self::num($sel[$kolKoef] ?? null),
                     'satuan' => self::teks($sel[$kolKoef + 1] ?? '') ?: null,
+                    'harga' => self::num($sel[$kolKoef + 2] ?? null),
                 ];
             }
         }

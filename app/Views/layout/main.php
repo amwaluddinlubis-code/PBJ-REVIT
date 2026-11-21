@@ -160,12 +160,14 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
     </div>
     <main class="isi">
       <div class="atas"><?= esc($judul ?? '') ?></div>
-      <?php if (session()->getFlashdata('sukses')): ?>
-        <div class="pesan sukses"><?= esc(session()->getFlashdata('sukses')) ?></div>
-      <?php endif; ?>
-      <?php if (session()->getFlashdata('galat')): ?>
-        <div class="pesan galat"><?= esc(session()->getFlashdata('galat')) ?></div>
-      <?php endif; ?>
+      <div id="wadah-toast" aria-live="polite">
+        <?php if (session()->getFlashdata('sukses')): ?>
+          <div class="toast sukses" role="status"><span class="toast-ikon">✓</span><div class="toast-isi"><strong>Berhasil</strong><p><?= esc(session()->getFlashdata('sukses')) ?></p></div><button type="button" class="toast-tutup" aria-label="Tutup notifikasi">×</button></div>
+        <?php endif; ?>
+        <?php if (session()->getFlashdata('galat')): ?>
+          <div class="toast galat" role="alert"><span class="toast-ikon">!</span><div class="toast-isi"><strong>Gagal</strong><p><?= esc(session()->getFlashdata('galat')) ?></p></div><button type="button" class="toast-tutup" aria-label="Tutup notifikasi">×</button></div>
+        <?php endif; ?>
+      </div>
       <?= $konten ?? '' ?>
     </main>
   </div>
@@ -267,6 +269,98 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
     if (i > 0) { zoom = langkah[i - 1]; terapkan(); }
   });
   terapkan();
+})();
+</script>
+<div id="modal-konfirmasi" class="mk-lapik" hidden>
+  <div class="mk-kartu" role="alertdialog" aria-modal="true" aria-labelledby="mk-judul" aria-describedby="mk-pesan">
+    <div class="mk-ikon" id="mk-ikon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+    </div>
+    <h3 id="mk-judul">Konfirmasi Hapus</h3>
+    <p id="mk-pesan"></p>
+    <div class="mk-aksi">
+      <button type="button" id="mk-batal" class="mk-tombol batal">Batal</button>
+      <button type="button" id="mk-ya" class="mk-tombol bahaya">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+<script>
+// Notifikasi toast + modal konfirmasi gaya TailAdmin.
+// Semua form ber-atribut data-konfirmasi dicegat: tampilkan modal dulu,
+// form hanya terkirim setelah pengguna menekan tombol setuju.
+(function () {
+  // ---------- Toast ----------
+  const wadah = document.getElementById('wadah-toast');
+  function pasangToast(el) {
+    const tutup = function () {
+      el.classList.add('toast-keluar');
+      setTimeout(() => el.remove(), 260);
+    };
+    const btn = el.querySelector('.toast-tutup');
+    if (btn) btn.addEventListener('click', tutup);
+    setTimeout(tutup, 5200);
+    requestAnimationFrame(() => el.classList.add('toast-masuk'));
+  }
+  if (wadah) wadah.querySelectorAll('.toast').forEach(pasangToast);
+  window.tampilToast = function (pesan, jenis) {
+    if (!wadah) return;
+    const el = document.createElement('div');
+    el.className = 'toast ' + (jenis === 'galat' ? 'galat' : 'sukses');
+    el.setAttribute('role', 'status');
+    el.innerHTML = '<span class="toast-ikon">' + (jenis === 'galat' ? '!' : '✓') + '</span>' +
+      '<div class="toast-isi"><strong>' + (jenis === 'galat' ? 'Gagal' : 'Berhasil') + '</strong><p></p></div>' +
+      '<button type="button" class="toast-tutup" aria-label="Tutup notifikasi">×</button>';
+    el.querySelector('p').textContent = pesan;
+    wadah.appendChild(el);
+    pasangToast(el);
+  };
+
+  // ---------- Modal konfirmasi ----------
+  const lapik = document.getElementById('modal-konfirmasi');
+  if (!lapik) return;
+  const judulEl = document.getElementById('mk-judul');
+  const pesanEl = document.getElementById('mk-pesan');
+  const ikonEl = document.getElementById('mk-ikon');
+  const btnYa = document.getElementById('mk-ya');
+  const btnBatal = document.getElementById('mk-batal');
+  let formAntrian = null;
+
+  function tutupModal() {
+    lapik.hidden = true;
+    formAntrian = null;
+  }
+  function bukaModal(form) {
+    formAntrian = form;
+    const aksi = form.getAttribute('action') || '';
+    const bahaya = aksi.includes('hapus');
+    judulEl.textContent = form.dataset.konfirmasiJudul || (bahaya ? 'Konfirmasi Hapus' : 'Konfirmasi');
+    pesanEl.textContent = form.dataset.konfirmasi || 'Lanjutkan operasi ini?';
+    btnYa.textContent = form.dataset.konfirmasiTombol || (bahaya ? 'Ya, Hapus' : 'Ya, Lanjutkan');
+    btnYa.className = 'mk-tombol ' + (bahaya ? 'bahaya' : 'utama');
+    ikonEl.className = 'mk-ikon ' + (bahaya ? 'bahaya' : 'utama');
+    lapik.hidden = false;
+    btnBatal.focus();
+  }
+  btnBatal.addEventListener('click', tutupModal);
+  lapik.addEventListener('click', function (e) { if (e.target === lapik) tutupModal(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !lapik.hidden) tutupModal();
+  });
+  btnYa.addEventListener('click', function () {
+    const form = formAntrian;
+    tutupModal();
+    if (form) {
+      form.dataset.terkonfirmasi = '1';
+      form.submit();
+    }
+  });
+  document.addEventListener('submit', function (e) {
+    const form = e.target;
+    if (form.dataset && form.dataset.konfirmasi && !form.dataset.terkonfirmasi) {
+      e.preventDefault();
+      bukaModal(form);
+    }
+  });
 })();
 </script>
 </body>

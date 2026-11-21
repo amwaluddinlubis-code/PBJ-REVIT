@@ -44,8 +44,9 @@ class ParserTemplate
         $this->imporHarga($p, $stat);
         $petaBahan = $this->petaBahan();
         $petaUpah = $this->petaUpah();
-        $this->imporAnalisa($p, $stat, $petaBahan, $petaUpah);
-        $this->imporBoq($p, $stat);
+        $petaHarsat = $this->bacaHarsat($p);
+        $this->imporAnalisa($p, $stat, $petaBahan, $petaUpah, $petaHarsat);
+        $this->imporBoq($p, $stat, $petaHarsat);
         return $stat;
     }
 
@@ -138,7 +139,24 @@ class ParserTemplate
     }
 
     // ---------- Analisa ----------
-    private function imporAnalisa(PembacaXlsxMentah $p, array &$stat, array $petaBahan, array $petaUpah): void
+    /** Peta kode analisa -> harga satuan resmi dari sheet Harsat template. */
+    private function bacaHarsat(PembacaXlsxMentah $p): array
+    {
+        $peta = [];
+        if (! $p->adaSheet('Harsat')) {
+            return $peta;
+        }
+        foreach ($this->barisData($p, 'Harsat', 3, 'kode analisa') as $sel) {
+            $kode = ParserPerencana::kanonKode(trim((string) ($sel[0] ?? '')));
+            $harga = (float) ($sel[2] ?? 0);
+            if ($kode !== '' && $harga > 0) {
+                $peta[$kode] = $harga;
+            }
+        }
+        return $peta;
+    }
+
+    private function imporAnalisa(PembacaXlsxMentah $p, array &$stat, array $petaBahan, array $petaUpah, array $petaHarsat = []): void
     {
         if (!$p->adaSheet('Analisa')) {
             return;
@@ -148,7 +166,7 @@ class ParserTemplate
             $hargaBahan[(int) $b['id']] = (float) $b['harga_rab'];
         }
         $grup = [];
-        foreach ($this->barisData($p, 'Analisa', 7, 'kode analisa') as $sel) {
+        foreach ($this->barisData($p, 'Analisa', 8, 'kode analisa') as $sel) {
             $kode = ParserPerencana::kanonKode(trim((string) ($sel[0] ?? '')));
             if ($kode === '' || str_starts_with(strtoupper((string) ($sel[0] ?? '')), 'CONTOH')) {
                 continue;
@@ -166,27 +184,40 @@ class ParserTemplate
                 'jenis' => $jenis, 'nama' => $namaKomp,
                 'koefisien' => (float) ($sel[5] ?? 0),
                 'satuan' => trim((string) ($sel[6] ?? '')) ?: null,
+                // Harga per satuan komponen dari dokumen analisa (opsional):
+                // acuan harga komponen yang sebenarnya, per satuan komponen.
+                'harga' => (float) ($sel[7] ?? 0),
             ];
         }
         foreach ($grup as $kode => $g) {
             $ada = $this->db->table('analisa')->where(['sekolah_id' => $this->sid, 'kode' => $kode, 'is_deleted' => 0])->get()->getRowArray();
+            $hargaResmi = $petaHarsat[$kode] ?? null;
             if ($ada) {
                 $aid = (int) $ada['id'];
-                $this->db->table('analisa')->where('id', $aid)->update(['nama' => $g['nama'], 'satuan' => $g['satuan']]);
+                $ubah = ['nama' => $g['nama'], 'satuan' => $g['satuan']];
+                if ($hargaResmi !== null) {
+                    $ubah['harga_satuan'] = $hargaResmi;
+                }
+                $this->db->table('analisa')->where('id', $aid)->update($ubah);
                 $this->db->table('analisa_komponen')->where('analisa_id', $aid)->delete();
             } else {
-                $this->db->table('analisa')->insert(['sekolah_id' => $this->sid, 'kode' => $kode, 'nama' => $g['nama'], 'satuan' => $g['satuan']]);
+                $this->db->table('analisa')->insert(['sekolah_id' => $this->sid, 'kode' => $kode, 'nama' => $g['nama'], 'satuan' => $g['satuan'], 'harga_satuan' => $hargaResmi]);
                 $aid = (int) $this->db->insertID();
             }
             foreach ($g['komponen'] as $k) {
                 $bahanId = null;
-                $tarif = 0.0;
+                // Harga Komponen dari template menang; cadangan: tarif master.
+                $tarif = ($k['harga'] ?? 0) > 0 ? (float) $k['harga'] : 0.0;
                 if ($k['jenis'] === 'upah') {
-                    $tarif = $petaUpah[ParserPerencana::normal($k['nama'])] ?? 0.0;
+                    if ($tarif <= 0) {
+                        $tarif = $petaUpah[ParserPerencana::normal($k['nama'])] ?? 0.0;
+                    }
                 } else {
                     $bahanId = $petaBahan[ParserPerencana::normal($k['nama'])] ?? $petaBahan[ParserPerencana::normalDasar($k['nama'])] ?? null;
                     if ($bahanId) {
-                        $tarif = $hargaBahan[$bahanId] ?? 0.0;
+                        if ($tarif <= 0) {
+                            $tarif = $hargaBahan[$bahanId] ?? 0.0;
+                        }
                     } elseif ($k['jenis'] === 'bahan') {
                         $stat['tak_tertaut']++;
                     }
@@ -203,7 +234,7 @@ class ParserTemplate
     }
 
     // ---------- BOQ ----------
-    private function imporBoq(PembacaXlsxMentah $p, array &$stat): void
+    private function imporBoq(PembacaXlsxMentah $p, array &$stat, array $petaHarsat = []): void
     {
         if (!$p->adaSheet('BOQ')) {
             return;
@@ -221,7 +252,9 @@ class ParserTemplate
             // Kolom Harga Satuan (opsional): bila diisi, dipakai apa adanya
             // (mis. ekspor dari dokumen resmi) — mengalahkan hitungan analisa.
             $hargaIsi = (float) ($sel[6] ?? 0);
-            $harga = $hargaIsi > 0 ? $hargaIsi : ($kode !== '' ? ($hargaAnalisa[$kode] ?? 0.0) : 0.0);
+            // Urutan acuan harga: kolom BOQ terisi -> Harsat resmi -> hitungan komponen.
+            $harga = $hargaIsi > 0 ? $hargaIsi
+                : ($kode !== '' ? ($petaHarsat[$kode] ?? $hargaAnalisa[$kode] ?? 0.0) : 0.0);
             $perGedung[$gedung][] = [
                 'bab' => trim((string) ($sel[1] ?? '')) ?: null,
                 'nama' => $nama, 'kode_analisa' => $kode !== '' ? $kode : null,

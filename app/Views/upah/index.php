@@ -43,7 +43,7 @@
       <td class="angka"><?= number_format((float) $u['orang_hari'], 2, ',', '.') ?></td>
       <td class="angka"><?= number_format((float) $u['tarif'], 0, ',', '.') ?></td>
       <td class="angka"><?= number_format((float) $u['jumlah'], 0, ',', '.') ?></td>
-      <td><form class="inline" method="post" action="<?= base_url('upah/' . $u['id'] . '/hapus') ?>" onsubmit="return confirm('Hapus catatan ini?')"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
+      <td><form class="inline" method="post" action="<?= base_url('upah/' . $u['id'] . '/hapus') ?>" data-konfirmasi="Hapus catatan ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
     </tr>
     <?php endforeach; ?>
     <?php if ($daftar === []): ?><tr><td colspan="8">Belum ada pembayaran upah tercatat.</td></tr><?php endif; ?>

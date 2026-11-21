@@ -14,7 +14,7 @@
   </div>
 </form>
 <?php if (! empty($b['id'])): ?>
-<form method="post" action="<?= base_url('bahan/hapus/' . $b['id']) ?>" onsubmit="return confirm('Hapus bahan ini?')" style="margin-top:14px">
+<form method="post" action="<?= base_url('bahan/hapus/' . $b['id']) ?>" data-konfirmasi="Hapus bahan ini?" style="margin-top:14px">
   <?= csrf_field() ?>
   <button type="submit" class="bahaya kecil">Hapus Bahan</button>
 </form>

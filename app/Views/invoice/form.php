@@ -38,7 +38,7 @@
   <div class="aksi md:col-span-2"><button type="submit">Simpan</button><a class="tombol abu" href="<?= base_url('invoice') ?>">Batal</a></div>
 </form>
 <?php if (! empty($i['id'])): ?>
-<form method="post" action="<?= base_url('invoice/hapus/' . $i['id']) ?>" onsubmit="return confirm('Hapus invoice ini?')" style="margin-top:14px">
+<form method="post" action="<?= base_url('invoice/hapus/' . $i['id']) ?>" data-konfirmasi="Hapus invoice ini?" style="margin-top:14px">
   <?= csrf_field() ?><button type="submit" class="bahaya kecil">Hapus Invoice</button>
 </form>
 <?php endif; ?>

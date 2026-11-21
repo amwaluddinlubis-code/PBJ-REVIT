@@ -88,7 +88,7 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
     <tr><td><?= esc($p['nama']) ?></td><td><?= esc($p['alamat'] ?? '') ?></td><td><?= esc($p['ttd_nama'] ?? '') ?></td>
       <td style="white-space:nowrap">
         <button class="kecil" type="button" data-ubah-penyedia data-id="<?= (int) $p['id'] ?>" data-nama="<?= esc($p['nama'], 'attr') ?>" data-alamat="<?= esc($p['alamat'] ?? '', 'attr') ?>" data-ttd="<?= esc($p['ttd_nama'] ?? '', 'attr') ?>">Ubah</button>
-        <form class="inline" method="post" action="<?= base_url('pengaturan/penyedia-hapus/' . $p['id']) ?>" onsubmit="return confirm('Hapus penyedia ini?')"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>
+        <form class="inline" method="post" action="<?= base_url('pengaturan/penyedia-hapus/' . $p['id']) ?>" data-konfirmasi="Hapus penyedia ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>
       </td></tr>
     <?php endforeach; ?>
   </table>

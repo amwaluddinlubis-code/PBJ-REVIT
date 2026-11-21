@@ -29,7 +29,7 @@
       </form>
     </td>
     <td>
-      <form class="inline" method="post" action="<?= base_url('spk/detail-hapus/' . $d['id']) ?>" onsubmit="return confirm('Hapus baris ini?')">
+      <form class="inline" method="post" action="<?= base_url('spk/detail-hapus/' . $d['id']) ?>" data-konfirmasi="Hapus baris ini?">
         <?= csrf_field() ?>
         <button type="submit" class="kecil bahaya">Hapus</button>
       </form>

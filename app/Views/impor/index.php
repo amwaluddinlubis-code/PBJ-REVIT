@@ -98,7 +98,7 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
   <h2>Komponen Belum Tertaut ke Master Bahan — <?= count($tak_tertaut) ?> nama</h2>
   <p style="margin-top:0;color:var(--ta-teks-2)">Komponen ini belum punya padanan di master bahan sehingga belum terhitung di kebutuhan. Aplikasi menyarankan padanan terdekat — periksa, lalu tautkan satu-satu atau massal untuk saran yang meyakinkan (skor ≥ 80).</p>
   <?php if ($jumlah_massal > 0): ?>
-  <form method="post" action="<?= base_url('impor/tautkan-massal') ?>" onsubmit="return confirm('Tautkan <?= (int) $jumlah_massal ?> nama komponen sesuai saran skor ≥ 80?')">
+  <form method="post" action="<?= base_url('impor/tautkan-massal') ?>" data-konfirmasi="Tautkan <?= (int) $jumlah_massal ?> nama komponen sesuai saran skor ≥ 80?">
     <?= csrf_field() ?>
     <div class="aksi" style="margin:0 0 12px"><button type="submit">Tautkan Massal Saran ≥ 80 (<?= (int) $jumlah_massal ?> nama)</button></div>
   </form>

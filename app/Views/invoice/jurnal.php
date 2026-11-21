@@ -29,7 +29,7 @@
       <td class="angka"><?= $rp($r['pph22']) ?></td>
       <td class="angka"><?= $rp($r['dibayar']) ?></td>
       <td><?= esc($r['keterangan'] ?? '') ?></td>
-      <td><form class="inline" method="post" action="<?= base_url('invoice/jurnal-hapus/' . $r['id']) ?>" onsubmit="return confirm('Hapus baris jurnal ini?')"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
+      <td><form class="inline" method="post" action="<?= base_url('invoice/jurnal-hapus/' . $r['id']) ?>" data-konfirmasi="Hapus baris jurnal ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
     </tr>
     <?php endforeach; ?>
     <tr><th colspan="5" style="text-align:right">TOTAL DIBAYAR</th><th class="angka"><?= $rp($tot) ?></th><th colspan="2"></th></tr>

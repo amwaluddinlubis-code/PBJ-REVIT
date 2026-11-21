@@ -38,7 +38,7 @@ $tabAktif = $tab ?? 'boq';
             <input type="text" name="volume" value="<?= esc((string) $p['volume']) ?>" style="width:76px;display:inline-block;margin:0;padding:4px 7px">
             <button class="kecil" type="submit">Simpan</button>
           </form>
-          <form class="inline" method="post" action="<?= base_url('gedung/pekerjaan/' . $p['id'] . '/hapus') ?>" onsubmit="return confirm('Hapus pekerjaan ini?')">
+          <form class="inline" method="post" action="<?= base_url('gedung/pekerjaan/' . $p['id'] . '/hapus') ?>" data-konfirmasi="Hapus pekerjaan ini?">
             <?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button>
           </form>
         </td>
@@ -178,7 +178,7 @@ $tabAktif = $tab ?? 'boq';
       <td><?= esc($r['nama_pekerjaan']) ?></td>
       <td class="angka"><?= rtrim(rtrim(number_format((float) $r['volume'], 3, ',', '.'), '0'), ',') ?></td>
       <td><?= esc($r['keterangan'] ?? '') ?></td>
-      <td><form class="inline" method="post" action="<?= base_url('gedung/realisasi/' . $r['id'] . '/hapus') ?>" onsubmit="return confirm('Hapus catatan ini?')"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
+      <td><form class="inline" method="post" action="<?= base_url('gedung/realisasi/' . $r['id'] . '/hapus') ?>" data-konfirmasi="Hapus catatan ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
     </tr>
     <?php endforeach; ?>
     <?php if ($riwayat === []): ?><tr><td colspan="5">Belum ada pencatatan kemajuan.</td></tr><?php endif; ?>

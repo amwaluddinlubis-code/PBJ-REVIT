@@ -14,7 +14,7 @@
       <td><?= $aktif ? 'Aktif sekarang' : '' ?></td>
       <td>
         <?php if (! $aktif): ?><a href="<?= base_url('sekolah/pilih/' . $s['id']) ?>">Jadikan Aktif</a> · <?php endif; ?>
-        <form class="inline" method="post" action="<?= base_url('sekolah/hapus/' . $s['id']) ?>" onsubmit="return confirm('Hapus sekolah kosong ini?')"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>
+        <form class="inline" method="post" action="<?= base_url('sekolah/hapus/' . $s['id']) ?>" data-konfirmasi="Hapus sekolah kosong ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>
       </td>
     </tr>
     <?php endforeach; ?>

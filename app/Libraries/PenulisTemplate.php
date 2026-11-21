@@ -69,17 +69,29 @@ class PenulisTemplate
         // Analisa (datar per komponen)
         $ws = $ss->createSheet();
         $ws->setTitle('Analisa');
-        self::kepala($ws, 'ANALISA HARGA SATUAN (AHSP)', ['Kode Analisa *', 'Uraian Pekerjaan *', 'Satuan Pekerjaan', 'Jenis Komponen *', 'Nama Komponen *', 'Koefisien *', 'Satuan Komponen'], [13, 44, 12, 13, 36, 12, 12]);
+        self::kepala($ws, 'ANALISA HARGA SATUAN (AHSP)', ['Kode Analisa *', 'Uraian Pekerjaan *', 'Satuan Pekerjaan', 'Jenis Komponen *', 'Nama Komponen *', 'Koefisien *', 'Satuan Komponen', 'Harga Komponen'], [13, 44, 12, 13, 36, 12, 12, 14]);
         $r = 5;
         foreach ($analisa as $a) {
             if ($a['komponen'] === []) {
                 // Analisa tanpa komponen tetap ditulis sebagai baris kepala
                 // agar tidak hilang saat template diimpor kembali.
-                $ws->fromArray([$a['kode'], $a['nama'], $a['satuan'], '', '', '', ''], null, 'A' . $r++);
+                $ws->fromArray([$a['kode'], $a['nama'], $a['satuan'], '', '', '', '', ''], null, 'A' . $r++);
                 continue;
             }
             foreach ($a['komponen'] as $k) {
-                $ws->fromArray([$a['kode'], $a['nama'], $a['satuan'], ucfirst($k['jenis']), $k['nama'], (float) $k['koefisien'], $k['satuan']], null, 'A' . $r++);
+                $hargaKomp = isset($k['tarif']) && (float) $k['tarif'] > 0 ? (float) $k['tarif'] : null;
+                $ws->fromArray([$a['kode'], $a['nama'], $a['satuan'], ucfirst($k['jenis']), $k['nama'], (float) $k['koefisien'], $k['satuan'], $hargaKomp], null, 'A' . $r++);
+            }
+        }
+
+        // Harsat — harga satuan pekerjaan resmi per kode analisa
+        $ws = $ss->createSheet();
+        $ws->setTitle('Harsat');
+        self::kepala($ws, 'HARSAT — HARGA SATUAN PEKERJAAN PER KODE ANALISA', ['Kode Analisa *', 'Uraian Pekerjaan', 'Harga Satuan *'], [13, 46, 16]);
+        $r = 5;
+        foreach ($analisa as $a) {
+            if (isset($a['harga_satuan']) && (float) $a['harga_satuan'] > 0) {
+                $ws->fromArray([$a['kode'], $a['nama'], (float) $a['harga_satuan']], null, 'A' . $r++);
             }
         }
 
@@ -119,6 +131,8 @@ class PenulisTemplate
             'Berkas ini adalah EKSPOR dari data aplikasi. Periksa dan koreksi seperlunya, lalu impor kembali lewat menu Impor.',
             'Aturan: jangan mengubah nama sheet dan baris judul (baris 4); data dibaca mulai baris 5.',
             'Kode analisa di BOQ harus sama dengan di Analisa. Nama bahan/upah di Analisa harus sama dengan di Harga.',
+            'Harga Komponen di Analisa adalah harga per SATUAN KOMPONEN dari dokumen analisa (mis. Semen Rp 1.860 per kg) — acuan harga yang sebenarnya.',
+            'Sheet Harsat memuat harga satuan pekerjaan resmi per kode analisa: dipakai bila kolom Harga Satuan di BOQ kosong, sebelum dihitung dari komponen Analisa.',
             'Baris yang kolom pertamanya diawali CONTOH dilewati saat impor.',
             'Kolom Harga Satuan (opsional) di BOQ: bila diisi, nilai itu yang dipakai apa adanya; bila dikosongkan, harga dihitung dari Analisa.',
         ];

@@ -27,9 +27,9 @@
       <td><span class="lencana <?= $u['peran'] === 'admin' ? 'biru' : 'abu' ?>"><?= esc(ucfirst($u['peran'])) ?></span></td>
       <td><?= esc(substr((string) ($u['created_at'] ?? ''), 0, 10)) ?></td>
       <td style="white-space:nowrap">
-        <button type="button" class="kecil" onclick="isiUbah(<?= (int) $u['id'] ?>, '<?= esc($u['username'], 'js') ?>', '<?= esc($u['nama'], 'js') ?>', '<?= esc($u['peran'], 'js') ?>')">Ubah</button>
+        <button type="button" class="kecil" onclick="isiUbah(<?= (int) $u['id'] ?>, '<?= esc($u['username'], 'attr') ?>', '<?= esc($u['nama'], 'js') ?>', '<?= esc($u['peran'], 'js') ?>')">Ubah</button>
         <?php if ((int) $u['id'] !== $saya): ?>
-        <form class="inline" method="post" action="<?= base_url('pengguna/' . $u['id'] . '/hapus') ?>" onsubmit="return confirm('Hapus pengguna <?= esc($u['username'], 'js') ?>?')"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>
+        <form class="inline" method="post" action="<?= base_url('pengguna/' . $u['id'] . '/hapus') ?>" data-konfirmasi="Hapus pengguna <?= esc($u['username'], 'attr') ?>?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>
         <?php endif; ?>
       </td>
     </tr>

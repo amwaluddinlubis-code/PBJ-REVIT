@@ -159,15 +159,15 @@ class Impor extends BaseController
     public function unduhTemplate()
     {
         $analisa = [[
-            'kode' => 'CONTOH-F.01', 'nama' => 'Pondasi Batu Belah Campuran 1SP : 4PP', 'satuan' => 'm3',
+            'kode' => 'CONTOH-F.01', 'nama' => 'Pondasi Batu Belah Campuran 1SP : 4PP', 'satuan' => 'm3', 'harga_satuan' => 1141370,
             'komponen' => [
-                ['jenis' => 'bahan', 'nama' => 'Semen PC', 'koefisien' => 163, 'satuan' => 'kg'],
-                ['jenis' => 'bahan', 'nama' => 'Pasir Pasang', 'koefisien' => 0.52, 'satuan' => 'm3'],
-                ['jenis' => 'bahan', 'nama' => 'Batu Belah', 'koefisien' => 1.2, 'satuan' => 'm3'],
-                ['jenis' => 'upah', 'nama' => 'Pekerja', 'koefisien' => 1.5, 'satuan' => 'OH'],
-                ['jenis' => 'upah', 'nama' => 'Tukang Batu', 'koefisien' => 0.75, 'satuan' => 'OH'],
-                ['jenis' => 'upah', 'nama' => 'Kepala Tukang', 'koefisien' => 0.075, 'satuan' => 'OH'],
-                ['jenis' => 'upah', 'nama' => 'Mandor', 'koefisien' => 0.075, 'satuan' => 'OH'],
+                ['jenis' => 'bahan', 'nama' => 'Semen PC', 'koefisien' => 163, 'satuan' => 'kg', 'tarif' => 1860],
+                ['jenis' => 'bahan', 'nama' => 'Pasir Pasang', 'koefisien' => 0.52, 'satuan' => 'm3', 'tarif' => 320000],
+                ['jenis' => 'bahan', 'nama' => 'Batu Belah', 'koefisien' => 1.2, 'satuan' => 'm3', 'tarif' => 420000],
+                ['jenis' => 'upah', 'nama' => 'Pekerja', 'koefisien' => 1.5, 'satuan' => 'OH', 'tarif' => 80671],
+                ['jenis' => 'upah', 'nama' => 'Tukang Batu', 'koefisien' => 0.75, 'satuan' => 'OH', 'tarif' => 93578],
+                ['jenis' => 'upah', 'nama' => 'Kepala Tukang', 'koefisien' => 0.075, 'satuan' => 'OH', 'tarif' => 0],
+                ['jenis' => 'upah', 'nama' => 'Mandor', 'koefisien' => 0.075, 'satuan' => 'OH', 'tarif' => 0],
             ],
         ]];
         $ss = PenulisTemplate::dariData(
