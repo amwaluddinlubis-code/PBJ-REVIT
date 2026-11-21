@@ -1,4 +1,8 @@
 <div class="panel">
+  <h2>Jumlah Calon Penyedia Menurut Juknis Revitalisasi</h2>
+  <p style="margin-bottom:0">Perbandingan harga wajib memenuhi jumlah minimum calon penyedia menurut nilai paket pengadaan: sampai dengan <strong>Rp50 juta</strong> boleh pemilihan langsung atau negosiasi harga (1 penyedia); <strong>Rp50–200 juta</strong> perbandingan dengan paling sedikit <strong>2 calon penyedia</strong>; di atas <strong>Rp200 juta</strong> paling sedikit <strong>3 calon penyedia</strong>. Isi harga dari toko-toko pembanding di bawah ini sebagai bukti perbandingan — panel pada halaman detail SPK akan memperingatkan bila jumlah toko pembanding untuk bahan paket itu masih kurang dari minimum.</p>
+</div>
+<div class="panel">
   <p>Isi harga dari tiap toko hasil survei. Kolom <strong>Termurah</strong> dan <strong>Toko Termurah</strong> terhitung otomatis — harga termurah itulah yang menjadi <em>Harga Terpilih</em> untuk negosiasi dan acuan SPK.</p>
   <form method="post" action="<?= base_url('survei/simpan') ?>">
     <?= csrf_field() ?>

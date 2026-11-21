@@ -94,7 +94,19 @@ class Spk extends BaseController
         foreach ($bahan as &$b) {
             $b['harga_acuan'] = $this->hargaAcuan((int) $b['id']);
         }
-        return $this->tampil('spk/detail', ['s' => $s, 'detail' => $detail, 'bahan' => $bahan], 'SPK ' . $s['nomor']);
+        $nilaiPaket = array_sum(array_map(static fn ($d) => (float) $d['total'], $detail));
+        $pembanding = (int) $db->query(
+            'SELECT COUNT(DISTINCT sh.toko) AS j FROM survei_harga sh
+             JOIN spk_detail d ON d.bahan_id = sh.bahan_id AND d.is_deleted = 0
+             WHERE d.spk_id = ? AND sh.is_deleted = 0',
+            [(int) $id]
+        )->getRow()->j;
+        return $this->tampil('spk/detail', [
+            's' => $s, 'detail' => $detail, 'bahan' => $bahan,
+            'nilai_paket' => $nilaiPaket,
+            'ketentuan' => $this->ketentuanPbj($nilaiPaket),
+            'pembanding' => $pembanding,
+        ], 'SPK ' . $s['nomor']);
     }
 
     public function detailTambah($spkId)

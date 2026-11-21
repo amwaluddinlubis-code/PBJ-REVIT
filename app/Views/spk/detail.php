@@ -8,6 +8,16 @@
   </div>
 </div>
 <div class="panel">
+  <h2>Ketentuan Juknis Revitalisasi untuk Paket Ini</h2>
+  <p class="kecil-teks" style="margin-bottom:0">
+    Nilai paket <b><?= $rp($nilai_paket) ?></b> · Bentuk surat pemesanan menurut nilai: <b><?= esc($ketentuan['dokumen']) ?></b> ·
+    Metode penetapan penyedia: <b><?= esc($ketentuan['metode']) ?></b> dengan calon penyedia minimal <b><?= (int) $ketentuan['min_penyedia'] ?></b> ·
+    Toko pembanding tercatat di Survei Harga untuk bahan paket ini: <b><?= (int) $pembanding ?> toko</b><?php if ($pembanding < (int) $ketentuan['min_penyedia']): ?> — <b style="color:#b91c1c">masih kurang dari minimum menurut Juknis, lengkapi Survei Harga</b><?php endif; ?>.
+    <?php if ($nilai_paket <= 50000000): ?>Menurut Juknis, nilai sampai dengan Rp50 juta cukup dengan nota/kuitansi — SPK yang lebih lengkap seperti ini tetap boleh dipakai.<?php endif; ?>
+    <?php if ($ketentuan['materai']): ?>Kuitansi pembayaran Rp5 juta ke atas wajib dibubuhi materai Rp10.000.<?php endif; ?>
+  </p>
+</div>
+<div class="panel">
 <table data-paginasi="10">
   <tr><th>Kode</th><th>Nama Bahan</th><th class="angka">Qty</th><th>Satuan</th><th class="angka">Harga</th><th class="angka">Total</th><th class="angka">PPN</th><th>Ubah Qty/Harga</th><th></th></tr>
   <?php $grand = 0; $grandPpn = 0; foreach ($detail as $d): $grand += (float) $d['total']; $grandPpn += (float) $d['ppn']; ?>
