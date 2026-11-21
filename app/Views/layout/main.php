@@ -99,6 +99,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
         <a href="<?= base_url('invoice/jurnal') ?>"<?= $uriPenuh === 'invoice/jurnal' ? ' class="aktif"' : '' ?>>Jurnal Pembayaran</a>
         <a href="<?= base_url('buku-kas') ?>"<?= $aktif('buku-kas') ?>>Buku Kas (BKU)</a>
         <a href="<?= base_url('penerimaan-dana') ?>"<?= $aktif('penerimaan-dana') ?>>Penerimaan Dana</a>
+        <a href="<?= base_url('bukti-setor') ?>"<?= $aktif('bukti-setor') ?>>Bukti Setor &amp; Pajak</a>
         <a href="<?= base_url('upah') ?>"<?= $aktif('upah') ?>>Pembayaran Upah</a>
       <?= $tutupInduk() ?>
       <?php $induk('bahan', 'mat', 'Bahan &amp; Laporan'); ?>
