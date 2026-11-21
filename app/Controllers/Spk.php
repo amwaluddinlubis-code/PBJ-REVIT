@@ -101,12 +101,60 @@ class Spk extends BaseController
              WHERE d.spk_id = ? AND sh.is_deleted = 0',
             [(int) $id]
         )->getRow()->j;
+        // Ceklis kelengkapan dokumen bukti belanja (Juknis): status
+        // otomatis dari modul terkait + penanda manual untuk dokumen fisik.
+        $hitung = static fn (string $sql) => (int) $db->query($sql, [(int) $id])->getRow()->j;
+        $manual = [];
+        try {
+            foreach ($db->table('dokumen_spk')->where(['spk_id' => (int) $id, 'is_deleted' => 0])->get()->getResultArray() as $m) {
+                $manual[$m['item']] = (int) $m['ada'] === 1;
+            }
+        } catch (\Throwable $e) {
+            // tabel dokumen_spk belum dimigrasi
+        }
+        $ceklis = [
+            ['kunci' => 'perencanaan', 'label' => 'Dokumen perencanaan pengadaan (jumlah, spesifikasi, waktu & lokasi serah terima, alokasi anggaran, persyaratan penyedia)', 'ada' => $manual['perencanaan'] ?? false, 'manual' => true],
+            ['kunci' => 'pembandingan', 'label' => 'Hasil pembandingan harga (Survei Harga)', 'ada' => $pembanding > 0, 'manual' => false],
+            ['kunci' => 'negosiasi', 'label' => 'Hasil negosiasi harga', 'ada' => $hitung('SELECT COUNT(*) AS j FROM negosiasi n JOIN spk_detail d ON d.bahan_id = n.bahan_id AND d.is_deleted = 0 WHERE d.spk_id = ? AND n.is_deleted = 0 AND n.harga_nego IS NOT NULL') > 0, 'manual' => false],
+            ['kunci' => 'pemesanan', 'label' => 'Surat pemesanan (SPK ini)', 'ada' => true, 'manual' => false],
+            ['kunci' => 'pemeriksaan', 'label' => 'Hasil pemeriksaan barang/jasa (BAP)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM bap WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false],
+            ['kunci' => 'bast', 'label' => 'Berita Acara Serah Terima (BAST)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM bast WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false],
+            ['kunci' => 'invoice', 'label' => 'Invoice / tagihan penyedia', 'ada' => $hitung('SELECT COUNT(*) AS j FROM invoice WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false],
+            ['kunci' => 'pembayaran', 'label' => 'Bukti pembayaran (jurnal pembayaran)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0 WHERE i.spk_id = ? AND p.is_deleted = 0') > 0, 'manual' => false],
+            ['kunci' => 'kuitansi', 'label' => 'Kuitansi/faktur fisik dari penyedia (ditandatangani + stempel; bermaterai bila nilai kuitansi ≥ Rp5 juta)', 'ada' => $manual['kuitansi'] ?? false, 'manual' => true],
+        ];
         return $this->tampil('spk/detail', [
             's' => $s, 'detail' => $detail, 'bahan' => $bahan,
             'nilai_paket' => $nilaiPaket,
             'ketentuan' => $this->ketentuanPbj($nilaiPaket),
             'pembanding' => $pembanding,
+            'ceklis' => $ceklis,
         ], 'SPK ' . $s['nomor']);
+    }
+
+    /** Simpan penanda manual ceklis kelengkapan dokumen SPK. */
+    public function ceklis($id)
+    {
+        $s = $this->db()->table('spk')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        if (! $s) {
+            return redirect()->to('spk')->with('galat', 'SPK tidak ditemukan di sekolah aktif.');
+        }
+        $item = (string) $this->request->getPost('item');
+        if (! in_array($item, ['perencanaan', 'kuitansi'], true)) {
+            return redirect()->to('spk/detail/' . (int) $id)->with('galat', 'Item ceklis tidak dikenal.');
+        }
+        $ada = $this->request->getPost('ada') ? 1 : 0;
+        $db = $this->db();
+        $lama = $db->table('dokumen_spk')->where(['spk_id' => (int) $id, 'item' => $item, 'is_deleted' => 0])->get()->getRowArray();
+        if ($lama) {
+            $db->table('dokumen_spk')->where('id', $lama['id'])->update(['ada' => $ada, 'updated_at' => date('Y-m-d H:i:s')]);
+        } else {
+            $db->table('dokumen_spk')->insert([
+                'sekolah_id' => $this->sid(), 'spk_id' => (int) $id, 'item' => $item, 'ada' => $ada,
+                'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+        return redirect()->to('spk/detail/' . (int) $id)->with('sukses', 'Ceklis kelengkapan dokumen diperbarui.');
     }
 
     public function detailTambah($spkId)

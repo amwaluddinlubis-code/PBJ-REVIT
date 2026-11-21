@@ -27,6 +27,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('spk/perbarui/(:num)', 'Spk::perbarui/$1');
     $routes->post('spk/hapus/(:num)', 'Spk::hapus/$1');
     $routes->get('spk/detail/(:num)', 'Spk::detail/$1');
+    $routes->post('spk/ceklis/(:num)', 'Spk::ceklis/$1');
     $routes->post('spk/detail-tambah/(:num)', 'Spk::detailTambah/$1');
     $routes->post('spk/detail-ubah/(:num)', 'Spk::detailUbah/$1');
     $routes->post('spk/detail-hapus/(:num)', 'Spk::detailHapus/$1');
