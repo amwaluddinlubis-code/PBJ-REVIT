@@ -1,0 +1,127 @@
+<?php
+
+namespace App\Libraries;
+
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
+/**
+ * Menulis TEMPLATE MANUAL (format ParserTemplate) dari data aplikasi —
+ * untuk fitur "Ekspor Template Terisi": pengguna memeriksa/mengoreksi
+ * hasil baca parser di Excel, lalu mengimpornya kembali.
+ */
+class PenulisTemplate
+{
+    public static function unduh(Spreadsheet $ss, string $namaBerkas): void
+    {
+        $writer = new Xlsx($ss);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $namaBerkas . '"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+    }
+
+    public static function dariData(array $sekolah, array $bahan, array $upah, array $analisa, array $boq): Spreadsheet
+    {
+        $ss = new Spreadsheet();
+        self::sheetPetunjuk($ss->getActiveSheet());
+
+        // Sekolah (kunci-nilai, nilai di kolom C mulai baris 4)
+        $ws = $ss->createSheet();
+        $ws->setTitle('Sekolah');
+        $ws->setCellValue('A1', 'IDENTITAS SEKOLAH & PAGU ANGGARAN');
+        $ws->setCellValue('A2', 'Isi kolom C. Baris bertanda * wajib diisi.');
+        $isi = [
+            'Nama Sekolah *' => $sekolah['nama_sekolah'] ?? '',
+            'NPSN' => $sekolah['npsn'] ?? '',
+            'Tahun Anggaran *' => $sekolah['tahun_anggaran'] ?? '',
+            'Total Anggaran / Pagu (Rp) *' => (float) ($sekolah['total_anggaran'] ?? 0) ?: '',
+            'Alamat' => $sekolah['alamat'] ?? '',
+            'Desa/Kelurahan' => $sekolah['desa'] ?? '',
+            'Kecamatan' => $sekolah['kecamatan'] ?? '',
+            'Kabupaten' => $sekolah['kabupaten'] ?? '',
+            'Kepala Sekolah' => $sekolah['kepsek_nama'] ?? '',
+            'NIP Kepala Sekolah' => $sekolah['kepsek_nip'] ?? '',
+        ];
+        $r = 4;
+        foreach ($isi as $k => $v) {
+            $ws->setCellValue('A' . $r, $k);
+            $ws->setCellValue('C' . $r, $v);
+            $r++;
+        }
+        $ws->getColumnDimension('A')->setWidth(28);
+        $ws->getColumnDimension('C')->setWidth(55);
+
+        // Harga
+        $ws = $ss->createSheet();
+        $ws->setTitle('Harga');
+        self::kepala($ws, 'DAFTAR HARGA BAHAN & UPAH', ['Kode', 'Jenis *', 'Nama *', 'Satuan *', 'Harga Satuan (Rp) *'], [10, 10, 42, 10, 18]);
+        $r = 5;
+        foreach ($bahan as $b) {
+            $ws->fromArray([$b['kode'], 'Bahan', $b['nama'], $b['satuan'], (float) $b['harga_rab']], null, 'A' . $r++);
+        }
+        foreach ($upah as $u) {
+            $ws->fromArray(['', 'Upah', $u['jenis'], $u['satuan'], (float) $u['tarif']], null, 'A' . $r++);
+        }
+
+        // Analisa (datar per komponen)
+        $ws = $ss->createSheet();
+        $ws->setTitle('Analisa');
+        self::kepala($ws, 'ANALISA HARGA SATUAN (AHSP)', ['Kode Analisa *', 'Uraian Pekerjaan *', 'Satuan Pekerjaan', 'Jenis Komponen *', 'Nama Komponen *', 'Koefisien *', 'Satuan Komponen'], [13, 44, 12, 13, 36, 12, 12]);
+        $r = 5;
+        foreach ($analisa as $a) {
+            if ($a['komponen'] === []) {
+                // Analisa tanpa komponen tetap ditulis sebagai baris kepala
+                // agar tidak hilang saat template diimpor kembali.
+                $ws->fromArray([$a['kode'], $a['nama'], $a['satuan'], '', '', '', ''], null, 'A' . $r++);
+                continue;
+            }
+            foreach ($a['komponen'] as $k) {
+                $ws->fromArray([$a['kode'], $a['nama'], $a['satuan'], ucfirst($k['jenis']), $k['nama'], (float) $k['koefisien'], $k['satuan']], null, 'A' . $r++);
+            }
+        }
+
+        // BOQ (datar per pekerjaan)
+        $ws = $ss->createSheet();
+        $ws->setTitle('BOQ');
+        self::kepala($ws, 'BOQ — DAFTAR PEKERJAAN PER GEDUNG', ['Gedung *', 'Bab / Kelompok', 'Uraian Pekerjaan *', 'Kode Analisa', 'Volume *', 'Satuan'], [24, 22, 46, 13, 12, 10]);
+        $r = 5;
+        foreach ($boq as $row) {
+            $ws->fromArray([$row['gedung'], $row['bab'], $row['nama'], $row['kode_analisa'], (float) $row['volume'], $row['satuan']], null, 'A' . $r++);
+        }
+        $ss->setActiveSheetIndex(0);
+        return $ss;
+    }
+
+    private static function kepala($ws, string $judul, array $kolom, array $lebar): void
+    {
+        $ws->setCellValue('A1', $judul);
+        foreach ($kolom as $i => $nama) {
+            $huruf = Coordinate::stringFromColumnIndex($i + 1);
+            $ws->setCellValue($huruf . '4', $nama);
+            $gaya = $ws->getStyle($huruf . '4');
+            $gaya->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('0049B8');
+            $gaya->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+            $ws->getColumnDimension($huruf)->setWidth($lebar[$i] ?? 14);
+        }
+        $ws->freezePane('A5');
+    }
+
+    private static function sheetPetunjuk($ws): void
+    {
+        $ws->setTitle('Petunjuk');
+        $ws->getColumnDimension('A')->setWidth(105);
+        $teks = [
+            'TEMPLATE IMPOR DATA PERENCANA — Analisa Perencana (PBJ-REVIT)',
+            'Berkas ini adalah EKSPOR dari data aplikasi. Periksa dan koreksi seperlunya, lalu impor kembali lewat menu Impor.',
+            'Aturan: jangan mengubah nama sheet dan baris judul (baris 4); data dibaca mulai baris 5.',
+            'Kode analisa di BOQ harus sama dengan di Analisa. Nama bahan/upah di Analisa harus sama dengan di Harga.',
+            'Baris yang kolom pertamanya diawali CONTOH dilewati saat impor.',
+        ];
+        foreach ($teks as $i => $t) {
+            $ws->setCellValue('A' . ($i + 1), $t);
+        }
+    }
+}

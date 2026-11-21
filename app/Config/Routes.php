@@ -129,3 +129,5 @@ $routes->post('impor/folder', 'Impor::folder', ['filter' => 'auth']);
 $routes->post('impor/ulang', 'Impor::ulang', ['filter' => 'auth']);
 $routes->post('impor/tautkan', 'Impor::tautkan', ['filter' => 'auth']);
 $routes->post('impor/tautkan-massal', 'Impor::tautkanMassal', ['filter' => 'auth']);
+$routes->get('impor/unduh-template', 'Impor::unduhTemplate', ['filter' => 'auth']);
+$routes->get('impor/ekspor-template', 'Impor::eksporTemplate', ['filter' => 'auth']);

@@ -58,6 +58,15 @@ $pilihSekolah = static function () use ($semuaSekolah, $sekolahAktif) {
   </form>
 </div>
 
+<div class="panel">
+  <h2>Template Manual — Jalur Pasti untuk RAB Format Apa Pun</h2>
+  <p style="margin-top:0;color:var(--ta-teks-2)">Bila workbook perencana tidak terbaca rapi (format perencana lain, PDF, atau hitungan manual), isi <b>template 4 sheet</b> (Sekolah, Harga, Analisa, BOQ) lalu impor berkasnya lewat salah satu cara di atas — aplikasi mengenali format template secara otomatis. Sebaliknya, data sekolah aktif juga bisa <b>dieksper sebagai template terisi</b> untuk diperiksa/dikoreksi di Excel lalu diimpor kembali.</p>
+  <div class="aksi" style="justify-content:flex-start;gap:10px">
+    <a class="tombol" href="<?= base_url('impor/unduh-template') ?>">Unduh Template Kosong</a>
+    <a class="tombol" href="<?= base_url('impor/ekspor-template') ?>">Ekspor Template Terisi (Sekolah Aktif)</a>
+  </div>
+</div>
+
 <?php if ($tak_tertaut !== []): ?>
 <div class="panel">
   <h2>Komponen Belum Tertaut ke Master Bahan — <?= count($tak_tertaut) ?> nama</h2>

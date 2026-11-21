@@ -2,7 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Libraries\PembacaXlsxMentah;
 use App\Libraries\ParserPerencana;
+use App\Libraries\ParserTemplate;
+use App\Libraries\PenulisTemplate;
 
 /**
  * Impor Dokumen Perencana — versi satu klik:
@@ -125,8 +128,23 @@ class Impor extends BaseController
     {
         session()->set('sekolah_id', $sekolahId);
         try {
-            $parser = new ParserPerencana($this->db(), $sekolahId);
-            $r = $parser->impor($path);
+            if (ParserTemplate::berkasTemplate(new PembacaXlsxMentah($path))) {
+                $r = (new ParserTemplate($sekolahId))->impor($path);
+                $r['format'] = 'template';
+                $pesan = sprintf(
+                    'Impor TEMPLATE selesai: %d gedung (%d pekerjaan), %d analisa (%d komponen), %d bahan baru + %d diperbarui, %d jenis upah. Nilai BOQ terhitung Rp %s.',
+                    $r['gedung'], $r['pekerjaan'], $r['analisa'], $r['komponen'],
+                    $r['bahan_baru'], $r['bahan_diperbarui'], $r['upah'],
+                    number_format($r['nilai_boq'], 0, ',', '.')
+                );
+            } else {
+                $r = (new ParserPerencana($this->db(), $sekolahId))->impor($path);
+                $r['format'] = 'perencana';
+                $pesan = sprintf(
+                    'Impor selesai: %d gedung, %d analisa (%d komponen), %d bahan baru ditambahkan ke master.',
+                    count($r['gedung']), $r['analisa'], $r['komponen'], $r['bahan_baru']
+                );
+            }
         } catch (\Throwable $e) {
             return redirect()->to('/impor')->with('galat', 'Impor gagal: ' . $e->getMessage());
         }
@@ -134,14 +152,57 @@ class Impor extends BaseController
             'sekolah_id' => $sekolahId, 'berkas' => $namaTampil,
             'ringkasan' => json_encode($r), 'created_at' => date('Y-m-d H:i:s'),
         ]);
-        $pesan = sprintf(
-            'Impor selesai: %d gedung, %d analisa (%d komponen), %d bahan baru ditambahkan ke master.',
-            count($r['gedung']),
-            $r['analisa'],
-            $r['komponen'],
-            $r['bahan_baru']
-        );
         return redirect()->to('/impor')->with('sukses', $pesan);
+    }
+
+    /** Unduh template manual kosong (dengan baris CONTOH). */
+    public function unduhTemplate()
+    {
+        $analisa = [[
+            'kode' => 'CONTOH-F.01', 'nama' => 'Pondasi Batu Belah Campuran 1SP : 4PP', 'satuan' => 'm3',
+            'komponen' => [
+                ['jenis' => 'bahan', 'nama' => 'Semen PC', 'koefisien' => 163, 'satuan' => 'kg'],
+                ['jenis' => 'bahan', 'nama' => 'Pasir Pasang', 'koefisien' => 0.52, 'satuan' => 'm3'],
+                ['jenis' => 'bahan', 'nama' => 'Batu Belah', 'koefisien' => 1.2, 'satuan' => 'm3'],
+                ['jenis' => 'upah', 'nama' => 'Pekerja', 'koefisien' => 1.5, 'satuan' => 'OH'],
+                ['jenis' => 'upah', 'nama' => 'Tukang Batu', 'koefisien' => 0.75, 'satuan' => 'OH'],
+                ['jenis' => 'upah', 'nama' => 'Kepala Tukang', 'koefisien' => 0.075, 'satuan' => 'OH'],
+                ['jenis' => 'upah', 'nama' => 'Mandor', 'koefisien' => 0.075, 'satuan' => 'OH'],
+            ],
+        ]];
+        $ss = PenulisTemplate::dariData(
+            [],
+            [['kode' => 'CONTOH-B001', 'nama' => 'Semen PC', 'satuan' => 'zak', 'harga_rab' => 65000]],
+            [['jenis' => 'CONTOH-Pekerja', 'satuan' => 'OH', 'tarif' => 80671]],
+            $analisa,
+            [['gedung' => 'CONTOH-RKB 3 Kopel', 'bab' => 'III. PEKERJAAN PONDASI', 'nama' => 'Pondasi Batu Belah Campuran 1SP : 4PP', 'kode_analisa' => 'F.01', 'volume' => 62.4, 'satuan' => 'm3']]
+        );
+        PenulisTemplate::unduh($ss, 'Template_Impor_Perencana.xlsx');
+        exit;
+    }
+
+    /** Ekspor data sekolah aktif sebagai template terisi (untuk diperiksa/dikoreksi lalu diimpor kembali). */
+    public function eksporTemplate()
+    {
+        $db = $this->db();
+        $sid = $this->sid();
+        $bahan = $db->table('bahan')->where('sekolah_id', $sid)->orderBy('kode')->get()->getResultArray();
+        $upah = $db->table('upah_master')->where('sekolah_id', $sid)->orderBy('jenis')->get()->getResultArray();
+        $analisa = [];
+        foreach ($db->table('analisa')->where('sekolah_id', $sid)->orderBy('kode')->get()->getResultArray() as $a) {
+            $a['komponen'] = $db->table('analisa_komponen')->where('analisa_id', $a['id'])->orderBy('id')->get()->getResultArray();
+            $analisa[] = $a;
+        }
+        $boq = $db->query(
+            'SELECT g.nama AS gedung, p.bab, p.nama, p.kode_analisa, p.volume, p.satuan
+             FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
+             WHERE g.sekolah_id = ? ORDER BY g.urutan, p.urutan',
+            [$sid]
+        )->getResultArray();
+        $sekolah = $this->sekolahAktif() ?? [];
+        $slug = trim(preg_replace('/[^a-z0-9]+/i', '_', (string) ($sekolah['nama_sekolah'] ?? 'sekolah')), '_');
+        PenulisTemplate::unduh(PenulisTemplate::dariData($sekolah, $bahan, $upah, $analisa, $boq), 'Template_Terisi_' . $slug . '.xlsx');
+        exit;
     }
 
     public function proses()
