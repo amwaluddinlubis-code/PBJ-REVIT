@@ -117,6 +117,35 @@ class Invoice extends BaseController
         ];
     }
 
+    /** Halaman cetak invoice (tagihan) per SPK. */
+    public function cetak($id)
+    {
+        $db = $this->db();
+        $i = $db->query(
+            'SELECT i.*, s.nomor AS spk_nomor, s.tanggal AS spk_tanggal, s.paket, s.ttd_penyedia,
+                    p.nama AS penyedia, p.alamat AS penyedia_alamat
+             FROM invoice i JOIN spk s ON s.id = i.spk_id
+             LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE i.id = ? AND s.sekolah_id = ?',
+            [(int) $id, $this->sid()]
+        )->getRowArray();
+        if (! $i) {
+            return redirect()->to('invoice')->with('galat', 'Invoice tidak ditemukan di sekolah aktif.');
+        }
+        $detail = $db->query(
+            'SELECT COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan,
+                    d.qty, d.harga, d.qty*d.harga AS total
+             FROM spk_detail d LEFT JOIN bahan b ON b.id = d.bahan_id WHERE d.spk_id = ? ORDER BY d.id',
+            [(int) $i['spk_id']]
+        )->getResultArray();
+        return view('cetak/invoice', [
+            'idn' => $this->sekolahAktif(), 'i' => $i, 'detail' => $detail,
+            'totalSpk' => array_sum(array_column($detail, 'total')),
+            'terbilang' => $this->terbilang($i['nilai']),
+            'nomor' => $this->nomorSurat('INV', (int) $i['nomor_urut']),
+            'nomorSpk' => $this->nomorSurat('SPK', (int) $i['spk_nomor']),
+        ]);
+    }
+
     // ---------------- JURNAL PEMBAYARAN ----------------
 
     public function jurnal()

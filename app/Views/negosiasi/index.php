@@ -5,7 +5,7 @@
   <form method="post" action="<?= base_url('negosiasi/simpan') ?>">
     <?= csrf_field() ?>
     <div style="overflow-x:auto">
-    <table>
+    <table data-paginasi="25">
       <tr><th>Kode</th><th>Nama Bahan</th><th class="angka">Qty RAB</th><th class="angka">Harga Terpilih</th><th class="angka">Harga Penawaran</th><th class="angka">Harga Negosiasi</th><th class="angka">Total Penawaran</th><th class="angka">Total Negosiasi</th><th class="angka">Hemat</th></tr>
       <?php $tPen = 0; $tNeg = 0; foreach ($bahan as $b):
         $qty = (float) $b['qty_total'];
@@ -26,9 +26,9 @@
         <td class="angka"><?= ($totPen !== null && $totNeg !== null) ? $rp($totPen - $totNeg) : '—' ?></td>
       </tr>
       <?php endforeach; ?>
-      <tr><th colspan="6" style="text-align:right">TOTAL</th><th class="angka"><?= $rp($tPen) ?></th><th class="angka"><?= $rp($tNeg) ?></th><th class="angka"><?= $rp($tPen - $tNeg) ?></th></tr>
+      <tr class="baris-total"><th colspan="6" style="text-align:right">TOTAL</th><th class="angka"><?= $rp($tPen) ?></th><th class="angka"><?= $rp($tNeg) ?></th><th class="angka"><?= $rp($tPen - $tNeg) ?></th></tr>
     </table>
     </div>
-    <div class="aksi"><button type="submit">Simpan Negosiasi</button></div>
+    <div class="aksi md:col-span-2"><button type="submit">Simpan Negosiasi</button></div>
   </form>
 </div>

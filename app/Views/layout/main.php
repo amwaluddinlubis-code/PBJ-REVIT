@@ -4,15 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= esc($judul ?? 'Aplikasi PBJ Sekolah') ?></title>
+<link rel="stylesheet" href="<?= base_url('assets/idds.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/tailwind.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/app.css') ?>">
 </head>
 <body>
 <div class="kerangka">
   <aside class="samping">
     <div class="merek">Aplikasi PBJ Sekolah</div>
-    <form method="post" action="<?= base_url('sekolah/pilih') ?>" style="margin:10px 12px">
+    <div class="sub">Gaya INA Digital Design System (IDDS)</div>
+    <form method="post" action="<?= base_url('sekolah/pilih') ?>">
       <?= csrf_field() ?>
-      <label style="color:#cbd5e1;font-size:12px;display:block;margin-bottom:4px">Sekolah aktif</label>
+      <label class="kecil-teks" style="margin-bottom:4px">Sekolah aktif</label>
       <select name="sekolah_id" onchange="this.form.submit()" style="width:100%">
         <?php foreach ($semuaSekolah ?? [] as $sk): ?>
           <option value="<?= (int) $sk['id'] ?>"<?= ((int) ($sekolahAktif['id'] ?? 0) === (int) $sk['id']) ? ' selected' : '' ?>><?= esc($sk['nama_sekolah'] ?? ('Sekolah #' . $sk['id'])) ?></option>
@@ -31,6 +34,7 @@
       <a href="<?= base_url('invoice/jurnal') ?>">Jurnal Pembayaran</a>
       <a href="<?= base_url('material') ?>">Buku Material</a>
       <a href="<?= base_url('sisa-bahan') ?>">Sisa Bahan</a>
+      <a href="<?= base_url('laporan') ?>">Laporan &amp; Ekspor</a>
       <a href="<?= base_url('pengaturan') ?>">Identitas &amp; Pengaturan</a>
       <a href="<?= base_url('sekolah') ?>">Kelola Sekolah</a>
     </nav>
@@ -49,5 +53,6 @@
     <?= $konten ?? '' ?>
   </main>
 </div>
+<script src="<?= base_url('assets/paginasi.js') ?>"></script>
 </body>
 </html>

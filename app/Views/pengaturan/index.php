@@ -1,6 +1,6 @@
 <div class="panel">
   <h2>Identitas Satuan Pendidikan & Panitia</h2>
-  <form class="grid" method="post" action="<?= base_url('pengaturan/simpan') ?>">
+  <form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('pengaturan/simpan') ?>">
     <?= csrf_field() ?>
     <?php
     $kolom = [
@@ -18,7 +18,7 @@
       <label><?= $label ?> <input name="<?= $k ?>" value="<?= esc($idn[$k] ?? '') ?>"></label>
     <?php endforeach; ?>
     <label>Tanggal Survei Terakhir <input type="date" name="tanggal_survei" value="<?= esc($idn['tanggal_survei'] ?? '') ?>"></label>
-    <div class="aksi"><button type="submit">Simpan Identitas</button></div>
+    <div class="aksi md:col-span-2"><button type="submit">Simpan Identitas</button></div>
   </form>
 </div>
 <div class="panel">
@@ -30,11 +30,11 @@
       <td><form class="inline" method="post" action="<?= base_url('pengaturan/penyedia-hapus/' . $p['id']) ?>" onsubmit="return confirm('Hapus penyedia ini?')"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td></tr>
     <?php endforeach; ?>
   </table>
-  <form class="grid" method="post" action="<?= base_url('pengaturan/penyedia-tambah') ?>" style="margin-top:12px">
+  <form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('pengaturan/penyedia-tambah') ?>" style="margin-top:12px">
     <?= csrf_field() ?>
     <label>Nama Penyedia <input name="nama" required></label>
     <label>Alamat <input name="alamat"></label>
     <label>Penandatangan <input name="ttd_nama"></label>
-    <div class="aksi"><button type="submit">Tambah Penyedia</button></div>
+    <div class="aksi md:col-span-2"><button type="submit">Tambah Penyedia</button></div>
   </form>
 </div>

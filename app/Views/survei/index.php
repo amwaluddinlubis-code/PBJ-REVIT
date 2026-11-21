@@ -4,7 +4,7 @@
     <?= csrf_field() ?>
     <label>Tanggal Survei <input type="date" name="tanggal_survei" value="<?= esc($identitas['tanggal_survei'] ?? '') ?>" style="max-width:220px"></label>
     <div style="overflow-x:auto; margin-top:12px">
-    <table>
+    <table data-paginasi="25">
       <tr><th>Kode</th><th>Nama Bahan</th><th>Satuan</th>
         <?php for ($t = 1; $t <= 4; $t++): ?><th class="angka"><?= esc($identitas['toko' . $t] ?? ('Toko ' . $t)) ?></th><?php endfor; ?>
         <th class="angka">Termurah</th><th>Toko Termurah</th></tr>
@@ -24,6 +24,6 @@
       <?php endforeach; ?>
     </table>
     </div>
-    <div class="aksi"><button type="submit">Simpan Harga Survei</button></div>
+    <div class="aksi md:col-span-2"><button type="submit">Simpan Harga Survei</button></div>
   </form>
 </div>

@@ -1,49 +1,66 @@
+/* PBJ Revit — komponen bergaya INA Digital Design System (IDDS).
+   Token warna/font memakai variabel resmi --ina-* dari idds.css (@idds/styles).
+   Utilitas layout memakai Tailwind CSS (tailwind.css). */
 * { box-sizing: border-box; }
-body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: #f3f5f9; color: #1f2733; }
-a { color: #2f5fd0; text-decoration: none; }
+body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, sans-serif; background: var(--ina-background-secondary, #f8f8f7); color: var(--ina-content-primary, #1f1f1f); }
+a { color: var(--ina-blue-600, #0049b8); text-decoration: none; }
 a:hover { text-decoration: underline; }
 .kerangka { display: flex; min-height: 100vh; }
-.samping { width: 230px; background: #20304d; color: #dbe4f5; padding: 18px 14px; flex-shrink: 0; }
-.merek { font-weight: 700; font-size: 17px; margin-bottom: 18px; color: #fff; }
-.samping nav a { display: block; color: #dbe4f5; padding: 8px 10px; border-radius: 8px; margin-bottom: 2px; }
-.samping nav a:hover { background: #2c4066; text-decoration: none; }
-.samping .fase { margin: 16px 10px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #8fa5c8; }
-.samping .mati { display: block; padding: 6px 10px; color: #7186a8; font-size: 14px; }
-.isi { flex: 1; padding: 18px 22px 40px; min-width: 0; }
+.samping { width: 232px; background: var(--ina-background-primary, #fff); color: var(--ina-content-primary, #1f1f1f); border-right: 1px solid var(--ina-stroke-primary, #e5e5e5); padding: 18px 14px; flex-shrink: 0; }
+.merek { font-weight: 700; font-size: 17px; margin-bottom: 4px; color: var(--ina-content-primary, #1f1f1f); }
+.samping .sub { font-size: 12px; color: var(--ina-content-tertiary, #737373); margin-bottom: 14px; }
+.samping select { margin-bottom: 8px; }
+.samping nav a { display: block; color: var(--ina-content-secondary, #525252); padding: 8px 10px; border-radius: 8px; margin-bottom: 2px; border-left: 3px solid transparent; }
+.samping nav a:hover { background: var(--ina-background-tertiary, #f2f2f2); text-decoration: none; }
+.samping nav a.aktif { background: var(--ina-blue-50, #fafcff); color: var(--ina-blue-600, #0049b8); border-left-color: var(--ina-blue-600, #0049b8); font-weight: 600; }
+.samping .fase { margin: 16px 10px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ina-content-tertiary, #737373); }
+.isi { flex: 1; padding: 20px 24px 40px; min-width: 0; }
 .atas { display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 600; margin-bottom: 14px; }
-.atas .pengguna { font-size: 13px; font-weight: 400; color: #5b6b82; }
+.atas .pengguna { font-size: 13px; font-weight: 400; color: var(--ina-content-tertiary, #737373); }
 .pesan { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 14px; }
-.pesan.sukses { background: #e2f4e5; border: 1px solid #9fd3a8; }
-.pesan.galat { background: #fdeaea; border: 1px solid #eba3a3; }
+.pesan.sukses { background: var(--ina-green-50, #eefbf0); border: 1px solid var(--ina-green-300, #8ce99a); color: var(--ina-green-700, #1e6b2a); }
+.pesan.galat { background: var(--ina-red-100, #fdeded); border: 1px solid var(--ina-red-300, #ffa0a0); color: var(--ina-red-700, #a61e1e); }
 .kartu-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
-.kpi { background: #fff; border: 1px solid #dde3ee; border-radius: 12px; padding: 14px 16px; }
-.kpi .label { font-size: 12px; color: #5b6b82; text-transform: uppercase; letter-spacing: .05em; }
+.kpi { background: var(--ina-background-primary, #fff); border: 1px solid var(--ina-stroke-primary, #e5e5e5); border-radius: 12px; padding: 14px 16px; }
+.kpi .label { font-size: 12px; color: var(--ina-content-tertiary, #737373); text-transform: uppercase; letter-spacing: .05em; }
 .kpi .nilai { font-size: 20px; font-weight: 700; margin-top: 4px; }
-.panel { background: #fff; border: 1px solid #dde3ee; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.panel { background: var(--ina-background-primary, #fff); border: 1px solid var(--ina-stroke-primary, #e5e5e5); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(20, 20, 20, .04); }
 .panel h2 { margin: 0 0 10px; font-size: 16px; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { padding: 7px 9px; border-bottom: 1px solid #e6ebf2; text-align: left; vertical-align: top; }
-th { background: #f0f3f8; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #44536c; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--ina-stroke-primary, #e5e5e5); text-align: left; vertical-align: top; }
+th { background: var(--ina-background-tertiary, #f2f2f2); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--ina-content-secondary, #525252); }
+table tr:hover td { background: var(--ina-background-secondary, #f8f8f7); }
 td.angka, th.angka { text-align: right; font-variant-numeric: tabular-nums; }
-tr.negatif td { background: #fdf0f0; }
-.peringatan { border: 1px solid #f0c36d; background: #fff8e6; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+tr.negatif td { background: var(--ina-red-100, #fdeded); }
+.peringatan { border: 1px solid var(--ina-yellow-300, #f0c36d); background: var(--ina-yellow-50, #fff8e6); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
 .peringatan h2 { margin: 0 0 8px; font-size: 15px; }
-button, .tombol { background: #2f5fd0; color: #fff; border: 0; border-radius: 8px; padding: 8px 14px; font-size: 14px; cursor: pointer; display: inline-block; }
-button:hover, .tombol:hover { background: #2650b4; text-decoration: none; }
-button.bahaya { background: #c0392b; }
+button, .tombol { background: var(--ina-blue-600, #0049b8); color: #fff; border: 1px solid transparent; border-radius: 8px; padding: 8px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-block; font-family: inherit; }
+button:hover, .tombol:hover { background: var(--ina-blue-700, #003a94); text-decoration: none; }
+button:focus-visible, .tombol:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ina-blue-500, #0968f6); }
+button.bahaya { background: var(--ina-red-500, #f02d2d); }
+button.bahaya:hover { background: var(--ina-red-600, #d92323); }
 button.kecil, .tombol.kecil { padding: 4px 10px; font-size: 13px; }
-button.abu { background: #6b7a90; }
-form.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-form.grid label, .kotak-login label { display: block; font-size: 13px; color: #44536c; }
-input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #c4cedd; border-radius: 8px; font-size: 14px; margin-top: 4px; background: #fff; }
+button.abu, .tombol.abu { background: var(--ina-background-primary, #fff); color: var(--ina-content-primary, #1f1f1f); border-color: var(--ina-stroke-secondary, #a3a3a3); }
+button.abu:hover, .tombol.abu:hover { background: var(--ina-background-tertiary, #f2f2f2); }
+button:disabled { opacity: .5; cursor: default; }
+label { display: block; font-size: 13px; color: var(--ina-content-secondary, #525252); font-weight: 500; }
+input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--ina-stroke-secondary, #a3a3a3); border-radius: 8px; font-size: 14px; margin-top: 4px; background: #fff; font-family: inherit; color: var(--ina-content-primary, #1f1f1f); }
+input:focus, select:focus, textarea:focus { border-color: var(--ina-blue-500, #0968f6); outline: none; box-shadow: 0 0 0 3px var(--ina-blue-100, #dbeafe); }
 .aksi { display: flex; gap: 8px; margin-top: 14px; }
 form.inline { display: inline; }
 form.inline button { margin: 0; }
-.login { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-.kotak-login { background: #fff; border: 1px solid #dde3ee; border-radius: 14px; padding: 28px; width: min(360px, 92vw); }
+.login { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--ina-background-secondary, #f8f8f7); }
+.kotak-login { background: #fff; border: 1px solid var(--ina-stroke-primary, #e5e5e5); border-radius: 14px; padding: 28px; width: min(360px, 92vw); box-shadow: 0 4px 16px rgba(20, 20, 20, .06); }
 .kotak-login h1 { margin: 0 0 4px; font-size: 20px; }
-.kotak-login .sub { color: #5b6b82; margin: 0 0 16px; font-size: 13px; }
+.kotak-login .sub { color: var(--ina-content-tertiary, #737373); margin: 0 0 16px; font-size: 13px; }
 .kotak-login label { margin-bottom: 12px; }
 .kotak-login button { width: 100%; }
-.kecil-teks { font-size: 12px; color: #5b6b82; }
+.kecil-teks { font-size: 12px; color: var(--ina-content-tertiary, #737373); }
+/* Paginasi tabel (IDDS style) */
+.paginasi { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--ina-content-secondary, #525252); }
+.paginasi .tombol-halaman { display: flex; gap: 4px; align-items: center; }
+.paginasi button { background: #fff; color: var(--ina-content-primary, #1f1f1f); border: 1px solid var(--ina-stroke-secondary, #a3a3a3); padding: 5px 11px; font-weight: 400; }
+.paginasi button:hover:not(:disabled) { background: var(--ina-background-tertiary, #f2f2f2); }
+.paginasi button.aktif { background: var(--ina-blue-600, #0049b8); border-color: var(--ina-blue-600, #0049b8); color: #fff; font-weight: 600; }
+.paginasi select { width: auto; margin-top: 0; padding: 5px 8px; }
 @media (max-width: 760px) { .samping { display: none; } .isi { padding: 14px; } }

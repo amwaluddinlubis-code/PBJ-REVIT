@@ -1,5 +1,5 @@
 <div class="panel">
-<form class="grid" method="post" action="<?= base_url($aksi) ?>">
+<form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url($aksi) ?>">
   <?= csrf_field() ?>
   <label>Nomor SPK <input type="number" name="nomor" min="1" value="<?= esc(old('nomor', $s['nomor'] ?? '')) ?>" required></label>
   <label>Tanggal <input type="date" name="tanggal" value="<?= esc(old('tanggal', $s['tanggal'] ?? '')) ?>"></label>
@@ -23,7 +23,7 @@
       <?php endforeach; ?>
     </select>
   </label>
-  <div class="aksi">
+  <div class="aksi md:col-span-2">
     <button type="submit">Simpan</button>
     <a class="tombol abu" href="<?= base_url('spk') ?>">Batal</a>
   </div>

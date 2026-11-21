@@ -59,6 +59,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('invoice/ubah/(:num)', 'Invoice::ubah/$1');
     $routes->post('invoice/perbarui/(:num)', 'Invoice::perbarui/$1');
     $routes->post('invoice/hapus/(:num)', 'Invoice::hapus/$1');
+    $routes->get('invoice/cetak/(:num)', 'Invoice::cetak/$1');
     $routes->get('invoice/jurnal', 'Invoice::jurnal');
     $routes->post('invoice/jurnal-tambah', 'Invoice::jurnalTambah');
     $routes->post('invoice/jurnal-hapus/(:num)', 'Invoice::jurnalHapus/$1');
@@ -68,6 +69,13 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('material/simpan', 'Material::simpan');
     $routes->post('material/hapus/(:num)', 'Material::hapus/$1');
     $routes->get('sisa-bahan', 'Material::sisa');
+
+    // Laporan & ekspor (Fase 3)
+    $routes->get('laporan', 'Laporan::index');
+    $routes->get('laporan/cetak', 'Laporan::cetak');
+    $routes->get('laporan/ekspor-spk', 'Laporan::eksporSpk');
+    $routes->get('laporan/ekspor-material', 'Laporan::eksporMaterial');
+    $routes->get('laporan/ekspor-sisa', 'Laporan::eksporSisa');
 
     // Multi-sekolah
     $routes->get('sekolah', 'Sekolah::index');

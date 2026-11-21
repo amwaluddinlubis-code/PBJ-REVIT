@@ -1,6 +1,6 @@
 <div class="panel">
   <p>BAP dibuat dari rincian SPK (kondisi awal "Cukup", dapat diubah per barang). BAST dibuat per SPK. Nomor surat mengikuti pola 422/&lt;JENIS&gt;/&lt;urut&gt;/&lt;tahun&gt;.</p>
-  <table>
+  <table data-paginasi="10">
     <tr><th>SPK</th><th>Paket / Penyedia</th><th>BAP</th><th>BAST</th><th>Cetak SPK</th></tr>
     <?php foreach ($spk as $s): ?>
     <tr>

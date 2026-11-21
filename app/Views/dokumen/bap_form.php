@@ -1,7 +1,7 @@
 <div class="panel">
 <form method="post" action="<?= base_url('dokumen/bap-simpan/' . $bap['id']) ?>">
   <?= csrf_field() ?>
-  <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
     <label>Nomor Urut BAP <input type="number" name="nomor_urut" min="1" value="<?= esc($bap['nomor_urut']) ?>" required></label>
     <label>Tanggal Pemeriksaan <input type="date" name="tanggal" value="<?= esc($bap['tanggal'] ?? '') ?>"></label>
   </div>
@@ -23,7 +23,7 @@
     </tr>
     <?php endforeach; ?>
   </table>
-  <div class="aksi"><button type="submit">Simpan BAP</button>
+  <div class="aksi md:col-span-2"><button type="submit">Simpan BAP</button>
   <a class="tombol abu" href="<?= base_url('dokumen') ?>">Kembali</a>
   <a class="tombol" href="<?= base_url('dokumen/cetak-bap/' . $bap['id']) ?>" target="_blank">Cetak</a></div>
 </form>

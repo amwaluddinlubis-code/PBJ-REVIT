@@ -33,11 +33,24 @@ Data awal diimpor dari workbook v4 (master 95 bahan, 5 SPK, 169 baris detail, 1 
 - `CacheException`/folder tidak writable → pastikan `writable/cache`, `writable/logs`,
   `writable/session`, `writable/debugbar`, `writable/uploads` ada dan dapat ditulis.
 
+## Tampilan: IDDS + Tailwind
+
+Antarmuka memakai **INA Digital Design System (IDDS)** dikombinasikan dengan **Tailwind CSS**:
+
+- `public/assets/idds.css` — token resmi IDDS (`@idds/styles` v1.6.41): variabel warna `--ina-*`, font Inter.
+- `public/assets/tailwind.css` — Tailwind v4 hasil build (preflight + utilitas yang dipakai view + palet IDDS sebagai utilitas, mis. `bg-blue-600` = biru IDDS `#0049b8`). Membangun ulang: `npx @tailwindcss/cli -i input.css -o public/assets/tailwind.css` dengan `@source` menunjuk `app/Views` dan tema dari `@idds/styles/tailwind/css/idds.css`.
+- `public/assets/app.css` — komponen aplikasi (sidebar, tombol, panel, tabel) ditulis di atas token `--ina-*`.
+- Form memakai grid Tailwind 2 kolom (`grid md:grid-cols-2`); tabel data memakai paginasi klien (`public/assets/paginasi.js`, atribut `data-paginasi` pada tabel; baris total beri kelas `baris-total`).
+
 ## Status
 
 - Fase 1 (selesai): login, Dashboard (KPI + peringatan otomatis), Master Bahan (CRUD),
   Register SPK + Detail (dropdown bahan, harga acuan berjenjang negosiasi→penawaran→RAB),
   halaman "Belum Bernomor SPK" untuk memasangkan 159 baris warisan workbook ke SPK.
+- Fase 3 (selesai): Cetak Invoice (nomor 422/INV/..., terbilang, catatan selisih nilai),
+  halaman Laporan (ringkasan RAB vs realisasi, anggaran per gedung RKB/ADM/Toilet,
+  rekap per SPK) + Cetak Laporan ber-kop sekolah aktif, dan ekspor Excel (.xlsx)
+  untuk Rekap SPK, Buku Material, dan Sisa Bahan — semua mengikuti sekolah aktif.
 - Multi-sekolah: satu instalasi melayani banyak sekolah. Data bahan/penyedia/SPK
   (dan seluruh turunannya) terpisah penuh per sekolah; sekolah aktif dipilih lewat
   pengalih di menu samping atau halaman Kelola Sekolah. Sekolah baru mulai dari data

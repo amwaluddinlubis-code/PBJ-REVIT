@@ -1,7 +1,7 @@
 <?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); $tot = 0; ?>
 <div class="panel">
   <h2>Catat Pembayaran</h2>
-  <form class="grid" method="post" action="<?= base_url('invoice/jurnal-tambah') ?>">
+  <form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('invoice/jurnal-tambah') ?>">
     <?= csrf_field() ?>
     <label>Invoice Belum Bayar
       <select name="invoice_id" required>
@@ -13,12 +13,12 @@
     </label>
     <label>Tanggal Bayar <input type="date" name="tanggal"></label>
     <label>Keterangan <input name="keterangan"></label>
-    <div class="aksi"><button type="submit">Catat Bayar</button></div>
+    <div class="aksi md:col-span-2"><button type="submit">Catat Bayar</button></div>
   </form>
 </div>
 <div class="panel">
   <h2>Jurnal Pembayaran</h2>
-  <table>
+  <table data-paginasi="10">
     <tr><th>Tanggal</th><th>Invoice</th><th>SPK</th><th class="angka">Nilai Tagihan</th><th class="angka">PPh 22 (1,5%)</th><th class="angka">Nilai Dibayar</th><th>Keterangan</th><th></th></tr>
     <?php foreach ($baris as $r): $tot += (float) $r['dibayar']; ?>
     <tr>

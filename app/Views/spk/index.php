@@ -1,7 +1,7 @@
 <?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
-<div class="aksi" style="margin:0 0 12px"><a class="tombol" href="<?= base_url('spk/baru') ?>">+ SPK Baru</a></div>
+<div class="aksi md:col-span-2" style="margin:0 0 12px"><a class="tombol" href="<?= base_url('spk/baru') ?>">+ SPK Baru</a></div>
 <div class="panel">
-<table>
+<table data-paginasi="10">
   <tr><th>No.</th><th>Tanggal</th><th>Penyedia</th><th>Paket</th><th>Periode</th><th class="angka">Jml Bahan</th><th class="angka">Nilai SPK</th><th>Status</th><th></th></tr>
   <?php foreach ($spk as $s): ?>
   <tr>

@@ -1,5 +1,5 @@
 <div class="panel">
-<form class="grid" method="post" action="<?= base_url($aksi) ?>">
+<form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url($aksi) ?>">
   <?= csrf_field() ?>
   <label>Nomor Urut <input type="number" name="nomor_urut" min="1" value="<?= esc(old('nomor_urut', $i['nomor_urut'] ?? '')) ?>" required></label>
   <label>No. Invoice Toko <input name="no_toko" value="<?= esc(old('no_toko', $i['no_toko'] ?? '')) ?>"></label>
@@ -35,7 +35,7 @@
       <?php endforeach; ?>
     </select>
   </label>
-  <div class="aksi"><button type="submit">Simpan</button><a class="tombol abu" href="<?= base_url('invoice') ?>">Batal</a></div>
+  <div class="aksi md:col-span-2"><button type="submit">Simpan</button><a class="tombol abu" href="<?= base_url('invoice') ?>">Batal</a></div>
 </form>
 <?php if (! empty($i['id'])): ?>
 <form method="post" action="<?= base_url('invoice/hapus/' . $i['id']) ?>" onsubmit="return confirm('Hapus invoice ini?')" style="margin-top:14px">

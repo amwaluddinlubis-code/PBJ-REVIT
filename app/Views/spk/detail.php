@@ -8,7 +8,7 @@
   </div>
 </div>
 <div class="panel">
-<table>
+<table data-paginasi="10">
   <tr><th>Kode</th><th>Nama Bahan</th><th class="angka">Qty</th><th>Satuan</th><th class="angka">Harga</th><th class="angka">Total</th><th class="angka">PPN</th><th>Ubah Qty/Harga</th><th></th></tr>
   <?php $grand = 0; $grandPpn = 0; foreach ($detail as $d): $grand += (float) $d['total']; $grandPpn += (float) $d['ppn']; ?>
   <tr>
@@ -36,12 +36,12 @@
     </td>
   </tr>
   <?php endforeach; ?>
-  <tr><th colspan="5" style="text-align:right">TOTAL</th><th class="angka"><?= $rp($grand) ?></th><th class="angka"><?= $rp($grandPpn) ?></th><th colspan="2"></th></tr>
+  <tr class="baris-total"><th colspan="5" style="text-align:right">TOTAL</th><th class="angka"><?= $rp($grand) ?></th><th class="angka"><?= $rp($grandPpn) ?></th><th colspan="2"></th></tr>
 </table>
 </div>
 <div class="panel">
   <h2>Tambah Baris Barang</h2>
-  <form class="grid" method="post" action="<?= base_url('spk/detail-tambah/' . $s['id']) ?>">
+  <form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('spk/detail-tambah/' . $s['id']) ?>">
     <?= csrf_field() ?>
     <label>Bahan
       <select name="bahan_id" id="pilihBahan" required>
@@ -56,7 +56,7 @@
     <label>Kena PPN
       <select name="pajak"><option value="0">Tidak</option><option value="1">Ya</option></select>
     </label>
-    <div class="aksi"><button type="submit">Tambah Baris</button></div>
+    <div class="aksi md:col-span-2"><button type="submit">Tambah Baris</button></div>
   </form>
   <p class="kecil-teks">Harga acuan diambil berjenjang: harga negosiasi → harga penawaran → harga RAB.</p>
 </div>

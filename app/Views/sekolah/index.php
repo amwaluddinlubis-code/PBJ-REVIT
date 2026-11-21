@@ -1,7 +1,7 @@
-<div class="aksi" style="margin:0 0 12px"><a class="tombol" href="<?= base_url('sekolah/baru') ?>">+ Tambah Sekolah</a></div>
+<div class="aksi md:col-span-2" style="margin:0 0 12px"><a class="tombol" href="<?= base_url('sekolah/baru') ?>">+ Tambah Sekolah</a></div>
 <div class="panel">
   <p>Setiap sekolah mempunyai data sendiri yang terpisah penuh: bahan/RAB, penyedia, SPK, survei, invoice, dan buku material. Yang tampil di seluruh aplikasi adalah <strong>sekolah aktif</strong> — ganti lewat daftar ini atau pengalih di menu samping.</p>
-  <table>
+  <table data-paginasi="10">
     <tr><th>Sekolah</th><th>NPSN</th><th>Kecamatan</th><th>Tahun Anggaran</th><th class="angka">Bahan</th><th class="angka">SPK</th><th>Status</th><th></th></tr>
     <?php foreach ($daftar as $s): $aktif = (int) ($sekolahAktif['id'] ?? 0) === (int) $s['id']; ?>
     <tr<?= $aktif ? ' style="font-weight:bold"' : '' ?>>
