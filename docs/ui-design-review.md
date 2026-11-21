@@ -51,6 +51,7 @@ Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** di
 - Tambah override `--ina-neutral-*` gelap (di P2).
 
 ### P6 — Feedback saat impor berjalan (UX baru) — sudah selesai & diverifikasi (2026-11-21)
+- **Catatan bug**: fungsi `muatAwal`/`simpanCara` awalnya ada di dalam `<?php if ($tak_tertaut !== []) ?>` — tidak *render* selama belum ada komponen tak tertaut (error "muatAwal is not defined") — dipindahkan ke luar kondisi itu.
 - Cara 1/3 proses synchronous, workbook 8MB+ bisa "berjalan beberapa detik sampai ±1 menit". Tanpa feedback — user rela refresh/menunggu.
 - **Terlakukan**: `onsubmit` pada 3 form impor → `muatAwal(form)` — disable tombol + ubah teks menjadi "Mengimpor…"; verifikasi di browser: `btnDisabled: true` + `btnText` berubah.
 
