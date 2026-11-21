@@ -17,7 +17,7 @@
   <div class="kpi"><div class="label">Sisa Anggaran</div><div class="nilai"><?= $rp($sisa) ?></div></div>
 </div>
 
-<?php if ($tanpaSpk->j > 0 || $invoiceCek || $sisaNegatif || ! empty($tahap2JatuhTempo) || ! empty($pecahCek)): ?>
+<?php if ($tanpaSpk->j > 0 || $invoiceCek || $sisaNegatif || ! empty($tahap2JatuhTempo) || ! empty($pecahCek) || ! empty($masterKonflik)): ?>
 <div class="peringatan">
   <h2>Perlu perhatian</h2>
   <ul>
@@ -37,6 +37,9 @@
     <?php endforeach; ?>
     <?php foreach ($pecahCek ?? [] as $p): ?>
       <li><?= esc($p) ?></li>
+    <?php endforeach; ?>
+    <?php foreach ($masterKonflik ?? [] as $k): ?>
+      <li><strong>ALERT MASTER:</strong> <?= esc($k) ?> <a href="<?= base_url('bahan') ?>">Buka Master Bahan &amp; Upah</a></li>
     <?php endforeach; ?>
   </ul>
 </div>

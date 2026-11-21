@@ -102,6 +102,59 @@ class Lpj extends BaseController
         ], 'LPJ Gedung: ' . $g['nama']);
     }
 
+    /**
+     * Data RAB gabungan beberapa gedung: ringkasan per gedung +
+     * pekerjaan yang sama (nama & harga satuan sama) digabung volumenya
+     * lintas gedung. Melengkapi RAB per gedung yang sudah ada di LPJ
+     * Gedung.
+     */
+    private function dataRabGabungan(array $ids): array
+    {
+        $semua = $this->semuaGedung();
+        $valid = array_map(static fn ($g) => (int) $g['id'], $semua);
+        $ids = array_values(array_intersect(array_map('intval', $ids), $valid));
+        if ($ids === []) {
+            $ids = $valid;
+        }
+        $perGedung = [];
+        foreach ($semua as $g) {
+            if (in_array((int) $g['id'], $ids, true)) {
+                $perGedung[] = $this->rekapGedung($g);
+            }
+        }
+        $gabungan = [];
+        $total = 0.0;
+        if ($ids !== []) {
+            $in = implode(',', $ids);
+            $gabungan = $this->db()->query(
+                "SELECT MAX(p.nama) AS nama, p.satuan, p.harga_satuan,
+                        SUM(p.volume) AS volume, SUM(p.jumlah) AS jumlah,
+                        COUNT(DISTINCT p.gedung_id) AS jumlah_gedung
+                 FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
+                 WHERE p.gedung_id IN ($in) AND p.is_deleted = 0 AND g.is_deleted = 0
+                 GROUP BY LOWER(TRIM(p.nama)), p.satuan, p.harga_satuan
+                 ORDER BY jumlah DESC"
+            )->getResultArray();
+            $total = array_sum(array_column($gabungan, 'jumlah'));
+        }
+        return ['semua' => $semua, 'ids' => $ids, 'perGedung' => $perGedung, 'gabungan' => $gabungan, 'total' => $total];
+    }
+
+    /** Halaman RAB Gabungan: pilih beberapa gedung, lihat RAB menyatu. */
+    public function rabGabungan()
+    {
+        $pilih = (array) ($this->request->getGet('gedung') ?? []);
+        $d = $this->dataRabGabungan($pilih);
+        return $this->tampil('lpj/rab_gabungan', $d, 'RAB Gabungan Beberapa Gedung');
+    }
+
+    public function cetakRabGabungan()
+    {
+        $pilih = (array) ($this->request->getGet('gedung') ?? []);
+        $d = $this->dataRabGabungan($pilih);
+        return view('lpj/cetak_rab_gabungan', $d + ['sekolah' => $this->sekolahAktif()]);
+    }
+
     public function cetakSekolah()
     {
         $rekap = array_map(fn ($g) => $this->rekapGedung($g), $this->semuaGedung());

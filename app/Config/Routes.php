@@ -18,6 +18,11 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('bahan/ubah/(:num)', 'Bahan::ubah/$1');
     $routes->post('bahan/perbarui/(:num)', 'Bahan::perbarui/$1');
     $routes->post('bahan/hapus/(:num)', 'Bahan::hapus/$1');
+    $routes->post('bahan/gabung', 'Bahan::gabung');
+    $routes->post('bahan/upah-simpan', 'Bahan::upahSimpan');
+    $routes->post('bahan/upah-perbarui/(:num)', 'Bahan::upahPerbarui/$1');
+    $routes->post('bahan/upah-hapus/(:num)', 'Bahan::upahHapus/$1');
+    $routes->post('bahan/upah-gabung', 'Bahan::upahGabung');
 
     // SPK + detail
     $routes->get('spk', 'Spk::index');
@@ -150,6 +155,8 @@ $routes->get('lpj', 'Lpj::index', ['filter' => 'auth']);
 $routes->get('lpj/gedung/(:num)', 'Lpj::gedung/$1', ['filter' => 'auth']);
 $routes->get('lpj/cetak', 'Lpj::cetakSekolah', ['filter' => 'auth']);
 $routes->get('lpj/cetak/gedung/(:num)', 'Lpj::cetakGedung/$1', ['filter' => 'auth']);
+$routes->get('lpj/rab-gabungan', 'Lpj::rabGabungan', ['filter' => 'auth']);
+$routes->get('lpj/cetak/rab-gabungan', 'Lpj::cetakRabGabungan', ['filter' => 'auth']);
 $routes->get('pengguna', 'Pengguna::index', ['filter' => 'auth']);
 $routes->post('pengguna/simpan', 'Pengguna::simpan', ['filter' => 'auth']);
 $routes->post('pengguna/(:num)/ubah', 'Pengguna::ubah/$1', ['filter' => 'auth']);

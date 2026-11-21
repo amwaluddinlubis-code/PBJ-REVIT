@@ -90,6 +90,38 @@ class Dashboard extends BaseController
                 . ' pada ' . $r['bln'] . ' — pembelian maksimal Rp2 juta yang bebas PPh 22 tidak boleh dipecah-pecah.';
         }
 
+        // ALERT master: bahan/upah yang sama tetapi satuan atau harga
+        // berbeda — harus diperbaiki dan digabung di Master Bahan & Upah
+        // sebelum datanya konsisten dipakai modul lain.
+        $masterKonflik = [];
+        $kelompokBahan = [];
+        foreach ($db->table('bahan')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $b) {
+            $kelompokBahan[Bahan::normalNama($b['nama'])][] = $b;
+        }
+        foreach ($kelompokBahan as $anggota) {
+            if (count($anggota) < 2) {
+                continue;
+            }
+            $satuanUnik = array_unique(array_map(static fn ($x) => (string) $x['satuan'], $anggota));
+            $hargaUnik = array_unique(array_map(static fn ($x) => (string) $x['harga_rab'], $anggota));
+            if (count($satuanUnik) > 1 || count($hargaUnik) > 1) {
+                $masterKonflik[] = 'Bahan "' . $anggota[0]['nama'] . '" tercatat ' . count($anggota) . ' kali dengan satuan/harga berbeda — perbaiki dan gabungkan di Master Bahan & Upah.';
+            }
+        }
+        $kelompokUpah = [];
+        foreach ($db->table('upah_master')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $u) {
+            $kelompokUpah[Bahan::normalNama($u['jenis'])][] = $u;
+        }
+        foreach ($kelompokUpah as $anggota) {
+            if (count($anggota) < 2) {
+                continue;
+            }
+            $tarifUnik = array_unique(array_map(static fn ($x) => (string) $x['tarif'], $anggota));
+            if (count($tarifUnik) > 1) {
+                $masterKonflik[] = 'Jenis tenaga "' . $anggota[0]['jenis'] . '" tercatat ' . count($anggota) . ' kali dengan tarif berbeda — perbaiki dan gabungkan di Master Bahan & Upah.';
+            }
+        }
+
         return $this->tampil('dashboard/index', [
             'identitas'   => $identitas,
             'totalRab'    => $totalRab,
@@ -104,6 +136,7 @@ class Dashboard extends BaseController
             'tahap2JatuhTempo' => $tahap2JatuhTempo,
             'fisikRata' => $fisikRata,
             'pecahCek' => $pecahCek,
+            'masterKonflik' => $masterKonflik,
         ], 'Dashboard — Analisa Perencana');
     }
 }

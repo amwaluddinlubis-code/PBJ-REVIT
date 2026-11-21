@@ -158,6 +158,17 @@ Pengembangan lanjutan berdasarkan Juknis (migrasi 000008–000011):
   Kegiatan** (di halaman BAP & BAST), **cetak Daftar Pembayaran Upah**
   bulanan dengan kolom tanda tangan penerima, dan **deteksi pola
   pemecahan pembelian** di Dashboard.
+- **Master Bahan & Upah** (satu menu): master bahan dan master upah
+  menjadi referensi bersama semua modul. **ALERT** muncul di Dashboard
+  dan di halaman master bila ada bahan/jenis tenaga yang sama dengan
+  satuan atau harga berbeda; alurnya **perbaiki dulu** (tentukan satuan
+  & harga/tarif final) **barulah gabungkan** ke master — penggabungan
+  mengalihkan semua referensi (SPK detail, komponen analisa, survei
+  harga, negosiasi, buku material) dan menjumlahkan kuantitas RAB.
+  Menambah bahan/jenis dengan nama yang sama kini ditolak.
+- **RAB Gabungan**: selain RAB per gedung di LPJ Gedung, tersedia RAB
+  gabungan beberapa gedung (pekerjaan yang sama dijumlahkan volumenya
+  lintas gedung) lengkap dengan cetaknya.
 
 Langkah sesudah `git pull` versi ini: jalankan `php spark migrate`
 (migrasi 000007–000011).
