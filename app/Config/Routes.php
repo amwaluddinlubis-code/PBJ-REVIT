@@ -109,6 +109,9 @@ $routes->post('gedung/pekerjaan/(:num)/realisasi', 'Gedung::simpanRealisasi/$1',
 $routes->post('gedung/realisasi/(:num)/hapus', 'Gedung::hapusRealisasi/$1', ['filter' => 'auth']);
 $routes->post('gedung/tautkan', 'Gedung::tautkan', ['filter' => 'auth']);
 $routes->get('rencana-belanja', 'Rencana::index', ['filter' => 'auth']);
+$routes->get('biaya-non-gedung', 'BiayaLain::index', ['filter' => 'auth']);
+$routes->post('biaya-non-gedung/simpan', 'BiayaLain::simpan', ['filter' => 'auth']);
+$routes->post('biaya-non-gedung/hapus/(:num)', 'BiayaLain::hapus/$1', ['filter' => 'auth']);
 $routes->post('rencana-belanja/buat-spk', 'Rencana::buatSpk', ['filter' => 'auth']);
 $routes->get('upah', 'Upah::index', ['filter' => 'auth']);
 $routes->post('upah/simpan', 'Upah::simpan', ['filter' => 'auth']);

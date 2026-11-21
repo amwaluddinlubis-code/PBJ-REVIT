@@ -147,15 +147,27 @@ class Impor extends BaseController
                     count($r['gedung']), $r['analisa'], $r['komponen'], $r['bahan_baru']
                 );
             }
+            if (($r['format'] ?? '') === 'template' && ($r['biaya_lain'] ?? 0) > 0) {
+                $pesan .= sprintf(' Biaya non-gedung: %d baris.', $r['biaya_lain']);
+            }
+            if (($r['format'] ?? '') === 'perencana' && ($r['biaya_lain']['baris'] ?? 0) > 0) {
+                $pesan .= sprintf(
+                    ' Biaya non-gedung terbaca: %d baris (Rp %s).',
+                    $r['biaya_lain']['baris'],
+                    number_format($r['biaya_lain']['total'], 0, ',', '.')
+                );
+            }
             $v = $this->verifikasiAnggaran($sekolahId);
             $r['verifikasi'] = $v;
             $statusV = $v['pagu'] <= 0
                 ? 'pagu belum diatur di Pengaturan'
                 : ($v['selisih'] == 0 ? 'persis sama dengan pagu' : ($v['selisih'] > 0 ? 'di bawah pagu' : 'MELEBIHI pagu'));
             $pesan .= sprintf(
-                ' Verifikasi anggaran: total BOQ %d gedung aktif Rp %s vs pagu Rp %s — selisih Rp %s (%s).',
+                ' Verifikasi anggaran: total BOQ %d gedung aktif Rp %s + biaya non-gedung Rp %s = Rp %s vs pagu Rp %s — selisih Rp %s (%s).',
                 $v['gedung'],
                 number_format($v['total_boq'], 0, ',', '.'),
+                number_format($v['biaya_lain'], 0, ',', '.'),
+                number_format($v['total_semua'], 0, ',', '.'),
                 number_format($v['pagu'], 0, ',', '.'),
                 number_format($v['selisih'], 0, ',', '.'),
                 $statusV
@@ -190,7 +202,11 @@ class Impor extends BaseController
             [['kode' => 'CONTOH-B001', 'nama' => 'Semen PC', 'satuan' => 'zak', 'harga_rab' => 65000]],
             [['jenis' => 'CONTOH-Pekerja', 'satuan' => 'OH', 'tarif' => 80671]],
             $analisa,
-            [['gedung' => 'CONTOH-RKB 3 Kopel', 'bab' => 'III. PEKERJAAN PONDASI', 'nama' => 'Pondasi Batu Belah Campuran 1SP : 4PP', 'kode_analisa' => 'F.01', 'volume' => 62.4, 'satuan' => 'm3']]
+            [['gedung' => 'CONTOH-RKB 3 Kopel', 'bab' => 'III. PEKERJAAN PONDASI', 'nama' => 'Pondasi Batu Belah Campuran 1SP : 4PP', 'kode_analisa' => 'F.01', 'volume' => 62.4, 'satuan' => 'm3']],
+            [
+                ['kelompok' => 'Perencanaan & Pengawasan', 'uraian' => 'CONTOH-Perencana', 'volume' => 1, 'satuan' => 'orang', 'periode' => 1, 'satuan_periode' => 'Ls', 'harga_satuan' => 21017634, 'keterangan' => '1,65% dari nilai konstruksi'],
+                ['kelompok' => 'Biaya Pengelolaan', 'uraian' => 'CONTOH-Honor P2SP — Ketua', 'volume' => 1, 'satuan' => 'set', 'periode' => 4, 'satuan_periode' => 'bln', 'harga_satuan' => 750000, 'keterangan' => ''],
+            ]
         );
         PenulisTemplate::unduh($ss, 'Template_Impor_Perencana.xlsx');
         exit;
@@ -214,9 +230,10 @@ class Impor extends BaseController
              WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 ORDER BY g.urutan, p.urutan',
             [$sid]
         )->getResultArray();
+        $biayaLain = $db->table('biaya_lain')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->orderBy('kelompok')->orderBy('id')->get()->getResultArray();
         $sekolah = $this->sekolahAktif() ?? [];
         $slug = trim(preg_replace('/[^a-z0-9]+/i', '_', (string) ($sekolah['nama_sekolah'] ?? 'sekolah')), '_');
-        PenulisTemplate::unduh(PenulisTemplate::dariData($sekolah, $bahan, $upah, $analisa, $boq), 'Template_Terisi_' . $slug . '.xlsx');
+        PenulisTemplate::unduh(PenulisTemplate::dariData($sekolah, $bahan, $upah, $analisa, $boq, $biayaLain), 'Template_Terisi_' . $slug . '.xlsx');
         exit;
     }
 

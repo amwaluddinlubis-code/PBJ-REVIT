@@ -23,7 +23,7 @@ class PenulisTemplate
         $writer->save('php://output');
     }
 
-    public static function dariData(array $sekolah, array $bahan, array $upah, array $analisa, array $boq): Spreadsheet
+    public static function dariData(array $sekolah, array $bahan, array $upah, array $analisa, array $boq, array $biayaLain = []): Spreadsheet
     {
         $ss = new Spreadsheet();
         self::sheetPetunjuk($ss->getActiveSheet());
@@ -104,6 +104,15 @@ class PenulisTemplate
             $hargaIsi = isset($row['harga_satuan']) && (float) $row['harga_satuan'] > 0 ? (float) $row['harga_satuan'] : null;
             $ws->fromArray([$row['gedung'], $row['bab'], $row['nama'], $row['kode_analisa'], (float) $row['volume'], $row['satuan'], $hargaIsi], null, 'A' . $r++);
         }
+        // BiayaLain — biaya non-gedung tingkat sekolah
+        $ws = $ss->createSheet();
+        $ws->setTitle('BiayaLain');
+        self::kepala($ws, 'BIAYA NON-GEDUNG — PERENCANAAN, PENGAWASAN & PENGELOLAAN', ['Kelompok *', 'Uraian *', 'Volume *', 'Satuan', 'Periode', 'Satuan Periode', 'Harga Satuan (Rp) *', 'Keterangan'], [26, 44, 10, 10, 10, 12, 18, 34]);
+        $r = 5;
+        foreach ($biayaLain as $row) {
+            $ws->fromArray([$row['kelompok'], $row['uraian'], (float) $row['volume'], $row['satuan'] ?? '', $row['periode'] !== null ? (float) $row['periode'] : '', $row['satuan_periode'] ?? '', (float) $row['harga_satuan'], $row['keterangan'] ?? ''], null, 'A' . $r++);
+        }
+
         $ss->setActiveSheetIndex(0);
         return $ss;
     }
@@ -133,6 +142,7 @@ class PenulisTemplate
             'Kode analisa di BOQ harus sama dengan di Analisa. Nama bahan/upah di Analisa harus sama dengan di Harga.',
             'Harga Komponen di Analisa adalah harga per SATUAN KOMPONEN dari dokumen analisa (mis. Semen Rp 1.860 per kg) — acuan harga yang sebenarnya.',
             'Sheet Harsat memuat harga satuan pekerjaan resmi per kode analisa: dipakai bila kolom Harga Satuan di BOQ kosong, sebelum dihitung dari komponen Analisa.',
+            'Sheet BiayaLain memuat biaya non-gedung tingkat sekolah (perencanaan, pengawasan, pengelolaan): jumlah = volume x periode (bila ada) x harga satuan. Baris manual di aplikasi tidak tertimpa impor template.',
             'Baris yang kolom pertamanya diawali CONTOH dilewati saat impor.',
             'Kolom Harga Satuan (opsional) di BOQ: bila diisi, nilai itu yang dipakai apa adanya; bila dikosongkan, harga dihitung dari Analisa.',
         ];

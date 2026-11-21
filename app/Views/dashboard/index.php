@@ -50,7 +50,7 @@
     <?php endforeach; ?>
   </table>
   <?php if (isset($verifikasi)): ?>
-  <p class="kecil-teks" style="margin-bottom:0">Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung aktif</b>: <b><?= $rp($verifikasi['total_boq']) ?></b> · Pagu anggaran: <b><?= $rp($verifikasi['pagu']) ?></b> · Selisih: <b><?= $rp($verifikasi['selisih']) ?></b><?php if ($verifikasi['pagu'] > 0 && $verifikasi['selisih'] < 0): ?> <span style="color:var(--ina-red-700,#a61e1e)"><b>(melebihi pagu)</b></span><?php elseif ($verifikasi['pagu'] > 0 && $verifikasi['selisih'] == 0): ?> <span style="color:var(--ina-green-700,#1e6b2a)"><b>(sesuai pagu)</b></span><?php endif; ?> — pantau pemakaiannya di <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a> dan <a href="<?= base_url('lpj') ?>">LPJ &amp; Realisasi</a>.</p>
+  <p class="kecil-teks" style="margin-bottom:0">Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung aktif</b>: <b><?= $rp($verifikasi['total_boq']) ?></b> + biaya non-gedung <b><?= $rp($verifikasi['biaya_lain']) ?></b> = <b><?= $rp($verifikasi['total_semua']) ?></b> · Pagu anggaran: <b><?= $rp($verifikasi['pagu']) ?></b> · Selisih: <b><?= $rp($verifikasi['selisih']) ?></b><?php if ($verifikasi['pagu'] > 0 && $verifikasi['selisih'] < 0): ?> <span style="color:var(--ina-red-700,#a61e1e)"><b>(melebihi pagu)</b></span><?php elseif ($verifikasi['pagu'] > 0 && $verifikasi['selisih'] == 0): ?> <span style="color:var(--ina-green-700,#1e6b2a)"><b>(sesuai pagu)</b></span><?php endif; ?> — pantau pemakaiannya di <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a> dan <a href="<?= base_url('lpj') ?>">LPJ &amp; Realisasi</a>.</p>
   <?php endif; ?>
 </div>
 <?php endif; ?>

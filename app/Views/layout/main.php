@@ -64,7 +64,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       <?php
       $uriPenuh = uri_string();
       $indukAktif = [
-        'perencanaan' => in_array($seg, ['impor', 'rencana-belanja'], true),
+        'perencanaan' => in_array($seg, ['impor', 'rencana-belanja', 'biaya-non-gedung'], true),
         'gedung'      => $seg === 'gedung',
         'belanja'     => in_array($seg, ['spk', 'belum-bernomor', 'survei', 'negosiasi', 'dokumen', 'invoice', 'upah'], true),
         'bahan'       => in_array($seg, ['bahan', 'material', 'sisa-bahan', 'lpj', 'laporan'], true),
@@ -81,6 +81,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       <?php $induk('perencanaan', 'rencana', 'Perencanaan'); ?>
         <a href="<?= base_url('impor') ?>"<?= $aktif('impor') ?>>Impor Dokumen Perencana</a>
         <a href="<?= base_url('rencana-belanja') ?>"<?= $aktif('rencana-belanja') ?>>Rencana Belanja</a>
+        <a href="<?= base_url('biaya-non-gedung') ?>"<?= $aktif('biaya-non-gedung') ?>>Biaya Non-Gedung</a>
       <?= $tutupInduk() ?>
       <?php $induk('gedung', 'gedung', 'Pembangunan Gedung'); ?>
         <a href="<?= base_url('gedung') ?>"<?= $aktif('gedung') ?>>Kelola Gedung</a>

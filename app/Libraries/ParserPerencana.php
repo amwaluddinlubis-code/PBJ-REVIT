@@ -173,9 +173,14 @@ class ParserPerencana
         }
         $ringkas['harsat'] = $this->validasiHarsat($petaHarsat);
 
+        // 3c) Biaya non-gedung: sheet "Prcn dan pgws" (perencanaan &
+        // pengawasan) dan "ADMINISTRASI" (biaya pengelolaan P2SP).
+        $ringkas['biaya_lain'] = $this->imporBiayaLain($p);
+
         // 4) Sheet BOQ per gedung
         $bukanBoq = ['harga bahan upah', 'harga bahan upah 2', 'analisa', 'analisa 2',
-                     'rekap rab per ruang', 'input data', 'harsat pekerjaan'];
+                     'rekap rab per ruang', 'input data', 'harsat pekerjaan',
+                     'prcn dan pgws', 'administrasi'];
         foreach ($semuaSheet as $nama) {
             if ($this->sheetDilewati($nama) || in_array(self::normal($nama), $bukanBoq, true)) {
                 continue;
@@ -422,6 +427,116 @@ class ParserPerencana
                 $hasil['cocok']++;
             } else {
                 $hasil['selisih']++;
+            }
+        }
+        return $hasil;
+    }
+
+    /**
+     * Biaya non-gedung dari sheet "Prcn dan pgws" dan "ADMINISTRASI".
+     * Baris sumber impor lama diganti segar; baris manual pengguna utuh.
+     * Mengembalikan [baris, total].
+     */
+    private function imporBiayaLain(PembacaXlsxMentah $p): array
+    {
+        $this->db->table('biaya_lain')->where(['sekolah_id' => $this->sid, 'sumber' => 'impor'])->delete();
+        $hasil = ['baris' => 0, 'total' => 0.0];
+        $sisip = function (array $r) use (&$hasil) {
+            $r['sekolah_id'] = $this->sid;
+            $r['sumber'] = 'impor';
+            $r['created_at'] = date('Y-m-d H:i:s');
+            $r['updated_at'] = date('Y-m-d H:i:s');
+            $this->db->table('biaya_lain')->insert($r);
+            $hasil['baris']++;
+            $hasil['total'] += (float) $r['jumlah'];
+        };
+        $cariSheet = function (string $target) use ($p) {
+            foreach ($p->daftarSheet() as $n) {
+                if (self::normal($n) === $target) {
+                    return $n;
+                }
+            }
+            return null;
+        };
+
+        // --- Perencanaan & Pengawasan ---
+        $sheetPrcn = $cariSheet('prcn dan pgws');
+        if ($sheetPrcn !== null) {
+            $nilaiKonstruksi = 0.0;
+            foreach ($this->baris($p, $sheetPrcn, 12) as $sel) {
+                foreach ($sel as $v) {
+                    if (self::teks($v) === 'Nilai Konstruksi') {
+                        foreach ($sel as $v2) {
+                            $nilaiKonstruksi = max($nilaiKonstruksi, self::num($v2));
+                        }
+                    }
+                }
+                $uraian = self::teks($sel[3] ?? null);
+                if (! in_array(strtolower($uraian), ['perencana', 'pengawas'], true)) {
+                    continue;
+                }
+                $volume = self::num($sel[5] ?? null) ?: 1;
+                $periode = self::num($sel[7] ?? null) ?: 1;
+                $harga = self::num($sel[9] ?? null);
+                $jumlah = self::num($sel[10] ?? null);
+                if ($jumlah <= 0) {
+                    $jumlah = $volume * $periode * $harga;
+                }
+                $persen = self::num($sel[11] ?? null);
+                $ket = null;
+                if ($persen > 0 && $nilaiKonstruksi > 0) {
+                    $ket = rtrim(rtrim(number_format($persen * 100, 2, ',', '.'), '0'), ',')
+                        . '% dari Nilai Konstruksi Rp ' . number_format($nilaiKonstruksi, 0, ',', '.');
+                }
+                $sisip([
+                    'kelompok' => 'Perencanaan & Pengawasan',
+                    'uraian' => $uraian,
+                    'volume' => $volume,
+                    'satuan' => self::teks($sel[6] ?? null) ?: null,
+                    'periode' => $periode,
+                    'satuan_periode' => self::teks($sel[8] ?? null) ?: null,
+                    'harga_satuan' => $harga,
+                    'jumlah' => $jumlah,
+                    'keterangan' => $ket,
+                ]);
+            }
+        }
+
+        // --- Biaya Pengelolaan (ADMINISTRASI) ---
+        $sheetAdm = $cariSheet('administrasi');
+        if ($sheetAdm !== null) {
+            $sub = '';
+            foreach ($this->baris($p, $sheetAdm, 12) as $sel) {
+                $label3 = self::teks($sel[3] ?? null);
+                $uraian4 = self::teks($sel[4] ?? null);
+                $adaAngka = isset($sel[5]) || isset($sel[9]) || isset($sel[10]);
+                // Baris judul kelompok: label di kolom 3 (bukan '-') atau
+                // label di kolom 4 tanpa angka sama sekali (cth. Honor P2SP).
+                if (($label3 !== '' && $label3 !== '-' && $uraian4 === '') || ($uraian4 !== '' && ! $adaAngka)) {
+                    $sub = $uraian4 !== '' && ! $adaAngka ? $uraian4 : $label3;
+                    continue;
+                }
+                if ($uraian4 === '' || ! $adaAngka) {
+                    continue;
+                }
+                $volume = self::num($sel[5] ?? null);
+                $periode = isset($sel[7]) ? self::num($sel[7]) : null;
+                $harga = self::num($sel[9] ?? null);
+                $jumlah = self::num($sel[10] ?? null);
+                if (! isset($sel[10])) {
+                    $jumlah = $volume * ($periode !== null && $periode > 0 ? $periode : 1) * $harga;
+                }
+                $sisip([
+                    'kelompok' => 'Biaya Pengelolaan',
+                    'uraian' => ($sub !== '' && strcasecmp($sub, $uraian4) !== 0) ? $sub . ' — ' . $uraian4 : $uraian4,
+                    'volume' => $volume,
+                    'satuan' => self::teks($sel[6] ?? null) ?: null,
+                    'periode' => $periode,
+                    'satuan_periode' => self::teks($sel[8] ?? null) ?: null,
+                    'harga_satuan' => $harga,
+                    'jumlah' => $jumlah,
+                    'keterangan' => null,
+                ]);
             }
         }
         return $hasil;

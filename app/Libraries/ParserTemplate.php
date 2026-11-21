@@ -39,7 +39,8 @@ class ParserTemplate
     {
         $p = new PembacaXlsxMentah($path);
         $stat = ['bahan_baru' => 0, 'bahan_diperbarui' => 0, 'upah' => 0, 'analisa' => 0,
-            'komponen' => 0, 'tak_tertaut' => 0, 'gedung' => 0, 'pekerjaan' => 0, 'nilai_boq' => 0.0];
+            'komponen' => 0, 'tak_tertaut' => 0, 'gedung' => 0, 'pekerjaan' => 0, 'nilai_boq' => 0.0,
+            'biaya_lain' => 0];
         $this->imporSekolah($p);
         $this->imporHarga($p, $stat);
         $petaBahan = $this->petaBahan();
@@ -47,6 +48,7 @@ class ParserTemplate
         $petaHarsat = $this->bacaHarsat($p);
         $this->imporAnalisa($p, $stat, $petaBahan, $petaUpah, $petaHarsat);
         $this->imporBoq($p, $stat, $petaHarsat);
+        $this->imporBiayaLain($p, $stat);
         return $stat;
     }
 
@@ -299,6 +301,41 @@ class ParserTemplate
      * pertama (bukan nomor baris — pembaca mentah melewati baris kosong,
      * jadi menghitung baris akan menggeser data).
      */
+    /** Biaya non-gedung dari sheet BiayaLain template (baris impor diganti segar; baris manual utuh). */
+    private function imporBiayaLain(PembacaXlsxMentah $p, array &$stat): void
+    {
+        if (! $p->adaSheet('BiayaLain')) {
+            return;
+        }
+        $this->db->table('biaya_lain')->where(['sekolah_id' => $this->sid, 'sumber' => 'impor'])->delete();
+        foreach ($this->barisData($p, 'BiayaLain', 8, 'kelompok') as $sel) {
+            $kelompok = trim((string) ($sel[0] ?? ''));
+            $uraian = trim((string) ($sel[1] ?? ''));
+            if ($kelompok === '' || $uraian === '' || str_starts_with(strtoupper($kelompok), 'CONTOH') || str_starts_with(strtoupper($uraian), 'CONTOH')) {
+                continue;
+            }
+            $volume = (float) ($sel[2] ?? 0);
+            $periode = isset($sel[4]) && $sel[4] !== '' ? (float) $sel[4] : null;
+            $harga = (float) ($sel[6] ?? 0);
+            $this->db->table('biaya_lain')->insert([
+                'sekolah_id' => $this->sid,
+                'kelompok' => $kelompok,
+                'uraian' => $uraian,
+                'volume' => $volume,
+                'satuan' => trim((string) ($sel[3] ?? '')) ?: null,
+                'periode' => $periode,
+                'satuan_periode' => trim((string) ($sel[5] ?? '')) ?: null,
+                'harga_satuan' => $harga,
+                'jumlah' => $volume * ($periode !== null && $periode > 0 ? $periode : 1) * $harga,
+                'keterangan' => trim((string) ($sel[7] ?? '')) ?: null,
+                'sumber' => 'impor',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+            $stat['biaya_lain']++;
+        }
+    }
+
     private function barisData(PembacaXlsxMentah $p, string $sheet, int $kolom, string $penanda = ''): \Generator
     {
         $lewatJudul = $penanda === '';

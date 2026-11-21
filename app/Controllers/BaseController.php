@@ -302,8 +302,9 @@ abstract class BaseController extends Controller
     }
 
     /**
-     * Verifikasi anggaran: total BOQ gedung aktif dibandingkan pagu sekolah.
-     * Mengembalikan [total_boq, pagu, selisih (pagu - total), gedung (jumlah aktif)].
+     * Verifikasi anggaran: total BOQ gedung aktif + biaya non-gedung
+     * dibandingkan pagu sekolah. Mengembalikan [total_boq, biaya_lain,
+     * total_semua, pagu, selisih (pagu - total_semua), gedung (jumlah aktif)].
      */
     protected function verifikasiAnggaran(?int $sid = null): array
     {
@@ -315,10 +316,18 @@ abstract class BaseController extends Controller
         )->getRowArray();
         $total = $this->totalBoqAktif($sid);
         $pagu = (float) ($sekolah['total_anggaran'] ?? 0);
+        $bl = $this->db()->query(
+            'SELECT COALESCE(SUM(jumlah), 0) AS t FROM biaya_lain WHERE sekolah_id = ? AND is_deleted = 0',
+            [$sid]
+        )->getRowArray();
+        $biayaLain = (float) ($bl['t'] ?? 0);
+        $totalSemua = $total + $biayaLain;
         return [
             'total_boq' => $total,
+            'biaya_lain' => $biayaLain,
+            'total_semua' => $totalSemua,
             'pagu' => $pagu,
-            'selisih' => $pagu - $total,
+            'selisih' => $pagu - $totalSemua,
             'gedung' => (int) ($n['n'] ?? 0),
         ];
     }
