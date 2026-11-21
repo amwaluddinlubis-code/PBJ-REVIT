@@ -161,3 +161,65 @@ form.inline button { margin: 0; }
 .tombol-samping { background: #fff; color: var(--ta-teks-2); border: 1px solid var(--ta-garis); border-radius: 9px; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .tombol-samping:hover { background: var(--ina-neutral-50, #f8f8f7); color: var(--ta-teks); }
 .tombol-samping svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.9; }
+
+/* ===== Menu parent > child (TailAdmin) ===== */
+.samping nav .parent { display: flex; align-items: center; gap: 10px; width: 100%; background: transparent; border: none; box-shadow: none; color: var(--ta-teks-2); padding: 8px 10px; border-radius: 8px; margin-bottom: 2px; font-size: 11.2px; font-weight: 500; text-align: left; cursor: pointer; font-family: inherit; }
+.samping nav .parent:hover { background: var(--ina-neutral-50, #f8f8f7); color: var(--ta-teks); }
+.samping nav .parent.aktif { color: var(--ta-biru); font-weight: 600; }
+.samping nav .parent > svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.8; flex-shrink: 0; }
+.samping nav .parent .panah { width: 15px; height: 15px; margin-left: auto; stroke: currentColor; fill: none; stroke-width: 1.8; transition: transform .2s; }
+.samping nav .induk.buka .parent .panah { transform: rotate(180deg); }
+.samping nav .anak { display: none; margin: 1px 0 5px 18px; padding-left: 9px; border-left: 1px solid var(--ta-garis); }
+.samping nav .induk.buka .anak { display: block; }
+.samping nav .anak a { font-size: 10.8px; padding: 6.5px 10px; }
+
+/* ===== Topbar: font, tema, dropdown user ===== */
+.grup-font { display: flex; align-items: center; border: 1px solid var(--ta-garis); border-radius: 9px; overflow: hidden; background: #fff; }
+.grup-font button { background: transparent; border: none; box-shadow: none; color: var(--ta-teks-2); padding: 7px 10px; font-size: 10.4px; font-weight: 700; cursor: pointer; border-radius: 0; }
+.grup-font button:hover { background: var(--ina-neutral-50, #f8f8f7); color: var(--ta-biru); }
+.grup-font span { font-size: 9.6px; color: var(--ta-teks-3); min-width: 37px; text-align: center; font-weight: 600; }
+.tombol-ikon-top { background: #fff; color: var(--ta-teks-2); border: 1px solid var(--ta-garis); border-radius: 9px; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+.tombol-ikon-top:hover { background: var(--ina-neutral-50, #f8f8f7); color: var(--ta-teks); }
+.tombol-ikon-top svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; display: block; }
+.tombol-ikon-top .ikon-matahari { display: none; }
+html.gelap .tombol-ikon-top .ikon-bulan { display: none; }
+html.gelap .tombol-ikon-top .ikon-matahari { display: block; }
+.user-menu { position: relative; }
+.tombol-user { display: flex; align-items: center; gap: 9px; background: transparent; border: none; box-shadow: none; padding: 4px 8px 4px 4px; border-radius: 10px; cursor: pointer; color: var(--ta-teks); font-family: inherit; }
+.tombol-user:hover { background: var(--ina-neutral-50, #f8f8f7); }
+.tombol-user .panah { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; transition: transform .2s; }
+.user-menu.buka .tombol-user .panah { transform: rotate(180deg); }
+.user-ringkas { text-align: left; line-height: 1.2; }
+.user-ringkas b { display: block; font-size: 11.2px; font-weight: 600; }
+.user-ringkas small { display: block; font-size: 9.6px; color: var(--ta-teks-3); }
+.dropdown-user { position: absolute; right: 0; top: calc(100% + 10px); width: 252px; background: #fff; border: 1px solid var(--ta-garis); border-radius: 12px; box-shadow: 0 18px 44px -12px rgba(16, 24, 40, .22); padding: 8px; display: none; z-index: 60; }
+.user-menu.buka .dropdown-user { display: block; }
+.dd-kepala { display: flex; gap: 10px; align-items: center; padding: 8px 10px 12px; border-bottom: 1px solid var(--ta-garis); margin-bottom: 6px; }
+.dd-kepala b { display: block; font-size: 11.6px; }
+.dd-kepala small { display: block; font-size: 9.6px; color: var(--ta-teks-3); margin-top: 1px; }
+.dd-kepala .ava, .dropdown-user .ava { width: 38px; height: 38px; border-radius: 50%; background: var(--ta-biru); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11.2px; flex-shrink: 0; }
+.dropdown-user a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--ta-teks-2); font-size: 11.2px; font-weight: 500; }
+.dropdown-user a:hover { background: var(--ina-neutral-50, #f8f8f7); color: var(--ta-teks); text-decoration: none; }
+.dropdown-user a svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; flex-shrink: 0; }
+.dropdown-user a.dd-keluar { color: var(--ina-red-600, #d92d20); }
+.dropdown-user a.dd-keluar:hover { background: var(--ina-red-50, #fef3f2); color: var(--ina-red-600, #d92d20); }
+.dd-garis { border-top: 1px solid var(--ta-garis); margin: 6px 4px; }
+
+/* ===== Tema gelap ===== */
+html.gelap { --ta-teks: #e7edf5; --ta-teks-2: #a9bcd2; --ta-teks-3: #7e94ad; --ta-garis: #22334f; --ta-garis-2: #3d5578; --ta-latar: #0a1120; --ta-biru-50: rgba(9, 104, 246, .18); }
+html.gelap .samping, html.gelap .topbar, html.gelap .panel, html.gelap .kpi { background: #0f1a2e; }
+html.gelap input, html.gelap select, html.gelap textarea { background: #0c1526; color: var(--ta-teks); }
+html.gelap th { background: #13203a; border-color: var(--ta-garis); }
+html.gelap td { border-color: var(--ta-garis); }
+html.gelap tr.total td, html.gelap tr.total th { background: #13203a; }
+html.gelap .topbar .cari { background: #0c1526; }
+html.gelap .tombol-samping, html.gelap .tombol-ikon-top, html.gelap .grup-font { background: #0f1a2e; }
+html.gelap .grup-font button:hover, html.gelap .tombol-user:hover, html.gelap .dropdown-user a:hover, html.gelap .samping nav a:hover, html.gelap .samping nav .parent:hover { background: #16263f; }
+html.gelap .dropdown-user { background: #0f1a2e; box-shadow: 0 18px 44px -12px rgba(0, 0, 0, .6); }
+html.gelap .pesan.sukses { background: #0d2b18; border-color: #1d5c33; color: #7ee2a0; }
+html.gelap .pesan.galat { background: #33141a; border-color: #6e2430; color: #ff9d9d; }
+html.gelap .peringatan { background: #2e2410; border-color: #5c4a1d; color: #f2cf8a; }
+html.gelap .login { background: #0a1120; }
+html.gelap .login-brand { color: var(--ta-teks); }
+html.gelap .bar { background: #22334f; }
+html.gelap .paginasi button { background: #0f1a2e; color: var(--ta-teks); }

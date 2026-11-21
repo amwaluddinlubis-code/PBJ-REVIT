@@ -7,6 +7,13 @@
 <link rel="stylesheet" href="<?= base_url('assets/idds.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/tailwind.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/app.css') ?>">
+<script>
+try {
+  if (localStorage.getItem('ap-tema') === 'gelap') document.documentElement.classList.add('gelap');
+  var _z = parseFloat(localStorage.getItem('ap-zoom') || '1');
+  if (_z && _z !== 1) document.documentElement.style.zoom = _z;
+} catch (e) {}
+</script>
 </head>
 <body class="login">
   <div class="login-grid">

@@ -7,6 +7,13 @@
 <link rel="stylesheet" href="<?= base_url('assets/idds.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/tailwind.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/app.css') ?>">
+<script>
+try {
+  if (localStorage.getItem('ap-tema') === 'gelap') document.documentElement.classList.add('gelap');
+  var _z = parseFloat(localStorage.getItem('ap-zoom') || '1');
+  if (_z && _z !== 1) document.documentElement.style.zoom = _z;
+} catch (e) {}
+</script>
 </head>
 <body>
 <?php
@@ -30,6 +37,12 @@ $ikon = [
   'lpj'    => '<path d="M4 19V5m0 14h16"/><path d="M7 15c3-1 4-6 7-7 2-.7 3 1 5 0"/>',
   'gear'   => '<circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 1.55V21a2 2 0 11-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.55-1H3a2 2 0 110-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 001-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-1.55V3a2 2 0 114 0v.09c0 .68.4 1.3 1 1.51.61.22 1.3.1 1.9-.34l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.34 1.9V9c.24.6.86 1 1.51 1H21a2 2 0 110 4h-.09c-.65 0-1.27.4-1.51 1z" stroke-linejoin="round"/>',
   'sekolah'=> '<path d="M3 21h18M5 21V9l7-5 7 5v12"/><path d="M9 21v-5h6v5M12 4V2.5"/>',
+  'user'   => '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  'users'  => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  'keluar' => '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>',
+  'bulan'  => '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  'matahari'=> '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  'panah'  => '<path d="m6 9 6 6 6-6"/>',
 ];
 $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k] ?? '') . '</svg>';
 ?>
@@ -46,37 +59,62 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       </select>
     </form>
     <nav>
-      <div class="grup">Menu</div>
       <a href="<?= base_url('/') ?>"<?= $seg === '' ? ' class="aktif"' : '' ?>><?= $svg('grid') ?>Dashboard</a>
-      <a href="<?= base_url('impor') ?>"<?= $aktif('impor') ?>><?= $svg('impor') ?>Impor Dokumen Perencana</a>
-      <div class="grup">Pembangunan Gedung</div>
-      <?php foreach ($semuaGedung ?? [] as $g): ?>
-        <a href="<?= base_url('gedung/' . $g['id']) ?>"<?= ($seg === 'gedung' && (explode('/', uri_string())[1] ?? '') === (string) $g['id']) ? ' class="aktif"' : '' ?>><?= $svg('gedung') ?><?= esc($g['nama']) ?><?php if (isset($g['persen_fisik'])): ?><span class="hitung"><?= (int) round((float) $g['persen_fisik']) ?>%</span><?php endif; ?></a>
-      <?php endforeach; ?>
-      <a href="<?= base_url('gedung') ?>"<?= $aktif('gedung') ?>><?= $svg('gedung') ?>Kelola Gedung</a>
-      <div class="grup">Belanja</div>
-      <a href="<?= base_url('rencana-belanja') ?>"<?= $aktif('rencana-belanja') ?>><?= $svg('rencana') ?>Rencana Belanja</a>
-      <a href="<?= base_url('bahan') ?>"<?= $aktif('bahan') ?>><?= $svg('kotak') ?>Master Bahan</a>
-      <a href="<?= base_url('spk') ?>"<?= $aktif('spk') ?>><?= $svg('spk') ?>Register SPK</a>
-      <a href="<?= base_url('belum-bernomor') ?>"<?= $aktif('belum-bernomor') ?>><?= $svg('spk') ?>Belum Bernomor SPK</a>
-      <a href="<?= base_url('survei') ?>"<?= $aktif('survei') ?>><?= $svg('survei') ?>Survei Harga</a>
-      <a href="<?= base_url('negosiasi') ?>"<?= $aktif('negosiasi') ?>><?= $svg('nego') ?>Negosiasi</a>
-      <a href="<?= base_url('dokumen') ?>"<?= $aktif('dokumen') ?>><?= $svg('dok') ?>BAP &amp; BAST / Cetak</a>
-      <a href="<?= base_url('invoice') ?>"<?= $aktif('invoice') ?>><?= $svg('inv') ?>Invoice</a>
-      <a href="<?= base_url('invoice/jurnal') ?>"<?= $aktif('invoice') ?>><?= $svg('jurnal') ?>Jurnal Pembayaran</a>
-      <a href="<?= base_url('upah') ?>"<?= $aktif('upah') ?>><?= $svg('upah') ?>Pembayaran Upah</a>
-      <div class="grup">Bahan &amp; Laporan</div>
-      <a href="<?= base_url('material') ?>"<?= $aktif('material') ?>><?= $svg('mat') ?>Buku Material</a>
-      <a href="<?= base_url('sisa-bahan') ?>"<?= $aktif('sisa-bahan') ?>><?= $svg('sisa') ?>Sisa Bahan</a>
-      <a href="<?= base_url('lpj') ?>"<?= $aktif('lpj') ?>><?= $svg('lpj') ?>LPJ &amp; Realisasi</a>
-      <a href="<?= base_url('laporan') ?>"<?= $aktif('laporan') ?>><?= $svg('dok') ?>Laporan &amp; Ekspor</a>
-      <div class="grup">Pengaturan</div>
-      <a href="<?= base_url('pengaturan') ?>"<?= $aktif('pengaturan') ?>><?= $svg('gear') ?>Identitas &amp; Pengaturan</a>
-      <a href="<?= base_url('sekolah') ?>"<?= $aktif('sekolah') ?>><?= $svg('sekolah') ?>Kelola Sekolah</a>
+      <?php
+      $uriPenuh = uri_string();
+      $indukAktif = [
+        'perencanaan' => in_array($seg, ['impor', 'rencana-belanja'], true),
+        'gedung'      => $seg === 'gedung',
+        'belanja'     => in_array($seg, ['spk', 'belum-bernomor', 'survei', 'negosiasi', 'dokumen', 'invoice', 'upah'], true),
+        'bahan'       => in_array($seg, ['bahan', 'material', 'sisa-bahan', 'lpj', 'laporan'], true),
+        'pengaturan'  => in_array($seg, ['pengaturan', 'sekolah', 'pengguna', 'profil'], true),
+      ];
+      $induk = static function (string $kunci, string $ikonNama, string $label) use ($indukAktif, $svg): void {
+          $buka = $indukAktif[$kunci] ?? false;
+          echo '<div class="induk' . ($buka ? ' buka' : '') . '" data-induk="' . $kunci . '">'
+             . '<button type="button" class="parent' . ($buka ? ' aktif' : '') . '">' . $svg($ikonNama) . $label
+             . '<svg class="panah" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button><div class="anak">';
+      };
+      $tutupInduk = static fn (): string => '</div></div>';
+      ?>
+      <?php $induk('perencanaan', 'rencana', 'Perencanaan'); ?>
+        <a href="<?= base_url('impor') ?>"<?= $aktif('impor') ?>>Impor Dokumen Perencana</a>
+        <a href="<?= base_url('rencana-belanja') ?>"<?= $aktif('rencana-belanja') ?>>Rencana Belanja</a>
+      <?= $tutupInduk() ?>
+      <?php $induk('gedung', 'gedung', 'Pembangunan Gedung'); ?>
+        <a href="<?= base_url('gedung') ?>"<?= $aktif('gedung') ?>>Kelola Gedung</a>
+        <?php foreach ($semuaGedung ?? [] as $g): ?>
+          <a href="<?= base_url('gedung/' . $g['id']) ?>"<?= ($seg === 'gedung' && (explode('/', $uriPenuh)[1] ?? '') === (string) $g['id']) ? ' class="aktif"' : '' ?>><?= esc($g['nama']) ?><?php if (isset($g['persen_fisik'])): ?><span class="hitung"><?= (int) round((float) $g['persen_fisik']) ?>%</span><?php endif; ?></a>
+        <?php endforeach; ?>
+      <?= $tutupInduk() ?>
+      <?php $induk('belanja', 'spk', 'Belanja'); ?>
+        <a href="<?= base_url('spk') ?>"<?= $aktif('spk') ?>>Register SPK</a>
+        <a href="<?= base_url('belum-bernomor') ?>"<?= $aktif('belum-bernomor') ?>>Belum Bernomor SPK</a>
+        <a href="<?= base_url('survei') ?>"<?= $aktif('survei') ?>>Survei Harga</a>
+        <a href="<?= base_url('negosiasi') ?>"<?= $aktif('negosiasi') ?>>Negosiasi</a>
+        <a href="<?= base_url('dokumen') ?>"<?= $aktif('dokumen') ?>>BAP &amp; BAST / Cetak</a>
+        <a href="<?= base_url('invoice') ?>"<?= $uriPenuh === 'invoice' ? ' class="aktif"' : '' ?>>Invoice</a>
+        <a href="<?= base_url('invoice/jurnal') ?>"<?= $uriPenuh === 'invoice/jurnal' ? ' class="aktif"' : '' ?>>Jurnal Pembayaran</a>
+        <a href="<?= base_url('upah') ?>"<?= $aktif('upah') ?>>Pembayaran Upah</a>
+      <?= $tutupInduk() ?>
+      <?php $induk('bahan', 'mat', 'Bahan &amp; Laporan'); ?>
+        <a href="<?= base_url('bahan') ?>"<?= $aktif('bahan') ?>>Master Bahan</a>
+        <a href="<?= base_url('material') ?>"<?= $aktif('material') ?>>Buku Material</a>
+        <a href="<?= base_url('sisa-bahan') ?>"<?= $aktif('sisa-bahan') ?>>Sisa Bahan</a>
+        <a href="<?= base_url('lpj') ?>"<?= $aktif('lpj') ?>>LPJ &amp; Realisasi</a>
+        <a href="<?= base_url('laporan') ?>"<?= $aktif('laporan') ?>>Laporan &amp; Ekspor</a>
+      <?= $tutupInduk() ?>
+      <?php $induk('pengaturan', 'gear', 'Pengaturan'); ?>
+        <a href="<?= base_url('pengaturan') ?>"<?= $aktif('pengaturan') ?>>Identitas &amp; Pengaturan</a>
+        <a href="<?= base_url('sekolah') ?>"<?= $aktif('sekolah') ?>>Kelola Sekolah</a>
+        <?php if (($pengguna['peran'] ?? '') === 'admin'): ?>
+        <a href="<?= base_url('pengguna') ?>"<?= $aktif('pengguna') ?>>Manajemen User</a>
+        <?php endif; ?>
+      <?= $tutupInduk() ?>
     </nav>
     <div class="profil">
       <div class="ava"><?= esc(strtoupper(substr($pengguna['nama'] ?? 'A', 0, 1))) ?></div>
-      <div class="siapa"><?= esc($pengguna['nama'] ?? '') ?><small><?= esc($sekolahAktif['nama_sekolah'] ?? '') ?> · <a href="<?= base_url('logout') ?>">Keluar</a></small></div>
+      <div class="siapa"><?= esc($pengguna['nama'] ?? '') ?><small><?= esc(ucfirst($pengguna['peran'] ?? '')) ?> · <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></small></div>
     </div>
   </aside>
   <div class="utama">
@@ -90,7 +128,33 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       </form>
       <div class="topbar-kanan">
         <span class="cip-top"><?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></span>
-        <div class="ava"><?= esc(strtoupper(substr($pengguna['nama'] ?? 'A', 0, 1))) ?></div>
+        <div class="grup-font" role="group" aria-label="Ukuran huruf">
+          <button type="button" id="font-out" title="Perkecil huruf">A−</button>
+          <span id="font-label">100%</span>
+          <button type="button" id="font-in" title="Perbesar huruf">A+</button>
+        </div>
+        <button type="button" class="tombol-ikon-top" id="tombol-tema" title="Tema gelap / terang" aria-label="Ganti tema">
+          <span class="ikon-bulan"><?= $svg('bulan') ?></span><span class="ikon-matahari"><?= $svg('matahari') ?></span>
+        </button>
+        <div class="user-menu">
+          <button type="button" class="tombol-user" id="tombol-user" aria-haspopup="true">
+            <span class="ava"><?= esc(strtoupper(substr($pengguna['nama'] ?? 'A', 0, 1))) ?></span>
+            <span class="user-ringkas"><b><?= esc($pengguna['nama'] ?? '') ?></b><small><?= esc(ucfirst($pengguna['peran'] ?? '')) ?></small></span>
+            <svg class="panah" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-user" id="dropdown-user">
+            <div class="dd-kepala">
+              <span class="ava besar"><?= esc(strtoupper(substr($pengguna['nama'] ?? 'A', 0, 1))) ?></span>
+              <div><b><?= esc($pengguna['nama'] ?? '') ?></b><small>@<?= esc($pengguna['username'] ?? '') ?> · <?= esc(ucfirst($pengguna['peran'] ?? '')) ?></small></div>
+            </div>
+            <a href="<?= base_url('profil') ?>"><?= $svg('user') ?>Profil Saya</a>
+            <?php if (($pengguna['peran'] ?? '') === 'admin'): ?>
+            <a href="<?= base_url('pengguna') ?>"><?= $svg('users') ?>Manajemen User</a>
+            <?php endif; ?>
+            <div class="dd-garis"></div>
+            <a href="<?= base_url('logout') ?>" class="dd-keluar"><?= $svg('keluar') ?>Keluar</a>
+          </div>
+        </div>
       </div>
     </div>
     <main class="isi">
@@ -117,6 +181,60 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
     const tutup = kerangka.classList.toggle('samping-tutup');
     localStorage.setItem('ap-samping', tutup ? 'tutup' : 'buka');
   });
+})();
+// Menu parent > child pada sidebar + dropdown user + tema gelap + ukuran huruf.
+(function () {
+  document.querySelectorAll('.induk').forEach(function (induk) {
+    const kunci = 'ap-induk-' + induk.dataset.induk;
+    const simpan = localStorage.getItem(kunci);
+    if (simpan === 'buka') induk.classList.add('buka');
+    if (simpan === 'tutup') induk.classList.remove('buka');
+    induk.querySelector('.parent').addEventListener('click', function () {
+      const buka = induk.classList.toggle('buka');
+      localStorage.setItem(kunci, buka ? 'buka' : 'tutup');
+    });
+  });
+  const menuUser = document.querySelector('.user-menu');
+  const tombolUser = document.getElementById('tombol-user');
+  if (menuUser && tombolUser) {
+    tombolUser.addEventListener('click', function (e) {
+      e.stopPropagation();
+      menuUser.classList.toggle('buka');
+    });
+    document.addEventListener('click', function (e) {
+      if (!menuUser.contains(e.target)) menuUser.classList.remove('buka');
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') menuUser.classList.remove('buka');
+    });
+  }
+  const tombolTema = document.getElementById('tombol-tema');
+  if (tombolTema) {
+    tombolTema.addEventListener('click', function () {
+      const gelap = document.documentElement.classList.toggle('gelap');
+      localStorage.setItem('ap-tema', gelap ? 'gelap' : 'terang');
+    });
+  }
+  const langkah = [0.8, 0.9, 1, 1.1, 1.2, 1.3];
+  let zoom = parseFloat(localStorage.getItem('ap-zoom') || '1');
+  if (!langkah.includes(zoom)) zoom = 1;
+  const label = document.getElementById('font-label');
+  const terapkan = function () {
+    document.documentElement.style.zoom = zoom === 1 ? '' : zoom;
+    localStorage.setItem('ap-zoom', String(zoom));
+    if (label) label.textContent = Math.round(zoom * 100) + '%';
+  };
+  const btnIn = document.getElementById('font-in');
+  const btnOut = document.getElementById('font-out');
+  if (btnIn) btnIn.addEventListener('click', function () {
+    const i = langkah.indexOf(zoom);
+    if (i < langkah.length - 1) { zoom = langkah[i + 1]; terapkan(); }
+  });
+  if (btnOut) btnOut.addEventListener('click', function () {
+    const i = langkah.indexOf(zoom);
+    if (i > 0) { zoom = langkah[i - 1]; terapkan(); }
+  });
+  terapkan();
 })();
 </script>
 </body>
