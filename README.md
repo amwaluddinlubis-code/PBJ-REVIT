@@ -38,6 +38,11 @@ Data awal diimpor dari workbook v4 (master 95 bahan, 5 SPK, 169 baris detail, 1 
 - Fase 1 (selesai): login, Dashboard (KPI + peringatan otomatis), Master Bahan (CRUD),
   Register SPK + Detail (dropdown bahan, harga acuan berjenjang negosiasi→penawaran→RAB),
   halaman "Belum Bernomor SPK" untuk memasangkan 159 baris warisan workbook ke SPK.
+- Multi-sekolah: satu instalasi melayani banyak sekolah. Data bahan/penyedia/SPK
+  (dan seluruh turunannya) terpisah penuh per sekolah; sekolah aktif dipilih lewat
+  pengalih di menu samping atau halaman Kelola Sekolah. Sekolah baru mulai dari data
+  kosong; nomor SPK dan kode bahan berlaku per sekolah. Sesudah `git pull` versi ini,
+  jalankan `php spark migrate` (migration 000002 MultiSekolah).
 - Fase 2 (selesai): Survei Harga (termurah/terpilih otomatis) & Negosiasi (total + hemat),
   BAP/BAST per SPK + cetak dokumen SPK/BAP/BAST (kop dari Identitas, nomor 422/... otomatis,
   terbilang otomatis), Invoice (peringatan nilai != total SPK) & Jurnal Pembayaran

@@ -16,7 +16,8 @@ class Invoice extends BaseController
             'SELECT i.*, s.nomor AS spk_nomor, p.nama AS penyedia,
                     (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id) AS total_spk
              FROM invoice i JOIN spk s ON s.id = i.spk_id
-             LEFT JOIN penyedia p ON p.id = s.penyedia_id ORDER BY i.nomor_urut'
+             LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.sekolah_id = ? ORDER BY i.nomor_urut',
+            [$this->sid()]
         )->getResultArray();
         return $this->tampil('invoice/index', ['inv' => $inv], 'Register Invoice — Aplikasi PBJ Sekolah');
     }
@@ -34,9 +35,23 @@ class Invoice extends BaseController
     public function simpan()
     {
         $data = $this->ambilForm();
+        if ($this->nomorDipakai((int) $data['nomor_urut'], 0)) {
+            return redirect()->back()->withInput()->with('galat', 'Nomor urut invoice ' . $data['nomor_urut'] . ' sudah dipakai di sekolah ini.');
+        }
         $data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('invoice')->insert($data);
         return redirect()->to('invoice')->with('sukses', 'Invoice dicatat.');
+    }
+
+    /** Nomor urut invoice unik per sekolah (lewat SPK induknya). */
+    private function nomorDipakai(int $urut, int $kecualiId): bool
+    {
+        $row = $this->db()->query(
+            'SELECT COUNT(*) j FROM invoice i JOIN spk s ON s.id = i.spk_id
+             WHERE i.nomor_urut = ? AND s.sekolah_id = ? AND i.id <> ?',
+            [$urut, $this->sid(), $kecualiId]
+        )->getRow();
+        return (int) $row->j > 0;
     }
 
     public function ubah($id)
@@ -53,6 +68,9 @@ class Invoice extends BaseController
     public function perbarui($id)
     {
         $data = $this->ambilForm();
+        if ($this->nomorDipakai((int) $data['nomor_urut'], (int) $id)) {
+            return redirect()->back()->withInput()->with('galat', 'Nomor urut invoice ' . $data['nomor_urut'] . ' sudah dipakai di sekolah ini.');
+        }
         $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('invoice')->where('id', (int) $id)->update($data);
         return redirect()->to('invoice')->with('sukses', 'Invoice diperbarui.');
@@ -68,7 +86,8 @@ class Invoice extends BaseController
     {
         $spk = $this->db()->query(
             'SELECT s.id, s.nomor, s.paket, (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id) AS total
-             FROM spk s ORDER BY s.nomor'
+             FROM spk s WHERE s.sekolah_id = ? ORDER BY s.nomor',
+            [$this->sid()]
         )->getResultArray();
         $bap = [];
         foreach ($this->db()->table('bap')->get()->getResultArray() as $r) {
@@ -106,11 +125,13 @@ class Invoice extends BaseController
             'SELECT p.*, i.nomor_urut, i.no_toko, i.nilai, s.nomor AS spk_nomor,
                     ROUND(i.nilai * 0.015) AS pph22, i.nilai - ROUND(i.nilai * 0.015) AS dibayar
              FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id
-             JOIN spk s ON s.id = i.spk_id ORDER BY p.id'
+             JOIN spk s ON s.id = i.spk_id WHERE s.sekolah_id = ? ORDER BY p.id',
+            [$this->sid()]
         )->getResultArray();
         $belum = $this->db()->query(
             "SELECT i.id, i.nomor_urut, i.nilai, s.nomor AS spk_nomor FROM invoice i
-             JOIN spk s ON s.id = i.spk_id WHERE i.status = 'Belum Bayar' ORDER BY i.nomor_urut"
+             JOIN spk s ON s.id = i.spk_id WHERE i.status = 'Belum Bayar' AND s.sekolah_id = ? ORDER BY i.nomor_urut",
+            [$this->sid()]
         )->getResultArray();
         return $this->tampil('invoice/jurnal', ['baris' => $baris, 'belum' => $belum], 'Jurnal Pembayaran — Aplikasi PBJ Sekolah');
     }

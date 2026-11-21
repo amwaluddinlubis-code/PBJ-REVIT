@@ -7,7 +7,7 @@ use CodeIgniter\CLI\CLI;
 
 /**
  * Impor data hasil ekstrak workbook PBJ (writable/impor.json) ke database.
- * Menimpa tabel domain (bahan, spk, spk_detail, invoice, dst.), users utuh.
+ * Mengisi data SATU sekolah (yang namanya ada di impor.json); sekolah lain tidak disentuh.
  */
 class ImporJson extends BaseCommand
 {
@@ -27,17 +27,12 @@ class ImporJson extends BaseCommand
         $now = date('Y-m-d H:i:s');
 
         $db->transStart();
-        // TRUNCATE biasa gagal senyap pada tabel yang dirujuk FK (mis. spk_detail);
-        // matikan pemeriksaan FK selama pengosongan agar impor ulang bersih.
-        $db->query('SET FOREIGN_KEY_CHECKS=0');
-        foreach (['pembayaran', 'invoice', 'bast', 'bap_detail', 'bap', 'negosiasi', 'survei_harga', 'spk_detail', 'spk', 'penyedia', 'bahan', 'identitas'] as $t) {
-            $db->table($t)->truncate();
-        }
-        $db->query('SET FOREIGN_KEY_CHECKS=1');
 
-        // ---------- identitas ----------
+        // ---------- sekolah tujuan (dari identitas workbook) ----------
         $m = $d['identitas_mentah'] ?? [];
-        $db->table('identitas')->insert([
+        $namaSekolah = $m['Nama Satuan Pendidikan'] ?? null;
+        $barisSekolah = [
+
             'nama_sekolah'    => $m['Nama Satuan Pendidikan'] ?? null,
             'npsn'            => isset($m['NPSN']) ? (string) $m['NPSN'] : null,
             'alamat'          => $m['Alamat'] ?? null,
@@ -65,12 +60,26 @@ class ImporJson extends BaseCommand
             'toko4'           => $m['Nama Toko 4'] ?? null,
             'penyedia_default_nama'   => $m['Nama Penyedia (default)'] ?? null,
             'penyedia_default_alamat' => $m['Alamat Penyedia'] ?? null,
-        ]);
+        ];
+        $sudah = $namaSekolah ? $db->table('sekolah')->where('nama_sekolah', $namaSekolah)->get()->getRowArray() : null;
+        if ($sudah) {
+            $sekolahId = (int) $sudah['id'];
+            $db->table('sekolah')->where('id', $sekolahId)->update($barisSekolah);
+            // Kosongkan data lama sekolah ini saja (urutan aman terhadap FK).
+            $db->table('spk_detail')->where('sekolah_id', $sekolahId)->delete();
+            $db->table('spk')->where('sekolah_id', $sekolahId)->delete();
+            $db->table('bahan')->where('sekolah_id', $sekolahId)->delete();
+            $db->table('penyedia')->where('sekolah_id', $sekolahId)->delete();
+        } else {
+            $db->table('sekolah')->insert($barisSekolah);
+            $sekolahId = (int) $db->insertID();
+        }
 
         // ---------- bahan ----------
         $bahanId = [];
         foreach ($d['bahan'] ?? [] as $b) {
             $db->table('bahan')->insert([
+                'sekolah_id' => $sekolahId,
                 'kode' => $b['kode'], 'nama' => $b['nama'], 'satuan' => $b['satuan'],
                 'harga_rab' => (int) $b['harga_rab'], 'qty_rkb' => $b['qty_rkb'],
                 'qty_adm' => $b['qty_adm'], 'qty_toilet' => $b['qty_toilet'],
@@ -81,13 +90,13 @@ class ImporJson extends BaseCommand
 
         // ---------- penyedia + spk ----------
         $penyediaId = [];
-        $buatPenyedia = static function (?string $nama) use ($db, &$penyediaId, $now) {
+        $buatPenyedia = static function (?string $nama) use ($db, &$penyediaId, $now, $sekolahId) {
             $nama = trim((string) $nama);
             if ($nama === '') {
                 return null;
             }
             if (! isset($penyediaId[$nama])) {
-                $db->table('penyedia')->insert(['nama' => $nama, 'created_at' => $now, 'updated_at' => $now]);
+                $db->table('penyedia')->insert(['sekolah_id' => $sekolahId, 'nama' => $nama, 'created_at' => $now, 'updated_at' => $now]);
                 $penyediaId[$nama] = (int) $db->insertID();
             }
             return $penyediaId[$nama];
@@ -102,6 +111,7 @@ class ImporJson extends BaseCommand
                 continue;
             }
             $db->table('spk')->insert([
+                'sekolah_id' => $sekolahId,
                 'nomor' => $s['nomor'], 'tanggal' => $s['tanggal'],
                 'tgl_mulai' => $s['mulai'], 'tgl_selesai' => $s['selesai'],
                 'penyedia_id' => $buatPenyedia($s['penyedia']),
@@ -117,6 +127,7 @@ class ImporJson extends BaseCommand
         foreach ($d['detail'] ?? [] as $r) {
             $bid = $r['kode'] ? ($bahanId[$r['kode']] ?? null) : null;
             $db->table('spk_detail')->insert([
+                'sekolah_id' => $sekolahId,
                 'spk_id' => $r['no_spk'] ? ($spkId[$r['no_spk']] ?? null) : null,
                 'bahan_id' => $bid,
                 'nama_manual' => $bid ? null : $r['nama'],

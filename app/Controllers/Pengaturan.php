@@ -7,8 +7,8 @@ class Pengaturan extends BaseController
     public function index()
     {
         return $this->tampil('pengaturan/index', [
-            'idn' => $this->db()->table('identitas')->get()->getRowArray(),
-            'penyedia' => $this->db()->table('penyedia')->orderBy('nama')->get()->getResultArray(),
+            'idn' => $this->sekolahAktif(),
+            'penyedia' => $this->db()->table('penyedia')->where('sekolah_id', $this->sid())->orderBy('nama')->get()->getResultArray(),
         ], 'Identitas & Pengaturan — Aplikasi PBJ Sekolah');
     }
 
@@ -24,7 +24,8 @@ class Pengaturan extends BaseController
             $v = $this->request->getPost($k);
             $data[$k] = ($v === '' || $v === null) ? null : $v;
         }
-        $this->db()->table('identitas')->where('id', 1)->update($data);
+        $data['updated_at'] = date('Y-m-d H:i:s');
+        $this->db()->table('sekolah')->where('id', $this->sid())->update($data);
         return redirect()->to('pengaturan')->with('sukses', 'Identitas disimpan — kop surat dan dokumen mengikuti otomatis.');
     }
 
@@ -33,6 +34,7 @@ class Pengaturan extends BaseController
         $nama = trim((string) $this->request->getPost('nama'));
         if ($nama !== '') {
             $this->db()->table('penyedia')->insert([
+                'sekolah_id' => $this->sid(),
                 'nama' => $nama,
                 'alamat' => trim((string) $this->request->getPost('alamat')) ?: null,
                 'ttd_nama' => trim((string) $this->request->getPost('ttd_nama')) ?: null,
@@ -48,7 +50,7 @@ class Pengaturan extends BaseController
         if ($dipakai > 0) {
             return redirect()->to('pengaturan')->with('galat', 'Penyedia ini dipakai SPK — tidak bisa dihapus.');
         }
-        $this->db()->table('penyedia')->where('id', (int) $id)->delete();
+        $this->db()->table('penyedia')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->delete();
         return redirect()->to('pengaturan')->with('sukses', 'Penyedia dihapus.');
     }
 }

@@ -10,6 +10,15 @@
 <div class="kerangka">
   <aside class="samping">
     <div class="merek">Aplikasi PBJ Sekolah</div>
+    <form method="post" action="<?= base_url('sekolah/pilih') ?>" style="margin:10px 12px">
+      <?= csrf_field() ?>
+      <label style="color:#cbd5e1;font-size:12px;display:block;margin-bottom:4px">Sekolah aktif</label>
+      <select name="sekolah_id" onchange="this.form.submit()" style="width:100%">
+        <?php foreach ($semuaSekolah ?? [] as $sk): ?>
+          <option value="<?= (int) $sk['id'] ?>"<?= ((int) ($sekolahAktif['id'] ?? 0) === (int) $sk['id']) ? ' selected' : '' ?>><?= esc($sk['nama_sekolah'] ?? ('Sekolah #' . $sk['id'])) ?></option>
+        <?php endforeach; ?>
+      </select>
+    </form>
     <nav>
       <a href="<?= base_url('/') ?>">Dashboard</a>
       <a href="<?= base_url('bahan') ?>">Master Bahan</a>
@@ -23,6 +32,7 @@
       <a href="<?= base_url('material') ?>">Buku Material</a>
       <a href="<?= base_url('sisa-bahan') ?>">Sisa Bahan</a>
       <a href="<?= base_url('pengaturan') ?>">Identitas &amp; Pengaturan</a>
+      <a href="<?= base_url('sekolah') ?>">Kelola Sekolah</a>
     </nav>
   </aside>
   <main class="isi">

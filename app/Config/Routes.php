@@ -69,6 +69,14 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('material/hapus/(:num)', 'Material::hapus/$1');
     $routes->get('sisa-bahan', 'Material::sisa');
 
+    // Multi-sekolah
+    $routes->get('sekolah', 'Sekolah::index');
+    $routes->get('sekolah/baru', 'Sekolah::baru');
+    $routes->post('sekolah/simpan', 'Sekolah::simpan');
+    $routes->post('sekolah/pilih', 'Sekolah::pilih');
+    $routes->get('sekolah/pilih/(:num)', 'Sekolah::pilih/$1');
+    $routes->post('sekolah/hapus/(:num)', 'Sekolah::hapus/$1');
+
     // Pengaturan
     $routes->get('pengaturan', 'Pengaturan::index');
     $routes->post('pengaturan/simpan', 'Pengaturan::simpan');

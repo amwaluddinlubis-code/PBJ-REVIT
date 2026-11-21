@@ -19,7 +19,7 @@ class Dokumen extends BaseController
 
     private function identitas(): array
     {
-        return $this->db()->table('identitas')->get()->getRowArray() ?? [];
+        return $this->sekolahAktif();
     }
 
     public function index()
@@ -27,7 +27,8 @@ class Dokumen extends BaseController
         $db = $this->db();
         $spk = $db->query(
             'SELECT s.id, s.nomor, s.paket, p.nama AS penyedia FROM spk s
-             LEFT JOIN penyedia p ON p.id = s.penyedia_id ORDER BY s.nomor'
+             LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.sekolah_id = ? ORDER BY s.nomor',
+            [$this->sid()]
         )->getResultArray();
         $bap = [];
         foreach ($db->table('bap')->get()->getResultArray() as $r) {
@@ -125,6 +126,9 @@ class Dokumen extends BaseController
     {
         $db = $this->db();
         $s = $db->query('SELECT s.*, p.nama AS penyedia, p.alamat AS penyedia_alamat FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ?', [(int) $spkId])->getRowArray();
+        if (! $s) {
+            return redirect()->to('dokumen')->with('galat', 'SPK tidak ditemukan.');
+        }
         $detail = $db->query(
             'SELECT COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan, d.qty, d.harga, d.qty*d.harga AS total
              FROM spk_detail d LEFT JOIN bahan b ON b.id = d.bahan_id WHERE d.spk_id = ? ORDER BY d.id',
@@ -143,6 +147,9 @@ class Dokumen extends BaseController
     {
         $db = $this->db();
         $bap = $db->table('bap')->where('id', (int) $bapId)->get()->getRowArray();
+        if (! $bap) {
+            return redirect()->to('dokumen')->with('galat', 'BAP tidak ditemukan.');
+        }
         $s = $db->query('SELECT s.*, p.nama AS penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ?', [(int) $bap['spk_id']])->getRowArray();
         $items = $db->query(
             'SELECT bd.kondisi, bd.keterangan, d.qty, COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan
@@ -162,6 +169,9 @@ class Dokumen extends BaseController
     {
         $db = $this->db();
         $bast = $db->table('bast')->where('id', (int) $bastId)->get()->getRowArray();
+        if (! $bast) {
+            return redirect()->to('dokumen')->with('galat', 'BAST tidak ditemukan.');
+        }
         $s = $db->query('SELECT s.*, p.nama AS penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ?', [(int) $bast['spk_id']])->getRowArray();
         $items = $db->query(
             'SELECT COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan, d.qty

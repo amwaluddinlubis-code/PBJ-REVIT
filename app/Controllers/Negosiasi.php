@@ -17,9 +17,10 @@ class Negosiasi extends BaseController
     public function index()
     {
         $db = $this->db();
-        $identitas = $db->table('identitas')->get()->getRowArray();
+        $identitas = $this->sekolahAktif();
         $bahan = $db->query(
-            'SELECT *, (qty_rkb+qty_adm+qty_toilet) AS qty_total FROM bahan ORDER BY kode'
+            'SELECT *, (qty_rkb+qty_adm+qty_toilet) AS qty_total FROM bahan WHERE sekolah_id = ? ORDER BY kode',
+            [$this->sid()]
         )->getResultArray();
         $nego = [];
         foreach ($db->table('negosiasi')->get()->getResultArray() as $r) {

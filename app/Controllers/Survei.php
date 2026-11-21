@@ -7,8 +7,8 @@ class Survei extends BaseController
     public function index()
     {
         $db = $this->db();
-        $identitas = $db->table('identitas')->get()->getRowArray();
-        $bahan = $db->table('bahan')->orderBy('kode')->get()->getResultArray();
+        $identitas = $this->sekolahAktif();
+        $bahan = $db->table('bahan')->where('sekolah_id', $this->sid())->orderBy('kode')->get()->getResultArray();
         $harga = [];
         foreach ($db->table('survei_harga')->get()->getResultArray() as $r) {
             $harga[$r['bahan_id']][$r['toko']] = $r['harga'];
@@ -22,7 +22,7 @@ class Survei extends BaseController
     {
         $db = $this->db();
         $tgl = $this->request->getPost('tanggal_survei');
-        $db->table('identitas')->where('id', 1)->update(['tanggal_survei' => $tgl ?: null]);
+        $db->table('sekolah')->where('id', $this->sid())->update(['tanggal_survei' => $tgl ?: null]);
         $semua = $this->request->getPost('harga') ?? [];
         $db->transStart();
         foreach ($semua as $bahanId => $perToko) {
