@@ -153,11 +153,28 @@ form.inline button { margin: 0; }
 .paginasi button:hover:not(:disabled) { background: var(--ina-neutral-100, #f2f2f2); }
 .paginasi button.aktif { background: var(--ta-biru); border-color: var(--ta-biru); color: #fff; font-weight: 600; }
 .paginasi select { width: auto; margin-top: 0; padding: 6px 9px; }
-@media (max-width: 760px) { .samping { display: none; } .isi { padding: 14px; } }
+@media (max-width: 760px) {
+  .isi { padding: 14px; }
+  /* Drawer menu samping: di layar sempit sidebar jadi panel geser dari kiri;
+     saat tertutup terengsebar melewati layar (translateX -105%). */
+  .kerangka .samping {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 320px; max-width: 85vw; height: 100vh; z-index: 70;
+    transform: translateX(-105%);
+    transition: transform .3s ease;
+  }
+  .kerangka.samping-buka .samping { transform: translateX(0); }
+  .kerangka .lapik { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, .42); z-index: 65; cursor: pointer; }
+  .kerangka.samping-buka .lapik { display: block; }
+}
 
 /* ===== Toggle menu samping (TailAdmin) ===== */
 .samping { transition: width .25s ease, padding .25s ease, opacity .2s ease; }
-.kerangka.samping-tutup .samping { width: 0; padding-left: 0; padding-right: 0; opacity: 0; border-right: 0; overflow: hidden; }
+.lapik { display: none; }
+@media (min-width: 761px) {
+  .kerangka.samping-tutup .samping { width: 0; padding-left: 0; padding-right: 0; opacity: 0; border-right: 0; overflow: hidden; }
+  .kerangka .tombol-samping { display: none; }
+}
 .tombol-samping { background: #fff; color: var(--ta-teks-2); border: 1px solid var(--ta-garis); border-radius: 9px; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .tombol-samping:hover { background: var(--ina-neutral-50, #f8f8f7); color: var(--ta-teks); }
 .tombol-samping svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.9; }

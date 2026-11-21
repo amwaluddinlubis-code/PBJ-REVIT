@@ -47,7 +47,8 @@ $ikon = [
 $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k] ?? '') . '</svg>';
 ?>
 <div class="kerangka">
-  <aside class="samping">
+  <div class="lapik" id="lapik-samping"></div>
+  <aside class="samping" id="samping">
     <div class="logo"><div class="kotak-logo">AP</div><div class="nama-logo">Analisa Perencana<small>Perencanaan · Belanja · LPJ</small></div></div>
     <form method="post" action="<?= base_url('sekolah/pilih') ?>">
       <?= csrf_field() ?>
@@ -119,7 +120,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
   </aside>
   <div class="utama">
     <div class="topbar">
-      <button type="button" class="tombol-samping" id="tombol-samping" aria-label="Tampilkan / sembunyikan menu samping" title="Menu samping">
+      <button type="button" class="tombol-samping" id="tombol-samping" aria-controls="samping" aria-label="Tampilkan / sembunyikan menu samping" aria-expanded="false" title="Menu samping">
         <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
       <form class="cari" method="get" action="<?= base_url('bahan') ?>">
@@ -172,15 +173,43 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
 <script src="<?= base_url('assets/paginasi.js') ?>"></script>
 <script>
 // Toggle menu samping gaya TailAdmin — pilihan tersimpan di peramban.
+// Desktop: tombol sembunyikan/tunjukkan sidebar (sebagaimana awalnya).
+// Mobile: tombol membuka drawer dari kiri; tap lapik atau Escape menutupnya.
 (function () {
   const kerangka = document.querySelector('.kerangka');
   const tombol = document.getElementById('tombol-samping');
+  const lapik = document.getElementById('lapik-samping');
   if (!kerangka || !tombol) return;
+  const mobile = () => window.matchMedia('(max-width: 760px)').matches;
+  const aria = () => {
+    const buka = mobile() ? kerangka.classList.contains('samping-buka')
+      : !kerangka.classList.contains('samping-tutup');
+    tombol.setAttribute('aria-expanded', buka ? 'true' : 'false');
+  };
   if (localStorage.getItem('ap-samping') === 'tutup') kerangka.classList.add('samping-tutup');
-  tombol.addEventListener('click', function () {
-    const tutup = kerangka.classList.toggle('samping-tutup');
-    localStorage.setItem('ap-samping', tutup ? 'tutup' : 'buka');
+  if (mobile() && localStorage.getItem('ap-samping') === 'buka') kerangka.classList.add('samping-buka');
+  if (lapik) lapik.addEventListener('click', function () {
+    kerangka.classList.toggle('samping-buka');
+    if (!kerangka.classList.contains('samping-buka')) tombol.focus();
   });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') kerangka.classList.remove('samping-buka');
+  });
+  tombol.addEventListener('click', function () {
+    if (mobile()) {
+      const buka = kerangka.classList.toggle('samping-buka');
+      localStorage.setItem('ap-samping', buka ? 'buka' : 'tutup');
+      if (buka) {
+        const awal = kerangka.querySelector('.samping a, .samping .parent');
+        setTimeout(function () { if (awal) awal.focus(); }, 0);
+      }
+    } else {
+      const tutup = kerangka.classList.toggle('samping-tutup');
+      localStorage.setItem('ap-samping', tutup ? 'tutup' : 'buka');
+    }
+    aria();
+  });
+  aria();
 })();
 // Menu parent > child pada sidebar + dropdown user + tema gelap + ukuran huruf.
 (function () {
