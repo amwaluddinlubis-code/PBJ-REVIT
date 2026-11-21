@@ -36,9 +36,10 @@ Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** di
 - `html.gelap` tidak mengubah `--ina-neutral-50/100` (terlihat pada hover `.tombol.abu`, `--ina-neutral-100` pada beberapa border).
 - **Saran**: tambah variabel gelap (`--ina-neutral-50:#16263f; --ina-neutral-100:#22334f; ...`) atau overrides khusus `html.gelap .tombol.abu`.
 
-### P3 — Tabel melebar di mobile tanpa scroll
+### P3 — Tabel melebar di mobile tanpa scroll — sudah selesai & diverifikasi (2026-11-21)
 - Rencana Belanja, SPK Detail, LPJ, Dashboard Gedung (5–9 kolom).
 - **Saran**: `.panel { overflow-x:auto; }` atau `table { display:block; overflow-x:auto; }` — mulai dari tabel impor baru (panel tak tertaut, riwayat).
+- **Terlakukan**: `.panel { overflow-x: auto; }` — tabel di dalam panel kini mempunyai *scroll horizontal* — cocok untuk Rencana Belanja, SPK Detail, LPJ, Dashboard Gedung, tabel impor.
 
 ### P4 — Touch & teks terlalu kecil di genggaman
 - Sidebar: `padding:8px 10px; font:11.2px` → tinggi ~31px.
@@ -67,7 +68,7 @@ Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** di
 
 ~~1.~~ **Mobile drawer** (P1) — **sudah selesai & diverifikasi** (2026-11-21): click menambah class `sanding-boka` + aria-expanded true, Escape menutupnya; drawer CSS lengkap ada di media ≤760px dan cocok dengan class DOM.
 ~~2.~~ **Dark theme vars** (P2) — **sudah selesai & diverifikasi** (2026-11-21): tambah override `--ina-neutral-50/100/200/300/400` gelap — hover seperti `.tombol.abu:hover`, `.paginasi button:hover` terlihat di gelap.
-3. **Overflow-x tabel** (P3) — kebutuhan kompatibilitas layar sempit (termasuk tabel baru impor).
+~~3.~~ **Overflow-x tabel** (P3) — **sudah selesai & diverifikasi** (2026-11-21): `.panel { overflow-x: auto }` — tabel di dalam panel mempunyai scroll horizontal (termasuk tabel impor baru).
 4. **Touch target 44px** (P4) — bagian dari fix mobile.
 5. **A11y polis** (P5) — aria-label pencarian, aria-expanded user menu, minor lain.
 6. **Feedback impor (P6)** — disable + spinner pada saat proses impor.
