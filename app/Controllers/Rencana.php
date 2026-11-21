@@ -18,8 +18,8 @@ class Rencana extends BaseController
             : $this->kebutuhanBahanSekolah();
 
         $dipesan = [];
-        $sql = 'SELECT d.bahan_id, SUM(d.qty) q FROM spk_detail d JOIN spk s ON s.id = d.spk_id
-                WHERE s.sekolah_id = ? AND d.bahan_id IS NOT NULL';
+        $sql = 'SELECT d.bahan_id, SUM(d.qty) q FROM spk_detail d JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0
+                WHERE s.sekolah_id = ? AND d.bahan_id IS NOT NULL AND d.is_deleted = 0';
         $bind = [$this->sid()];
         if ($gedungFilter > 0) {
             $sql .= ' AND s.gedung_id = ?';
@@ -62,7 +62,7 @@ class Rencana extends BaseController
         foreach ($pilihan as $bahanId) {
             $bahanId = (int) $bahanId;
             $qty = (float) str_replace(',', '.', (string) ($qtyPost[$bahanId] ?? 0));
-            $b = $db->table('bahan')->where(['id' => $bahanId, 'sekolah_id' => $this->sid()])->get()->getRowArray();
+            $b = $db->table('bahan')->where(['id' => $bahanId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
             if ($b !== null && $qty > 0) {
                 $baris[] = ['bahan' => $b, 'qty' => $qty, 'harga' => $this->hargaAcuan($bahanId)];
             }
@@ -70,7 +70,7 @@ class Rencana extends BaseController
         if ($baris === []) {
             return redirect()->to('/rencana-belanja')->with('galat', 'Centang minimal satu bahan dengan jumlah rencana lebih dari 0.');
         }
-        $row = $db->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ?', [$this->sid()])->getRow();
+        $row = $db->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ? AND is_deleted = 0', [$this->sid()])->getRow();
         $nomor = ((int) ($row->m ?? 0)) + 1;
         $db->transStart();
         $db->table('spk')->insert([

@@ -10,8 +10,8 @@ class Bahan extends BaseController
         $sql = 'SELECT b.*, (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_total,
                     (b.qty_rkb+b.qty_adm+b.qty_toilet)*b.harga_rab AS anggaran,
                     COALESCE(SUM(d.qty),0) AS terpakai
-             FROM bahan b LEFT JOIN spk_detail d ON d.bahan_id = b.id
-             WHERE b.sekolah_id = ?';
+             FROM bahan b LEFT JOIN spk_detail d ON d.bahan_id = b.id AND d.is_deleted = 0
+             WHERE b.sekolah_id = ? AND b.is_deleted = 0';
         $bind = [$this->sid()];
         if ($q !== '') {
             $sql .= ' AND (b.nama LIKE ? OR b.kode LIKE ?)';
@@ -25,7 +25,7 @@ class Bahan extends BaseController
 
     public function baru()
     {
-        $row = $this->db()->query('SELECT MAX(CAST(SUBSTRING(kode,2) AS UNSIGNED)) m FROM bahan WHERE sekolah_id = ?', [$this->sid()])->getRow();
+        $row = $this->db()->query('SELECT MAX(CAST(SUBSTRING(kode,2) AS UNSIGNED)) m FROM bahan WHERE sekolah_id = ? AND is_deleted = 0', [$this->sid()])->getRow();
         $kode = 'B' . str_pad((string) (((int) $row->m) + 1), 3, '0', STR_PAD_LEFT);
         return $this->tampil('bahan/form', ['b' => ['kode' => $kode], 'aksi' => 'bahan/simpan'], 'Tambah Bahan');
     }
@@ -33,7 +33,7 @@ class Bahan extends BaseController
     public function simpan()
     {
         $data = $this->ambilForm();
-        if ($this->db()->table('bahan')->where(['kode' => $data['kode'], 'sekolah_id' => $this->sid()])->countAllResults() > 0) {
+        if ($this->db()->table('bahan')->where(['kode' => $data['kode'], 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults() > 0) {
             return redirect()->back()->withInput()->with('galat', 'Kode ' . $data['kode'] . ' sudah dipakai.');
         }
         $data['sekolah_id'] = $this->sid();
@@ -44,7 +44,7 @@ class Bahan extends BaseController
 
     public function ubah($id)
     {
-        $b = $this->db()->table('bahan')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->get()->getRowArray();
+        $b = $this->db()->table('bahan')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         if (! $b) {
             return redirect()->to('bahan')->with('galat', 'Bahan tidak ditemukan.');
         }
@@ -61,11 +61,11 @@ class Bahan extends BaseController
 
     public function hapus($id)
     {
-        $dipakai = $this->db()->table('spk_detail')->where('bahan_id', (int) $id)->countAllResults();
+        $dipakai = $this->db()->table('spk_detail')->where(['bahan_id' => (int) $id, 'is_deleted' => 0])->countAllResults();
         if ($dipakai > 0) {
             return redirect()->to('bahan')->with('galat', 'Bahan ini sudah dipakai di SPK Detail — tidak bisa dihapus.');
         }
-        $this->db()->table('bahan')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->delete();
+        $this->hapusLunak('bahan', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
         return redirect()->to('bahan')->with('sukses', 'Bahan dihapus.');
     }
 

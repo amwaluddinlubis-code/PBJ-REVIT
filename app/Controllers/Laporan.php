@@ -13,14 +13,14 @@ class Laporan extends BaseController
         $db = $this->db();
         $sid = $this->sid();
 
-        $totalRab = (float) $db->query('SELECT COALESCE(SUM((qty_rkb+qty_adm+qty_toilet)*harga_rab),0) t FROM bahan WHERE sekolah_id = ?', [$sid])->getRow()->t;
-        $totalSpk = (float) $db->query('SELECT COALESCE(SUM(qty*harga),0) t FROM spk_detail WHERE spk_id IS NOT NULL AND sekolah_id = ?', [$sid])->getRow()->t;
+        $totalRab = (float) $db->query('SELECT COALESCE(SUM((qty_rkb+qty_adm+qty_toilet)*harga_rab),0) t FROM bahan WHERE sekolah_id = ? AND is_deleted = 0', [$sid])->getRow()->t;
+        $totalSpk = (float) $db->query('SELECT COALESCE(SUM(qty*harga),0) t FROM spk_detail WHERE spk_id IS NOT NULL AND sekolah_id = ? AND is_deleted = 0', [$sid])->getRow()->t;
 
         $realisasi = 0.0;
         $totalInvoice = 0.0;
         foreach ($db->query(
-            'SELECT i.nilai, (SELECT COUNT(*) FROM pembayaran p WHERE p.invoice_id = i.id) AS lunas
-             FROM invoice i JOIN spk s ON s.id = i.spk_id WHERE s.sekolah_id = ?',
+            'SELECT i.nilai, (SELECT COUNT(*) FROM pembayaran p WHERE p.invoice_id = i.id AND p.is_deleted = 0) AS lunas
+             FROM invoice i JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE s.sekolah_id = ? AND i.is_deleted = 0',
             [$sid]
         )->getResultArray() as $r) {
             $totalInvoice += (float) $r['nilai'];
@@ -31,17 +31,17 @@ class Laporan extends BaseController
 
         $gedung = [];
         foreach (['qty_rkb' => 'RKB 3 Kopel', 'qty_adm' => 'Ruang Administrasi', 'qty_toilet' => 'Toilet'] as $kolom => $label) {
-            $nilai = (float) $db->query("SELECT COALESCE(SUM({$kolom}*harga_rab),0) t FROM bahan WHERE sekolah_id = ?", [$sid])->getRow()->t;
+            $nilai = (float) $db->query("SELECT COALESCE(SUM({$kolom}*harga_rab),0) t FROM bahan WHERE sekolah_id = ? AND is_deleted = 0", [$sid])->getRow()->t;
             $gedung[] = ['label' => $label, 'anggaran' => $nilai, 'persen' => $totalRab > 0 ? $nilai / $totalRab * 100 : 0];
         }
 
         $perSpk = $db->query(
             'SELECT s.nomor, s.tanggal, s.paket, s.status, p.nama AS penyedia,
-                    (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id) AS nilai_spk,
-                    (SELECT COALESCE(SUM(i.nilai),0) FROM invoice i WHERE i.spk_id = s.id) AS nilai_invoice,
-                    (SELECT COUNT(*) FROM invoice i JOIN pembayaran pb ON pb.invoice_id = i.id WHERE i.spk_id = s.id) AS jumlah_bayar
+                    (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS nilai_spk,
+                    (SELECT COALESCE(SUM(i.nilai),0) FROM invoice i WHERE i.spk_id = s.id AND i.is_deleted = 0) AS nilai_invoice,
+                    (SELECT COUNT(*) FROM invoice i JOIN pembayaran pb ON pb.invoice_id = i.id AND pb.is_deleted = 0 WHERE i.spk_id = s.id AND i.is_deleted = 0) AS jumlah_bayar
              FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id
-             WHERE s.sekolah_id = ? GROUP BY s.id ORDER BY s.nomor',
+             WHERE s.sekolah_id = ? AND s.is_deleted = 0 GROUP BY s.id ORDER BY s.nomor',
             [$sid]
         )->getResultArray();
 
@@ -89,9 +89,9 @@ class Laporan extends BaseController
         $sid = $this->sid();
         $baris = $this->db()->query(
             'SELECT s.nomor, s.tanggal, s.paket, s.status, p.nama AS penyedia,
-                    (SELECT COUNT(*) FROM spk_detail d WHERE d.spk_id = s.id) AS jumlah,
-                    (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id) AS nilai
-             FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.sekolah_id = ? ORDER BY s.nomor',
+                    (SELECT COUNT(*) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS jumlah,
+                    (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS nilai
+             FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.sekolah_id = ? AND s.is_deleted = 0 ORDER BY s.nomor',
             [$sid]
         )->getResultArray();
         $ss = new Spreadsheet();
@@ -114,7 +114,7 @@ class Laporan extends BaseController
         $baris = $this->db()->query(
             'SELECT m.tanggal, m.no_bpb, b.kode, b.nama, b.satuan, m.masuk, m.keluar, m.keterangan
              FROM buku_material m JOIN bahan b ON b.id = m.bahan_id
-             WHERE b.sekolah_id = ? ORDER BY m.tanggal IS NULL, m.tanggal, m.id',
+             WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0 ORDER BY m.tanggal IS NULL, m.tanggal, m.id',
             [$sid]
         )->getResultArray();
         $ss = new Spreadsheet();
@@ -136,10 +136,10 @@ class Laporan extends BaseController
         $sid = $this->sid();
         $baris = $this->db()->query(
             'SELECT b.kode, b.nama, b.satuan, (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_rab,
-                    (SELECT COALESCE(SUM(d.qty),0) FROM spk_detail d WHERE d.bahan_id = b.id) AS masuk_spk,
-                    (SELECT COALESCE(SUM(m.masuk),0) FROM buku_material m WHERE m.bahan_id = b.id) AS gudang_masuk,
-                    (SELECT COALESCE(SUM(m.keluar),0) FROM buku_material m WHERE m.bahan_id = b.id) AS gudang_keluar
-             FROM bahan b WHERE b.sekolah_id = ? ORDER BY b.kode',
+                    (SELECT COALESCE(SUM(d.qty),0) FROM spk_detail d WHERE d.bahan_id = b.id AND d.is_deleted = 0) AS masuk_spk,
+                    (SELECT COALESCE(SUM(m.masuk),0) FROM buku_material m WHERE m.bahan_id = b.id AND m.is_deleted = 0) AS gudang_masuk,
+                    (SELECT COALESCE(SUM(m.keluar),0) FROM buku_material m WHERE m.bahan_id = b.id AND m.is_deleted = 0) AS gudang_keluar
+             FROM bahan b WHERE b.sekolah_id = ? AND b.is_deleted = 0 ORDER BY b.kode',
             [$sid]
         )->getResultArray();
         $ss = new Spreadsheet();

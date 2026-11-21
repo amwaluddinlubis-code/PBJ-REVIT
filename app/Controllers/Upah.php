@@ -16,13 +16,13 @@ class Upah extends BaseController
              FROM upah_bayar u
              LEFT JOIN gedung g ON g.id = u.gedung_id
              LEFT JOIN pekerjaan p ON p.id = u.pekerjaan_id
-             WHERE u.sekolah_id = ? ORDER BY u.tanggal DESC, u.id DESC',
+             WHERE u.sekolah_id = ? AND u.is_deleted = 0 ORDER BY u.tanggal DESC, u.id DESC',
             [$this->sid()]
         )->getResultArray();
         $total = array_sum(array_map(static fn ($r) => (float) $r['jumlah'], $daftar));
         return $this->tampil('upah/index', [
             'daftar' => $daftar, 'total' => $total,
-            'master' => $db->table('upah_master')->where('sekolah_id', $this->sid())->orderBy('jenis')->get()->getResultArray(),
+            'master' => $db->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray(),
             'pekerjaan_per_gedung' => $this->pekerjaanPerGedung(),
         ], 'Pembayaran Upah');
     }
@@ -31,7 +31,7 @@ class Upah extends BaseController
     {
         $hasil = [];
         foreach ($this->db()->query(
-            'SELECT p.id, p.nama, p.gedung_id FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id WHERE g.sekolah_id = ? ORDER BY p.gedung_id, p.urutan',
+            'SELECT p.id, p.nama, p.gedung_id FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id AND g.is_deleted = 0 WHERE g.sekolah_id = ? AND p.is_deleted = 0 ORDER BY p.gedung_id, p.urutan',
             [$this->sid()]
         )->getResultArray() as $p) {
             $hasil[(int) $p['gedung_id']][] = $p;
@@ -50,7 +50,7 @@ class Upah extends BaseController
         $oh = (float) str_replace(',', '.', (string) $r->getPost('orang_hari'));
         $tarif = (float) str_replace(['.', ','], ['', '.'], (string) $r->getPost('tarif'));
         if ($tarif <= 0) {
-            $m = $this->db()->table('upah_master')->where(['sekolah_id' => $this->sid(), 'jenis' => $jenis])->get()->getRowArray();
+            $m = $this->db()->table('upah_master')->where(['sekolah_id' => $this->sid(), 'jenis' => $jenis, 'is_deleted' => 0])->get()->getRowArray();
             $tarif = (float) ($m['tarif'] ?? 0);
         }
         $jumlah = $oh * $tarif;
@@ -81,7 +81,7 @@ class Upah extends BaseController
 
     public function hapus($id)
     {
-        $this->db()->table('upah_bayar')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->delete();
+        $this->hapusLunak('upah_bayar', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
         return redirect()->to('/upah')->with('sukses', 'Catatan pembayaran upah dihapus.');
     }
 
@@ -89,7 +89,7 @@ class Upah extends BaseController
     public function tarif($id)
     {
         $tarif = (float) str_replace(['.', ','], ['', '.'], (string) $this->request->getPost('tarif'));
-        $this->db()->table('upah_master')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->update(['tarif' => $tarif]);
+        $this->db()->table('upah_master')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->update(['tarif' => $tarif]);
         return redirect()->to('/upah')->with('sukses', 'Tarif upah diperbarui.');
     }
 

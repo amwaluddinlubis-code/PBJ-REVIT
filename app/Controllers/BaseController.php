@@ -30,6 +30,22 @@ abstract class BaseController extends Controller
     }
 
     /** Render view di dalam layout utama. */
+    /**
+     * Hapus lunak: tandai baris is_deleted = 1 + deleted_at (data tetap di
+     * database dan bisa dipulihkan). $syarat bisa array where atau callable
+     * yang menerima query builder.
+     */
+    protected function hapusLunak(string $tabel, $syarat): void
+    {
+        $b = $this->db()->table($tabel);
+        if (is_callable($syarat)) {
+            $syarat($b);
+        } else {
+            $b->where($syarat);
+        }
+        $b->update(['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
+    }
+
     protected function tampil(string $view, array $data = [], string $judul = 'Aplikasi PBJ Sekolah')
     {
         $data['judul']        = $judul;
@@ -46,10 +62,10 @@ abstract class BaseController extends Controller
     {
         $db = $this->db();
         $id = (int) (session()->get('sekolah_id') ?? 0);
-        if ($id > 0 && $db->table('sekolah')->where('id', $id)->countAllResults() > 0) {
+        if ($id > 0 && $db->table('sekolah')->where(['id' => $id, 'is_deleted' => 0])->countAllResults() > 0) {
             return $id;
         }
-        $row = $db->table('sekolah')->orderBy('id')->get()->getRowArray();
+        $row = $db->table('sekolah')->where('is_deleted', 0)->orderBy('id')->get()->getRowArray();
         $id = (int) ($row['id'] ?? 0);
         if ($id > 0) {
             session()->set('sekolah_id', $id);
@@ -61,13 +77,13 @@ abstract class BaseController extends Controller
     protected function sekolahAktif(): array
     {
         $id = $this->sid();
-        return $id > 0 ? ($this->db()->table('sekolah')->where('id', $id)->get()->getRowArray() ?? []) : [];
+        return $id > 0 ? ($this->db()->table('sekolah')->where(['id' => $id, 'is_deleted' => 0])->get()->getRowArray() ?? []) : [];
     }
 
     /** Semua sekolah terdaftar (untuk pengalih di layout). */
     protected function semuaSekolah(): array
     {
-        return $this->db()->table('sekolah')->orderBy('nama_sekolah')->get()->getResultArray();
+        return $this->db()->table('sekolah')->where('is_deleted', 0)->orderBy('nama_sekolah')->get()->getResultArray();
     }
 
     /** Semua gedung sekolah aktif + persen kemajuan fisiknya (untuk menu). */
@@ -80,9 +96,10 @@ abstract class BaseController extends Controller
                  LEFT JOIN (
                      SELECT p.gedung_id AS gid, SUM(rl.volume * p.harga_satuan) AS nilai
                      FROM realisasi rl JOIN pekerjaan p ON p.id = rl.pekerjaan_id
+                     WHERE rl.is_deleted = 0 AND p.is_deleted = 0
                      GROUP BY p.gedung_id
                  ) r ON r.gid = g.id
-                 WHERE g.sekolah_id = ? ORDER BY g.urutan, g.id',
+                 WHERE g.sekolah_id = ? AND g.is_deleted = 0 ORDER BY g.urutan, g.id',
                 [$this->sid()]
             )->getResultArray();
         } catch (\Throwable $e) {
@@ -97,7 +114,7 @@ abstract class BaseController extends Controller
     /** Satu baris gedung milik sekolah aktif (null bila tidak ada). */
     protected function ambilGedung(int $id): ?array
     {
-        $g = $this->db()->table('gedung')->where(['id' => $id, 'sekolah_id' => $this->sid()])->get()->getRowArray();
+        $g = $this->db()->table('gedung')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         return $g ?: null;
     }
 
@@ -152,7 +169,7 @@ abstract class BaseController extends Controller
              JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
              JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'bahan' AND ak.bahan_id IS NOT NULL
              JOIN bahan b ON b.id = ak.bahan_id
-             WHERE p.gedung_id = ?
+             WHERE p.gedung_id = ? AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0 AND b.is_deleted = 0
              GROUP BY b.id, b.kode, b.nama, b.satuan, ak.satuan",
             [$this->sid(), $gedungId]
         )->getResultArray();
@@ -178,7 +195,7 @@ abstract class BaseController extends Controller
              FROM pekerjaan p
              JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
              JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'bahan' AND ak.bahan_id IS NULL
-             WHERE p.gedung_id = ?
+             WHERE p.gedung_id = ? AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0
              GROUP BY ak.nama ORDER BY qty_butuh DESC",
             [$this->sid(), $gedungId]
         )->getResultArray();
@@ -194,8 +211,8 @@ abstract class BaseController extends Controller
              FROM pekerjaan p
              JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
              JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'upah'
-             LEFT JOIN upah_master um ON um.sekolah_id = a.sekolah_id AND um.jenis = ak.nama
-             WHERE p.gedung_id = ?
+             LEFT JOIN upah_master um ON um.sekolah_id = a.sekolah_id AND um.jenis = ak.nama AND um.is_deleted = 0
+             WHERE p.gedung_id = ? AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0
              GROUP BY ak.nama ORDER BY orang_hari DESC",
             [$this->sid(), $gedungId]
         )->getResultArray();
@@ -252,10 +269,10 @@ abstract class BaseController extends Controller
         $db = $this->db();
         $inv = $db->query(
             "SELECT COALESCE(SUM(i.nilai), 0) AS t FROM invoice i JOIN spk s ON s.id = i.spk_id
-             WHERE i.status = 'Sudah Bayar' AND s.sekolah_id = ?",
+             WHERE i.status = 'Sudah Bayar' AND s.sekolah_id = ? AND i.is_deleted = 0 AND s.is_deleted = 0",
             [$this->sid()]
         )->getRowArray();
-        $upah = $db->table('upah_bayar')->selectSum('jumlah')->where('sekolah_id', $this->sid())->get()->getRowArray();
+        $upah = $db->table('upah_bayar')->selectSum('jumlah')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         return (float) ($inv['t'] ?? 0) + (float) ($upah['jumlah'] ?? 0);
     }
 
@@ -277,7 +294,7 @@ abstract class BaseController extends Controller
     protected function hargaAcuan(int $bahanId): int
     {
         $db = $this->db();
-        $nego = $db->table('negosiasi')->where('bahan_id', $bahanId)->get()->getRowArray();
+        $nego = $db->table('negosiasi')->where(['bahan_id' => $bahanId, 'is_deleted' => 0])->get()->getRowArray();
         if ($nego) {
             if (! empty($nego['harga_nego'])) {
                 return (int) $nego['harga_nego'];
@@ -286,7 +303,7 @@ abstract class BaseController extends Controller
                 return (int) $nego['harga_penawaran'];
             }
         }
-        $bahan = $db->table('bahan')->where('id', $bahanId)->get()->getRowArray();
+        $bahan = $db->table('bahan')->where(['id' => $bahanId, 'is_deleted' => 0])->get()->getRowArray();
         return (int) ($bahan['harga_rab'] ?? 0);
     }
 

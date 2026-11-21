@@ -9,9 +9,9 @@ class Sekolah extends BaseController
         $db = $this->db();
         $daftar = $db->query(
             'SELECT s.*,
-                    (SELECT COUNT(*) FROM bahan b WHERE b.sekolah_id = s.id) AS jumlah_bahan,
-                    (SELECT COUNT(*) FROM spk k WHERE k.sekolah_id = s.id) AS jumlah_spk
-             FROM sekolah s ORDER BY s.nama_sekolah'
+                    (SELECT COUNT(*) FROM bahan b WHERE b.sekolah_id = s.id AND b.is_deleted = 0) AS jumlah_bahan,
+                    (SELECT COUNT(*) FROM spk k WHERE k.sekolah_id = s.id AND k.is_deleted = 0) AS jumlah_spk
+             FROM sekolah s WHERE s.is_deleted = 0 ORDER BY s.nama_sekolah'
         )->getResultArray();
         return $this->tampil('sekolah/index', ['daftar' => $daftar], 'Kelola Sekolah — Aplikasi PBJ Sekolah');
     }
@@ -38,9 +38,9 @@ class Sekolah extends BaseController
     public function pilih($id = null)
     {
         $target = (int) ($id ?? $this->request->getPost('sekolah_id'));
-        if ($target > 0 && $this->db()->table('sekolah')->where('id', $target)->countAllResults() > 0) {
+        if ($target > 0 && $this->db()->table('sekolah')->where(['id' => $target, 'is_deleted' => 0])->countAllResults() > 0) {
             session()->set('sekolah_id', $target);
-            $s = $this->db()->table('sekolah')->where('id', $target)->get()->getRowArray();
+            $s = $this->db()->table('sekolah')->where(['id' => $target, 'is_deleted' => 0])->get()->getRowArray();
             return redirect()->to('/')->with('sukses', 'Sekolah aktif: ' . ($s['nama_sekolah'] ?? ''));
         }
         return redirect()->to('/')->with('galat', 'Sekolah tidak ditemukan.');
@@ -50,14 +50,14 @@ class Sekolah extends BaseController
     {
         $db = $this->db();
         $id = (int) $id;
-        $ada = (int) $db->query('SELECT (SELECT COUNT(*) FROM bahan WHERE sekolah_id = ?) + (SELECT COUNT(*) FROM spk WHERE sekolah_id = ?) AS j', [$id, $id])->getRow()->j;
+        $ada = (int) $db->query('SELECT (SELECT COUNT(*) FROM bahan WHERE sekolah_id = ? AND is_deleted = 0) + (SELECT COUNT(*) FROM spk WHERE sekolah_id = ? AND is_deleted = 0) AS j', [$id, $id])->getRow()->j;
         if ($ada > 0) {
             return redirect()->to('sekolah')->with('galat', 'Sekolah ini sudah mempunyai data bahan/SPK — tidak bisa dihapus.');
         }
-        if ($db->table('sekolah')->countAllResults() <= 1) {
+        if ($db->table('sekolah')->where('is_deleted', 0)->countAllResults() <= 1) {
             return redirect()->to('sekolah')->with('galat', 'Minimal harus ada satu sekolah.');
         }
-        $db->table('sekolah')->where('id', $id)->delete();
+        $this->hapusLunak('sekolah', ['id' => $id]);
         if ($this->sid() === $id) {
             session()->remove('sekolah_id');
         }

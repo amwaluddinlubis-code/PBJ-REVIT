@@ -9,7 +9,7 @@ class Pengaturan extends BaseController
         return $this->tampil('pengaturan/index', [
             'idn' => $this->sekolahAktif(),
             'terbayar' => $this->totalBelanja(),
-            'penyedia' => $this->db()->table('penyedia')->where('sekolah_id', $this->sid())->orderBy('nama')->get()->getResultArray(),
+            'penyedia' => $this->db()->table('penyedia')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray(),
         ], 'Identitas & Pengaturan');
     }
 
@@ -54,7 +54,7 @@ class Pengaturan extends BaseController
         if ($nama === '') {
             return redirect()->to('pengaturan')->with('galat', 'Nama penyedia tidak boleh kosong.');
         }
-        $this->db()->table('penyedia')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->update([
+        $this->db()->table('penyedia')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->update([
             'nama' => $nama,
             'alamat' => trim((string) $this->request->getPost('alamat')) ?: null,
             'ttd_nama' => trim((string) $this->request->getPost('ttd_nama')) ?: null,
@@ -65,11 +65,11 @@ class Pengaturan extends BaseController
 
     public function penyediaHapus($id)
     {
-        $dipakai = $this->db()->table('spk')->where('penyedia_id', (int) $id)->countAllResults();
+        $dipakai = $this->db()->table('spk')->where(['penyedia_id' => (int) $id, 'is_deleted' => 0])->countAllResults();
         if ($dipakai > 0) {
             return redirect()->to('pengaturan')->with('galat', 'Penyedia ini dipakai SPK — tidak bisa dihapus.');
         }
-        $this->db()->table('penyedia')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->delete();
+        $this->hapusLunak('penyedia', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
         return redirect()->to('pengaturan')->with('sukses', 'Penyedia dihapus.');
     }
 }

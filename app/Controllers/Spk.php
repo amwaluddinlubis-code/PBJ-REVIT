@@ -9,8 +9,8 @@ class Spk extends BaseController
         $spk = $this->db()->query(
             'SELECT s.*, p.nama AS penyedia, COUNT(d.id) AS jumlah, COALESCE(SUM(d.qty*d.harga),0) AS nilai
              FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id
-             LEFT JOIN spk_detail d ON d.spk_id = s.id
-             WHERE s.sekolah_id = ?
+             LEFT JOIN spk_detail d ON d.spk_id = s.id AND d.is_deleted = 0
+             WHERE s.sekolah_id = ? AND s.is_deleted = 0
              GROUP BY s.id ORDER BY s.nomor',
             [$this->sid()]
         )->getResultArray();
@@ -19,10 +19,10 @@ class Spk extends BaseController
 
     public function baru()
     {
-        $row = $this->db()->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ?', [$this->sid()])->getRow();
+        $row = $this->db()->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ? AND is_deleted = 0', [$this->sid()])->getRow();
         return $this->tampil('spk/form', [
             's' => ['nomor' => ((int) $row->m) + 1, 'status' => 'Aktif'],
-            'penyedia' => $this->db()->table('penyedia')->where('sekolah_id', $this->sid())->orderBy('nama')->get()->getResultArray(),
+            'penyedia' => $this->db()->table('penyedia')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray(),
             'aksi' => 'spk/simpan',
         ], 'SPK Baru');
     }
@@ -30,7 +30,7 @@ class Spk extends BaseController
     public function simpan()
     {
         $data = $this->ambilForm();
-        if ($this->db()->table('spk')->where(['nomor' => $data['nomor'], 'sekolah_id' => $this->sid()])->countAllResults() > 0) {
+        if ($this->db()->table('spk')->where(['nomor' => $data['nomor'], 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults() > 0) {
             return redirect()->back()->withInput()->with('galat', 'Nomor SPK ' . $data['nomor'] . ' sudah ada.');
         }
         $data['sekolah_id'] = $this->sid();
@@ -41,13 +41,13 @@ class Spk extends BaseController
 
     public function ubah($id)
     {
-        $s = $this->db()->table('spk')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->get()->getRowArray();
+        $s = $this->db()->table('spk')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         if (! $s) {
             return redirect()->to('spk')->with('galat', 'SPK tidak ditemukan.');
         }
         return $this->tampil('spk/form', [
             's' => $s,
-            'penyedia' => $this->db()->table('penyedia')->where('sekolah_id', $this->sid())->orderBy('nama')->get()->getResultArray(),
+            'penyedia' => $this->db()->table('penyedia')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray(),
             'aksi' => 'spk/perbarui/' . $id,
         ], 'Ubah SPK ' . $s['nomor']);
     }
@@ -62,8 +62,13 @@ class Spk extends BaseController
 
     public function hapus($id)
     {
-        // Detail tidak ikut terhapus: nomor SPK-nya dikosongkan (SET NULL oleh FK).
-        $this->db()->table('spk')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->delete();
+        // Hapus lunak: SPK ditandai terhapus; rinciannya menjadi belum bernomor
+        // (spk_id dikosongkan) agar tetap bisa dipakai ulang. BAP/BAST/invoice
+        // yang menunjuk SPK ini ikut tersembunyi lewat saringannya.
+        $db = $this->db();
+        $db->table('spk_detail')->where(['spk_id' => (int) $id, 'is_deleted' => 0])
+            ->update(['spk_id' => null, 'updated_at' => date('Y-m-d H:i:s')]);
+        $this->hapusLunak('spk', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
         return redirect()->to('spk')->with('sukses', 'SPK dihapus; rincian barangnya kini berstatus belum bernomor.');
     }
 
@@ -71,7 +76,7 @@ class Spk extends BaseController
     {
         $db = $this->db();
         $s = $db->query(
-            'SELECT s.*, p.nama AS penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ?',
+            'SELECT s.*, p.nama AS penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ? AND s.is_deleted = 0',
             [(int) $id]
         )->getRowArray();
         if (! $s || (int) $s['sekolah_id'] !== $this->sid()) {
@@ -82,10 +87,10 @@ class Spk extends BaseController
                     COALESCE(b.satuan, d.satuan_manual) AS satuan, d.qty*d.harga AS total,
                     CASE WHEN d.pajak = 1 THEN ROUND(0.11 * d.qty * d.harga / 1.11) ELSE 0 END AS ppn
              FROM spk_detail d LEFT JOIN bahan b ON b.id = d.bahan_id
-             WHERE d.spk_id = ? ORDER BY d.id',
+             WHERE d.spk_id = ? AND d.is_deleted = 0 ORDER BY d.id',
             [(int) $id]
         )->getResultArray();
-        $bahan = $db->query('SELECT id, kode, nama, satuan, harga_rab FROM bahan WHERE sekolah_id = ? ORDER BY kode', [$this->sid()])->getResultArray();
+        $bahan = $db->query('SELECT id, kode, nama, satuan, harga_rab FROM bahan WHERE sekolah_id = ? AND is_deleted = 0 ORDER BY kode', [$this->sid()])->getResultArray();
         foreach ($bahan as &$b) {
             $b['harga_acuan'] = $this->hargaAcuan((int) $b['id']);
         }
@@ -109,7 +114,7 @@ class Spk extends BaseController
 
     public function detailUbah($detailId)
     {
-        $d = $this->db()->table('spk_detail')->where('id', (int) $detailId)->get()->getRowArray();
+        $d = $this->db()->table('spk_detail')->where(['id' => (int) $detailId, 'is_deleted' => 0])->get()->getRowArray();
         if (! $d) {
             return redirect()->to('spk')->with('galat', 'Baris tidak ditemukan.');
         }
@@ -125,8 +130,8 @@ class Spk extends BaseController
 
     public function detailHapus($detailId)
     {
-        $d = $this->db()->table('spk_detail')->where('id', (int) $detailId)->get()->getRowArray();
-        $this->db()->table('spk_detail')->where('id', (int) $detailId)->delete();
+        $d = $this->db()->table('spk_detail')->where(['id' => (int) $detailId, 'is_deleted' => 0])->get()->getRowArray();
+        $this->hapusLunak('spk_detail', ['id' => (int) $detailId]);
         $kembali = ($d && $d['spk_id']) ? 'spk/detail/' . $d['spk_id'] : 'belum-bernomor';
         return redirect()->to($kembali)->with('sukses', 'Baris dihapus.');
     }
@@ -137,17 +142,17 @@ class Spk extends BaseController
             'SELECT d.*, COALESCE(b.kode, "") AS kode, COALESCE(b.nama, d.nama_manual) AS nama,
                     COALESCE(b.satuan, d.satuan_manual) AS satuan, d.qty*d.harga AS total
              FROM spk_detail d LEFT JOIN bahan b ON b.id = d.bahan_id
-             WHERE d.spk_id IS NULL AND d.sekolah_id = ? ORDER BY d.id',
+             WHERE d.spk_id IS NULL AND d.sekolah_id = ? AND d.is_deleted = 0 ORDER BY d.id',
             [$this->sid()]
         )->getResultArray();
-        $spk = $this->db()->table('spk')->where('sekolah_id', $this->sid())->orderBy('nomor')->get()->getResultArray();
+        $spk = $this->db()->table('spk')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nomor')->get()->getResultArray();
         return $this->tampil('spk/belum', ['detail' => $detail, 'spk' => $spk], 'Detail Belum Bernomor SPK');
     }
 
     public function pasangNomor($detailId)
     {
         $spkId = (int) $this->request->getPost('spk_id');
-        if ($spkId <= 0 || $this->db()->table('spk')->where(['id' => $spkId, 'sekolah_id' => $this->sid()])->countAllResults() === 0) {
+        if ($spkId <= 0 || $this->db()->table('spk')->where(['id' => $spkId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults() === 0) {
             return redirect()->to('belum-bernomor')->with('galat', 'Pilih dulu nomor SPK dari sekolah aktif.');
         }
         $this->db()->table('spk_detail')->where('id', (int) $detailId)->update(['spk_id' => $spkId, 'updated_at' => date('Y-m-d H:i:s')]);

@@ -206,7 +206,7 @@ class ParserPerencana
     private function petaBahanSekolah(): array
     {
         $peta = [];
-        foreach ($this->db->table('bahan')->where('sekolah_id', $this->sid)->get()->getResultArray() as $b) {
+        foreach ($this->db->table('bahan')->where(['sekolah_id' => $this->sid, 'is_deleted' => 0])->get()->getResultArray() as $b) {
             $peta[self::normal($b['nama'])] = (int) $b['id'];
             $peta[self::normalDasar($b['nama'])] = (int) $b['id'];
         }
@@ -242,7 +242,7 @@ class ParserPerencana
                 continue;
             }
             if ($mode === 'upah') {
-                $ada = $this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $nama])->get()->getRowArray();
+                $ada = $this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $nama, 'is_deleted' => 0])->get()->getRowArray();
                 if ($ada) {
                     if ($harga > 0) {
                         $this->db->table('upah_master')->where('id', $ada['id'])->update(['tarif' => $harga]);
@@ -279,7 +279,7 @@ class ParserPerencana
     private function imporAnalisa(PembacaXlsxMentah $p, string $sheet, array $petaBahan, array $sudahKode): array
     {
         $tarifUpah = [];
-        foreach ($this->db->table('upah_master')->where('sekolah_id', $this->sid)->get()->getResultArray() as $u) {
+        foreach ($this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'is_deleted' => 0])->get()->getResultArray() as $u) {
             $tarifUpah[self::normal($u['jenis'])] = (float) $u['tarif'];
         }
         $cariTarif = static function (string $nama) use ($tarifUpah): ?float {
@@ -322,7 +322,7 @@ class ParserPerencana
                 $this->db->table('analisa')->ignore(true)->insert([
                     'sekolah_id' => $this->sid, 'kode' => $kode, 'nama' => $blok['nama'], 'satuan' => $blok['satuan'],
                 ]);
-                $row = $this->db->table('analisa')->where(['sekolah_id' => $this->sid, 'kode' => $kode])->get()->getRowArray();
+                $row = $this->db->table('analisa')->where(['sekolah_id' => $this->sid, 'kode' => $kode, 'is_deleted' => 0])->get()->getRowArray();
                 $aid = (int) $row['id'];
                 $this->db->table('analisa')->where('id', $aid)->update(['nama' => $blok['nama'], 'satuan' => $blok['satuan']]);
                 $this->db->table('analisa_komponen')->where('analisa_id', $aid)->delete();

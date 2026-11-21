@@ -8,9 +8,9 @@ class Survei extends BaseController
     {
         $db = $this->db();
         $identitas = $this->sekolahAktif();
-        $bahan = $db->table('bahan')->where('sekolah_id', $this->sid())->orderBy('kode')->get()->getResultArray();
+        $bahan = $db->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('kode')->get()->getResultArray();
         $harga = [];
-        foreach ($db->table('survei_harga')->get()->getResultArray() as $r) {
+        foreach ($db->table('survei_harga')->where('is_deleted', 0)->get()->getResultArray() as $r) {
             $harga[$r['bahan_id']][$r['toko']] = $r['harga'];
         }
         return $this->tampil('survei/index', [
@@ -27,10 +27,10 @@ class Survei extends BaseController
         $db->transStart();
         foreach ($semua as $bahanId => $perToko) {
             foreach ($perToko as $toko => $nilai) {
-                $ada = $db->table('survei_harga')->where(['bahan_id' => (int) $bahanId, 'toko' => (int) $toko])->get()->getRowArray();
+                $ada = $db->table('survei_harga')->where(['bahan_id' => (int) $bahanId, 'toko' => (int) $toko, 'is_deleted' => 0])->get()->getRowArray();
                 if ($nilai === '' || $nilai === null) {
                     if ($ada) {
-                        $db->table('survei_harga')->where('id', $ada['id'])->delete();
+                        $this->hapusLunak('survei_harga', ['id' => $ada['id']]);
                     }
                 } elseif ($ada) {
                     $db->table('survei_harga')->where('id', $ada['id'])->update(['harga' => (int) $nilai]);

@@ -9,7 +9,7 @@ class Material extends BaseController
         $db = $this->db();
         $baris = $db->query(
             'SELECT m.*, b.kode, b.nama, b.satuan FROM buku_material m
-             JOIN bahan b ON b.id = m.bahan_id WHERE b.sekolah_id = ? ORDER BY m.tanggal IS NULL, m.tanggal, m.id',
+             JOIN bahan b ON b.id = m.bahan_id WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0 ORDER BY m.tanggal IS NULL, m.tanggal, m.id',
             [$this->sid()]
         )->getResultArray();
         // Saldo berjalan per bahan
@@ -18,7 +18,7 @@ class Material extends BaseController
             $saldo[$r['bahan_id']] = ($saldo[$r['bahan_id']] ?? 0) + (float) $r['masuk'] - (float) $r['keluar'];
             $r['sisa'] = $saldo[$r['bahan_id']];
         }
-        $bahan = $db->table('bahan')->where('sekolah_id', $this->sid())->orderBy('kode')->get()->getResultArray();
+        $bahan = $db->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('kode')->get()->getResultArray();
         return $this->tampil('material/index', ['baris' => $baris, 'bahan' => $bahan], 'Buku Material — Aplikasi PBJ Sekolah');
     }
 
@@ -38,7 +38,7 @@ class Material extends BaseController
 
     public function hapus($id)
     {
-        $this->db()->table('buku_material')->where('id', (int) $id)->delete();
+        $this->hapusLunak('buku_material', ['id' => (int) $id]);
         return redirect()->to('material')->with('sukses', 'Baris dihapus.');
     }
 
@@ -47,10 +47,10 @@ class Material extends BaseController
         $bahan = $this->db()->query(
             'SELECT b.kode, b.nama, b.satuan,
                     (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_rab,
-                    (SELECT COALESCE(SUM(d.qty),0) FROM spk_detail d WHERE d.bahan_id = b.id) AS masuk_spk,
-                    (SELECT COALESCE(SUM(m.masuk),0) FROM buku_material m WHERE m.bahan_id = b.id) AS gudang_masuk,
-                    (SELECT COALESCE(SUM(m.keluar),0) FROM buku_material m WHERE m.bahan_id = b.id) AS gudang_keluar
-             FROM bahan b WHERE b.sekolah_id = ? ORDER BY b.kode',
+                    (SELECT COALESCE(SUM(d.qty),0) FROM spk_detail d WHERE d.bahan_id = b.id AND d.is_deleted = 0) AS masuk_spk,
+                    (SELECT COALESCE(SUM(m.masuk),0) FROM buku_material m WHERE m.bahan_id = b.id AND m.is_deleted = 0) AS gudang_masuk,
+                    (SELECT COALESCE(SUM(m.keluar),0) FROM buku_material m WHERE m.bahan_id = b.id AND m.is_deleted = 0) AS gudang_keluar
+             FROM bahan b WHERE b.sekolah_id = ? AND b.is_deleted = 0 ORDER BY b.kode',
             [$this->sid()]
         )->getResultArray();
         return $this->tampil('material/sisa', ['bahan' => $bahan], 'Sisa Bahan — Aplikasi PBJ Sekolah');

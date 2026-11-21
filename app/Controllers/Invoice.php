@@ -6,7 +6,7 @@ class Invoice extends BaseController
 {
     private function totalSpk(int $spkId): float
     {
-        $row = $this->db()->query('SELECT COALESCE(SUM(qty*harga),0) t FROM spk_detail WHERE spk_id = ?', [$spkId])->getRow();
+        $row = $this->db()->query('SELECT COALESCE(SUM(qty*harga),0) t FROM spk_detail WHERE spk_id = ? AND is_deleted = 0', [$spkId])->getRow();
         return (float) $row->t;
     }
 
@@ -14,9 +14,9 @@ class Invoice extends BaseController
     {
         $inv = $this->db()->query(
             'SELECT i.*, s.nomor AS spk_nomor, p.nama AS penyedia,
-                    (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id) AS total_spk
-             FROM invoice i JOIN spk s ON s.id = i.spk_id
-             LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.sekolah_id = ? ORDER BY i.nomor_urut',
+                    (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS total_spk
+             FROM invoice i JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0
+             LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.sekolah_id = ? AND i.is_deleted = 0 ORDER BY i.nomor_urut',
             [$this->sid()]
         )->getResultArray();
         return $this->tampil('invoice/index', ['inv' => $inv], 'Register Invoice — Aplikasi PBJ Sekolah');
@@ -48,7 +48,7 @@ class Invoice extends BaseController
     {
         $row = $this->db()->query(
             'SELECT COUNT(*) j FROM invoice i JOIN spk s ON s.id = i.spk_id
-             WHERE i.nomor_urut = ? AND s.sekolah_id = ? AND i.id <> ?',
+             WHERE i.nomor_urut = ? AND s.sekolah_id = ? AND i.id <> ? AND i.is_deleted = 0',
             [$urut, $this->sid(), $kecualiId]
         )->getRow();
         return (int) $row->j > 0;
@@ -56,7 +56,7 @@ class Invoice extends BaseController
 
     public function ubah($id)
     {
-        $i = $this->db()->table('invoice')->where('id', (int) $id)->get()->getRowArray();
+        $i = $this->db()->table('invoice')->where(['id' => (int) $id, 'is_deleted' => 0])->get()->getRowArray();
         if (! $i) {
             return redirect()->to('invoice')->with('galat', 'Invoice tidak ditemukan.');
         }
@@ -78,23 +78,23 @@ class Invoice extends BaseController
 
     public function hapus($id)
     {
-        $this->db()->table('invoice')->where('id', (int) $id)->delete();
+        $this->hapusLunak('invoice', ['id' => (int) $id]);
         return redirect()->to('invoice')->with('sukses', 'Invoice dihapus (jurnal pembayaran terkait ikut terhapus).');
     }
 
     private function daftarSpk(): array
     {
         $spk = $this->db()->query(
-            'SELECT s.id, s.nomor, s.paket, (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id) AS total
-             FROM spk s WHERE s.sekolah_id = ? ORDER BY s.nomor',
+            'SELECT s.id, s.nomor, s.paket, (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS total
+             FROM spk s WHERE s.sekolah_id = ? AND s.is_deleted = 0 ORDER BY s.nomor',
             [$this->sid()]
         )->getResultArray();
         $bap = [];
-        foreach ($this->db()->table('bap')->get()->getResultArray() as $r) {
+        foreach ($this->db()->table('bap')->where('is_deleted', 0)->get()->getResultArray() as $r) {
             $bap[$r['spk_id']][] = $r;
         }
         $bast = [];
-        foreach ($this->db()->table('bast')->get()->getResultArray() as $r) {
+        foreach ($this->db()->table('bast')->where('is_deleted', 0)->get()->getResultArray() as $r) {
             $bast[$r['spk_id']][] = $r;
         }
         return ['list' => $spk, 'bap' => $bap, 'bast' => $bast];
@@ -125,7 +125,7 @@ class Invoice extends BaseController
             'SELECT i.*, s.nomor AS spk_nomor, s.tanggal AS spk_tanggal, s.paket, s.ttd_penyedia,
                     p.nama AS penyedia, p.alamat AS penyedia_alamat
              FROM invoice i JOIN spk s ON s.id = i.spk_id
-             LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE i.id = ? AND s.sekolah_id = ?',
+             LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE i.id = ? AND s.sekolah_id = ? AND i.is_deleted = 0 AND s.is_deleted = 0',
             [(int) $id, $this->sid()]
         )->getRowArray();
         if (! $i) {
@@ -134,7 +134,7 @@ class Invoice extends BaseController
         $detail = $db->query(
             'SELECT COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan,
                     d.qty, d.harga, d.qty*d.harga AS total
-             FROM spk_detail d LEFT JOIN bahan b ON b.id = d.bahan_id WHERE d.spk_id = ? ORDER BY d.id',
+             FROM spk_detail d LEFT JOIN bahan b ON b.id = d.bahan_id WHERE d.spk_id = ? AND d.is_deleted = 0 ORDER BY d.id',
             [(int) $i['spk_id']]
         )->getResultArray();
         return view('cetak/invoice', [
@@ -153,13 +153,13 @@ class Invoice extends BaseController
         $baris = $this->db()->query(
             'SELECT p.*, i.nomor_urut, i.no_toko, i.nilai, s.nomor AS spk_nomor,
                     ROUND(i.nilai * 0.015) AS pph22, i.nilai - ROUND(i.nilai * 0.015) AS dibayar
-             FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id
-             JOIN spk s ON s.id = i.spk_id WHERE s.sekolah_id = ? ORDER BY p.id',
+             FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0
+             JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE s.sekolah_id = ? AND p.is_deleted = 0 ORDER BY p.id',
             [$this->sid()]
         )->getResultArray();
         $belum = $this->db()->query(
             "SELECT i.id, i.nomor_urut, i.nilai, s.nomor AS spk_nomor FROM invoice i
-             JOIN spk s ON s.id = i.spk_id WHERE i.status = 'Belum Bayar' AND s.sekolah_id = ? ORDER BY i.nomor_urut",
+             JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE i.status = 'Belum Bayar' AND s.sekolah_id = ? AND i.is_deleted = 0 ORDER BY i.nomor_urut",
             [$this->sid()]
         )->getResultArray();
         return $this->tampil('invoice/jurnal', ['baris' => $baris, 'belum' => $belum], 'Jurnal Pembayaran — Aplikasi PBJ Sekolah');
@@ -172,7 +172,7 @@ class Invoice extends BaseController
             return redirect()->to('invoice/jurnal')->with('galat', 'Pilih invoice yang dibayar.');
         }
         $inv = $this->db()->query(
-            'SELECT i.* FROM invoice i JOIN spk s ON s.id = i.spk_id WHERE i.id = ? AND s.sekolah_id = ?',
+            'SELECT i.* FROM invoice i JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE i.id = ? AND s.sekolah_id = ? AND i.is_deleted = 0',
             [$invoiceId, $this->sid()]
         )->getRowArray();
         if ($inv === null) {
@@ -202,10 +202,10 @@ class Invoice extends BaseController
 
     public function jurnalHapus($id)
     {
-        $p = $this->db()->table('pembayaran')->where('id', (int) $id)->get()->getRowArray();
+        $p = $this->db()->table('pembayaran')->where(['id' => (int) $id, 'is_deleted' => 0])->get()->getRowArray();
         if ($p) {
             $this->db()->transStart();
-            $this->db()->table('pembayaran')->where('id', (int) $id)->delete();
+            $this->hapusLunak('pembayaran', ['id' => (int) $id]);
             $this->db()->table('invoice')->where('id', $p['invoice_id'])->update(['status' => 'Belum Bayar', 'updated_at' => date('Y-m-d H:i:s')]);
             $this->db()->transComplete();
         }

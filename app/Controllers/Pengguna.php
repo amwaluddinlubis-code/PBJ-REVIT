@@ -21,7 +21,7 @@ class Pengguna extends BaseController
             return redirect()->to('/')->with('galat', 'Manajemen user hanya untuk administrator.');
         }
         return $this->tampil('pengguna/index', [
-            'daftar' => $this->db()->table('users')->orderBy('id')->get()->getResultArray(),
+            'daftar' => $this->db()->table('users')->where('is_deleted', 0)->orderBy('id')->get()->getResultArray(),
             'pilihan_peran' => self::PERAN,
             'saya' => (int) ($this->pengguna['id'] ?? 0),
         ], 'Manajemen User');
@@ -43,7 +43,7 @@ class Pengguna extends BaseController
         if (! in_array($peran, self::PERAN, true)) {
             $peran = 'operator';
         }
-        $ada = $this->db()->table('users')->where('username', $username)->countAllResults();
+        $ada = $this->db()->table('users')->where(['username' => $username, 'is_deleted' => 0])->countAllResults();
         if ($ada > 0) {
             return redirect()->to('/pengguna')->with('galat', 'Username "' . $username . '" sudah dipakai pengguna lain.');
         }
@@ -99,13 +99,13 @@ class Pengguna extends BaseController
         if ($target && $target['peran'] === 'admin' && $this->jumlahAdminSelain($id) === 0) {
             return redirect()->to('/pengguna')->with('galat', 'Admin terakhir tidak dapat dihapus.');
         }
-        $this->db()->table('users')->where('id', $id)->delete();
+        $this->hapusLunak('users', ['id' => $id]);
         return redirect()->to('/pengguna')->with('sukses', 'Pengguna dihapus.');
     }
 
     private function jumlahAdminSelain(int $id): int
     {
-        return $this->db()->table('users')->where('peran', 'admin')->where('id !=', $id)->countAllResults();
+        return $this->db()->table('users')->where(['peran' => 'admin', 'is_deleted' => 0])->where('id !=', $id)->countAllResults();
     }
 
     // ---------- Profil saya ----------

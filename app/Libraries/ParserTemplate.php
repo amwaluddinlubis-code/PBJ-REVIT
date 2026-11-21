@@ -98,7 +98,7 @@ class ParserTemplate
                 continue;
             }
             if (str_contains($jenis, 'upah')) {
-                $ada = $this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $nama])->get()->getRowArray();
+                $ada = $this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $nama, 'is_deleted' => 0])->get()->getRowArray();
                 if ($ada) {
                     if ($harga > 0) {
                         $this->db->table('upah_master')->where('id', $ada['id'])->update(['tarif' => $harga, 'satuan' => $satuan]);
@@ -111,10 +111,10 @@ class ParserTemplate
             }
             $ada = null;
             if ($kode !== '') {
-                $ada = $this->db->table('bahan')->where(['sekolah_id' => $this->sid, 'kode' => $kode])->get()->getRowArray();
+                $ada = $this->db->table('bahan')->where(['sekolah_id' => $this->sid, 'kode' => $kode, 'is_deleted' => 0])->get()->getRowArray();
             }
             if (!$ada) {
-                $ada = $this->db->table('bahan')->where('sekolah_id', $this->sid)
+                $ada = $this->db->table('bahan')->where(['sekolah_id' => $this->sid, 'is_deleted' => 0])
                     ->where('LOWER(nama) =', strtolower($nama))->get()->getRowArray();
             }
             if ($ada) {
@@ -144,7 +144,7 @@ class ParserTemplate
             return;
         }
         $hargaBahan = [];
-        foreach ($this->db->table('bahan')->where('sekolah_id', $this->sid)->select('id, harga_rab')->get()->getResultArray() as $b) {
+        foreach ($this->db->table('bahan')->where(['sekolah_id' => $this->sid, 'is_deleted' => 0])->select('id, harga_rab')->get()->getResultArray() as $b) {
             $hargaBahan[(int) $b['id']] = (float) $b['harga_rab'];
         }
         $grup = [];
@@ -169,7 +169,7 @@ class ParserTemplate
             ];
         }
         foreach ($grup as $kode => $g) {
-            $ada = $this->db->table('analisa')->where(['sekolah_id' => $this->sid, 'kode' => $kode])->get()->getRowArray();
+            $ada = $this->db->table('analisa')->where(['sekolah_id' => $this->sid, 'kode' => $kode, 'is_deleted' => 0])->get()->getRowArray();
             if ($ada) {
                 $aid = (int) $ada['id'];
                 $this->db->table('analisa')->where('id', $aid)->update(['nama' => $g['nama'], 'satuan' => $g['satuan']]);
@@ -280,7 +280,7 @@ class ParserTemplate
     private function petaBahan(): array
     {
         $peta = [];
-        foreach ($this->db->table('bahan')->where('sekolah_id', $this->sid)->get()->getResultArray() as $b) {
+        foreach ($this->db->table('bahan')->where(['sekolah_id' => $this->sid, 'is_deleted' => 0])->get()->getResultArray() as $b) {
             $peta[ParserPerencana::normal($b['nama'])] = (int) $b['id'];
             $peta[ParserPerencana::normalDasar($b['nama'])] = (int) $b['id'];
         }
@@ -290,7 +290,7 @@ class ParserTemplate
     private function petaUpah(): array
     {
         $peta = [];
-        foreach ($this->db->table('upah_master')->where('sekolah_id', $this->sid)->get()->getResultArray() as $u) {
+        foreach ($this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'is_deleted' => 0])->get()->getResultArray() as $u) {
             $peta[ParserPerencana::normal($u['jenis'])] = (float) $u['tarif'];
         }
         return $peta;
@@ -358,7 +358,7 @@ class ParserTemplate
     private function kodeBahanBerikut(): int
     {
         $maks = 0;
-        foreach ($this->db->table('bahan')->where('sekolah_id', $this->sid)->select('kode')->get()->getResultArray() as $b) {
+        foreach ($this->db->table('bahan')->where(['sekolah_id' => $this->sid, 'is_deleted' => 0])->select('kode')->get()->getResultArray() as $b) {
             if (preg_match('/^B(\d+)$/', (string) $b['kode'], $m)) {
                 $maks = max($maks, (int) $m[1]);
             }

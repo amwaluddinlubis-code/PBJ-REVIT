@@ -8,7 +8,7 @@ class Negosiasi extends BaseController
     private function terpilih(int $bahanId): ?int
     {
         $row = $this->db()->query(
-            'SELECT MIN(harga) m FROM survei_harga WHERE bahan_id = ? AND harga IS NOT NULL',
+            'SELECT MIN(harga) m FROM survei_harga WHERE bahan_id = ? AND harga IS NOT NULL AND is_deleted = 0',
             [$bahanId]
         )->getRow();
         return $row && $row->m !== null ? (int) $row->m : null;
@@ -19,11 +19,11 @@ class Negosiasi extends BaseController
         $db = $this->db();
         $identitas = $this->sekolahAktif();
         $bahan = $db->query(
-            'SELECT *, (qty_rkb+qty_adm+qty_toilet) AS qty_total FROM bahan WHERE sekolah_id = ? ORDER BY kode',
+            'SELECT *, (qty_rkb+qty_adm+qty_toilet) AS qty_total FROM bahan WHERE sekolah_id = ? AND is_deleted = 0 ORDER BY kode',
             [$this->sid()]
         )->getResultArray();
         $nego = [];
-        foreach ($db->table('negosiasi')->get()->getResultArray() as $r) {
+        foreach ($db->table('negosiasi')->where('is_deleted', 0)->get()->getResultArray() as $r) {
             $nego[$r['bahan_id']] = $r;
         }
         foreach ($bahan as &$b) {
@@ -48,7 +48,7 @@ class Negosiasi extends BaseController
                 'harga_penawaran' => ($nilai === '' || $nilai === null) ? null : (int) $nilai,
                 'harga_nego' => (isset($negoIn[$bid]) && $negoIn[$bid] !== '') ? (int) $negoIn[$bid] : null,
             ];
-            $ada = $db->table('negosiasi')->where('bahan_id', $bid)->get()->getRowArray();
+            $ada = $db->table('negosiasi')->where(['bahan_id' => $bid, 'is_deleted' => 0])->get()->getRowArray();
             if ($ada) {
                 $db->table('negosiasi')->where('id', $ada['id'])->update($data);
             } else {

@@ -71,11 +71,11 @@ class Impor extends BaseController
         $namaList = $db->query(
             "SELECT ak.nama, ak.satuan, COUNT(*) AS dipakai
              FROM analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
-             WHERE a.sekolah_id = ? AND ak.jenis = 'bahan' AND ak.bahan_id IS NULL
+             WHERE a.sekolah_id = ? AND ak.jenis = 'bahan' AND ak.bahan_id IS NULL AND ak.is_deleted = 0 AND a.is_deleted = 0
              GROUP BY ak.nama, ak.satuan ORDER BY dipakai DESC",
             [$this->sid()]
         )->getResultArray();
-        $semuaBahan = $db->table('bahan')->where('sekolah_id', $this->sid())->orderBy('kode')->get()->getResultArray();
+        $semuaBahan = $db->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('kode')->get()->getResultArray();
         $hasil = [];
         $massal = 0;
         foreach ($namaList as $n) {
@@ -120,7 +120,7 @@ class Impor extends BaseController
         if ($id <= 0) {
             $id = $this->sid();
         }
-        $ada = $this->db()->table('sekolah')->where('id', $id)->countAllResults();
+        $ada = $this->db()->table('sekolah')->where(['id' => $id, 'is_deleted' => 0])->countAllResults();
         return $ada > 0 ? $id : null;
     }
 
@@ -186,17 +186,17 @@ class Impor extends BaseController
     {
         $db = $this->db();
         $sid = $this->sid();
-        $bahan = $db->table('bahan')->where('sekolah_id', $sid)->orderBy('kode')->get()->getResultArray();
-        $upah = $db->table('upah_master')->where('sekolah_id', $sid)->orderBy('jenis')->get()->getResultArray();
+        $bahan = $db->table('bahan')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->orderBy('kode')->get()->getResultArray();
+        $upah = $db->table('upah_master')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray();
         $analisa = [];
-        foreach ($db->table('analisa')->where('sekolah_id', $sid)->orderBy('kode')->get()->getResultArray() as $a) {
-            $a['komponen'] = $db->table('analisa_komponen')->where('analisa_id', $a['id'])->orderBy('id')->get()->getResultArray();
+        foreach ($db->table('analisa')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->orderBy('kode')->get()->getResultArray() as $a) {
+            $a['komponen'] = $db->table('analisa_komponen')->where(['analisa_id' => $a['id'], 'is_deleted' => 0])->orderBy('id')->get()->getResultArray();
             $analisa[] = $a;
         }
         $boq = $db->query(
             'SELECT g.nama AS gedung, p.bab, p.nama, p.kode_analisa, p.volume, p.satuan
              FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
-             WHERE g.sekolah_id = ? ORDER BY g.urutan, p.urutan',
+             WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 ORDER BY g.urutan, p.urutan',
             [$sid]
         )->getResultArray();
         $sekolah = $this->sekolahAktif() ?? [];
@@ -270,16 +270,16 @@ class Impor extends BaseController
             // Cadangan tanpa JS: teks "KODE — Nama" dari datalist.
             $teks = (string) $this->request->getPost('bahan_teks');
             $kode = trim(explode('—', $teks)[0]);
-            $b = $this->db()->table('bahan')->where(['sekolah_id' => $this->sid(), 'kode' => $kode])->get()->getRowArray();
+            $b = $this->db()->table('bahan')->where(['sekolah_id' => $this->sid(), 'kode' => $kode, 'is_deleted' => 0])->get()->getRowArray();
             $bahanId = (int) ($b['id'] ?? 0);
         }
-        $b = $bahanId > 0 ? $this->db()->table('bahan')->where(['id' => $bahanId, 'sekolah_id' => $this->sid()])->get()->getRowArray() : null;
+        $b = $bahanId > 0 ? $this->db()->table('bahan')->where(['id' => $bahanId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray() : null;
         if ($b === null || $nama === '') {
             return redirect()->to('/impor')->with('galat', 'Pilih bahan master yang sesuai untuk komponen tersebut.');
         }
         $this->db()->query(
             "UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
-             SET ak.bahan_id = ? WHERE a.sekolah_id = ? AND ak.jenis = 'bahan' AND ak.nama = ?",
+             SET ak.bahan_id = ? WHERE a.sekolah_id = ? AND ak.jenis = 'bahan' AND ak.nama = ? AND ak.is_deleted = 0 AND ak.is_deleted = 0",
             [$bahanId, $this->sid(), $nama]
         );
         return redirect()->to('/impor')->with('sukses', 'Komponen "' . $nama . '" tertaut ke ' . $b['kode'] . ' — ' . $b['nama'] . '.');
@@ -294,7 +294,7 @@ class Impor extends BaseController
             if ($d['saran'] !== null && $d['skor'] >= 80) {
                 $this->db()->query(
                     "UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
-                     SET ak.bahan_id = ? WHERE a.sekolah_id = ? AND ak.jenis = 'bahan' AND ak.nama = ?",
+                     SET ak.bahan_id = ? WHERE a.sekolah_id = ? AND ak.jenis = 'bahan' AND ak.nama = ? AND ak.is_deleted = 0 AND ak.is_deleted = 0",
                     [(int) $d['saran']['id'], $this->sid(), $d['nama']]
                 );
                 $n++;

@@ -16,7 +16,7 @@ class Auth extends BaseController
     {
         $username = (string) $this->request->getPost('username');
         $sandi    = (string) $this->request->getPost('sandi');
-        $user = $this->db()->table('users')->where('username', $username)->get()->getRowArray();
+        $user = $this->db()->table('users')->where(['username' => $username, 'is_deleted' => 0])->get()->getRowArray();
         if (! $user || ! password_verify($sandi, $user['password_hash'])) {
             return redirect()->back()->with('galat', 'Username atau kata sandi salah.');
         }

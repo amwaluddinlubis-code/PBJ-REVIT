@@ -14,7 +14,7 @@ class Lpj extends BaseController
         $db = $this->db();
         $gid = (int) $g['id'];
         $real = $db->query(
-            'SELECT COALESCE(SUM(r.volume * p.harga_satuan), 0) t FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id WHERE p.gedung_id = ?',
+            'SELECT COALESCE(SUM(r.volume * p.harga_satuan), 0) t FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
             [$gid]
         )->getRowArray();
         $nilaiRealisasi = (float) ($real['t'] ?? 0);
@@ -30,14 +30,14 @@ class Lpj extends BaseController
             $nilaiUpahButuh += (float) $u['orang_hari'] * (float) $u['tarif'];
         }
         $spk = $db->query(
-            'SELECT COALESCE(SUM(d.qty * d.harga), 0) t FROM spk_detail d JOIN spk s ON s.id = d.spk_id WHERE s.gedung_id = ?',
+            'SELECT COALESCE(SUM(d.qty * d.harga), 0) t FROM spk_detail d JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0 WHERE s.gedung_id = ? AND d.is_deleted = 0',
             [$gid]
         )->getRowArray();
         $inv = $db->query(
-            "SELECT COALESCE(SUM(i.nilai), 0) t FROM invoice i JOIN spk s ON s.id = i.spk_id WHERE s.gedung_id = ? AND i.status = 'Sudah Bayar'",
+            "SELECT COALESCE(SUM(i.nilai), 0) t FROM invoice i JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE s.gedung_id = ? AND i.status = 'Sudah Bayar' AND i.is_deleted = 0",
             [$gid]
         )->getRowArray();
-        $upah = $db->table('upah_bayar')->selectSum('jumlah')->where(['sekolah_id' => $this->sid(), 'gedung_id' => $gid])->get()->getRowArray();
+        $upah = $db->table('upah_bayar')->selectSum('jumlah')->where(['sekolah_id' => $this->sid(), 'gedung_id' => $gid, 'is_deleted' => 0])->get()->getRowArray();
 
         return $g + [
             'nilai_realisasi' => $nilaiRealisasi,
@@ -59,7 +59,7 @@ class Lpj extends BaseController
         // Belanja tanpa tautan gedung (pengecualian yang harus tampak di LPJ)
         $tanpaGedung = $this->db()->query(
             'SELECT COALESCE(SUM(d.qty * d.harga), 0) t, COUNT(DISTINCT s.id) n FROM spk_detail d JOIN spk s ON s.id = d.spk_id
-             WHERE s.sekolah_id = ? AND s.gedung_id IS NULL',
+             WHERE s.sekolah_id = ? AND s.gedung_id IS NULL AND s.is_deleted = 0 AND d.is_deleted = 0',
             [$this->sid()]
         )->getRowArray();
         return $this->tampil('lpj/index', [
@@ -80,14 +80,14 @@ class Lpj extends BaseController
         $rekap = $this->rekapGedung($g);
         $pekerjaan = $db->query(
             'SELECT p.*, COALESCE(SUM(r.volume), 0) AS volume_terealisasi
-             FROM pekerjaan p LEFT JOIN realisasi r ON r.pekerjaan_id = p.id
-             WHERE p.gedung_id = ? GROUP BY p.id ORDER BY p.urutan',
+             FROM pekerjaan p LEFT JOIN realisasi r ON r.pekerjaan_id = p.id AND r.is_deleted = 0
+             WHERE p.gedung_id = ? AND p.is_deleted = 0 GROUP BY p.id ORDER BY p.urutan',
             [$g['id']]
         )->getResultArray();
         $kb = $this->kebutuhanBahan((int) $g['id']);
         $dipesan = [];
         foreach ($db->query(
-            'SELECT d.bahan_id, SUM(d.qty) q FROM spk_detail d JOIN spk s ON s.id = d.spk_id WHERE s.gedung_id = ? AND d.bahan_id IS NOT NULL GROUP BY d.bahan_id',
+            'SELECT d.bahan_id, SUM(d.qty) q FROM spk_detail d JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0 WHERE s.gedung_id = ? AND d.bahan_id IS NOT NULL AND d.is_deleted = 0 GROUP BY d.bahan_id',
             [$g['id']]
         )->getResultArray() as $r) {
             $dipesan[(int) $r['bahan_id']] = (float) $r['q'];
@@ -122,8 +122,8 @@ class Lpj extends BaseController
         $db = $this->db();
         $pekerjaan = $db->query(
             'SELECT p.*, COALESCE(SUM(r.volume), 0) AS volume_terealisasi
-             FROM pekerjaan p LEFT JOIN realisasi r ON r.pekerjaan_id = p.id
-             WHERE p.gedung_id = ? GROUP BY p.id ORDER BY p.urutan',
+             FROM pekerjaan p LEFT JOIN realisasi r ON r.pekerjaan_id = p.id AND r.is_deleted = 0
+             WHERE p.gedung_id = ? AND p.is_deleted = 0 GROUP BY p.id ORDER BY p.urutan',
             [$g['id']]
         )->getResultArray();
         return view('lpj/cetak_gedung', [
