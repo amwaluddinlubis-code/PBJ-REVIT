@@ -6,7 +6,7 @@
 
 ## Kesimpulan Singkat
 
-Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** dipakai dengan disiplin tinggi (sidebar terang berikon, topbar, panel putih, KPI berikon, badge, tombol radius 8–12px, skala font 80–130%). **Bahasa visual kompak dan cepat dicerna** — proses admin yang sering dijalankan terbaca jelas. Fitur impor yang baru tadi (impor dari folder + template + verifikasi) juga sudah membaiki beberapa hal standar dari sebelumnya. Fitur drawer mobile (P1) **sudah diimplementasi & diverifikasi** (2026-11-21): drawer dari kiri, lapik overlay, aria-expanded, Escape, tombol sembunyikan/tunjukkan sidebar di desktop. Selain itu masih tersisa beberapa **celah gelap minor**, serta **UX feedback saat impor berjalan**.
+Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** dipakai dengan disiplin tinggi (sidebar terang berikon, topbar, panel putih, KPI berikon, badge, tombol radius 8–12px, skala font 80–130%). **Bahasa visual kompak dan cepat dicerna** — proses admin yang sering dijalankan terbaca jelas. Fitur impor yang baru tadi (impor dari folder + template + verifikasi) juga sudah membaiki beberapa hal standar dari sebelumnya. Fitur drawer mobile (P1) **sudah diimplementasi & diverifikasi** (2026-11-21): drawer dari kiri, lapik overlay, aria-expanded, Escape, tombol sembunyikan/tunjukkan sidebar di desktop. Fitur Dark theme (P2) **sudah selesai & diverifikasi** (2026-11-21): palet `--ina-neutral-*` gelap dipasangkan — hover seperti `.tombol.abu:hover`, `.paginasi button:hover` terlihat di gelap. Masih tersisa: **UX feedback saat impor berjalan** (P6).
 
 ## Kekuatan
 
@@ -66,7 +66,7 @@ Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** di
 ## Bagian yang perlu dikembangkan (menurut urgensi)
 
 ~~1.~~ **Mobile drawer** (P1) — **sudah selesai & diverifikasi** (2026-11-21): click menambah class `sanding-boka` + aria-expanded true, Escape menutupnya; drawer CSS lengkap ada di media ≤760px dan cocok dengan class DOM.
-2. **Dark theme vars** (P2) — pelengkapan sedap.
+~~2.~~ **Dark theme vars** (P2) — **sudah selesai & diverifikasi** (2026-11-21): tambah override `--ina-neutral-50/100/200/300/400` gelap — hover seperti `.tombol.abu:hover`, `.paginasi button:hover` terlihat di gelap.
 3. **Overflow-x tabel** (P3) — kebutuhan kompatibilitas layar sempit (termasuk tabel baru impor).
 4. **Touch target 44px** (P4) — bagian dari fix mobile.
 5. **A11y polis** (P5) — aria-label pencarian, aria-expanded user menu, minor lain.

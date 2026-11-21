@@ -224,6 +224,8 @@ html.gelap .tombol-ikon-top .ikon-matahari { display: block; }
 
 /* ===== Tema gelap ===== */
 html.gelap { --ta-teks: #e7edf5; --ta-teks-2: #a9bcd2; --ta-teks-3: #7e94ad; --ta-garis: #22334f; --ta-garis-2: #3d5578; --ta-latar: #0a1120; --ta-biru-50: rgba(9, 104, 246, .18); }
+/* P2: padu gelap — tambah palet --ina-neutral-* gelap (hover/border tersedia di gelap). */
+html.gelap { --ina-neutral-50: #16263f; --ina-neutral-100: #22334f; --ina-neutral-200: #1b2a45; --ina-neutral-300: #243553; --ina-neutral-400: #35526b; }
 html.gelap .samping, html.gelap .topbar, html.gelap .panel, html.gelap .kpi { background: #0f1a2e; }
 html.gelap input, html.gelap select, html.gelap textarea { background: #0c1526; color: var(--ta-teks); }
 html.gelap th { background: #13203a; border-color: var(--ta-garis); }
