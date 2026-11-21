@@ -92,6 +92,34 @@ class Upah extends BaseController
         return redirect()->to('/upah')->with('sukses', 'Catatan pembayaran upah dihapus.');
     }
 
+    /**
+     * Cetak daftar pembayaran upah satu bulan mengikuti format dokumen
+     * pembayaran upah Juknis: daftar penerima dengan jumlah bruto, PPh 21,
+     * jumlah bersih, dan kolom tanda tangan penerima.
+     */
+    public function cetakDaftar()
+    {
+        $bulan = (string) ($this->request->getGet('bulan') ?? date('Y-m'));
+        if (! preg_match('/^\d{4}-\d{2}$/', $bulan)) {
+            $bulan = date('Y-m');
+        }
+        $rows = $this->db()->table('upah_bayar')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])
+            ->like('tanggal', $bulan, 'after')
+            ->orderBy('tanggal')->orderBy('id')->get()->getResultArray();
+        $total = ['bruto' => 0.0, 'pph21' => 0.0, 'bersih' => 0.0];
+        foreach ($rows as &$u) {
+            $u['pph21'] = $this->pph21UpahHarian((float) $u['tarif'], (float) $u['orang_hari']);
+            $u['bersih'] = (float) $u['jumlah'] - $u['pph21'];
+            $total['bruto'] += (float) $u['jumlah'];
+            $total['pph21'] += $u['pph21'];
+            $total['bersih'] += $u['bersih'];
+        }
+        return view('cetak/daftar_upah', [
+            'idn' => $this->sekolahAktif(), 'bulan' => $bulan, 'rows' => $rows, 'total' => $total,
+        ]);
+    }
+
     /** Ubah tarif satu jenis tenaga pada master upah. */
     public function tarif($id)
     {

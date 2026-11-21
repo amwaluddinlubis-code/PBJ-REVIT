@@ -5,6 +5,7 @@
   <span class="lencana abu">Kebutuhan Bahan <b>&nbsp;<?= $rp($g['nilai_kebutuhan_bahan']) ?></b></span>
   <span class="lencana abu">SPK Dipesan <b>&nbsp;<?= $rp($g['nilai_spk']) ?></b></span>
   <a class="tombol kecil" style="float:right" href="<?= base_url('lpj/cetak/gedung/' . $g['id']) ?>" target="_blank">Cetak LPJ Gedung</a>
+  <a class="tombol kecil abu" style="float:right;margin-right:6px" href="<?= base_url('dokumen/cetak-bast-aset/' . $g['id']) ?>" target="_blank">Cetak BAST Aset</a>
   <a class="tombol kecil abu" style="float:right;margin-right:6px" href="<?= base_url('gedung/' . $g['id']) ?>">Ke Menu Gedung</a>
 </div>
 

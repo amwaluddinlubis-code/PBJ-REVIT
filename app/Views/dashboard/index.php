@@ -17,7 +17,7 @@
   <div class="kpi"><div class="label">Sisa Anggaran</div><div class="nilai"><?= $rp($sisa) ?></div></div>
 </div>
 
-<?php if ($tanpaSpk->j > 0 || $invoiceCek || $sisaNegatif || ! empty($tahap2JatuhTempo)): ?>
+<?php if ($tanpaSpk->j > 0 || $invoiceCek || $sisaNegatif || ! empty($tahap2JatuhTempo) || ! empty($pecahCek)): ?>
 <div class="peringatan">
   <h2>Perlu perhatian</h2>
   <ul>
@@ -34,6 +34,9 @@
     <?php endforeach; ?>
     <?php foreach ($sisaNegatif as $n): ?>
       <li>Sisa bahan negatif: <strong><?= esc($n['kode']) ?> <?= esc($n['nama']) ?></strong> — terpakai <?= rtrim(rtrim(number_format((float) $n['terpakai'], 2, ',', '.'), '0'), ',') ?> dari RAB <?= rtrim(rtrim(number_format((float) $n['qty_rab'], 2, ',', '.'), '0'), ',') ?>.</li>
+    <?php endforeach; ?>
+    <?php foreach ($pecahCek ?? [] as $p): ?>
+      <li><?= esc($p) ?></li>
     <?php endforeach; ?>
   </ul>
 </div>

@@ -62,6 +62,34 @@ class Dashboard extends BaseController
         $fisikRata = $totalBoq > 0 ? $tertimbang / $totalBoq : 0.0;
         $tahap2JatuhTempo = $paguDana > 0 && $fisikRata >= 50 && $perTahap[2] <= 0;
 
+        // Deteksi pola pemecahan pembelian (dilarang Juknis): banyak
+        // invoice kecil ke penyedia yang sama dalam waktu berdekatan
+        // yang bila digabung melewati ambang ketentuan.
+        $pecahCek = [];
+        foreach ($db->query(
+            'SELECT py.nama AS penyedia, YEARWEEK(i.tanggal, 3) AS yw, COUNT(*) AS j, SUM(i.nilai) AS total
+             FROM invoice i JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0
+             LEFT JOIN penyedia py ON py.id = s.penyedia_id
+             WHERE s.sekolah_id = ? AND i.is_deleted = 0 AND i.tanggal IS NOT NULL AND i.nilai <= 50000000
+             GROUP BY py.nama, yw HAVING j >= 2 AND total > 50000000',
+            [$sid]
+        )->getResultArray() as $r) {
+            $pecahCek[] = 'Pola pemecahan terdeteksi: ' . (int) $r['j'] . ' invoice ke ' . ($r['penyedia'] ?? 'penyedia yang sama')
+                . ' dalam minggu yang sama, masing-masing ≤ Rp50 juta tetapi totalnya ' . $this->rp($r['total'])
+                . ' — gabungan nilai menentukan bentuk dokumen & jumlah calon penyedia; jangan memecah pembelian untuk menghindari ketentuan.';
+        }
+        foreach ($db->query(
+            'SELECT py.nama AS penyedia, DATE_FORMAT(i.tanggal, "%Y-%m") AS bln, COUNT(*) AS j
+             FROM invoice i JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0
+             LEFT JOIN penyedia py ON py.id = s.penyedia_id
+             WHERE s.sekolah_id = ? AND i.is_deleted = 0 AND i.tanggal IS NOT NULL AND i.nilai <= 2000000
+             GROUP BY py.nama, bln HAVING j >= 3',
+            [$sid]
+        )->getResultArray() as $r) {
+            $pecahCek[] = 'Pola pemecahan terdeteksi: ' . (int) $r['j'] . ' invoice ≤ Rp2 juta ke ' . ($r['penyedia'] ?? 'penyedia yang sama')
+                . ' pada ' . $r['bln'] . ' — pembelian maksimal Rp2 juta yang bebas PPh 22 tidak boleh dipecah-pecah.';
+        }
+
         return $this->tampil('dashboard/index', [
             'identitas'   => $identitas,
             'totalRab'    => $totalRab,
@@ -75,6 +103,7 @@ class Dashboard extends BaseController
             'verifikasi'  => $this->verifikasiAnggaran(),
             'tahap2JatuhTempo' => $tahap2JatuhTempo,
             'fisikRata' => $fisikRata,
+            'pecahCek' => $pecahCek,
         ], 'Dashboard — Analisa Perencana');
     }
 }

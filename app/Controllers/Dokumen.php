@@ -185,4 +185,34 @@ class Dokumen extends BaseController
             'hariTanggal' => $this->hariTanggal($bast['tanggal']),
         ]);
     }
+
+    /**
+     * BAST Aset per gedung (format dokumen Juknis): serah terima aset
+     * hasil pembangunan — untuk satuan pendidikan negeri disampaikan
+     * kepada Dinas Pendidikan, untuk swasta kepada penyelenggara
+     * (yayasan). Berbeda dari BAST Pekerjaan yang disampaikan ke PPK.
+     */
+    public function cetakBastAset($gedungId)
+    {
+        $g = null;
+        foreach ($this->semuaGedung() as $row) {
+            if ((int) $row['id'] === (int) $gedungId) {
+                $g = $row;
+                break;
+            }
+        }
+        if (! $g) {
+            return redirect()->to('lpj')->with('galat', 'Gedung tidak ditemukan di sekolah aktif.');
+        }
+        return view('cetak/bast_aset', [
+            'idn' => $this->identitas(), 'g' => $g,
+            'hariTanggal' => $this->hariTanggal(date('Y-m-d')),
+        ]);
+    }
+
+    /** Papan Nama Kegiatan (format dokumen Juknis) dari identitas sekolah. */
+    public function cetakPapanNama()
+    {
+        return view('cetak/papan_nama', ['idn' => $this->identitas()]);
+    }
 }

@@ -1,5 +1,6 @@
 <div class="panel">
   <p>BAP dibuat dari rincian SPK (kondisi awal "Cukup", dapat diubah per barang). BAST dibuat per SPK. Nomor surat mengikuti pola 422/&lt;JENIS&gt;/&lt;urut&gt;/&lt;tahun&gt;.</p>
+  <p><a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-papan-nama') ?>" target="_blank">Cetak Papan Nama Kegiatan</a> <span class="kecil-teks">Papan nama kegiatan sesuai format Juknis, dicetak dari identitas sekolah. BAST Aset per gedung tersedia di halaman LPJ Gedung.</span></p>
   <table data-paginasi="10">
     <tr><th>SPK</th><th>Paket / Penyedia</th><th>BAP</th><th>BAST</th><th>Cetak SPK</th></tr>
     <?php foreach ($spk as $s): ?>

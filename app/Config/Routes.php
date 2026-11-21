@@ -50,6 +50,8 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('dokumen/bast-ubah/(:num)', 'Dokumen::bastUbah/$1');
     $routes->post('dokumen/bast-simpan/(:num)', 'Dokumen::bastSimpan/$1');
     $routes->get('dokumen/cetak-spk/(:num)', 'Dokumen::cetakSpk/$1');
+    $routes->get('dokumen/cetak-bast-aset/(:num)', 'Dokumen::cetakBastAset/$1');
+    $routes->get('dokumen/cetak-papan-nama', 'Dokumen::cetakPapanNama');
     $routes->get('dokumen/cetak-bap/(:num)', 'Dokumen::cetakBap/$1');
     $routes->get('dokumen/cetak-bast/(:num)', 'Dokumen::cetakBast/$1');
 
@@ -118,6 +120,7 @@ $routes->post('biaya-non-gedung/simpan', 'BiayaLain::simpan', ['filter' => 'auth
 $routes->post('biaya-non-gedung/hapus/(:num)', 'BiayaLain::hapus/$1', ['filter' => 'auth']);
 $routes->post('rencana-belanja/buat-spk', 'Rencana::buatSpk', ['filter' => 'auth']);
 $routes->get('upah', 'Upah::index', ['filter' => 'auth']);
+$routes->get('upah/cetak-daftar', 'Upah::cetakDaftar', ['filter' => 'auth']);
 $routes->post('upah/simpan', 'Upah::simpan', ['filter' => 'auth']);
 $routes->post('upah/master', 'Upah::masterSimpan', ['filter' => 'auth']);
 $routes->post('upah/tarif/(:num)', 'Upah::tarif/$1', ['filter' => 'auth']);
@@ -129,6 +132,11 @@ $routes->get('buku-kas', 'BukuKas::index', ['filter' => 'auth']);
 $routes->post('buku-kas/simpan', 'BukuKas::simpan', ['filter' => 'auth']);
 $routes->post('buku-kas/hapus/(:num)', 'BukuKas::hapus/$1', ['filter' => 'auth']);
 $routes->get('buku-kas/cetak', 'BukuKas::cetak', ['filter' => 'auth']);
+$routes->get('kurva-s', 'Kurva::index', ['filter' => 'auth']);
+$routes->get('revisi-pekerjaan', 'Revisi::index', ['filter' => 'auth']);
+$routes->post('revisi-pekerjaan/simpan', 'Revisi::simpan', ['filter' => 'auth']);
+$routes->post('revisi-pekerjaan/hapus/(:num)', 'Revisi::hapus/$1', ['filter' => 'auth']);
+$routes->get('revisi-pekerjaan/cetak/(:num)', 'Revisi::cetak/$1', ['filter' => 'auth']);
 $routes->get('bukti-setor', 'Setor::index', ['filter' => 'auth']);
 $routes->post('bukti-setor/simpan', 'Setor::simpan', ['filter' => 'auth']);
 $routes->post('bukti-setor/hapus/(:num)', 'Setor::hapus/$1', ['filter' => 'auth']);
