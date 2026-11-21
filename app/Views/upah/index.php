@@ -27,13 +27,13 @@
       <div class="aksi md:col-span-2"><button type="submit">Catat Pembayaran</button></div>
     </div>
   </form>
-  <p class="kecil-teks">Jumlah bayar = orang-hari × tarif, dihitung otomatis. Pembayaran upah ikut terhitung dalam kontrol pagu total anggaran.</p>
+  <p class="kecil-teks">Jumlah bayar = orang-hari × tarif, dihitung otomatis. Pembayaran upah ikut terhitung dalam kontrol pagu total anggaran. PPh 21 mengikuti Juknis Revitalisasi: upah harian sampai dengan Rp450.000 per hari tidak dipotong; di atasnya dipotong 5% dari kelebihan per hari (batas kumulatif Rp4.500.000 dalam 22 hari kerja per bulan untuk penerima yang sama perlu dicek manual).</p>
 </div>
 
 <div class="panel">
-  <h2>Riwayat Pembayaran Upah — Total <?= $rp($total) ?></h2>
+  <h2>Riwayat Pembayaran Upah — Total <?= $rp($total) ?> · PPh 21 <?= $rp($total_pph21) ?> · Bersih <?= $rp($total - $total_pph21) ?></h2>
   <table data-paginasi="25">
-    <tr><th>Tanggal</th><th>Gedung</th><th>Jenis Tenaga</th><th>Penerima</th><th class="angka">OH</th><th class="angka">Tarif</th><th class="angka">Jumlah</th><th>Aksi</th></tr>
+    <tr><th>Tanggal</th><th>Gedung</th><th>Jenis Tenaga</th><th>Penerima</th><th class="angka">OH</th><th class="angka">Tarif</th><th class="angka">Jumlah</th><th class="angka">PPh 21</th><th class="angka">Bersih</th><th>Aksi</th></tr>
     <?php foreach ($daftar as $u): ?>
     <tr>
       <td><?= esc($u['tanggal']) ?></td>
@@ -43,10 +43,12 @@
       <td class="angka"><?= number_format((float) $u['orang_hari'], 2, ',', '.') ?></td>
       <td class="angka"><?= number_format((float) $u['tarif'], 0, ',', '.') ?></td>
       <td class="angka"><?= number_format((float) $u['jumlah'], 0, ',', '.') ?></td>
+      <td class="angka"><?= (float) $u['pph21'] > 0 ? number_format((float) $u['pph21'], 0, ',', '.') : '—' ?></td>
+      <td class="angka"><?= number_format((float) $u['bersih'], 0, ',', '.') ?></td>
       <td><form class="inline" method="post" action="<?= base_url('upah/' . $u['id'] . '/hapus') ?>" data-konfirmasi="Hapus catatan ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
     </tr>
     <?php endforeach; ?>
-    <?php if ($daftar === []): ?><tr><td colspan="8">Belum ada pembayaran upah tercatat.</td></tr><?php endif; ?>
+    <?php if ($daftar === []): ?><tr><td colspan="10">Belum ada pembayaran upah tercatat.</td></tr><?php endif; ?>
   </table>
 </div>
 

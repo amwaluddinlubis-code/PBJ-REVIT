@@ -41,8 +41,13 @@
       <label>Keterangan
         <input type="text" name="keterangan" id="f-keterangan" placeholder="cth. 1,65% dari nilai konstruksi">
       </label>
+      <label>Pajak Dipotong Saat Pembayaran
+        <select name="pajak" id="f-pajak">
+          <?php foreach ($opsi_pajak as $kunci => $label): ?><option value="<?= esc($kunci) ?>"><?= esc($label) ?></option><?php endforeach; ?>
+        </select>
+      </label>
     </div>
-    <p class="kecil-teks">Jumlah dihitung otomatis: volume × periode (bila ada) × harga satuan.</p>
+    <p class="kecil-teks">Jumlah dihitung otomatis: volume × periode (bila ada) × harga satuan. Potongan pajak mengikuti Juknis Revitalisasi SMP 2026: PPh 23 sebesar 2% untuk jasa/sewa, PPh 4 ayat 2 sebesar 3,5% (ber-SKA) atau 6% (tanpa SKA) untuk perencana/pengawas, dan PPh 21 untuk honor menurut golongan penerima.</p>
     <div class="aksi" style="justify-content:flex-start;gap:10px">
       <button type="submit" id="tombol-simpan">Simpan Baris</button>
       <button type="button" class="tombol abu" id="tombol-batal" style="display:none">Batal Ubah</button>
@@ -60,14 +65,16 @@
 <div class="panel">
   <h2><?= esc($namaKelompok) ?></h2>
   <table>
-    <tr><th>Uraian</th><th class="angka">Volume</th><th class="angka">Periode</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah</th><th>Sumber</th><th>Aksi</th></tr>
-    <?php $sub = 0; foreach ($barisList as $r): $sub += (float) $r['jumlah']; ?>
+    <tr><th>Uraian</th><th class="angka">Volume</th><th class="angka">Periode</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah</th><th class="angka">Potongan Pajak</th><th class="angka">Bersih Diterima</th><th>Sumber</th><th>Aksi</th></tr>
+    <?php $sub = 0; $subPot = 0; foreach ($barisList as $r): $sub += (float) $r['jumlah']; $subPot += (float) $r['potongan']; ?>
     <tr>
       <td><b><?= esc($r['uraian']) ?></b><?php if (! empty($r['keterangan'])): ?><br><span class="kecil-teks"><?= esc($r['keterangan']) ?></span><?php endif; ?></td>
       <td class="angka"><?= $angka($r['volume']) ?> <?= esc($r['satuan'] ?? '') ?></td>
       <td class="angka"><?php if ($r['periode'] !== null): ?><?= $angka($r['periode']) ?> <?= esc($r['satuan_periode'] ?? '') ?><?php else: ?>—<?php endif; ?></td>
       <td class="angka"><?= $rp($r['harga_satuan']) ?></td>
       <td class="angka"><b><?= $rp($r['jumlah']) ?></b></td>
+      <td class="angka"><?php if ((float) $r['potongan'] > 0): ?><?= $rp($r['potongan']) ?><br><span class="kecil-teks"><?= esc($r['label_pajak']) ?></span><?php else: ?>—<?php endif; ?></td>
+      <td class="angka"><?= $rp($r['bersih']) ?></td>
       <td><span class="kecil-teks"><?= $r['sumber'] === 'impor' ? 'Impor' : 'Manual' ?></span></td>
       <td>
         <button type="button" class="tombol kecil" onclick="isiForm(<?= htmlspecialchars(json_encode([
@@ -75,6 +82,7 @@
             'volume' => $angka($r['volume']), 'satuan' => $r['satuan'] ?? '',
             'periode' => $r['periode'] !== null ? $angka($r['periode']) : '', 'satuan_periode' => $r['satuan_periode'] ?? '',
             'harga' => (string) (int) round((float) $r['harga_satuan']), 'keterangan' => $r['keterangan'] ?? '',
+            'pajak' => $r['pajak'] ?? '',
         ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>)">Ubah</button>
         <form method="post" action="<?= base_url('biaya-non-gedung/hapus/' . $r['id']) ?>" style="display:inline" data-konfirmasi="Hapus baris biaya &quot;<?= esc($r['uraian']) ?>&quot;?">
           <?= csrf_field() ?>
@@ -83,7 +91,7 @@
       </td>
     </tr>
     <?php endforeach; ?>
-    <tr><td colspan="4"><b>Subtotal <?= esc($namaKelompok) ?></b></td><td class="angka"><b><?= $rp($sub) ?></b></td><td colspan="2"></td></tr>
+    <tr><td colspan="4"><b>Subtotal <?= esc($namaKelompok) ?></b></td><td class="angka"><b><?= $rp($sub) ?></b></td><td class="angka"><b><?= $rp($subPot) ?></b></td><td class="angka"><b><?= $rp($sub - $subPot) ?></b></td><td colspan="2"></td></tr>
   </table>
 </div>
 <?php endforeach; ?>
@@ -99,6 +107,7 @@ function isiForm(d) {
   document.getElementById('f-satuan-periode').value = d.satuan_periode;
   document.getElementById('f-harga').value = d.harga;
   document.getElementById('f-keterangan').value = d.keterangan;
+  document.getElementById('f-pajak').value = d.pajak || '';
   document.getElementById('judul-form').textContent = 'Ubah Baris Biaya';
   document.getElementById('tombol-simpan').textContent = 'Simpan Perubahan';
   document.getElementById('tombol-batal').style.display = '';

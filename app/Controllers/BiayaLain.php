@@ -19,8 +19,12 @@ class BiayaLain extends BaseController
             ->orderBy('kelompok')->orderBy('id')
             ->get()->getResultArray();
 
+        $opsiPajak = $this->opsiPajakBiayaLain();
         $kelompok = [];
         foreach ($daftar as $r) {
+            $r['potongan'] = $this->potonganPajak($r['pajak'] ?? null, (float) $r['jumlah']);
+            $r['bersih'] = (float) $r['jumlah'] - $r['potongan'];
+            $r['label_pajak'] = $opsiPajak[$r['pajak'] ?? ''] ?? '';
             $kelompok[$r['kelompok']][] = $r;
         }
         $total = array_sum(array_map(static fn ($r) => (float) $r['jumlah'], $daftar));
@@ -30,6 +34,7 @@ class BiayaLain extends BaseController
             'total' => $total,
             'verifikasi' => $this->verifikasiAnggaran(),
             'saran_kelompok' => ['Perencanaan & Pengawasan', 'Biaya Pengelolaan'],
+            'opsi_pajak' => $opsiPajak,
         ], 'Biaya Non-Gedung');
     }
 
@@ -45,6 +50,10 @@ class BiayaLain extends BaseController
         if ($kelompok === '' || $uraian === '' || $volume <= 0) {
             return redirect()->to('/biaya-non-gedung')->with('galat', 'Kelompok, uraian, dan volume wajib diisi.');
         }
+        $pajak = trim((string) $this->request->getPost('pajak'));
+        if (! array_key_exists($pajak, $this->opsiPajakBiayaLain())) {
+            $pajak = '';
+        }
         $data = [
             'kelompok' => $kelompok,
             'uraian' => $uraian,
@@ -54,6 +63,7 @@ class BiayaLain extends BaseController
             'satuan_periode' => trim((string) $this->request->getPost('satuan_periode')) ?: null,
             'harga_satuan' => $harga,
             'jumlah' => $volume * ($periode !== null && $periode > 0 ? $periode : 1) * $harga,
+            'pajak' => $pajak !== '' ? $pajak : null,
             'keterangan' => trim((string) $this->request->getPost('keterangan')) ?: null,
             'updated_at' => date('Y-m-d H:i:s'),
         ];

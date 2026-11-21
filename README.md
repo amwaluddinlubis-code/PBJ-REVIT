@@ -99,3 +99,34 @@ berbeda tanpa aturan konversi ditandai "satuan beda" agar diperiksa pengguna.
 
 Langkah sesudah `git pull` di PC: jalankan `php spark migrate` (migrasi 000003), lalu buka
 menu **Impor Dokumen Perencana** dan unggah workbook RAB perencana sekolah.
+
+## Kesesuaian dengan Juknis Revitalisasi SMP 2026
+
+Aturan Panduan Pelaksanaan Bantuan Pemerintah Program Revitalisasi Satuan
+Pendidikan 2026 (Direktorat SMP) yang kini diterapkan aplikasi:
+
+- **PPh 22 = 1,5% dari DPP** (nilai tagihan di luar PPN), dan **tidak dipungut**
+  untuk pembelian sampai dengan Rp2.000.000. Berlaku di Jurnal Pembayaran,
+  cetak Invoice, Dashboard, dan Laporan (helper `pajakPembelian`).
+- **PPN 11% dipungut bendahara** dari bagian harga yang kena PPN dan tampil
+  sebagai kolom tersendiri di Jurnal Pembayaran; nilai dibayar ke penyedia =
+  nilai tagihan − PPN dipungut − PPh 22.
+- **Ambang dokumen & penyedia** (Permendikbudristek 18/2022): nota sampai
+  Rp10 juta, kuitansi Rp10–50 juta, SPK di atas Rp50 juta; calon penyedia
+  minimal 1 (≤ Rp50 juta), 2 (Rp50–200 juta), 3 (> Rp200 juta). Panel
+  ketentuan tampil di detail SPK (dengan jumlah toko pembanding dari Survei
+  Harga) dan penjelasan di halaman Survei Harga.
+- **Biaya Non-Gedung**: tiap baris dapat diberi jenis pajak yang dipotong saat
+  pembayaran — PPh 23 jasa/sewa 2%, PPh 4 ayat 2 perencana/pengawas 3,5%
+  (ber-SKA) / 6% (tanpa SKA), PPh 21 honor (Gol. IV 15%, Gol. III 5%,
+  Gol. II 0%, non-PNS 5% dari 50%) — kolom Potongan Pajak dan Bersih Diterima
+  tampil di tabel (migrasi 000007 menambah kolom `pajak`).
+- **PPh 21 upah harian**: upah sampai Rp450.000/hari tidak dipotong; di
+  atasnya dipotong 5% dari kelebihan per hari. Tampil di Riwayat Pembayaran
+  Upah (batas kumulatif Rp4,5 juta dalam 22 hari kerja per bulan untuk
+  penerima yang sama dicek manual).
+- **Bea materai**: pengingat materai Rp10.000 untuk kuitansi pembayaran
+  Rp5 juta ke atas (di Jurnal Pembayaran, detail SPK, dan cetak Invoice).
+
+Langkah sesudah `git pull` versi ini: jalankan `php spark migrate`
+(migrasi 000007).

@@ -20,8 +20,15 @@ class Upah extends BaseController
             [$this->sid()]
         )->getResultArray();
         $total = array_sum(array_map(static fn ($r) => (float) $r['jumlah'], $daftar));
+        $totalPph21 = 0.0;
+        foreach ($daftar as &$u) {
+            $u['pph21'] = $this->pph21UpahHarian((float) $u['tarif'], (float) $u['orang_hari']);
+            $u['bersih'] = (float) $u['jumlah'] - $u['pph21'];
+            $totalPph21 += $u['pph21'];
+        }
+        unset($u);
         return $this->tampil('upah/index', [
-            'daftar' => $daftar, 'total' => $total,
+            'daftar' => $daftar, 'total' => $total, 'total_pph21' => $totalPph21,
             'master' => $db->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray(),
             'pekerjaan_per_gedung' => $this->pekerjaanPerGedung(),
         ], 'Pembayaran Upah');
