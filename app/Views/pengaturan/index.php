@@ -86,14 +86,48 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
     <tr><th>Nama</th><th>Alamat</th><th>Penandatangan</th><th></th></tr>
     <?php foreach ($penyedia as $p): ?>
     <tr><td><?= esc($p['nama']) ?></td><td><?= esc($p['alamat'] ?? '') ?></td><td><?= esc($p['ttd_nama'] ?? '') ?></td>
-      <td><form class="inline" method="post" action="<?= base_url('pengaturan/penyedia-hapus/' . $p['id']) ?>" onsubmit="return confirm('Hapus penyedia ini?')"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td></tr>
+      <td style="white-space:nowrap">
+        <button class="kecil" type="button" data-ubah-penyedia data-id="<?= (int) $p['id'] ?>" data-nama="<?= esc($p['nama'], 'attr') ?>" data-alamat="<?= esc($p['alamat'] ?? '', 'attr') ?>" data-ttd="<?= esc($p['ttd_nama'] ?? '', 'attr') ?>">Ubah</button>
+        <form class="inline" method="post" action="<?= base_url('pengaturan/penyedia-hapus/' . $p['id']) ?>" onsubmit="return confirm('Hapus penyedia ini?')"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>
+      </td></tr>
     <?php endforeach; ?>
   </table>
-  <form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('pengaturan/penyedia-tambah') ?>" style="margin-top:12px">
+  <form id="form-penyedia" class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('pengaturan/penyedia-tambah') ?>" style="margin-top:12px">
     <?= csrf_field() ?>
     <label>Nama Penyedia <input name="nama" required></label>
     <label>Alamat <input name="alamat"></label>
     <label>Penandatangan <input name="ttd_nama"></label>
-    <div class="aksi md:col-span-2"><button type="submit">Tambah Penyedia</button></div>
+    <div class="aksi md:col-span-2">
+      <button type="submit" id="tombol-penyedia">Tambah Penyedia</button>
+      <button type="button" id="batal-penyedia" class="abu" style="display:none">Batal Ubah</button>
+    </div>
   </form>
 </div>
+<script>
+(function () {
+  var form = document.getElementById('form-penyedia');
+  if (!form) return;
+  var tombol = document.getElementById('tombol-penyedia');
+  var batal = document.getElementById('batal-penyedia');
+  var aksiTambah = form.getAttribute('action');
+  function modeTambah() {
+    form.setAttribute('action', aksiTambah);
+    form.reset();
+    tombol.textContent = 'Tambah Penyedia';
+    batal.style.display = 'none';
+  }
+  batal.addEventListener('click', modeTambah);
+  document.querySelectorAll('[data-ubah-penyedia]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      form.setAttribute('action', aksiTambah.replace('penyedia-tambah', 'penyedia-ubah/' + btn.dataset.id));
+      form.querySelector('[name=nama]').value = btn.dataset.nama || '';
+      form.querySelector('[name=alamat]').value = btn.dataset.alamat || '';
+      form.querySelector('[name=ttd_nama]').value = btn.dataset.ttd || '';
+      tombol.textContent = 'Simpan Perubahan';
+      batal.style.display = '';
+      form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      form.querySelector('[name=nama]').focus();
+    });
+  });
+})();
+</script>

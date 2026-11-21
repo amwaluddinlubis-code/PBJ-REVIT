@@ -48,6 +48,21 @@ class Pengaturan extends BaseController
         return redirect()->to('pengaturan')->with('sukses', 'Penyedia ditambahkan.');
     }
 
+    public function penyediaUbah($id)
+    {
+        $nama = trim((string) $this->request->getPost('nama'));
+        if ($nama === '') {
+            return redirect()->to('pengaturan')->with('galat', 'Nama penyedia tidak boleh kosong.');
+        }
+        $this->db()->table('penyedia')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->update([
+            'nama' => $nama,
+            'alamat' => trim((string) $this->request->getPost('alamat')) ?: null,
+            'ttd_nama' => trim((string) $this->request->getPost('ttd_nama')) ?: null,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+        return redirect()->to('pengaturan')->with('sukses', 'Penyedia "' . $nama . '" diperbarui.');
+    }
+
     public function penyediaHapus($id)
     {
         $dipakai = $this->db()->table('spk')->where('penyedia_id', (int) $id)->countAllResults();
