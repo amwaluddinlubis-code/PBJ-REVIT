@@ -37,7 +37,7 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
 });
 </script>
   <h2>Impor Dokumen Perencana — Satu Klik</h2>
-  <p style="margin-top:0;color:var(--ta-teks-2)">Dokumen RAB perencana dibaca otomatis: daftar harga bahan &amp; upah, analisa AHSP, BOQ tiap gedung, dan total bantuan dari Rekap RAB. Pilih sekolah tujuan, lalu pakai salah satu dari tiga cara di bawah. Mengimpor ulang berkas yang sama aman — gedung dari sheet yang sama diperbarui, bukan digandakan.</p>
+  <p style="margin-top:0;color:var(--ta-teks-2)">Dokumen RAB perencana dibaca otomatis: daftar harga bahan &amp; upah, analisa AHSP, BOQ tiap gedung, dan total bantuan dari Rekap RAB. Pilih sekolah tujuan, lalu pakai salah satu dari tiga cara di bawah — sesudah berkas dipilih, Anda masuk ke tahap <b>Tinjau &amp; Petakan</b>: memilih sheet mana saja yang diimpor dan memetakannya ke Gedung atau Biaya Non-Gedung, sebelum apa pun ditulis ke tabel. Mengimpor ulang berkas yang sama aman — gedung dari sheet yang sama diperbarui, bukan digandakan.</p>
 
   <h3 style="margin:18px 0 8px">Cara 1 — Dari Folder (disarankan, tanpa batas ukuran)</h3>
   <p class="kecil-teks" style="margin-top:0">Salin berkas .xlsx ke folder ini lewat Explorer: <code style="word-break:break-all"><?= esc($folder_impor) ?></code></p>

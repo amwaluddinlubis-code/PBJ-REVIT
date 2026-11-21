@@ -126,12 +126,12 @@ class Impor extends BaseController
         return $ada > 0 ? $id : null;
     }
 
-    private function jalankan(string $path, string $namaTampil, int $sekolahId)
+    private function jalankan(string $path, string $namaTampil, int $sekolahId, array $pilihan = [])
     {
         session()->set('sekolah_id', $sekolahId);
         try {
             if (ParserTemplate::berkasTemplate(new PembacaXlsxMentah($path))) {
-                $r = (new ParserTemplate($sekolahId))->impor($path);
+                $r = (new ParserTemplate($sekolahId))->impor($path, $pilihan);
                 $r['format'] = 'template';
                 $pesan = sprintf(
                     'Impor TEMPLATE selesai: %d gedung (%d pekerjaan), %d analisa (%d komponen), %d bahan baru + %d diperbarui, %d jenis upah. Nilai BOQ terhitung Rp %s.',
@@ -140,7 +140,7 @@ class Impor extends BaseController
                     number_format($r['nilai_boq'], 0, ',', '.')
                 );
             } else {
-                $r = (new ParserPerencana($this->db(), $sekolahId))->impor($path);
+                $r = (new ParserPerencana($this->db(), $sekolahId))->impor($path, $pilihan);
                 $r['format'] = 'perencana';
                 $pesan = sprintf(
                     'Impor selesai: %d gedung, %d analisa (%d komponen), %d bahan baru ditambahkan ke master.',
@@ -183,6 +183,106 @@ class Impor extends BaseController
     }
 
     /** Unduh template manual kosong (dengan baris CONTOH). */
+    /**
+     * Tahap 1 impor: baca daftar sheet berkas TANPA menulis apa pun ke
+     * tabel, simpan sebagai stage di sesi, lalu ke halaman peninjauan —
+     * pengguna memilih sheet yang diimpor dan memetakannya ke tujuan.
+     */
+    private function tahapTinjau(string $path, string $namaTampil, int $sekolahId)
+    {
+        try {
+            $pembaca = new PembacaXlsxMentah($path);
+            if (ParserTemplate::berkasTemplate($pembaca)) {
+                $format = 'template';
+                $lembar = $this->pratinjauTemplate($pembaca);
+            } else {
+                $format = 'perencana';
+                $lembar = (new ParserPerencana($this->db(), $sekolahId))->pratinjau($path);
+            }
+        } catch (\Throwable $e) {
+            return redirect()->to('/impor')->with('galat', 'Berkas tidak dapat dibaca: ' . $e->getMessage());
+        }
+        session()->set('impor_stage', [
+            'path' => $path, 'nama' => $namaTampil, 'sekolah_id' => $sekolahId,
+            'format' => $format, 'lembar' => $lembar,
+        ]);
+        return redirect()->to('/impor/petakan');
+    }
+
+    /** Pratinjau ringkas untuk berkas template (sheet berperan tetap). */
+    private function pratinjauTemplate(PembacaXlsxMentah $p): array
+    {
+        $peran = [
+            'Sekolah' => ['Identitas Sekolah & Pagu', 'referensi'],
+            'Harga' => ['Daftar Harga Bahan & Upah', 'referensi'],
+            'Analisa' => ['Analisa AHSP', 'referensi'],
+            'Harsat' => ['Harsat Pekerjaan', 'referensi'],
+            'BOQ' => ['BOQ Gedung', 'gedung'],
+            'BiayaLain' => ['Biaya Non-Gedung', 'non_gedung'],
+        ];
+        $hasil = [];
+        foreach ($peran as $sheet => [$jenis, $kategori]) {
+            if (! $p->adaSheet($sheet)) {
+                continue;
+            }
+            $baris = 0;
+            foreach ($p->baris($sheet, 8) as $sel) {
+                $baris++;
+            }
+            $hasil[] = [
+                'nama' => $sheet, 'jenis' => $jenis, 'kategori' => $kategori,
+                'saran' => $kategori, 'baris' => max(0, $baris - 4), 'total' => 0.0,
+            ];
+        }
+        return $hasil;
+    }
+
+    /** Tahap 2 impor: halaman peninjauan & pemetaan sheet. */
+    public function petakan()
+    {
+        $stage = session()->get('impor_stage');
+        if (! is_array($stage) || ! is_file((string) ($stage['path'] ?? ''))) {
+            return redirect()->to('/impor')->with('galat', 'Tidak ada impor yang menunggu peninjauan. Pilih berkas dulu lewat salah satu cara impor.');
+        }
+        $sekolah = $this->db()->table('sekolah')->where('id', (int) $stage['sekolah_id'])->get()->getRowArray();
+        return $this->tampil('impor/petakan', [
+            'stage' => $stage,
+            'nama_sekolah' => $sekolah['nama_sekolah'] ?? '(sekolah tidak ditemukan)',
+        ], 'Tinjau & Petakan Impor');
+    }
+
+    /** Tahap 3 impor: jalankan impor sesuai pilihan peninjauan. */
+    public function eksekusi()
+    {
+        $stage = session()->get('impor_stage');
+        if (! is_array($stage) || ! is_file((string) ($stage['path'] ?? ''))) {
+            return redirect()->to('/impor')->with('galat', 'Tahap peninjauan sudah berakhir. Ulangi pemilihan berkas.');
+        }
+        $sheets = (array) $this->request->getPost('sheet');
+        $tujuan = (array) $this->request->getPost('tujuan');
+        $namaGedung = (array) $this->request->getPost('nama_gedung');
+        $pilihan = [];
+        foreach ($sheets as $i => $sheet) {
+            $t = (string) ($tujuan[$i] ?? 'lewati');
+            if (! in_array($t, ['gedung', 'non_gedung', 'referensi', 'lewati'], true)) {
+                $t = 'lewati';
+            }
+            $pilihan[(string) $sheet] = [
+                'tujuan' => $t,
+                'nama_gedung' => trim((string) ($namaGedung[$i] ?? '')) ?: null,
+            ];
+        }
+        session()->remove('impor_stage');
+        return $this->jalankan((string) $stage['path'], (string) $stage['nama'], (int) $stage['sekolah_id'], $pilihan);
+    }
+
+    /** Batalkan tahap peninjauan tanpa mengimpor apa pun. */
+    public function batal()
+    {
+        session()->remove('impor_stage');
+        return redirect()->to('/impor')->with('sukses', 'Peninjauan impor dibatalkan — tidak ada data yang diimpor.');
+    }
+
     public function unduhTemplate()
     {
         $analisa = [[
@@ -260,7 +360,7 @@ class Impor extends BaseController
         }
         $namaBaru = 'perencana-' . date('Ymd-His') . '.xlsx';
         $berkas->move($folder, $namaBaru);
-        return $this->jalankan($folder . '/' . $namaBaru, (string) $berkas->getClientName(), $sekolahId);
+        return $this->tahapTinjau($folder . '/' . $namaBaru, (string) $berkas->getClientName(), $sekolahId);
     }
 
     /** Impor dari berkas yang sudah disalin ke folder impor server. */
@@ -275,7 +375,7 @@ class Impor extends BaseController
         if ($nama === '' || strtolower(pathinfo($nama, PATHINFO_EXTENSION)) !== 'xlsx' || ! is_file($path)) {
             return redirect()->to('/impor')->with('galat', 'Berkas tidak ditemukan di folder impor. Salin dulu berkas .xlsx ke folder yang ditampilkan di halaman impor.');
         }
-        return $this->jalankan($path, $nama, $sekolahId);
+        return $this->tahapTinjau($path, $nama, $sekolahId);
     }
 
     /** Impor ulang berkas terakhir yang pernah diunggah. */
@@ -290,7 +390,7 @@ class Impor extends BaseController
             return redirect()->to('/impor')->with('galat', 'Belum ada berkas unggahan tersimpan. Gunakan cara unggah atau folder.');
         }
         usort($unggahan, static fn ($a, $b) => filemtime($b) <=> filemtime($a));
-        return $this->jalankan($unggahan[0], basename($unggahan[0]) . ' (impor ulang)', $sekolahId);
+        return $this->tahapTinjau($unggahan[0], basename($unggahan[0]) . ' (impor ulang)', $sekolahId);
     }
 
     /** Tautkan satu nama komponen ke bahan master pilihan pengguna. */

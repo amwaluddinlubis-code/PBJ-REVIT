@@ -96,6 +96,9 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
 // Modul Analisa Perencana
 $routes->get('impor', 'Impor::index', ['filter' => 'auth']);
 $routes->post('impor/proses', 'Impor::proses', ['filter' => 'auth']);
+$routes->get('impor/petakan', 'Impor::petakan', ['filter' => 'auth']);
+$routes->post('impor/eksekusi', 'Impor::eksekusi', ['filter' => 'auth']);
+$routes->post('impor/batal', 'Impor::batal', ['filter' => 'auth']);
 $routes->get('gedung', 'Gedung::index', ['filter' => 'auth']);
 $routes->post('gedung/simpan', 'Gedung::simpan', ['filter' => 'auth']);
 $routes->post('gedung/(:num)/perbarui', 'Gedung::perbarui/$1', ['filter' => 'auth']);

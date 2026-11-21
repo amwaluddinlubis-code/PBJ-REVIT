@@ -104,8 +104,30 @@ class ParserPerencana
         }
     }
 
-    /** Jalankan impor penuh; mengembalikan ringkasan hasil. */
-    public function impor(string $path): array
+    /** Tujuan impor sebuah sheet menurut pilihan pengguna (peninjauan). */
+    private function tujuan(array $pilihan, string $sheet, string $bawaan): string
+    {
+        $t = $pilihan[$sheet]['tujuan'] ?? $bawaan;
+        return in_array($t, ['gedung', 'non_gedung', 'referensi', 'lewati'], true) ? $t : $bawaan;
+    }
+
+    /** Nama sheet aktual di berkas dari bentuk normalnya (atau null). */
+    private function namaAktual(PembacaXlsxMentah $p, string $normal): ?string
+    {
+        foreach ($p->daftarSheet() as $n) {
+            if (self::normal($n) === $normal) {
+                return $n;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Jalankan impor; mengembalikan ringkasan hasil. $pilihan (dari tahap
+     * peninjauan) memetakan nama sheet => [tujuan, nama_gedung]; tanpa
+     * pilihan, perilaku bawaan lama berlaku persis.
+     */
+    public function impor(string $path, array $pilihan = []): array
     {
         $p = new PembacaXlsxMentah($path);
         $semuaSheet = $p->daftarSheet();
@@ -118,16 +140,19 @@ class ParserPerencana
         $petaBahan = $this->petaBahanSekolah();
         foreach (['Harga bahan & upah', 'Harga bahan & upah 2'] as $nama) {
             if ($p->adaSheet($nama)) {
-                $hasil = $this->imporDaftarHarga($p, $nama, $petaBahan);
-                $ringkas['bahan_baru'] += $hasil['bahan_baru'];
-                $ringkas['upah']      += $hasil['upah'];
-                $petaBahan = $hasil['peta'];
+                if ($this->tujuan($pilihan, $nama, 'referensi') !== 'lewati') {
+                    $hasil = $this->imporDaftarHarga($p, $nama, $petaBahan);
+                    $ringkas['bahan_baru'] += $hasil['bahan_baru'];
+                    $ringkas['upah']      += $hasil['upah'];
+                    $petaBahan = $hasil['peta'];
+                }
                 break;
             }
         }
 
         // 2) Total bantuan dari Rekap RAB per ruang + NPSN dari Input Data
-        if ($p->adaSheet('Rekap RAB per ruang')) {
+        $sheetRekap = $this->namaAktual($p, 'rekap rab per ruang');
+        if ($sheetRekap !== null && $this->tujuan($pilihan, $sheetRekap, 'referensi') !== 'lewati') {
             $maks = 0.0;
             foreach ($this->baris($p, 'Rekap RAB per ruang', 30, 12) as $sel) {
                 foreach ($sel as $v) {
@@ -139,7 +164,8 @@ class ParserPerencana
                 $this->db->table('sekolah')->where('id', $this->sid)->update(['total_anggaran' => $maks]);
             }
         }
-        if ($p->adaSheet('Input Data')) {
+        $sheetInput = $this->namaAktual($p, 'input data');
+        if ($sheetInput !== null && $this->tujuan($pilihan, $sheetInput, 'referensi') !== 'lewati') {
             foreach ($this->baris($p, 'Input Data', 8, 45) as $sel) {
                 foreach ($sel as $i => $v) {
                     if (self::teks($v) === 'NPSN' && isset($sel[$i + 2])) {
@@ -151,10 +177,15 @@ class ParserPerencana
 
         // 3) Analisa AHSP (+ komponen tertaut ke bahan/upah)
         $sudahKode = [];
+        $adaAnalisa = false;
         foreach (['Analisa', 'Analisa 2', 'Analisa (2)'] as $nama) {
             if (! $p->adaSheet($nama)) {
                 continue;
             }
+            if ($this->tujuan($pilihan, $nama, 'referensi') === 'lewati') {
+                continue;
+            }
+            $adaAnalisa = true;
             $hasil = $this->imporAnalisa($p, $nama, $petaBahan, $sudahKode);
             $ringkas['analisa']              += $hasil['analisa'];
             $ringkas['komponen']             += $hasil['komponen'];
@@ -165,31 +196,78 @@ class ParserPerencana
         // 3b) Referensi bahan & upah DARI ANALISA: sheet Analisa memuat satuan
         // dan harga setiap komponen — jadikan itu acuan master (daftar harga
         // dokumen tidak punya kolom satuan). Lalu validasi ke Harsat Pekerjaan.
-        $ringkas['referensi'] = $this->referensiDariAnalisa();
-        $petaHarsat = $this->bacaHarsat($p);
-        foreach ($petaHarsat as $kode => $harga) {
-            $this->db->table('analisa')->where(['sekolah_id' => $this->sid, 'kode' => $kode])
-                ->update(['harga_satuan' => $harga]);
+        if ($adaAnalisa) {
+            $ringkas['referensi'] = $this->referensiDariAnalisa();
         }
-        $ringkas['harsat'] = $this->validasiHarsat($petaHarsat);
+        $sheetHarsat = $this->namaAktual($p, 'harsat pekerjaan');
+        if ($sheetHarsat !== null && $this->tujuan($pilihan, $sheetHarsat, 'referensi') !== 'lewati') {
+            $petaHarsat = $this->bacaHarsat($p);
+            foreach ($petaHarsat as $kode => $harga) {
+                $this->db->table('analisa')->where(['sekolah_id' => $this->sid, 'kode' => $kode])
+                    ->update(['harga_satuan' => $harga]);
+            }
+            $ringkas['harsat'] = $this->validasiHarsat($petaHarsat);
+        }
 
         // 3c) Biaya non-gedung: sheet "Prcn dan pgws" (perencanaan &
         // pengawasan) dan "ADMINISTRASI" (biaya pengelolaan P2SP).
-        $ringkas['biaya_lain'] = $this->imporBiayaLain($p);
+        $ringkas['biaya_lain'] = $this->imporBiayaLain($p, $pilihan);
 
-        // 4) Sheet BOQ per gedung
-        $bukanBoq = ['harga bahan upah', 'harga bahan upah 2', 'analisa', 'analisa 2',
-                     'rekap rab per ruang', 'input data', 'harsat pekerjaan',
-                     'prcn dan pgws', 'administrasi'];
+        // 4) Sheet per gedung / non-gedung menurut pemetaan peninjauan.
+        // Sheet referensi (harga, analisa, rekap, input, harsat) sudah
+        // ditangani di langkah 1-3 dan tidak masuk putaran ini.
+        $referensi = ['harga bahan & upah', 'harga bahan & upah 2', 'analisa', 'analisa 2',
+                      'analisa (2)', 'rekap rab per ruang', 'input data', 'harsat pekerjaan'];
         foreach ($semuaSheet as $nama) {
-            if ($this->sheetDilewati($nama) || in_array(self::normal($nama), $bukanBoq, true)) {
+            $norm = self::normal($nama);
+            if (in_array($norm, $referensi, true)) {
+                continue;
+            }
+            $dipetakan = isset($pilihan[$nama]);
+            if ($norm === 'prcn dan pgws' || $norm === 'administrasi') {
+                // Bawaan non-gedung (langkah 3c); ke gedung hanya bila
+                // pengguna memetakannya secara eksplisit di peninjauan.
+                if ($this->tujuan($pilihan, $nama, 'non_gedung') !== 'gedung') {
+                    continue;
+                }
+                $umum = $this->bacaItemUmum($p, $nama);
+                if ($umum !== null) {
+                    $gid = $this->simpanGedung(trim($nama), $umum, $pilihan[$nama]['nama_gedung'] ?? null);
+                    $ringkas['gedung'][] = [
+                        'nama' => trim($nama), 'gedung_id' => $gid,
+                        'pekerjaan' => count($umum['items']),
+                        'total_hitung' => array_sum(array_column($umum['items'], 'jumlah')),
+                        'total_sheet' => $umum['grand'],
+                    ];
+                }
+                continue;
+            }
+            $bawaan = $this->sheetDilewati($nama) ? 'lewati' : 'gedung';
+            $tujuan = $this->tujuan($pilihan, $nama, $bawaan);
+            if ($tujuan === 'lewati' || $tujuan === 'referensi') {
                 continue;
             }
             $boq = $this->bacaBoq($p, $nama);
+            if ($tujuan === 'non_gedung') {
+                $items = $boq['items'] ?? null;
+                if ($items === null && $dipetakan) {
+                    $items = ($this->bacaItemUmum($p, $nama) ?? ['items' => []])['items'];
+                }
+                if ($items) {
+                    [$nB, $tB] = $this->boqKeBiayaLain(trim($nama), $items);
+                    $ringkas['biaya_lain']['baris'] += $nB;
+                    $ringkas['biaya_lain']['total'] += $tB;
+                }
+                continue;
+            }
+            // tujuan gedung
+            if ($boq === null && $dipetakan) {
+                $boq = $this->bacaItemUmum($p, $nama);
+            }
             if ($boq === null) {
                 continue;
             }
-            $gid = $this->simpanGedung(trim($nama), $boq);
+            $gid = $this->simpanGedung(trim($nama), $boq, $pilihan[$nama]['nama_gedung'] ?? null);
             $ringkas['gedung'][] = [
                 'nama' => trim($nama), 'gedung_id' => $gid,
                 'pekerjaan' => count($boq['items']),
@@ -437,7 +515,7 @@ class ParserPerencana
      * Baris sumber impor lama diganti segar; baris manual pengguna utuh.
      * Mengembalikan [baris, total].
      */
-    private function imporBiayaLain(PembacaXlsxMentah $p): array
+    private function imporBiayaLain(PembacaXlsxMentah $p, array $pilihan = []): array
     {
         $this->db->table('biaya_lain')->where(['sekolah_id' => $this->sid, 'sumber' => 'impor'])->delete();
         $hasil = ['baris' => 0, 'total' => 0.0];
@@ -461,6 +539,9 @@ class ParserPerencana
 
         // --- Perencanaan & Pengawasan ---
         $sheetPrcn = $cariSheet('prcn dan pgws');
+        if ($sheetPrcn !== null && $this->tujuan($pilihan, $sheetPrcn, 'non_gedung') !== 'non_gedung') {
+            $sheetPrcn = null;
+        }
         if ($sheetPrcn !== null) {
             $nilaiKonstruksi = 0.0;
             foreach ($this->baris($p, $sheetPrcn, 12) as $sel) {
@@ -504,6 +585,9 @@ class ParserPerencana
 
         // --- Biaya Pengelolaan (ADMINISTRASI) ---
         $sheetAdm = $cariSheet('administrasi');
+        if ($sheetAdm !== null && $this->tujuan($pilihan, $sheetAdm, 'non_gedung') !== 'non_gedung') {
+            $sheetAdm = null;
+        }
         if ($sheetAdm !== null) {
             $sub = '';
             foreach ($this->baris($p, $sheetAdm, 12) as $sel) {
@@ -540,6 +624,162 @@ class ParserPerencana
             }
         }
         return $hasil;
+    }
+
+    /**
+     * Pratinjau berkas untuk tahap peninjauan impor: daftar sheet dengan
+     * jenis terdeteksi, saran tujuan, jumlah baris data, dan total nilai.
+     * Murni membaca berkas — tidak menyentuh database.
+     */
+    public function pratinjau(string $path): array
+    {
+        $p = new PembacaXlsxMentah($path);
+        $hasil = [];
+        foreach ($p->daftarSheet() as $nama) {
+            $norm = self::normal($nama);
+            $e = ['nama' => $nama, 'jenis' => 'Tidak dikenal', 'kategori' => 'lainnya',
+                  'saran' => 'lewati', 'baris' => 0, 'total' => 0.0];
+            if (in_array($norm, ['harga bahan & upah', 'harga bahan & upah 2'], true)) {
+                $e['jenis'] = 'Daftar Harga Bahan & Upah'; $e['kategori'] = 'referensi'; $e['saran'] = 'referensi';
+            } elseif (in_array($norm, ['analisa', 'analisa 2', 'analisa (2)'], true)) {
+                $e['jenis'] = 'Analisa AHSP'; $e['kategori'] = 'referensi'; $e['saran'] = 'referensi';
+            } elseif ($norm === 'harsat pekerjaan') {
+                $e['jenis'] = 'Harsat Pekerjaan'; $e['kategori'] = 'referensi'; $e['saran'] = 'referensi';
+            } elseif ($norm === 'rekap rab per ruang') {
+                $e['jenis'] = 'Rekap RAB (pagu anggaran)'; $e['kategori'] = 'referensi'; $e['saran'] = 'referensi';
+            } elseif ($norm === 'input data') {
+                $e['jenis'] = 'Data Sekolah'; $e['kategori'] = 'referensi'; $e['saran'] = 'referensi';
+            } elseif ($norm === 'prcn dan pgws' || $norm === 'administrasi') {
+                $e['jenis'] = $norm === 'prcn dan pgws' ? 'Biaya Perencanaan & Pengawasan' : 'Biaya Pengelolaan';
+                $e['kategori'] = 'non_gedung'; $e['saran'] = 'non_gedung';
+                foreach ($this->baris($p, $nama, 12) as $sel) {
+                    $adaTotal = false;
+                    foreach ($sel as $v) {
+                        if (strcasecmp(self::teks($v), 'Total') === 0) { $adaTotal = true; }
+                    }
+                    if ($adaTotal || ! isset($sel[10])) {
+                        continue;
+                    }
+                    if ($norm === 'prcn dan pgws' && ! in_array(strtolower(self::teks($sel[3] ?? null)), ['perencana', 'pengawas'], true)) {
+                        continue;
+                    }
+                    if ($norm === 'administrasi' && self::teks($sel[4] ?? null) === '') {
+                        continue;
+                    }
+                    $e['baris']++;
+                    $e['total'] += self::num($sel[10]);
+                }
+            } elseif ($this->sheetDilewati($nama)) {
+                $e['jenis'] = 'Lembar kerja / gambar / rekap lain';
+            } else {
+                $boq = $this->bacaBoq($p, $nama);
+                if ($boq !== null) {
+                    $e['jenis'] = 'BOQ Gedung'; $e['kategori'] = 'gedung'; $e['saran'] = 'gedung';
+                    $e['baris'] = count($boq['items']);
+                    $e['total'] = array_sum(array_column($boq['items'], 'jumlah'));
+                }
+            }
+            $hasil[] = $e;
+        }
+        return $hasil;
+    }
+
+    /**
+     * Pembaca baris biaya UMUM untuk sheet yang dipetakan pengguna secara
+     * eksplisit (bukan BOQ baku): judul "Uraian Pekerjaan" + "Jumlah Harga"
+     * tanpa syarat kolom Analisa. Uraian dicari di kolom judul s.d. +2
+     * (sheet ADMINISTRASI menaruh uraian rinci dua kolom lebih kanan).
+     */
+    private function bacaItemUmum(PembacaXlsxMentah $p, string $sheet): ?array
+    {
+        $kolom = null;
+        $items = [];
+        $grand = 0.0;
+        $urut = 0;
+        foreach ($this->baris($p, $sheet, 20) as $sel) {
+            if ($kolom === null) {
+                $peta = [];
+                foreach ($sel as $j => $v) {
+                    $t = self::teks($v);
+                    if ($t !== '') {
+                        $peta[mb_strtolower($t)] = $j;
+                    }
+                }
+                if (isset($peta['uraian pekerjaan'], $peta['jumlah harga'])) {
+                    $kolom = [
+                        'uraian' => $peta['uraian pekerjaan'],
+                        'volume' => $peta['volume'] ?? null,
+                        'sat' => $peta['sat'] ?? ($peta['satuan'] ?? null),
+                        'harga' => $peta['harga satuan'] ?? null,
+                        'jumlah' => $peta['jumlah harga'],
+                    ];
+                }
+                continue;
+            }
+            $semua = implode(' ', array_map(static fn ($v) => self::teks($v), $sel));
+            if (stripos($semua, 'GRAND TOTAL') !== false) {
+                $grand = self::num($sel[$kolom['jumlah']] ?? null);
+                break;
+            }
+            $nama = '';
+            foreach ([$kolom['uraian'], $kolom['uraian'] + 1, $kolom['uraian'] + 2] as $k) {
+                $t = self::teks($sel[$k] ?? '');
+                if ($t !== '' && $t !== '-' && ! is_numeric($t)) {
+                    $nama = $t;
+                    break;
+                }
+            }
+            $volume = $kolom['volume'] !== null ? self::num($sel[$kolom['volume']] ?? null) : 0.0;
+            $harga = $kolom['harga'] !== null ? self::num($sel[$kolom['harga']] ?? null) : 0.0;
+            $jumlah = self::num($sel[$kolom['jumlah']] ?? null);
+            if ($nama === '' || strcasecmp($nama, 'Total') === 0) {
+                continue;
+            }
+            if ($jumlah <= 0 && $harga <= 0) {
+                continue; // baris judul kelompok / sub-bab
+            }
+            if ($jumlah <= 0 && $volume > 0 && $harga > 0) {
+                $jumlah = $volume * $harga;
+            }
+            $urut++;
+            $items[] = [
+                'bab' => '', 'nama' => $nama, 'kode_analisa' => null,
+                'volume' => $volume > 0 ? $volume : 1,
+                'satuan' => $kolom['sat'] !== null ? self::teks($sel[$kolom['sat']] ?? '') : '',
+                'harga_satuan' => $harga, 'jumlah' => $jumlah, 'urutan' => $urut,
+            ];
+        }
+        if ($kolom === null || $items === []) {
+            return null;
+        }
+        return ['items' => $items, 'grand' => $grand];
+    }
+
+    /** Tulis baris-baris sebuah sheet sebagai biaya non-gedung. [baris, total] */
+    private function boqKeBiayaLain(string $kelompok, array $items): array
+    {
+        $n = 0;
+        $total = 0.0;
+        foreach ($items as $it) {
+            $this->db->table('biaya_lain')->insert([
+                'sekolah_id' => $this->sid,
+                'kelompok' => $kelompok,
+                'uraian' => $it['nama'],
+                'volume' => $it['volume'],
+                'satuan' => $it['satuan'] ?: null,
+                'periode' => null,
+                'satuan_periode' => null,
+                'harga_satuan' => $it['harga_satuan'],
+                'jumlah' => $it['jumlah'],
+                'keterangan' => ($it['bab'] ?? '') !== '' ? $it['bab'] : null,
+                'sumber' => 'impor',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+            $n++;
+            $total += (float) $it['jumlah'];
+        }
+        return [$n, $total];
     }
 
     private function sheetDilewati(string $nama): bool
@@ -849,7 +1089,7 @@ class ParserPerencana
         return ['items' => $items, 'grand' => $grand];
     }
 
-    private function simpanGedung(string $namaSheet, array $boq): int
+    private function simpanGedung(string $namaSheet, array $boq, ?string $namaTampil = null): int
     {
         $db = $this->db;
         $ada = $db->table('gedung')->where(['sekolah_id' => $this->sid, 'sumber_sheet' => $namaSheet])->get()->getRowArray();
@@ -868,14 +1108,16 @@ class ParserPerencana
         $total = array_sum(array_column($boq['items'], 'jumlah'));
         if ($ada) {
             $gid = (int) $ada['id'];
-            $db->table('gedung')->where('id', $gid)->update([
-                'nilai_boq' => $total, 'updated_at' => date('Y-m-d H:i:s'),
-            ]);
+            $ubah = ['nilai_boq' => $total, 'updated_at' => date('Y-m-d H:i:s')];
+            if ($namaTampil !== null && trim($namaTampil) !== '') {
+                $ubah['nama'] = trim($namaTampil);
+            }
+            $db->table('gedung')->where('id', $gid)->update($ubah);
             $db->table('pekerjaan')->where('gedung_id', $gid)->delete();
         } else {
             $urut = (int) ($db->query('SELECT COALESCE(MAX(urutan),0) m FROM gedung WHERE sekolah_id = ?', [$this->sid])->getRow()->m ?? 0) + 1;
             $db->table('gedung')->insert([
-                'sekolah_id' => $this->sid, 'nama' => $namaSheet, 'nilai_boq' => $total,
+                'sekolah_id' => $this->sid, 'nama' => ($namaTampil !== null && trim($namaTampil) !== '') ? trim($namaTampil) : $namaSheet, 'nilai_boq' => $total,
                 'sumber_sheet' => $namaSheet, 'urutan' => $urut,
                 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
             ]);

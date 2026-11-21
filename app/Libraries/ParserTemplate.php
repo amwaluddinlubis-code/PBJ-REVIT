@@ -35,20 +35,37 @@ class ParserTemplate
         return $punya >= 3 && !$p->adaSheet('Rekap RAB per ruang ');
     }
 
-    public function impor(string $path): array
+    /**
+     * Impor template. $pilihan (tahap peninjauan) memetakan nama sheet =>
+     * [tujuan]: 'lewati' melewatkan sheet itu; sheet BOQ juga menerima
+     * 'non_gedung' (pekerjaan menjadi biaya non-gedung). Tanpa pilihan,
+     * perilaku bawaan berlaku persis.
+     */
+    public function impor(string $path, array $pilihan = []): array
     {
         $p = new PembacaXlsxMentah($path);
         $stat = ['bahan_baru' => 0, 'bahan_diperbarui' => 0, 'upah' => 0, 'analisa' => 0,
             'komponen' => 0, 'tak_tertaut' => 0, 'gedung' => 0, 'pekerjaan' => 0, 'nilai_boq' => 0.0,
             'biaya_lain' => 0];
-        $this->imporSekolah($p);
-        $this->imporHarga($p, $stat);
+        $tujuan = static fn (string $sheet, string $bawaan = 'referensi'): string => $pilihan[$sheet]['tujuan'] ?? $bawaan;
+        if ($tujuan('Sekolah') !== 'lewati') {
+            $this->imporSekolah($p);
+        }
+        if ($tujuan('Harga') !== 'lewati') {
+            $this->imporHarga($p, $stat);
+        }
         $petaBahan = $this->petaBahan();
         $petaUpah = $this->petaUpah();
-        $petaHarsat = $this->bacaHarsat($p);
-        $this->imporAnalisa($p, $stat, $petaBahan, $petaUpah, $petaHarsat);
-        $this->imporBoq($p, $stat, $petaHarsat);
-        $this->imporBiayaLain($p, $stat);
+        $petaHarsat = $tujuan('Harsat') !== 'lewati' ? $this->bacaHarsat($p) : [];
+        if ($tujuan('Analisa') !== 'lewati') {
+            $this->imporAnalisa($p, $stat, $petaBahan, $petaUpah, $petaHarsat);
+        }
+        if ($tujuan('BiayaLain', 'non_gedung') !== 'lewati') {
+            $this->imporBiayaLain($p, $stat);
+        }
+        if ($tujuan('BOQ', 'gedung') !== 'lewati') {
+            $this->imporBoq($p, $stat, $petaHarsat, $tujuan('BOQ', 'gedung'));
+        }
         return $stat;
     }
 
@@ -102,6 +119,13 @@ class ParserTemplate
             }
             if (str_contains($jenis, 'upah')) {
                 $ada = $this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $nama, 'is_deleted' => 0])->get()->getRowArray();
+                if (! $ada) {
+                    // Baris terhapus lunak tetap menahan kunci unik — hidupkan lagi.
+                    $ada = $this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $nama, 'is_deleted' => 1])->get()->getRowArray();
+                    if ($ada) {
+                        $this->db->table('upah_master')->where('id', $ada['id'])->update(['is_deleted' => 0, 'deleted_at' => null]);
+                    }
+                }
                 if ($ada) {
                     if ($harga > 0) {
                         $this->db->table('upah_master')->where('id', $ada['id'])->update(['tarif' => $harga, 'satuan' => $satuan]);
@@ -119,6 +143,22 @@ class ParserTemplate
             if (!$ada) {
                 $ada = $this->db->table('bahan')->where(['sekolah_id' => $this->sid, 'is_deleted' => 0])
                     ->where('LOWER(nama) =', strtolower($nama))->get()->getRowArray();
+            }
+            if (! $ada) {
+                // Kunci unik (sekolah, kode) juga dipegang baris terhapus
+                // lunak — hidupkan kembali baris itu alih-alih insert baru.
+                $mati = null;
+                if ($kode !== '') {
+                    $mati = $this->db->table('bahan')->where(['sekolah_id' => $this->sid, 'kode' => $kode, 'is_deleted' => 1])->get()->getRowArray();
+                }
+                if (! $mati) {
+                    $mati = $this->db->table('bahan')->where(['sekolah_id' => $this->sid, 'is_deleted' => 1])
+                        ->where('LOWER(nama) =', strtolower($nama))->get()->getRowArray();
+                }
+                if ($mati) {
+                    $this->db->table('bahan')->where('id', $mati['id'])->update(['is_deleted' => 0, 'deleted_at' => null]);
+                    $ada = $mati;
+                }
             }
             if ($ada) {
                 $this->db->table('bahan')->where('id', $ada['id'])->update([
@@ -236,7 +276,7 @@ class ParserTemplate
     }
 
     // ---------- BOQ ----------
-    private function imporBoq(PembacaXlsxMentah $p, array &$stat, array $petaHarsat = []): void
+    private function imporBoq(PembacaXlsxMentah $p, array &$stat, array $petaHarsat = [], string $tujuanBoq = 'gedung'): void
     {
         if (!$p->adaSheet('BOQ')) {
             return;
@@ -263,6 +303,30 @@ class ParserTemplate
                 'volume' => $volume, 'satuan' => trim((string) ($sel[5] ?? '')) ?: null,
                 'harga_satuan' => $harga, 'jumlah' => $harga * $volume,
             ];
+        }
+        if ($tujuanBoq === 'non_gedung') {
+            // Pemetaan peninjauan: pekerjaan BOQ menjadi biaya non-gedung.
+            foreach ($perGedung as $namaGedung => $items) {
+                foreach ($items as $it) {
+                    $this->db->table('biaya_lain')->insert([
+                        'sekolah_id' => $this->sid,
+                        'kelompok' => 'BOQ — ' . $namaGedung,
+                        'uraian' => $it['nama'],
+                        'volume' => $it['volume'],
+                        'satuan' => $it['satuan'],
+                        'periode' => null,
+                        'satuan_periode' => null,
+                        'harga_satuan' => $it['harga_satuan'],
+                        'jumlah' => $it['jumlah'],
+                        'keterangan' => $it['bab'],
+                        'sumber' => 'impor',
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+                    $stat['biaya_lain']++;
+                }
+            }
+            return;
         }
         $urut = (int) ($this->db->table('gedung')->where('sekolah_id', $this->sid)->selectMax('urutan')->get()->getRow()->urutan ?? 0);
         foreach ($perGedung as $namaGedung => $items) {
@@ -443,7 +507,7 @@ class ParserTemplate
     private function kodeBahanBerikut(): int
     {
         $maks = 0;
-        foreach ($this->db->table('bahan')->where(['sekolah_id' => $this->sid, 'is_deleted' => 0])->select('kode')->get()->getResultArray() as $b) {
+        foreach ($this->db->table('bahan')->where('sekolah_id', $this->sid)->select('kode')->get()->getResultArray() as $b) {
             if (preg_match('/^B(\d+)$/', (string) $b['kode'], $m)) {
                 $maks = max($maks, (int) $m[1]);
             }
