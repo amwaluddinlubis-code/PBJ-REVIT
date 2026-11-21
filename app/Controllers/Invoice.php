@@ -139,6 +139,7 @@ class Invoice extends BaseController
         )->getResultArray();
         return view('cetak/invoice', [
             'idn' => $this->sekolahAktif(), 'i' => $i, 'detail' => $detail,
+            'pajak' => $this->pajakPembelian((float) $i['nilai'], $this->ppnInvoice($this->ppnSpkMap(), (int) $i['spk_id'], (float) $i['nilai'])),
             'totalSpk' => array_sum(array_column($detail, 'total')),
             'terbilang' => $this->terbilang($i['nilai']),
             'nomor' => $this->nomorSurat('INV', (int) $i['nomor_urut']),
@@ -151,12 +152,16 @@ class Invoice extends BaseController
     public function jurnal()
     {
         $baris = $this->db()->query(
-            'SELECT p.*, i.nomor_urut, i.no_toko, i.nilai, s.nomor AS spk_nomor,
-                    ROUND(i.nilai * 0.015) AS pph22, i.nilai - ROUND(i.nilai * 0.015) AS dibayar
+            'SELECT p.*, i.nomor_urut, i.no_toko, i.nilai, i.spk_id, s.nomor AS spk_nomor
              FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0
              JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE s.sekolah_id = ? AND p.is_deleted = 0 ORDER BY p.id',
             [$this->sid()]
         )->getResultArray();
+        $peta = $this->ppnSpkMap();
+        foreach ($baris as &$r) {
+            $r += $this->pajakPembelian((float) $r['nilai'], $this->ppnInvoice($peta, (int) $r['spk_id'], (float) $r['nilai']));
+        }
+        unset($r);
         $belum = $this->db()->query(
             "SELECT i.id, i.nomor_urut, i.nilai, s.nomor AS spk_nomor FROM invoice i
              JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE i.status = 'Belum Bayar' AND s.sekolah_id = ? AND i.is_deleted = 0 ORDER BY i.nomor_urut",

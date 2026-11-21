@@ -18,14 +18,16 @@ class Laporan extends BaseController
 
         $realisasi = 0.0;
         $totalInvoice = 0.0;
+        $petaPpn = $this->ppnSpkMap();
         foreach ($db->query(
-            'SELECT i.nilai, (SELECT COUNT(*) FROM pembayaran p WHERE p.invoice_id = i.id AND p.is_deleted = 0) AS lunas
+            'SELECT i.nilai, i.spk_id, (SELECT COUNT(*) FROM pembayaran p WHERE p.invoice_id = i.id AND p.is_deleted = 0) AS lunas
              FROM invoice i JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE s.sekolah_id = ? AND i.is_deleted = 0',
             [$sid]
         )->getResultArray() as $r) {
             $totalInvoice += (float) $r['nilai'];
             if ((int) $r['lunas'] > 0) {
-                $realisasi += (float) $r['nilai'] - round((float) $r['nilai'] * 0.015);
+                $pjk = $this->pajakPembelian((float) $r['nilai'], $this->ppnInvoice($petaPpn, (int) $r['spk_id'], (float) $r['nilai']));
+                $realisasi += $pjk['dibayar'];
             }
         }
 

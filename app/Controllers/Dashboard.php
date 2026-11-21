@@ -12,8 +12,10 @@ class Dashboard extends BaseController
         $totalRab = (float) $db->query('SELECT COALESCE(SUM((qty_rkb+qty_adm+qty_toilet)*harga_rab),0) t FROM bahan WHERE sekolah_id = ? AND is_deleted = 0', [$sid])->getRow()->t;
         $totalSpk = (float) $db->query('SELECT COALESCE(SUM(qty*harga),0) t FROM spk_detail WHERE spk_id IS NOT NULL AND sekolah_id = ? AND is_deleted = 0', [$sid])->getRow()->t;
         $realisasi = 0.0;
-        foreach ($db->table('pembayaran p')->select('i.nilai')->join('invoice i', 'i.id = p.invoice_id AND i.is_deleted = 0')->join('spk s', 's.id = i.spk_id AND s.is_deleted = 0')->where(['s.sekolah_id' => $sid, 'p.is_deleted' => 0])->get()->getResultArray() as $r) {
-            $realisasi += (float) $r['nilai'] - round((float) $r['nilai'] * 0.015);
+        $petaPpn = $this->ppnSpkMap();
+        foreach ($db->table('pembayaran p')->select('i.nilai, i.spk_id')->join('invoice i', 'i.id = p.invoice_id AND i.is_deleted = 0')->join('spk s', 's.id = i.spk_id AND s.is_deleted = 0')->where(['s.sekolah_id' => $sid, 'p.is_deleted' => 0])->get()->getResultArray() as $r) {
+            $pjk = $this->pajakPembelian((float) $r['nilai'], $this->ppnInvoice($petaPpn, (int) $r['spk_id'], (float) $r['nilai']));
+            $realisasi += $pjk['dibayar'];
         }
 
         $tanpaSpk = $db->query('SELECT COUNT(*) j, COALESCE(SUM(qty*harga),0) t FROM spk_detail WHERE spk_id IS NULL AND sekolah_id = ? AND is_deleted = 0', [$sid])->getRow();

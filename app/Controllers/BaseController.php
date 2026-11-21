@@ -346,6 +346,135 @@ abstract class BaseController extends Controller
         return [$terpakai + $tambahan <= $anggaran + 0.5, $anggaran - $terpakai, $anggaran];
     }
 
+    /**
+     * Peta PPN per SPK sekolah aktif: total nilai SPK dan PPN yang terkandung
+     * di dalamnya (baris bertanda kena PPN; PPN = 11/111 dari harga, karena
+     * harga toko dianggap sudah termasuk PPN).
+     */
+    protected function ppnSpkMap(): array
+    {
+        $map = [];
+        foreach ($this->db()->query(
+            'SELECT d.spk_id, COALESCE(SUM(d.qty*d.harga),0) AS total,
+                    COALESCE(SUM(CASE WHEN d.pajak = 1 THEN ROUND(0.11 * d.qty * d.harga / 1.11) ELSE 0 END),0) AS ppn
+             FROM spk_detail d JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0
+             WHERE s.sekolah_id = ? AND d.spk_id IS NOT NULL AND d.is_deleted = 0 GROUP BY d.spk_id',
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $map[(int) $r['spk_id']] = ['total' => (float) $r['total'], 'ppn' => (float) $r['ppn']];
+        }
+        return $map;
+    }
+
+    /** PPN terkandung pada satu invoice: proporsional terhadap total SPK-nya. */
+    protected function ppnInvoice(array $peta, int $spkId, float $nilai): float
+    {
+        $info = $peta[$spkId] ?? null;
+        if ($info === null || $info['total'] <= 0 || $info['ppn'] <= 0) {
+            return 0.0;
+        }
+        return round($info['ppn'] * $nilai / $info['total']);
+    }
+
+    /**
+     * Pajak pembelian menurut Juknis Revitalisasi SMP 2026:
+     * - DPP (dasar pengenaan pajak) = nilai tagihan di luar PPN.
+     * - PPN 11% dipungut bendahara dari bagian harga yang kena PPN.
+     * - PPh 22 = 1,5% dari DPP; pembelian dengan DPP sampai dengan
+     *   Rp2.000.000 TIDAK dipungut PPh 22.
+     * Mengembalikan [dpp, ppn, pph22, dibayar] dengan dibayar = nilai bersih
+     * yang diterima penyedia (nilai - PPN dipungut - PPh 22).
+     */
+    protected function pajakPembelian(float $nilai, float $ppnTermasuk): array
+    {
+        $dpp = max(0.0, $nilai - $ppnTermasuk);
+        $pph22 = $dpp > 2000000 ? round($dpp * 0.015) : 0.0;
+        return [
+            'dpp' => $dpp,
+            'ppn' => $ppnTermasuk,
+            'pph22' => $pph22,
+            'dibayar' => $nilai - $ppnTermasuk - $pph22,
+        ];
+    }
+
+    /**
+     * Ketentuan PBJ menurut nilai paket (Juknis Revitalisasi SMP 2026,
+     * mengacu Permendikbudristek 18/2022): bentuk surat pemesanan, metode
+     * penetapan penyedia + jumlah minimum calon penyedia, dan kewajiban
+     * materai pada kuitansi.
+     */
+    protected function ketentuanPbj(float $nilai): array
+    {
+        if ($nilai <= 10000000) {
+            $dokumen = 'Nota pembelian/pembayaran';
+        } elseif ($nilai <= 50000000) {
+            $dokumen = 'Kuitansi';
+        } else {
+            $dokumen = 'Surat Perintah Kerja (SPK)';
+        }
+        if ($nilai <= 50000000) {
+            $metode = 'Pemilihan langsung atau negosiasi harga';
+            $min = 1;
+        } elseif ($nilai <= 200000000) {
+            $metode = 'Perbandingan harga, kualitas, ketersediaan, dan kemudahan';
+            $min = 2;
+        } else {
+            $metode = 'Perbandingan harga, kualitas, ketersediaan, dan kemudahan';
+            $min = 3;
+        }
+        return [
+            'dokumen' => $dokumen,
+            'metode' => $metode,
+            'min_penyedia' => $min,
+            'materai' => $nilai >= 5000000,
+        ];
+    }
+
+    /** Pilihan pajak yang dipotong saat membayar baris Biaya Non-Gedung. */
+    protected function opsiPajakBiayaLain(): array
+    {
+        return [
+            '' => 'Tanpa potongan pajak',
+            'pph23' => 'PPh 23 — jasa/sewa (2%)',
+            'pph42-ska' => 'PPh 4 ayat 2 — perencana/pengawas ber-SKA (3,5%)',
+            'pph42' => 'PPh 4 ayat 2 — perencana/pengawas tanpa SKA (6%)',
+            'pph21-gol4' => 'PPh 21 — honor PNS Gol. IV (15%)',
+            'pph21-gol3' => 'PPh 21 — honor PNS Gol. III (5%)',
+            'pph21-gol2' => 'PPh 21 — honor PNS Gol. II (0%)',
+            'pph21-nonpns' => 'PPh 21 — honor non-PNS (5% dari 50%)',
+        ];
+    }
+
+    /** Nominal potongan pajak satu baris Biaya Non-Gedung menurut jenisnya. */
+    protected function potonganPajak(?string $jenis, float $jumlah): float
+    {
+        $tarif = [
+            'pph23' => 0.02,
+            'pph42-ska' => 0.035,
+            'pph42' => 0.06,
+            'pph21-gol4' => 0.15,
+            'pph21-gol3' => 0.05,
+            'pph21-gol2' => 0.0,
+            'pph21-nonpns' => 0.5 * 0.05,
+        ];
+        $kunci = $jenis ?? '';
+        return isset($tarif[$kunci]) ? round($jumlah * $tarif[$kunci]) : 0.0;
+    }
+
+    /**
+     * PPh 21 upah harian menurut Juknis: upah sampai dengan Rp450.000 per
+     * hari tidak dipotong; di atasnya dipotong 5% dari kelebihan per hari.
+     * Catatan: batas kumulatif Rp4.500.000 dalam 22 hari kerja per bulan
+     * untuk penerima yang sama perlu dicek manual dari riwayat pembayaran.
+     */
+    protected function pph21UpahHarian(float $tarifPerHari, float $orangHari): float
+    {
+        if ($tarifPerHari <= 450000) {
+            return 0.0;
+        }
+        return round(($tarifPerHari - 450000) * 0.05 * $orangHari);
+    }
+
     /** Harga acuan sebuah bahan: negosiasi -> penawaran -> pembanding terpilih -> RAB. */
     protected function hargaAcuan(int $bahanId): int
     {
