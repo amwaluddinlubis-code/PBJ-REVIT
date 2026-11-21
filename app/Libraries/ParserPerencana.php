@@ -213,6 +213,15 @@ class ParserPerencana
         // pengawasan) dan "ADMINISTRASI" (biaya pengelolaan P2SP).
         $ringkas['biaya_lain'] = $this->imporBiayaLain($p, $pilihan);
 
+        // 3d) Sheet Perabot → biaya non-gedung (parser khusus: kelompok
+        // per ruangan, hanya baris yang terisi jumlah).
+        $perabot = $this->imporPerabot($p, $pilihan);
+        if ($perabot['baris'] > 0) {
+            $ringkas['perabot'] = $perabot;
+            $ringkas['biaya_lain']['baris'] += $perabot['baris'];
+            $ringkas['biaya_lain']['total'] += $perabot['total'];
+        }
+
         // 4) Sheet per gedung / non-gedung menurut pemetaan peninjauan.
         // Sheet referensi (harga, analisa, rekap, input, harsat) sudah
         // ditangani di langkah 1-3 dan tidak masuk putaran ini.
@@ -226,6 +235,24 @@ class ParserPerencana
             $dipetakan = isset($pilihan[$nama]);
             if ($norm === 'prcn dan pgws' || $norm === 'administrasi') {
                 // Bawaan non-gedung (langkah 3c); ke gedung hanya bila
+                // pengguna memetakannya secara eksplisit di peninjauan.
+                if ($this->tujuan($pilihan, $nama, 'non_gedung') !== 'gedung') {
+                    continue;
+                }
+                $umum = $this->bacaItemUmum($p, $nama);
+                if ($umum !== null) {
+                    $gid = $this->simpanGedung(trim($nama), $umum, $pilihan[$nama]['nama_gedung'] ?? null);
+                    $ringkas['gedung'][] = [
+                        'nama' => trim($nama), 'gedung_id' => $gid,
+                        'pekerjaan' => count($umum['items']),
+                        'total_hitung' => array_sum(array_column($umum['items'], 'jumlah')),
+                        'total_sheet' => $umum['grand'],
+                    ];
+                }
+                continue;
+            }
+            if (str_contains($norm, 'perabot')) {
+                // Bawaan non-gedung (langkah 3d); ke gedung hanya bila
                 // pengguna memetakannya secara eksplisit di peninjauan.
                 if ($this->tujuan($pilihan, $nama, 'non_gedung') !== 'gedung') {
                     continue;
@@ -627,6 +654,123 @@ class ParserPerencana
     }
 
     /**
+     * Baris terisi sheet Perabot: daftar perabot per ruangan (judul seksi
+     * angka romawi), uraian di kolom sesudah judul, berkode (M-1, L-2, …).
+     * Hanya baris dengan Jumlah Harga > 0 yang diambil — sebagian besar
+     * sheet adalah daftar kebutuhan yang volumenya belum diisi.
+     */
+    private function barisPerabot(PembacaXlsxMentah $p, string $sheet): array
+    {
+        $kolom = null;
+        $seksi = 'Umum';
+        $items = [];
+        foreach ($this->baris($p, $sheet, 20) as $sel) {
+            if ($kolom === null) {
+                $peta = [];
+                foreach ($sel as $j => $v) {
+                    $t = self::teks($v);
+                    if ($t !== '') {
+                        $peta[mb_strtolower($t)] = $j;
+                    }
+                }
+                if (isset($peta['uraian pekerjaan'], $peta['jumlah harga'])) {
+                    $kolom = [
+                        'uraian' => $peta['uraian pekerjaan'] + 1,
+                        'kode'   => $peta['kode'] ?? null,
+                        'volume' => $peta['volume'] ?? null,
+                        'sat'    => $peta['sat'] ?? ($peta['satuan'] ?? null),
+                        'harga'  => $peta['harga satuan'] ?? null,
+                        'jumlah' => $peta['jumlah harga'],
+                    ];
+                }
+                continue;
+            }
+            $c1 = self::teks($sel[1] ?? null);
+            $c2 = self::teks($sel[2] ?? null);
+            if (preg_match('/^[IVX]+\.?$/', $c1) && $c2 !== '') {
+                $seksi = $c2;
+                continue;
+            }
+            $uraian = self::teks($sel[$kolom['uraian']] ?? null);
+            $kode   = $kolom['kode'] !== null ? self::teks($sel[$kolom['kode']] ?? null) : '';
+            $jumlah = self::num($sel[$kolom['jumlah']] ?? null);
+            if ($uraian === '' || $kode === '' || $jumlah <= 0) {
+                continue;
+            }
+            if (preg_match('/^perabot r/i', $uraian)) {
+                continue; // baris label subtotal blok "Perabot R …"
+            }
+            $items[] = [
+                'kelompok' => 'Perabot — ' . $this->bersihSeksiPerabot($seksi),
+                'uraian'   => $uraian,
+                'volume'   => $kolom['volume'] !== null ? self::num($sel[$kolom['volume']] ?? null) : 0,
+                'satuan'   => $kolom['sat'] !== null ? self::teks($sel[$kolom['sat']] ?? null) : '',
+                'harga'    => $kolom['harga'] !== null ? self::num($sel[$kolom['harga']] ?? null) : 0,
+                'jumlah'   => $jumlah,
+                'kode'     => $kode,
+            ];
+        }
+        return $items;
+    }
+
+    private function bersihSeksiPerabot(string $judul): string
+    {
+        $j = trim((string) preg_replace('/^perabot\s+/i', '', trim($judul)));
+        if ($j === '') {
+            return 'Umum';
+        }
+        if (mb_strtoupper($j) === $j) {
+            $j = mb_convert_case(mb_strtolower($j), MB_CASE_TITLE, 'UTF-8');
+        }
+        return $j;
+    }
+
+    private function ringkasPerabot(PembacaXlsxMentah $p, string $sheet): array
+    {
+        $items = $this->barisPerabot($p, $sheet);
+        return [count($items), array_sum(array_column($items, 'jumlah'))];
+    }
+
+    /**
+     * Sheet Perabot → biaya_lain (kelompok "Perabot — <ruangan>").
+     * Baris sumber impor diganti segar setiap impor ulang.
+     */
+    private function imporPerabot(PembacaXlsxMentah $p, array $pilihan = []): array
+    {
+        $kosong = ['baris' => 0, 'total' => 0.0];
+        $sheet = null;
+        foreach ($p->daftarSheet() as $n) {
+            if (str_contains(self::normal($n), 'perabot')) {
+                $sheet = $n;
+                break;
+            }
+        }
+        if ($sheet === null) {
+            return $kosong;
+        }
+        if ($this->tujuan($pilihan, $sheet, 'non_gedung') !== 'non_gedung') {
+            return $kosong;
+        }
+        $items = $this->barisPerabot($p, $sheet);
+        $this->db->table('biaya_lain')->where('sekolah_id', $this->sid)
+            ->where('sumber', 'impor')->like('kelompok', 'Perabot', 'after')->delete();
+        $total = 0.0;
+        foreach ($items as $it) {
+            $this->db->table('biaya_lain')->insert([
+                'sekolah_id' => $this->sid, 'kelompok' => $it['kelompok'],
+                'uraian' => $it['uraian'], 'volume' => $it['volume'] ?: 1,
+                'satuan' => $it['satuan'] !== '' ? $it['satuan'] : 'bh',
+                'periode' => 1, 'satuan_periode' => '',
+                'harga_satuan' => $it['harga'], 'jumlah' => $it['jumlah'],
+                'keterangan' => 'Kode ' . $it['kode'] . ' · sheet Perabot',
+                'sumber' => 'impor',
+            ]);
+            $total += $it['jumlah'];
+        }
+        return ['baris' => count($items), 'total' => $total];
+    }
+
+    /**
      * Pratinjau berkas untuk tahap peninjauan impor: daftar sheet dengan
      * jenis terdeteksi, saran tujuan, jumlah baris data, dan total nilai.
      * Murni membaca berkas — tidak menyentuh database.
@@ -669,6 +813,11 @@ class ParserPerencana
                     $e['baris']++;
                     $e['total'] += self::num($sel[10]);
                 }
+            } elseif (str_contains($norm, 'perabot')) {
+                $e['jenis'] = 'Perabot (non-gedung)';
+                $e['kategori'] = 'non_gedung'; $e['saran'] = 'non_gedung';
+                [$nP, $tP] = $this->ringkasPerabot($p, $nama);
+                $e['baris'] = $nP; $e['total'] = $tP;
             } elseif ($this->sheetDilewati($nama)) {
                 $e['jenis'] = 'Lembar kerja / gambar / rekap lain';
             } else {
