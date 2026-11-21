@@ -475,6 +475,114 @@ abstract class BaseController extends Controller
         return round(($tarifPerHari - 450000) * 0.05 * $orangHari);
     }
 
+    /** Label jenis bukti setor ke kas negara. */
+    protected function labelSetor(string $jenis): string
+    {
+        return [
+            'pph22' => 'PPh Pasal 22',
+            'ppn' => 'PPN dipungut',
+            'pph21' => 'PPh Pasal 21',
+            'pph23' => 'PPh Pasal 23',
+            'pph42' => 'PPh Pasal 4 ayat 2',
+            'sisa_dana' => 'Pengembalian sisa dana bantuan (SIMPONI)',
+        ][$jenis] ?? $jenis;
+    }
+
+    /**
+     * Gabungan seluruh transaksi kas sekolah aktif untuk pembukuan
+     * (BKU / Buku Bank / Buku Pembantu Kas Tunai menurut Juknis):
+     * transaksi manual (kas_transaksi) + pembayaran invoice (keluar via
+     * bank, sebesar nilai bersih yang diterima penyedia) + pembayaran
+     * upah (keluar tunai, sebesar nilai bersih diterima pekerja) +
+     * penyetoran ke kas negara (bukti_setor). Diurutkan tanggal menaik.
+     * $kanal: null = semua (BKU), 'bank' = Buku Bank, 'tunai' = BPKT.
+     */
+    protected function gabungBukuKas(?string $kanal = null): array
+    {
+        $db = $this->db();
+        $sid = $this->sid();
+        $entri = [];
+
+        foreach ($db->table('kas_transaksi')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $k) {
+            $entri[] = [
+                'tanggal' => $k['tanggal'], 'uraian' => $k['uraian'],
+                'masuk' => $k['jenis'] === 'masuk' ? (float) $k['jumlah'] : 0.0,
+                'keluar' => $k['jenis'] === 'keluar' ? (float) $k['jumlah'] : 0.0,
+                'kanal' => $k['kanal'], 'sumber' => 'manual', 'ref_id' => (int) $k['id'],
+                'kategori' => $k['kategori'],
+            ];
+        }
+
+        $peta = $this->ppnSpkMap();
+        foreach ($db->query(
+            'SELECT p.tanggal AS tgl_bayar, i.tanggal AS tgl_inv, i.nomor_urut, i.nilai, i.spk_id,
+                    s.nomor AS spk_nomor, py.nama AS penyedia
+             FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0
+             JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0
+             LEFT JOIN penyedia py ON py.id = s.penyedia_id
+             WHERE s.sekolah_id = ? AND p.is_deleted = 0',
+            [$sid]
+        )->getResultArray() as $r) {
+            $pjk = $this->pajakPembelian((float) $r['nilai'], $this->ppnInvoice($peta, (int) $r['spk_id'], (float) $r['nilai']));
+            $entri[] = [
+                'tanggal' => $r['tgl_bayar'] ?: $r['tgl_inv'],
+                'uraian' => 'Pembayaran Invoice ' . (int) $r['nomor_urut'] . ' (SPK ' . (int) $r['spk_nomor'] . ')'
+                    . ($r['penyedia'] ? ' — ' . $r['penyedia'] : '')
+                    . '; tagihan ' . $this->rp($r['nilai'])
+                    . ($pjk['ppn'] > 0 ? '; PPN dipungut ' . $this->rp($pjk['ppn']) : '')
+                    . ($pjk['pph22'] > 0 ? '; PPh 22 ' . $this->rp($pjk['pph22']) : ''),
+                'masuk' => 0.0, 'keluar' => $pjk['dibayar'],
+                'kanal' => 'bank', 'sumber' => 'invoice', 'ref_id' => (int) $r['nomor_urut'],
+                'kategori' => 'belanja',
+            ];
+        }
+
+        foreach ($db->table('upah_bayar')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $u) {
+            $pph21 = $this->pph21UpahHarian((float) $u['tarif'], (float) $u['orang_hari']);
+            $entri[] = [
+                'tanggal' => $u['tanggal'],
+                'uraian' => 'Upah ' . $u['jenis_tenaga'] . ($u['penerima'] ? ' — ' . $u['penerima'] : '')
+                    . ' (' . rtrim(rtrim(number_format((float) $u['orang_hari'], 2, ',', '.'), '0'), ',') . ' OH × ' . $this->rp($u['tarif']) . ')'
+                    . ($pph21 > 0 ? '; PPh 21 ' . $this->rp($pph21) : ''),
+                'masuk' => 0.0, 'keluar' => (float) $u['jumlah'] - $pph21,
+                'kanal' => 'tunai', 'sumber' => 'upah', 'ref_id' => (int) $u['id'],
+                'kategori' => 'belanja',
+            ];
+        }
+
+        foreach ($db->table('bukti_setor')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $b) {
+            $entri[] = [
+                'tanggal' => $b['tanggal_setor'],
+                'uraian' => 'Setor ' . $this->labelSetor($b['jenis']) . ($b['masa'] ? ' masa ' . $b['masa'] : '')
+                    . ($b['ntpn'] ? ' — NTPN ' . $b['ntpn'] : ''),
+                'masuk' => 0.0, 'keluar' => (float) $b['jumlah'],
+                'kanal' => 'bank', 'sumber' => 'setor', 'ref_id' => (int) $b['id'],
+                'kategori' => $b['jenis'] === 'sisa_dana' ? 'sisa_dana' : 'pajak',
+            ];
+        }
+
+        if ($kanal !== null) {
+            $entri = array_values(array_filter($entri, static fn ($e) => $e['kanal'] === $kanal));
+        }
+        usort($entri, static fn ($a, $b) => [$a['tanggal'] ?? '9999', $a['sumber'], $a['ref_id']] <=> [$b['tanggal'] ?? '9999', $b['sumber'], $b['ref_id']]);
+        return $entri;
+    }
+
+    /** Penerimaan dana bantuan per tahap dari kas_transaksi (kategori penerimaan). */
+    protected function penerimaanPerTahap(): array
+    {
+        $hasil = [1 => 0.0, 2 => 0.0, 'lain' => 0.0];
+        foreach ($this->db()->table('kas_transaksi')->where(['sekolah_id' => $this->sid(), 'kategori' => 'penerimaan', 'jenis' => 'masuk', 'is_deleted' => 0])->get()->getResultArray() as $k) {
+            $t = (int) ($k['tahap'] ?? 0);
+            if ($t === 1 || $t === 2) {
+                $hasil[$t] += (float) $k['jumlah'];
+            } else {
+                $hasil['lain'] += (float) $k['jumlah'];
+            }
+        }
+        return $hasil;
+    }
+
     /** Harga acuan sebuah bahan: negosiasi -> penawaran -> pembanding terpilih -> RAB. */
     protected function hargaAcuan(int $bahanId): int
     {
