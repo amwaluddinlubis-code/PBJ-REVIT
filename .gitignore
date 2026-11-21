@@ -11,3 +11,5 @@ writable/debugbar/*
 !writable/debugbar/.gitkeep
 writable/uploads/*
 !writable/uploads/.gitkeep
+writable/impor/*
+!writable/impor/Taruh berkas xlsx di folder ini.txt

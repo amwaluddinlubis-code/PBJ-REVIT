@@ -240,6 +240,10 @@ html.gelap .pesan.galat { background: #33141a; border-color: #6e2430; color: #ff
 html.gelap .peringatan { background: #2e2410; border-color: #5c4a1d; color: #f2cf8a; }
 html.gelap .login { background: #0a1120; }
 html.gelap .login-brand { color: var(--ta-teks); }
+html.gelap .login-form-side { background: radial-gradient(circle at 12% 90%, rgba(9, 104, 246, .08), transparent 15rem), #0a1120; }
+html.gelap .login-form-wrap form { background: #0f1a2e; border-color: #22334f; box-shadow: 0 14px 38px rgba(0, 0, 0, .22); }
+html.gelap .login-field input { background: #0c1526; border-color: #3d5578; }
+html.gelap .login-field input:focus { background: #0f1a2e; border-color: #0968f6; }
 html.gelap .bar { background: #22334f; }
 html.gelap .paginasi button { background: #0f1a2e; color: var(--ta-teks); }
 
@@ -279,3 +283,492 @@ html.gelap .toast-isi p { color: #b8c2d4; }
 html.gelap .mk-kartu { background: #1c2534; }
 html.gelap .mk-kartu p { color: #b8c2d4; }
 html.gelap .mk-tombol.batal { background: transparent; border-color: #3b4a61; color: #e6ebf2; }
+
+/* ===== Modernisasi visual 2026 ===== */
+:root {
+  --ta-radius-sm: 8px;
+  --ta-radius-md: 14px;
+  --ta-radius-lg: 18px;
+  --ta-shadow-sm: 0 1px 2px rgba(16, 24, 40, .04), 0 4px 12px rgba(16, 24, 40, .025);
+  --ta-shadow-md: 0 12px 32px rgba(16, 24, 40, .09);
+}
+
+body {
+  background:
+    radial-gradient(circle at 100% 0, rgba(9, 104, 246, .025), transparent 26rem),
+    var(--ta-latar);
+  line-height: 1.5;
+}
+
+.samping {
+  box-shadow: 8px 0 24px rgba(16, 24, 40, .025);
+  z-index: 40;
+}
+
+.samping .logo {
+  padding: 8px 8px 16px;
+  margin-bottom: 16px;
+}
+
+.kotak-logo,
+.profil .ava,
+.topbar .ava,
+.dd-kepala .ava,
+.dropdown-user .ava {
+  background: linear-gradient(135deg, #0968f6, #0049b8);
+  box-shadow: 0 6px 14px rgba(9, 104, 246, .18);
+}
+
+.samping nav a,
+.samping nav .parent {
+  border: 1px solid transparent;
+  margin-bottom: 3px;
+  transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+
+.samping nav a:hover,
+.samping nav .parent:hover {
+  transform: translateX(2px);
+}
+
+.samping nav a.aktif,
+.samping nav .parent.aktif {
+  border-color: rgba(9, 104, 246, .08);
+  box-shadow: inset 3px 0 0 var(--ta-biru);
+}
+
+.topbar {
+  height: 66px;
+  padding: 10px 28px;
+  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, .92);
+}
+
+.topbar .cari {
+  border-radius: 10px;
+  min-height: 40px;
+  background: #f7f9fc;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.topbar .cari:focus-within {
+  border-color: #89adff;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(9, 104, 246, .09);
+}
+
+.topbar-kanan {
+  gap: 8px;
+}
+
+.cip-top {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.isi {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 26px 28px 48px;
+}
+
+.atas {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  font-size: 18px;
+  letter-spacing: -.02em;
+  margin-bottom: 20px;
+}
+
+.dashboard-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 150px;
+  margin-bottom: 16px;
+  padding: 28px 30px;
+  color: #fff;
+  border-radius: var(--ta-radius-lg);
+  overflow: hidden;
+  position: relative;
+  background:
+    radial-gradient(circle at 88% 20%, rgba(77, 196, 255, .32), transparent 18rem),
+    linear-gradient(135deg, #082a65 0%, #075bc7 72%, #0968f6 100%);
+  box-shadow: 0 14px 36px rgba(4, 73, 168, .16);
+}
+
+.dashboard-hero::after {
+  content: "";
+  position: absolute;
+  right: -70px;
+  bottom: -130px;
+  width: 280px;
+  height: 280px;
+  border: 40px solid rgba(255, 255, 255, .055);
+  border-radius: 50%;
+}
+
+.dashboard-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-kicker {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: rgba(255, 255, 255, .72);
+  font-weight: 700;
+}
+
+.dashboard-hero h1 {
+  margin: 0 0 5px;
+  font-size: 21px;
+  line-height: 1.25;
+  letter-spacing: -.02em;
+}
+
+.dashboard-hero p {
+  margin: 0;
+  color: rgba(255, 255, 255, .78);
+  font-size: 11px;
+}
+
+.dashboard-aksi {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.dashboard-hero .tombol,
+.dashboard-hero .tombol.abu {
+  min-height: 40px;
+  border-color: rgba(255, 255, 255, .22);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+
+.dashboard-hero .tombol.abu:hover,
+.dashboard-hero .tombol:hover {
+  background: rgba(255, 255, 255, .2);
+  border-color: rgba(255, 255, 255, .38);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.kartu-kpi {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.kpi {
+  min-height: 155px;
+  border-radius: var(--ta-radius-md);
+  box-shadow: var(--ta-shadow-sm);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.kpi:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--ta-shadow-md);
+  border-color: #cfe0ff;
+}
+
+.kpi .label {
+  min-height: 18px;
+  font-size: 10.5px;
+}
+
+.kpi .nilai {
+  margin-top: 8px;
+  font-size: 17px;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel,
+.peringatan {
+  border-radius: var(--ta-radius-md);
+  box-shadow: var(--ta-shadow-sm);
+}
+
+.panel {
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+
+.panel h2 {
+  font-size: 13px;
+  letter-spacing: -.01em;
+  margin-bottom: 14px;
+}
+
+table {
+  border: 1px solid var(--ina-neutral-100, #f2f2f2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th {
+  height: 40px;
+  background: #f8fafc;
+  border-top: 0;
+  text-transform: uppercase;
+  letter-spacing: .035em;
+  font-size: 9px;
+}
+
+td {
+  height: 48px;
+  transition: background .15s ease;
+}
+
+tbody tr:hover td,
+table tr:hover td {
+  background: #fafcff;
+}
+
+.tombol,
+button {
+  transition: background .16s ease, border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.tombol:hover,
+button:hover {
+  transform: translateY(-1px);
+}
+
+.peringatan {
+  border-left: 4px solid #e9a23b;
+}
+
+.login-grid {
+  background: #fff;
+}
+
+.login-form-wrap {
+  max-width: 430px;
+}
+
+.login-field input {
+  min-height: 46px;
+  border-color: #d7deea;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .025);
+}
+
+.login-submit {
+  min-height: 46px;
+  box-shadow: 0 8px 18px rgba(9, 104, 246, .18);
+}
+
+.login-brand-side {
+  border-radius: 28px 0 0 28px;
+  margin: 12px 12px 12px 0;
+  min-height: calc(100vh - 24px);
+}
+
+/* ===== Login modern ===== */
+.login-form-side {
+  position: relative;
+  background:
+    radial-gradient(circle at 12% 90%, rgba(9, 104, 246, .045), transparent 15rem),
+    #fff;
+}
+
+.login-form-wrap {
+  max-width: 400px;
+  animation: login-masuk .55s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+@keyframes login-masuk {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-brand {
+  margin-bottom: 34px;
+}
+
+.login-brand .kotak-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+.login-brand .nama-logo {
+  font-size: 13px;
+}
+
+.login-heading {
+  margin-bottom: 22px;
+}
+
+.login-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+  color: var(--ta-biru);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.login-badge span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #12b76a;
+  box-shadow: 0 0 0 4px rgba(18, 183, 106, .11);
+}
+
+.login-form-wrap h1 {
+  font-size: 27px;
+  letter-spacing: -.035em;
+  margin-bottom: 7px;
+}
+
+.login-form-wrap .sub {
+  max-width: 350px;
+  margin-bottom: 0;
+  font-size: 12px;
+}
+
+.login-form-wrap form {
+  padding: 20px;
+  margin-top: 6px;
+  border: 1px solid #edf0f5;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 14px 38px rgba(16, 24, 40, .055);
+}
+
+.login-form-wrap form label:first-of-type {
+  margin-top: 0;
+}
+
+.login-field input {
+  background: #fbfcfe;
+  border-color: #dde4ef;
+  border-radius: 11px;
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.login-field input:focus {
+  background: #fff;
+  border-color: #89adff;
+  box-shadow: 0 0 0 4px rgba(9, 104, 246, .08);
+}
+
+.login-submit {
+  border-radius: 11px;
+  background: linear-gradient(135deg, #0968f6, #0049b8);
+  border: 0;
+  letter-spacing: .01em;
+  box-shadow: 0 10px 22px rgba(9, 104, 246, .22);
+}
+
+.login-submit:hover {
+  background: linear-gradient(135deg, #247cff, #075dcf);
+  box-shadow: 0 12px 26px rgba(9, 104, 246, .28);
+}
+
+.login-foot {
+  margin-top: 20px;
+  font-size: 9.5px;
+}
+
+.login-brand-side {
+  box-shadow: inset 1px 0 rgba(255, 255, 255, .12), 0 12px 40px rgba(16, 24, 40, .12);
+}
+
+.login-brand-inner {
+  width: 100%;
+  max-width: 500px;
+}
+
+.login-brand-logo {
+  padding: 8px 10px;
+  width: fit-content;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .06);
+  backdrop-filter: blur(10px);
+}
+
+.login-fitur li {
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.login-fitur li:hover {
+  background: rgba(255, 255, 255, .065);
+  border-color: rgba(255, 255, 255, .12);
+  transform: translateX(4px);
+}
+
+html.gelap .topbar {
+  background: rgba(15, 26, 46, .92);
+}
+
+html.gelap .topbar .cari {
+  background: #0c1526;
+}
+
+html.gelap .kpi:hover {
+  border-color: #3d5578;
+}
+
+html.gelap th {
+  background: #13203a;
+}
+
+html.gelap tbody tr:hover td,
+html.gelap table tr:hover td {
+  background: #13203a;
+}
+
+@media (max-width: 1180px) {
+  .kartu-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cip-top { display: none; }
+  .dashboard-hero { min-height: 170px; }
+}
+
+@media (max-width: 760px) {
+  .topbar { height: 58px; padding: 8px 12px; }
+  .topbar .cari { flex: 1; width: auto; min-width: 0; }
+  .topbar-kanan { margin-left: 0; }
+  .grup-font { display: none; }
+  .user-ringkas { display: none; }
+  .tombol-user { padding: 2px; }
+  .dropdown-user { position: fixed; right: 12px; top: 62px; }
+  .isi { padding: 16px 12px 36px; }
+  .atas { font-size: 16px; margin-bottom: 12px; }
+  .dashboard-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    min-height: 0;
+    padding: 22px 20px;
+  }
+  .dashboard-hero h1 { font-size: 18px; }
+  .dashboard-aksi { width: 100%; }
+  .dashboard-aksi .tombol { flex: 1; justify-content: center; }
+  .kartu-kpi { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi { min-height: 130px; padding: 13px; }
+  .kpi .nilai { font-size: 14.5px; }
+  .panel { padding: 14px 12px; }
+  .login-brand-side { border-radius: 0; margin: 0; min-height: 210px; }
+}

@@ -1,0 +1,2 @@
+Salin berkas .xlsx dokumen perencana ke folder ini, lalu buka menu Impor Dokumen Perencana di aplikasi dan klik Impor.
+Cara ini tidak kena batas ukuran unggah PHP.

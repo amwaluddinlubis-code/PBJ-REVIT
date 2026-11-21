@@ -25,8 +25,11 @@ try {
           <div class="nama-logo">Analisa Perencana<small>Perencanaan · Belanja · LPJ</small></div>
         </div>
 
-        <h1>Masuk ke akun Anda</h1>
-        <p class="sub">Kelola perencanaan pembangunan, belanja, dan LPJ sekolah dalam satu aplikasi.</p>
+        <div class="login-heading">
+          <span class="login-badge"><span></span> Portal Pengelola Sekolah</span>
+          <h1>Selamat datang kembali</h1>
+          <p class="sub">Masuk untuk mengelola pembangunan, belanja, dan LPJ sekolah.</p>
+        </div>
 
         <?php if (session()->getFlashdata('galat')): ?>
           <div class="pesan galat"><?= esc(session()->getFlashdata('galat')) ?></div>
