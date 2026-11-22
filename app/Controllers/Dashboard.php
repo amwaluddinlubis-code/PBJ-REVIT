@@ -29,14 +29,38 @@ class Dashboard extends BaseController
             [$sid]
         )->getResultArray();
 
-        $sisaNegatif = $db->query(
-            'SELECT b.kode, b.nama, (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_rab,
+        // Sisa bahan negatif: pemakaian SPK melebihi kebutuhan RAB. Patokan
+        // qty RAB sama persis dengan kolom SISA di Master Bahan: kebutuhan
+        // BOQ x koefisien analisa untuk bahan yang tertaut pekerjaan gedung
+        // didanai, dan jumlah kolom warisan qty_rkb/adm/toilet untuk bahan
+        // lainnya. Kolom warisan itu selalu 0 pada sekolah hasil impor
+        // perencana, jadi memakainya untuk semua bahan membuat peringatan
+        // ini berbunyi palsu begitu ada satu saja detail SPK.
+        $petaButuh = [];
+        foreach ($this->kebutuhanBahanSekolah()['tertaut'] as $b) {
+            $petaButuh[(int) $b['bahan_id']] = (float) $b['qty_butuh'];
+        }
+        $pemakaian = $db->query(
+            'SELECT b.id, b.kode, b.nama, (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_warisan,
                     COALESCE(SUM(d.qty),0) AS terpakai
              FROM bahan b LEFT JOIN spk_detail d ON d.bahan_id = b.id AND d.is_deleted = 0
              WHERE b.sekolah_id = ? AND b.is_deleted = 0
-             GROUP BY b.id HAVING terpakai > qty_rab',
+             GROUP BY b.id HAVING terpakai > 0',
             [$sid]
         )->getResultArray();
+        $sisaNegatif = [];
+        foreach ($pemakaian as $t) {
+            // Bahan tertaut memakai kebutuhan analisa; bahan lain memakai
+            // jumlah kolom warisan, sama seperti Master Bahan.
+            $qtyRab = $petaButuh[(int) $t['id']] ?? (float) $t['qty_warisan'];
+            if ((float) $t['terpakai'] > $qtyRab) {
+                $sisaNegatif[] = [
+                    'kode' => $t['kode'], 'nama' => $t['nama'],
+                    'qty_rab' => $qtyRab, 'terpakai' => (float) $t['terpakai'],
+                ];
+            }
+        }
+        usort($sisaNegatif, static fn ($a, $b) => ($b['terpakai'] - $b['qty_rab']) <=> ($a['terpakai'] - $a['qty_rab']));
 
         $perSpk = $db->query(
             'SELECT s.nomor, s.tanggal, s.paket, s.status, p.nama AS penyedia,
