@@ -3585,3 +3585,137 @@ details.panel-lipat > summary .kecil-teks { font-weight: 500; }
 @media print {
   details.panel-lipat > summary::after { display: none; }
 }
+
+/* === Fase 2 (2026-11-22): komponen ala Apple ===
+   Tombol pil, segmented control, sidebar pil, KPI lingkaran, modal sheet. */
+
+/* 1) Tombol pil penuh + rasa tertekan; target sentuh lebih besar di ponsel. */
+body:not(.login) .tombol,
+body:not(.login) button:not(.sc-tombol):not(.toast-tutup):not(.parent) {
+  border-radius: 999px;
+}
+body:not(.login) .tombol:active,
+body:not(.login) button:not(.sc-tombol):not(.toast-tutup):not(.parent):active {
+  transform: scale(.98);
+}
+@media (max-width: 760px) {
+  body:not(.login) .paginasi button { min-height: 40px; min-width: 40px; }
+  body:not(.login) .aksi .tombol,
+  body:not(.login) .aksi button { min-height: 44px; }
+}
+
+/* 2) Segmented control untuk grup .tab (mis. tab Master Bahan):
+   wadah abu translusen, segmen aktif putih berbayang. */
+.tab {
+  display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
+  gap: 2px;
+  padding: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(15, 35, 70, .06);
+}
+.tab a,
+.tab span {
+  padding: 7px 14px;
+  border: 0;
+  margin: 0;
+  border-radius: 999px;
+  color: var(--ta-teks-2);
+  font-weight: 550;
+}
+.tab a:hover { color: var(--ta-teks); text-decoration: none; }
+.tab .aktif {
+  background: #fff;
+  color: var(--ta-teks);
+  font-weight: 600;
+  border-bottom-color: transparent;
+  box-shadow: 0 1px 3px rgba(16, 34, 62, .14);
+}
+html.gelap .tab { background: rgba(255, 255, 255, .08); }
+html.gelap .tab a,
+html.gelap .tab span { color: rgba(255, 255, 255, .75); }
+html.gelap .tab .aktif {
+  background: rgba(255, 255, 255, .18);
+  color: #fff;
+  box-shadow: none;
+}
+
+/* 3) Sidebar: item aktif menjadi pil translusen (tanpa garis aksen kiri). */
+body:not(.login) .samping nav a.aktif,
+body:not(.login) .samping nav .parent.aktif {
+  background: rgba(255, 255, 255, .20);
+  border-color: transparent;
+  box-shadow: none;
+  border-radius: 10px;
+  color: #fff;
+}
+body:not(.login) .samping nav .anak a.aktif {
+  background: rgba(255, 255, 255, .16);
+  border-radius: 8px;
+}
+html.gelap body:not(.login) .samping nav a.aktif,
+html.gelap body:not(.login) .samping nav .parent.aktif {
+  background: rgba(255, 255, 255, .16);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* 4) Kartu KPI: ikon menjadi lingkaran tint, angka lebih besar. */
+.kpi::before { border-radius: 50%; }
+body:not(.login) .kpi .nilai {
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+body:not(.login) .kpi .label { font-size: 11px; }
+
+/* 5) Modal: latar blur; di ponsel menjadi sheet menempel di bawah. */
+.mk-lapik {
+  backdrop-filter: blur(6px);
+  background: rgba(13, 22, 38, .48);
+}
+@media (max-width: 760px) {
+  .mk-lapik { align-items: flex-end; padding: 0; }
+  .mk-kartu {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh;
+    overflow-y: auto;
+    border-radius: 20px 20px 0 0 !important;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+}
+
+/* 6) Field form gaya terisi (filled): latar lembut, cincin fokus biru. */
+body:not(.login) input,
+body:not(.login) select,
+body:not(.login) textarea {
+  background: var(--ui-surface-soft);
+  border-color: rgba(15, 35, 70, .10);
+}
+body:not(.login) input:focus,
+body:not(.login) select:focus,
+body:not(.login) textarea:focus {
+  background: #fff;
+  border-color: #77a5ed;
+  box-shadow: 0 0 0 4px rgba(9, 104, 246, .12);
+}
+html.gelap body:not(.login) input,
+html.gelap body:not(.login) select,
+html.gelap body:not(.login) textarea {
+  background: rgba(255, 255, 255, .05);
+  border-color: rgba(255, 255, 255, .12);
+}
+html.gelap body:not(.login) input:focus,
+html.gelap body:not(.login) select:focus,
+html.gelap body:not(.login) textarea:focus {
+  background: rgba(255, 255, 255, .08);
+}
+
+/* Fase 2 koreksi: tombol hero ikut pil penuh (aturan hero lama lebih spesifik). */
+body:not(.login) .dashboard-hero .tombol,
+body:not(.login) .dashboard-hero .tombol.abu {
+  border-radius: 999px;
+}
