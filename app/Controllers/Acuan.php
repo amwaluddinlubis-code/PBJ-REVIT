@@ -56,6 +56,116 @@ class Acuan extends BaseController
             'Acuan ' . $ac['kode_kita'] . ' vs AHSP Nasional');
     }
 
+    /** Samakan koefisien satu grup komponen ke nilai acuan nasional. */
+    public function samakan()
+    {
+        if ($d = $this->penjagaPeran(['operator'])) {
+            return $d;
+        }
+        $acuanId = (int) $this->request->getPost('acuan_id');
+        $grup = (string) $this->request->getPost('grup');
+        [$ac, $analisa] = $this->pasangan($acuanId);
+        if (! $ac || ! $analisa) {
+            return redirect()->to('acuan')->with('galat', 'Pasangan acuan/analisa tidak ditemukan.');
+        }
+        $db = $this->db();
+        $db->transStart();
+        $ket = $this->terapkanSamakan($ac, $analisa, $grup);
+        $db->transComplete();
+        if ($ket === null || ! $db->transStatus()) {
+            return redirect()->to('acuan/' . $acuanId)->with('galat', 'Komponen tidak dapat disamakan dari sini (grup berisi lebih dari satu komponen atau satuan tidak terkonversi) — ubah lewat modul Analisa.');
+        }
+        return redirect()->to('acuan/' . $acuanId)->with('sukses', 'Koefisien disamakan ke acuan nasional: ' . $ket);
+    }
+
+    /** Samakan semua grup komponen yang menyimpang dan dapat disamakan. */
+    public function samakanSemua()
+    {
+        if ($d = $this->penjagaPeran(['operator'])) {
+            return $d;
+        }
+        $acuanId = (int) $this->request->getPost('acuan_id');
+        [$ac, $analisa] = $this->pasangan($acuanId);
+        if (! $ac || ! $analisa) {
+            return redirect()->to('acuan')->with('galat', 'Pasangan acuan/analisa tidak ditemukan.');
+        }
+        $db = $this->db();
+        $banding = $this->susunBanding($ac, $analisa);
+        $db->transStart();
+        $n = 0;
+        foreach ($banding['baris'] as $b) {
+            if ($b['bisa'] && $this->terapkanSamakan($ac, $analisa, (string) $b['grup']) !== null) {
+                $n++;
+            }
+        }
+        $db->transComplete();
+        if (! $db->transStatus()) {
+            return redirect()->to('acuan/' . $acuanId)->with('galat', 'Penyamaan dibatalkan karena kegagalan di tengah proses.');
+        }
+        return redirect()->to('acuan/' . $acuanId)->with('sukses', $n . ' koefisien komponen disamakan ke acuan nasional; harga satuan analisa dihitung ulang.');
+    }
+
+    /** @return array{0:?array, 1:?array} [baris acuan, baris analisa sekolah aktif] */
+    private function pasangan(int $acuanId): array
+    {
+        if (! $this->acuanAda()) {
+            return [null, null];
+        }
+        $db = $this->db();
+        $ac = $db->table('ahsp_acuan')->where('id', $acuanId)->where('is_deleted', 0)->get()->getRowArray();
+        if (! $ac || $ac['tanpa_padanan']) {
+            return [null, null];
+        }
+        $analisa = $db->table('analisa')->where('sekolah_id', $this->sid())->where('kode', $ac['kode_kita'])
+            ->where('is_deleted', 0)->get()->getRowArray();
+        return [$ac, $analisa ?: null];
+    }
+
+    /**
+     * Terapkan penyamaan satu grup: koefisien komponen tunggal pada grup itu
+     * diganti nilai acuan (sudah terkonversi ke satuan komponen), harga satuan
+     * analisa dihitung ulang, dan aksi dicatat di jejak audit.
+     * Mengembalikan keterangan perubahan, atau null bila tidak dapat diterapkan.
+     */
+    private function terapkanSamakan(array $ac, array $analisa, string $grup): ?string
+    {
+        $banding = $this->susunBanding($ac, $analisa);
+        foreach ($banding['baris'] as $b) {
+            if ($b['grup'] !== $grup || ! $b['bisa']) {
+                continue;
+            }
+            $db = $this->db();
+            $komp = $db->table('analisa_komponen')->where('id', (int) $b['komp_id'])
+                ->where('analisa_id', (int) $analisa['id'])->where('is_deleted', 0)->get()->getRowArray();
+            if (! $komp) {
+                return null;
+            }
+            $lama = (float) $komp['koefisien'];
+            $db->table('analisa_komponen')->where('id', (int) $komp['id'])
+                ->update(['koefisien' => (float) $b['target']]);
+            $this->hitungUlangHargaSatuan((int) $analisa['id']);
+            $ket = $komp['nama'] . ' (' . $analisa['kode'] . '): '
+                . rtrim(rtrim(number_format($lama, 6, ',', '.'), '0'), ',') . ' → '
+                . rtrim(rtrim(number_format((float) $b['target'], 6, ',', '.'), '0'), ',')
+                . ' ' . $komp['satuan'] . ' mengikuti acuan ' . $ac['kode_nasional'];
+            $this->catatAudit('analisa_komponen', (int) $komp['id'], 'samakan_ke_acuan', $ket);
+            return $ket;
+        }
+        return null;
+    }
+
+    /** Sama seperti Analisa::hitungUlangHargaSatuan — jumlah koefisien × tarif komponen aktif. */
+    private function hitungUlangHargaSatuan(int $analisaId): void
+    {
+        $db = $this->db();
+        $total = (float) ($db->query(
+            'SELECT COALESCE(SUM(koefisien * COALESCE(tarif, 0)), 0) AS t FROM analisa_komponen WHERE analisa_id = ? AND is_deleted = 0',
+            [$analisaId]
+        )->getRowArray()['t'] ?? 0);
+        $db->table('analisa')->where('id', $analisaId)
+            ->update(['harga_satuan' => $total]);
+    }
+
     /**
      * Susun perbandingan per grup komponen untuk satu pasangan analisa-acuan.
      * Mengembalikan baris-baris grup + harga acuan + jumlah menyimpang (>25%).
@@ -68,9 +178,11 @@ class Acuan extends BaseController
             $g = $this->grupKanon((string) $k['nama'], (string) $k['jenis']);
             if (isset($gk[$g])) {
                 $gk[$g]['koef'] += (float) $k['koefisien'];
+                $gk[$g]['ids'][] = (int) $k['id'];
             } else {
                 $gk[$g] = ['nama' => (string) $k['nama'], 'satuan' => (string) $k['satuan'],
-                           'koef' => (float) $k['koefisien'], 'tarif' => (float) $k['tarif']];
+                           'koef' => (float) $k['koefisien'], 'tarif' => (float) $k['tarif'],
+                           'ids' => [(int) $k['id']]];
             }
         }
         $ga = [];
@@ -104,23 +216,30 @@ class Acuan extends BaseController
                 if (! $gagal && ! in_array($g, ['kepala', 'mandor'], true)) {
                     $hargaAcuan += $kv * $kk['tarif'];
                 }
+                $bisa = ! $gagal && count($kk['ids']) === 1 && $selisih !== null && abs($selisih) > 0.05;
                 $baris[] = ['nama' => $namaA, 'satuan' => $kk['satuan'], 'kita' => $kk['koef'],
-                            'acuan' => $gagal ? null : $kv, 'selisih' => $selisih];
+                            'acuan' => $gagal ? null : $kv, 'selisih' => $selisih,
+                            'grup' => $g, 'komp_id' => count($kk['ids']) === 1 ? $kk['ids'][0] : null,
+                            'jumlah_kita' => count($kk['ids']), 'bisa' => $bisa,
+                            'target' => $gagal ? null : $kv];
             } else {
                 $baris[] = ['nama' => $namaA, 'satuan' => (string) $daftar[0]['satuan'], 'kita' => null,
-                            'acuan' => count($daftar) === 1 ? (float) $daftar[0]['koefisien'] : null, 'selisih' => null];
+                            'acuan' => count($daftar) === 1 ? (float) $daftar[0]['koefisien'] : null, 'selisih' => null,
+                            'grup' => $g, 'komp_id' => null, 'jumlah_kita' => 0, 'bisa' => false, 'target' => null];
             }
         }
         foreach ($gk as $g => $kk) {
             if (! isset($terpakai[$g])) {
                 $baris[] = ['nama' => $kk['nama'] . ' (hanya di analisa kita)', 'satuan' => $kk['satuan'],
-                            'kita' => $kk['koef'], 'acuan' => null, 'selisih' => null];
+                            'kita' => $kk['koef'], 'acuan' => null, 'selisih' => null,
+                            'grup' => $g, 'komp_id' => null, 'jumlah_kita' => count($kk['ids']), 'bisa' => false, 'target' => null];
             }
         }
         $hargaKita = (float) ($analisa['harga_satuan'] ?? 0);
         return ['baris' => $baris, 'harga_kita' => $hargaKita, 'harga_acuan' => $hargaAcuan,
                 'selisih_harga' => $hargaKita > 0 ? ($hargaAcuan - $hargaKita) / $hargaKita * 100 : null,
-                'menyimpang' => $menyimpang];
+                'menyimpang' => $menyimpang,
+                'bisa_count' => count(array_filter($baris, static fn ($b) => $b['bisa']))];
     }
 
     /** Grup kanonik komponen agar nama perencana dan nama nasional bisa dipasangkan. */

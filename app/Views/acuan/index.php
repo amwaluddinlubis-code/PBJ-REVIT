@@ -29,7 +29,7 @@ foreach ($daftar as $d) { if ($d['acuan']['tanpa_padanan']) { $tanpa++; } elseif
           <td class="angka"><?= $rg ? 'Rp ' . number_format($rg['harga_acuan'], 0, ',', '.') : '—' ?></td>
           <td class="angka"><?php if ($rg && $rg['selisih_harga'] !== null): ?><span style="color:<?= $rg['selisih_harga'] > 0 ? 'var(--ina-green-700,#1e6b2a)' : 'var(--ina-red-700,#a61e1e)' ?>"><?= ($rg['selisih_harga'] > 0 ? '+' : '−') . number_format(abs($rg['selisih_harga']), 1, ',', '.') ?>%</span><?php else: ?>—<?php endif; ?></td>
           <td class="angka"><?= $rg ? (int) $rg['menyimpang'] . ' komponen' : '—' ?></td>
-          <td><a class="aksi" href="<?= base_url('acuan/' . $ac['id']) ?>">Banding</a></td>
+          <td><a class="tombol kecil" href="<?= base_url('acuan/' . $ac['id']) ?>">Banding</a></td>
         </tr>
       <?php endforeach; ?>
       </tbody>
