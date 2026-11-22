@@ -247,12 +247,18 @@ abstract class BaseController extends Controller
         )->getResultArray();
     }
 
+    /** Gedung aktif yang didanai paket (untuk total & rekap tingkat sekolah). */
+    protected function semuaGedungDidanai(): array
+    {
+        return array_values(array_filter($this->semuaGedung(), static fn ($g) => (int) ($g['didanai'] ?? 1) === 1));
+    }
+
     /** Kebutuhan bahan gabungan seluruh gedung sekolah (per bahan master). */
     protected function kebutuhanBahanSekolah(): array
     {
         $gabung = [];
         $takTertaut = [];
-        foreach ($this->semuaGedung() as $g) {
+        foreach ($this->semuaGedungDidanai() as $g) {
             $kb = $this->kebutuhanBahan((int) $g['id']);
             foreach ($kb['tertaut'] as $b) {
                 $id = (int) $b['bahan_id'];
@@ -277,7 +283,7 @@ abstract class BaseController extends Controller
     protected function kebutuhanUpahSekolah(): array
     {
         $gabung = [];
-        foreach ($this->semuaGedung() as $g) {
+        foreach ($this->semuaGedungDidanai() as $g) {
             foreach ($this->kebutuhanUpah((int) $g['id']) as $u) {
                 $j = $u['jenis'];
                 if (! isset($gabung[$j])) {
@@ -312,7 +318,7 @@ abstract class BaseController extends Controller
         $row = $this->db()->query(
             'SELECT COALESCE(SUM(p.volume * p.harga_satuan), 0) AS t
              FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
-             WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0',
+             WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 AND g.didanai = 1',
             [$sid]
         )->getRowArray();
         return (float) ($row['t'] ?? 0);
@@ -328,6 +334,10 @@ abstract class BaseController extends Controller
         $sid = $sid ?? $this->sid();
         $sekolah = $this->db()->table('sekolah')->where('id', $sid)->get()->getRowArray() ?: [];
         $n = $this->db()->query(
+            'SELECT COUNT(*) AS n FROM gedung WHERE sekolah_id = ? AND is_deleted = 0 AND didanai = 1',
+            [$sid]
+        )->getRowArray();
+        $nSemua = $this->db()->query(
             'SELECT COUNT(*) AS n FROM gedung WHERE sekolah_id = ? AND is_deleted = 0',
             [$sid]
         )->getRowArray();
@@ -346,6 +356,7 @@ abstract class BaseController extends Controller
             'pagu' => $pagu,
             'selisih' => $pagu - $totalSemua,
             'gedung' => (int) ($n['n'] ?? 0),
+            'gedung_semua' => (int) ($nSemua['n'] ?? 0),
         ];
     }
 

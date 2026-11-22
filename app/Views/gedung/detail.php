@@ -82,6 +82,9 @@ $tabAktif = $tab ?? 'boq';
               <?php endif; ?>
               <tr class="total"><td colspan="5">Total komponen per satuan pekerjaan</td><td class="angka"><?= number_format($grand, 0, ',', '.') ?></td><td class="angka">&times; volume = <?= number_format($grand * $vol, 0, ',', '.') ?></td></tr>
             </table>
+            <?php if ((float) ($a['analisa']['harga_satuan'] ?? 0) <= 0): ?>
+            <div class="detail-kaki">Harga satuan analisa ini <strong>belum terverifikasi</strong> dari Harsat dokumen sumber (#REF!).</div>
+            <?php endif; ?>
             <?php if (! empty($a['tersembunyi'])): ?>
             <div class="detail-kaki"><?= (int) $a['tersembunyi'] ?> komponen disembunyikan karena bahan/upah masternya sudah dihapus dari master.</div>
             <?php endif; ?>

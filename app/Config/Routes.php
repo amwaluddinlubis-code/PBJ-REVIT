@@ -12,6 +12,11 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('/', 'Dashboard::index');
 
     // Master bahan
+    $routes->get('analisa', 'Analisa::index');
+    $routes->get('analisa/(:num)', 'Analisa::detail/$1');
+    $routes->post('analisa/(:num)/komponen-simpan', 'Analisa::komponenSimpan/$1');
+    $routes->post('analisa/(:num)/komponen-tambah', 'Analisa::komponenTambah/$1');
+    $routes->post('analisa/(:num)/komponen-hapus/(:num)', 'Analisa::komponenHapus/$1/$2');
     $routes->get('bahan', 'Bahan::index');
     $routes->get('bahan/baru', 'Bahan::baru');
     $routes->post('bahan/simpan', 'Bahan::simpan');
@@ -24,6 +29,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('bahan/upah-perbarui/(:num)', 'Bahan::upahPerbarui/$1');
     $routes->post('bahan/upah-hapus/(:num)', 'Bahan::upahHapus/$1');
     $routes->post('bahan/upah-gabung', 'Bahan::upahGabung');
+    $routes->post('bahan/upah-gabung-manual', 'Bahan::upahGabungManual');
     $routes->get('bahan/tabel', 'Bahan::tabel');
     $routes->post('bahan/hapus-massal', 'Bahan::hapusMassal');
     $routes->post('bahan/kosongkan', 'Bahan::kosongkan');
@@ -133,6 +139,7 @@ $routes->post('gedung/(:num)/kosongkan-boq', 'Gedung::kosongkanPekerjaan/$1', ['
 $routes->post('gedung/simpan', 'Gedung::simpan', ['filter' => 'auth']);
 $routes->post('gedung/(:num)/perbarui', 'Gedung::perbarui/$1', ['filter' => 'auth']);
 $routes->post('gedung/(:num)/hapus', 'Gedung::hapus/$1', ['filter' => 'auth']);
+$routes->post('gedung/(:num)/didanai', 'Gedung::didanai/$1', ['filter' => 'auth']);
 $routes->get('gedung/(:num)', 'Gedung::detail/$1', ['filter' => 'auth']);
 $routes->get('gedung/(:num)/(:segment)', 'Gedung::detail/$1/$2', ['filter' => 'auth']);
 $routes->post('gedung/pekerjaan/simpan', 'Gedung::simpanPekerjaan', ['filter' => 'auth']);

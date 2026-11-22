@@ -104,6 +104,14 @@ class Gedung extends BaseController
         return redirect()->to('/gedung')->with('sukses', 'Daftar gedung dikosongkan: ' . $n . ' gedung dihapus beserta BOQ dan realisasinya.');
     }
 
+    /** Tandai / batalkan gedung sebagai yang didanai paket. */
+    public function didanai($id)
+    {
+        $nilai = (int) $this->request->getPost('didanai') === 1 ? 1 : 0;
+        $this->db()->table('gedung')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->update(['didanai' => $nilai]);
+        return redirect()->to('gedung')->with('sukses', $nilai === 1 ? 'Gedung ditandai sebagai didanai — ikut dihitung di verifikasi & rekap sekolah.' : 'Gedung ditandai TIDAK didanai — tidak dihitung di verifikasi & rekap sekolah, tetapi datanya tetap tersimpan.');
+    }
+
     public function detail($id, $tab = 'boq')
     {
         $g = $this->ambilGedung((int) $id);

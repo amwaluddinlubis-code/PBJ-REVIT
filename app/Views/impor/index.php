@@ -89,7 +89,7 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
   <h2>Verifikasi Anggaran — <?= esc($sekolahAktif['nama_sekolah'] ?? 'Sekolah Aktif') ?></h2>
   <table>
     <tr><th>Uraian</th><th class="angka">Nilai</th></tr>
-    <tr><td>Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung aktif</b> (penjumlahan biaya semua gedung yang aktif)</td><td class="angka"><b><?= $rp($verifikasi['total_boq']) ?></b></td></tr>
+    <tr><td>Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung didanai</b> (dari <?= (int) ($verifikasi['gedung_semua'] ?? $verifikasi['gedung']) ?> gedung aktif — hanya yang didanai yang dihitung; tandai di <a href="<?= base_url('gedung') ?>">Kelola Gedung</a>)</td><td class="angka"><b><?= $rp($verifikasi['total_boq']) ?></b></td></tr>
     <tr><td>Biaya non-gedung (perencanaan, pengawasan, pengelolaan — menu <a href="<?= base_url('biaya-non-gedung') ?>">Biaya Non-Gedung</a>)</td><td class="angka"><b><?= $rp($verifikasi['biaya_lain']) ?></b></td></tr>
     <tr><td><b>Total keseluruhan (BOQ + biaya non-gedung)</b></td><td class="angka"><b><?= $rp($verifikasi['total_semua']) ?></b></td></tr>
     <tr><td>Pagu anggaran (diisi di <a href="<?= base_url('pengaturan') ?>">Pengaturan</a>)</td><td class="angka"><b><?= $rp($verifikasi['pagu']) ?></b></td></tr>

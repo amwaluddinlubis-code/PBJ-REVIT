@@ -382,6 +382,50 @@ class Bahan extends BaseController
      * utama, baris lain dihapus. Pembayaran upah historis menyimpan
      * jenis sebagai teks + tarif potret, jadi tidak perlu dialihkan.
      */
+    /** Alihkan semua pemakaian nama jenis upah (komponen analisa + pembayaran) ke nama tujuan. */
+    private function alihkanJenisUpah(string $dari, string $ke): void
+    {
+        if ($dari === $ke) {
+            return;
+        }
+        $db = $this->db();
+        $db->query(
+            'UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id SET ak.nama = ?
+             WHERE a.sekolah_id = ? AND ak.jenis = \'upah\' AND ak.nama = ?',
+            [$ke, $this->sid(), $dari]
+        );
+        $db->table('upah_bayar')->where(['sekolah_id' => $this->sid(), 'jenis_tenaga' => $dari])->update(['jenis_tenaga' => $ke]);
+    }
+
+    /** Gabung manual: jenis-jenis sumber dilebur ke satu jenis tujuan. */
+    public function upahGabungManual()
+    {
+        $db = $this->db();
+        $tujuanId = (int) $this->request->getPost('tujuan');
+        $sumber = array_values(array_diff(array_map('intval', (array) ($this->request->getPost('sumber') ?? [])), [$tujuanId]));
+        $tujuan = $db->table('upah_master')->where(['id' => $tujuanId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        if (! $tujuan || $sumber === []) {
+            return redirect()->to('bahan')->with('galat', 'Pilih jenis tujuan dan minimal satu jenis yang digabungkan ke dalamnya.');
+        }
+        $tarifFinal = $this->request->getPost('tarif_final');
+        $db->transStart();
+        if ($tarifFinal !== null && $tarifFinal !== '') {
+            $db->table('upah_master')->where('id', $tujuanId)->update(['tarif' => (float) str_replace(['.', ','], ['', '.'], (string) $tarifFinal)]);
+        }
+        $namaSumber = [];
+        foreach ($sumber as $sidRow) {
+            $s = $db->table('upah_master')->where(['id' => $sidRow, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+            if (! $s) {
+                continue;
+            }
+            $this->alihkanJenisUpah((string) $s['jenis'], (string) $tujuan['jenis']);
+            $this->hapusLunak('upah_master', ['id' => $sidRow, 'sekolah_id' => $this->sid()]);
+            $namaSumber[] = $s['jenis'];
+        }
+        $db->transComplete();
+        return redirect()->to('bahan')->with('sukses', 'Jenis ' . implode(', ', $namaSumber) . ' digabungkan ke "' . $tujuan['jenis'] . '" — komponen analisa dan riwayat pembayaran ikut dialihkan.');
+    }
+
     public function upahGabung()
     {
         $utamaId = (int) $this->request->getPost('utama');
@@ -396,8 +440,13 @@ class Bahan extends BaseController
                 'tarif' => (float) str_replace(['.', ','], ['', '.'], (string) $tarifFinal),
             ]);
         }
+        $utama = $this->db()->table('upah_master')->where(['id' => $utamaId, 'sekolah_id' => $this->sid()])->get()->getRowArray();
         foreach ($anggota as $aid) {
             if ($aid !== $utamaId) {
+                $lain = $this->db()->table('upah_master')->where(['id' => $aid, 'sekolah_id' => $this->sid()])->get()->getRowArray();
+                if ($lain && $utama) {
+                    $this->alihkanJenisUpah((string) $lain['jenis'], (string) $utama['jenis']);
+                }
                 $this->hapusLunak('upah_master', ['id' => $aid, 'sekolah_id' => $this->sid()]);
             }
         }

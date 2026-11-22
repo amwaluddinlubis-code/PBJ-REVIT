@@ -80,6 +80,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       ?>
       <?php $induk('perencanaan', 'rencana', 'Perencanaan'); ?>
         <a href="<?= base_url('impor') ?>"<?= $aktif('impor') ?>>Impor Dokumen Perencana</a>
+        <a href="<?= base_url('analisa') ?>"<?= $aktif('analisa') ?>>Analisa Pekerjaan</a>
         <a href="<?= base_url('bersih') ?>"<?= $aktif('bersih') ?>>Pembersihan Hasil Impor</a>
         <a href="<?= base_url('rencana-belanja') ?>"<?= $aktif('rencana-belanja') ?>>Rencana Belanja</a>
         <a href="<?= base_url('biaya-non-gedung') ?>"<?= $aktif('biaya-non-gedung') ?>>Biaya Non-Gedung</a>
