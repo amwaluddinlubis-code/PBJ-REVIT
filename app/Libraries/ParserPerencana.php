@@ -1068,9 +1068,12 @@ class ParserPerencana
                 $this->db->table('analisa')->ignore(true)->insert([
                     'sekolah_id' => $this->sid, 'kode' => $kode, 'nama' => $blok['nama'], 'satuan' => $blok['satuan'],
                 ]);
-                $row = $this->db->table('analisa')->where(['sekolah_id' => $this->sid, 'kode' => $kode, 'is_deleted' => 0])->get()->getRowArray();
+                // Baris terhapus-lunak berkode sama menahan insert (kunci unik)
+                // dan tidak terlihat oleh saringan aktif — ambil apa adanya
+                // lalu hidupkan kembali.
+                $row = $this->db->table('analisa')->where(['sekolah_id' => $this->sid, 'kode' => $kode])->get()->getRowArray();
                 $aid = (int) $row['id'];
-                $this->db->table('analisa')->where('id', $aid)->update(['nama' => $blok['nama'], 'satuan' => $blok['satuan']]);
+                $this->db->table('analisa')->where('id', $aid)->update(['nama' => $blok['nama'], 'satuan' => $blok['satuan'], 'is_deleted' => 0, 'deleted_at' => null]);
                 $this->db->table('analisa_komponen')->where('analisa_id', $aid)->delete();
                 foreach ($blok['komponen'] as $k) {
                     $bahanId = null;
@@ -1257,7 +1260,9 @@ class ParserPerencana
         $total = array_sum(array_column($boq['items'], 'jumlah'));
         if ($ada) {
             $gid = (int) $ada['id'];
-            $ubah = ['nilai_boq' => $total, 'updated_at' => date('Y-m-d H:i:s')];
+            // Gedung yang pernah terhapus-lunak DIHIDUPKAN kembali: tanpa ini
+            // impor ulang "berhasil" tetapi gedungnya tetap tidak tampil.
+            $ubah = ['nilai_boq' => $total, 'updated_at' => date('Y-m-d H:i:s'), 'is_deleted' => 0, 'deleted_at' => null];
             if ($namaTampil !== null && trim($namaTampil) !== '') {
                 $ubah['nama'] = trim($namaTampil);
             }
