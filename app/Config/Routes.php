@@ -15,6 +15,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('bahan', 'Bahan::index');
     $routes->get('bahan/baru', 'Bahan::baru');
     $routes->post('bahan/simpan', 'Bahan::simpan');
+    $routes->post('bahan/kelengkapan', 'Bahan::kelengkapanSimpan');
     $routes->get('bahan/ubah/(:num)', 'Bahan::ubah/$1');
     $routes->post('bahan/perbarui/(:num)', 'Bahan::perbarui/$1');
     $routes->post('bahan/hapus/(:num)', 'Bahan::hapus/$1');

@@ -122,7 +122,19 @@ class Dashboard extends BaseController
             }
         }
 
+        $tanpaHarga = (int) ($db->query(
+            'SELECT COUNT(*) AS j FROM bahan b
+             LEFT JOIN negosiasi n ON n.bahan_id = b.id AND n.is_deleted = 0
+             WHERE b.sekolah_id = ? AND b.is_deleted = 0
+               AND (b.harga_rab IS NULL OR b.harga_rab = 0)
+               AND (n.harga_nego IS NULL OR n.harga_nego = 0)
+               AND (n.harga_penawaran IS NULL OR n.harga_penawaran = 0)',
+            [$sid]
+        )->getRow()->j ?? 0);
+        $tanpaTarif = (int) $db->table('upah_master')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->where('tarif <=', 0)->countAllResults();
+
         return $this->tampil('dashboard/index', [
+            'tanpaHarga' => $tanpaHarga, 'tanpaTarif' => $tanpaTarif,
             'identitas'   => $identitas,
             'totalRab'    => $totalRab,
             'totalSpk'    => $totalSpk,

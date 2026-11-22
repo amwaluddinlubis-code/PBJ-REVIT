@@ -13,6 +13,17 @@ class Bahan extends BaseController
             'bahan' => $bahan, 'q' => $q, 'upah' => $upah,
             'totalBahan' => $this->db()->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults(),
             'totalUpah' => count($upah),
+            'bahanTanpaHarga' => $this->db()->query(
+                'SELECT b.id, b.kode, b.nama, b.satuan FROM bahan b
+                 LEFT JOIN negosiasi n ON n.bahan_id = b.id AND n.is_deleted = 0
+                 WHERE b.sekolah_id = ? AND b.is_deleted = 0
+                   AND (b.harga_rab IS NULL OR b.harga_rab = 0)
+                   AND (n.harga_nego IS NULL OR n.harga_nego = 0)
+                   AND (n.harga_penawaran IS NULL OR n.harga_penawaran = 0)
+                 ORDER BY b.kode',
+                [$this->sid()]
+            )->getResultArray(),
+            'upahTanpaTarif' => array_values(array_filter($upah, static fn ($u) => (float) $u['tarif'] <= 0)),
             'duplikatBahan' => $this->grupDuplikat($bahan),
             'duplikatUpah' => $this->grupDuplikat($upah, 'jenis'),
         ], 'Master Bahan & Upah — Aplikasi PBJ Sekolah');
@@ -174,6 +185,33 @@ class Bahan extends BaseController
             }
         }
         return null;
+    }
+
+    /** Simpan isian massal panel Kelengkapan Harga & Tarif. */
+    public function kelengkapanSimpan()
+    {
+        $db = $this->db();
+        $nB = 0;
+        $nU = 0;
+        foreach ((array) ($this->request->getPost('harga') ?? []) as $id => $nilai) {
+            $nilai = (int) $nilai;
+            if ($nilai <= 0) {
+                continue;
+            }
+            if ($db->table('bahan')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->update(['harga_rab' => $nilai])) {
+                $nB++;
+            }
+        }
+        foreach ((array) ($this->request->getPost('tarif') ?? []) as $id => $nilai) {
+            $nilai = (int) $nilai;
+            if ($nilai <= 0) {
+                continue;
+            }
+            if ($db->table('upah_master')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->update(['tarif' => $nilai])) {
+                $nU++;
+            }
+        }
+        return redirect()->to('bahan')->with('sukses', "Kelengkapan disimpan: {$nB} harga bahan dan {$nU} tarif upah terisi.");
     }
 
     public function baru()

@@ -17,7 +17,7 @@
   <div class="kpi"><div class="label">Sisa Anggaran</div><div class="nilai"><?= $rp($sisa) ?></div></div>
 </div>
 
-<?php if ($tanpaSpk->j > 0 || $invoiceCek || $sisaNegatif || ! empty($tahap2JatuhTempo) || ! empty($pecahCek) || ! empty($masterKonflik)): ?>
+<?php if ($tanpaSpk->j > 0 || $invoiceCek || $sisaNegatif || ! empty($tahap2JatuhTempo) || ! empty($pecahCek) || ! empty($masterKonflik) || ($tanpaHarga ?? 0) > 0 || ($tanpaTarif ?? 0) > 0): ?>
 <div class="peringatan">
   <h2>Perlu perhatian</h2>
   <ul>
@@ -38,6 +38,14 @@
     <?php foreach ($pecahCek ?? [] as $p): ?>
       <li><?= esc($p) ?></li>
     <?php endforeach; ?>
+    <?php if (($tanpaHarga ?? 0) > 0): ?>
+      <li><strong><?= (int) $tanpaHarga ?> bahan</strong> belum punya harga acuan sehingga terhitung Rp 0 di kebutuhan &amp; rencana belanja —
+        <a href="<?= base_url('bahan') ?>">isi lewat panel Kelengkapan Harga &amp; Tarif</a>.</li>
+    <?php endif; ?>
+    <?php if (($tanpaTarif ?? 0) > 0): ?>
+      <li><strong><?= (int) $tanpaTarif ?> jenis upah</strong> belum punya tarif sehingga terhitung Rp 0 di kebutuhan upah —
+        <a href="<?= base_url('bahan') ?>">isi lewat panel Kelengkapan Harga &amp; Tarif</a>.</li>
+    <?php endif; ?>
     <?php foreach ($masterKonflik ?? [] as $k): ?>
       <li><strong>ALERT MASTER:</strong> <?= esc($k) ?> <a href="<?= base_url('bahan') ?>">Buka Master Bahan &amp; Upah</a></li>
     <?php endforeach; ?>
