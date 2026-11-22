@@ -31,7 +31,7 @@
       <label>Volume Baru <input type="text" name="volume_baru" inputmode="decimal" placeholder="volume sesudah revisi / volume pengganti"></label>
       <label>Nama Pekerjaan Baru / Pengganti <input type="text" name="nama_baru" placeholder="cth. Pek. Jendela Kayu Kelas II"></label>
       <label>Satuan Pengganti <input type="text" name="satuan_baru" placeholder="cth. unit, m2, ls"></label>
-      <label>Harga Satuan Baru / Pengganti <input type="text" name="harga_baru" inputmode="numeric" placeholder="Rp per satuan"></label>
+      <label>Harga Satuan Baru / Pengganti <input type="text" name="harga_baru" inputmode="numeric" data-uang placeholder="Rp per satuan"></label>
       <label>Analisa Pengganti
         <select data-select-cari name="kode_analisa_baru">
           <option value="">— tanpa analisa —</option>

@@ -36,7 +36,7 @@
         <td><input type="checkbox" data-pilih value="<?= (int) $b['id'] ?>" x-model="terpilih"></td>
         <td><?= esc($b['kode']) ?></td><td><?= esc($b['nama']) ?></td><td><?= esc($b['satuan'] ?? '') ?></td>
         <?php for ($t = 1; $t <= 4; $t++): ?>
-          <td class="angka"><input type="number" name="harga[<?= (int) $b['id'] ?>][<?= $t ?>]" min="0" step="1" value="<?= esc($harga[$b['id']][$t] ?? '') ?>" style="width:120px"></td>
+          <td class="angka"><input type="text" inputmode="numeric" data-uang name="harga[<?= (int) $b['id'] ?>][<?= $t ?>]" min="0" step="1" value="<?= esc($harga[$b['id']][$t] ?? '') ?>" style="width:120px"></td>
         <?php endfor; ?>
         <td class="angka"><?= $min !== null ? 'Rp ' . number_format($min, 0, ',', '.') : '—' ?></td>
         <td><?= $tokoMin !== null ? esc($identitas['toko' . $tokoMin] ?? ('Toko ' . $tokoMin)) : '—' ?></td>

@@ -144,8 +144,32 @@ abstract class BaseController extends Controller
      * Koefisien AHSP semen/agregat dinyatakan dalam kg, sedangkan bahan dibeli
      * per zak (semen 50 kg) atau per m3 (pasir ~1.400 kg/m3, kerikil/batu ~1.600 kg/m3).
      */
+    /** Peta konversi manual bahan (bahan_konversi), dimuat sekali per request. */
+    private ?array $petaKonversi = null;
+
+    protected function faktorManual(int $bahanId, string $satuanKomponen): ?float
+    {
+        if ($this->petaKonversi === null) {
+            $this->petaKonversi = [];
+            if ($this->db()->tableExists('bahan_konversi')) {
+                foreach ($this->db()->table('bahan_konversi')
+                    ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray() as $k) {
+                    $this->petaKonversi[(int) $k['bahan_id'] . '|' . mb_strtolower(trim((string) $k['satuan_komponen']))] = (float) $k['faktor'];
+                }
+            }
+        }
+        return $this->petaKonversi[$bahanId . '|' . mb_strtolower(trim($satuanKomponen))] ?? null;
+    }
+
     protected function faktorSatuan(?string $satuanKomponen, array $bahan): float
     {
+        $bahanId = (int) ($bahan['id'] ?? $bahan['bahan_id'] ?? 0);
+        if ($bahanId > 0 && $satuanKomponen !== null && trim((string) $satuanKomponen) !== '') {
+            $manual = $this->faktorManual($bahanId, (string) $satuanKomponen);
+            if ($manual !== null) {
+                return $manual;
+            }
+        }
         $sk = mb_strtolower(trim((string) $satuanKomponen));
         $sb = mb_strtolower(trim((string) ($bahan['satuan'] ?? '')));
         // Dokumen perencana tidak mencantumkan satuan beli (bahan hasil impor

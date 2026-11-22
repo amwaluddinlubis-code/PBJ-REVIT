@@ -27,7 +27,7 @@
       <?php endforeach; endforeach; ?>
     </select>
   </label>
-  <label>Nilai Invoice (kosongkan = total SPK) <input type="number" name="nilai" step="1" value="<?= esc(old('nilai', $i['nilai'] ?? '')) ?>"></label>
+  <label>Nilai Invoice (kosongkan = total SPK) <input type="text" inputmode="numeric" data-uang name="nilai" step="1" value="<?= esc(old('nilai', $i['nilai'] ?? '')) ?>"></label>
   <label>Status
     <select data-select-cari name="status">
       <?php foreach (['Belum Bayar', 'Sudah Bayar'] as $st): ?>

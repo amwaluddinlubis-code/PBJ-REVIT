@@ -20,6 +20,33 @@ class Analisa extends BaseController
              FROM analisa a WHERE a.sekolah_id = ? AND a.is_deleted = 0 ORDER BY a.kode',
             [$this->sid()]
         )->getResultArray();
+        $komponenNol = $db->query(
+            'SELECT a.kode, a.nama AS analisa_nama, ak.id AS komponen_id, ak.analisa_id, ak.jenis, ak.nama AS komponen, ak.koefisien, ak.satuan
+             FROM analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             WHERE a.sekolah_id = ? AND ak.is_deleted = 0 AND a.is_deleted = 0 AND COALESCE(ak.tarif, 0) <= 0
+             ORDER BY a.kode, ak.jenis, ak.nama',
+            [$this->sid()]
+        )->getResultArray();
+        // Bahan yang satuan komponennya berbeda dari satuan master:
+        // tampilkan faktor yang berlaku + faktor manual (bila sudah diatur).
+        $norm = static fn ($x) => str_replace(['³', '²'], ['3', '2'], mb_strtolower(trim((string) $x)));
+        $bedaSatuan = [];
+        foreach ($db->query(
+            'SELECT b.id AS bahan_id, b.kode, b.nama, b.satuan AS satuan_master, ak.satuan AS satuan_komponen, COUNT(*) AS jml
+             FROM analisa_komponen ak
+             JOIN analisa a ON a.id = ak.analisa_id
+             JOIN bahan b ON b.id = ak.bahan_id
+             WHERE a.sekolah_id = ? AND ak.jenis = ? AND ak.is_deleted = 0 AND a.is_deleted = 0 AND b.is_deleted = 0
+             GROUP BY b.id, b.kode, b.nama, b.satuan, ak.satuan ORDER BY jml DESC',
+            [$this->sid(), 'bahan']
+        )->getResultArray() as $r) {
+            if ($norm($r['satuan_komponen']) === $norm($r['satuan_master'])) {
+                continue;
+            }
+            $r['faktor_manual'] = $this->faktorManual((int) $r['bahan_id'], (string) $r['satuan_komponen']);
+            $r['faktor_berlaku'] = $this->faktorSatuan($r['satuan_komponen'], $r);
+            $bedaSatuan[] = $r;
+        }
         // Dua tab: analisa yang dipakai gedung didanai vs sisanya
         // (hanya dipakai gedung tidak didanai, atau belum dipakai sama sekali).
         $tab = (string) $this->request->getGet('tab') === 'lainnya' ? 'lainnya' : 'didanai';
@@ -32,6 +59,8 @@ class Analisa extends BaseController
             'jml_didanai' => count($diDidanai),
             'jml_lainnya' => count($lainnya),
             'belum' => $belum,
+            'komponen_nol' => $komponenNol,
+            'beda_satuan' => $bedaSatuan,
         ], 'Analisa Pekerjaan — Aplikasi PBJ Sekolah');
     }
 
@@ -124,6 +153,48 @@ class Analisa extends BaseController
         ]);
         $this->hitungUlangHargaSatuan((int) $a['id']);
         return redirect()->to('analisa/' . $a['id'])->with('sukses', 'Komponen "' . $nama . '" ditambahkan.');
+    }
+
+    /** Simpan faktor konversi manual untuk pasangan bahan + satuan komponen. */
+    public function simpanKonversi()
+    {
+        $db = $this->db();
+        $bahanId = (int) $this->request->getPost('bahan_id');
+        $satuan = trim((string) $this->request->getPost('satuan_komponen'));
+        $mentah = trim((string) $this->request->getPost('faktor'));
+        // Angka Indonesia: koma = desimal; titik ribuan dibuang bila ada koma.
+        $faktor = str_contains($mentah, ',')
+            ? (float) str_replace(['.', ','], ['', '.'], $mentah)
+            : (float) $mentah;
+        $bahan = $db->table('bahan')->where(['id' => $bahanId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        if ($bahan === null || $satuan === '' || $faktor <= 0) {
+            return redirect()->to(base_url('analisa'))->with('galat', 'Konversi tidak disimpan: bahan/satuan tidak valid atau faktor harus lebih dari 0.');
+        }
+        $ada = $db->table('bahan_konversi')->where([
+            'sekolah_id' => $this->sid(), 'bahan_id' => $bahanId, 'satuan_komponen' => $satuan,
+        ])->get()->getRowArray();
+        if ($ada !== null) {
+            $db->table('bahan_konversi')->where('id', $ada['id'])->update([
+                'faktor' => $faktor, 'is_deleted' => 0, 'deleted_at' => null, 'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        } else {
+            $db->table('bahan_konversi')->insert([
+                'sekolah_id' => $this->sid(), 'bahan_id' => $bahanId, 'satuan_komponen' => $satuan,
+                'faktor' => $faktor, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+        return redirect()->to(base_url('analisa'))->with('sukses', 'Konversi satuan ' . $bahan['nama'] . ' (' . $satuan . ' ke ' . ($bahan['satuan'] ?? '') . ') diatur ke faktor ' . rtrim(rtrim(number_format($faktor, 8, ',', '.'), '0'), ',') . '. Kebutuhan bahan dihitung ulang dengan faktor ini.');
+    }
+
+    /** Hapus faktor konversi manual (kembali ke aturan bawaan). */
+    public function hapusKonversi()
+    {
+        $bahanId = (int) $this->request->getPost('bahan_id');
+        $satuan = trim((string) $this->request->getPost('satuan_komponen'));
+        $this->hapusLunak('bahan_konversi', [
+            'sekolah_id' => $this->sid(), 'bahan_id' => $bahanId, 'satuan_komponen' => $satuan,
+        ]);
+        return redirect()->to(base_url('analisa'))->with('sukses', 'Konversi manual dihapus; pasangan satuan itu kembali memakai aturan bawaan.');
     }
 
     public function komponenHapus($id, $kompId)

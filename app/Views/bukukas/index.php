@@ -59,7 +59,7 @@
       <label>Kanal
         <select data-select-cari name="kanal"><option value="bank">Bank</option><option value="tunai">Tunai</option></select>
       </label>
-      <label>Jumlah (Rp) <input type="text" name="jumlah" inputmode="numeric" required placeholder="750000000"></label>
+      <label>Jumlah (Rp) <input type="text" name="jumlah" inputmode="numeric" data-uang required placeholder="750000000"></label>
       <label>Keterangan <input type="text" name="keterangan" placeholder="opsional"></label>
     </div>
     <div class="aksi" style="justify-content:flex-start"><button type="submit">Catat Transaksi</button></div>

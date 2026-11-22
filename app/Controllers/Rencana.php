@@ -35,6 +35,26 @@ class Rencana extends BaseController
             $b['sisa'] = max(0, (float) $b['qty_butuh'] - $b['dipesan']);
         }
 
+        // Asal-usul tiap bahan di rencana: jumlah komponen & analisa sumbernya
+        // (untuk aksi hapus dari rencana lewat penghapusan komponen di Analisa).
+        $asalBahan = [];
+        foreach ($db->query(
+            'SELECT ak.bahan_id, COUNT(*) AS komponen, COUNT(DISTINCT ak.analisa_id) AS analisa, MIN(ak.analisa_id) AS analisa_pertama
+             FROM analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             WHERE a.sekolah_id = ? AND ak.jenis = ? AND ak.bahan_id IS NOT NULL AND ak.is_deleted = 0 AND a.is_deleted = 0
+             GROUP BY ak.bahan_id',
+            [$this->sid(), 'bahan']
+        )->getResultArray() as $r) {
+            $asalBahan[(int) $r['bahan_id']] = $r;
+        }
+        foreach ($kb['tertaut'] as &$b) {
+            $asal = $asalBahan[(int) $b['bahan_id']] ?? null;
+            $b['komponen_dari'] = (int) ($asal['komponen'] ?? 0);
+            $b['analisa_dari'] = (int) ($asal['analisa'] ?? 0);
+            $b['analisa_pertama'] = (int) ($asal['analisa_pertama'] ?? 0);
+        }
+        unset($b);
+
         $upah = $gedungFilter > 0 ? $this->kebutuhanUpah($gedungFilter) : $this->kebutuhanUpahSekolah();
         $sekolah = $this->sekolahAktif();
         $anggaran = (float) ($sekolah['total_anggaran'] ?? 0);
@@ -46,6 +66,38 @@ class Rencana extends BaseController
             'anggaran' => $anggaran, 'terbayar' => $terbayar,
             'sisa_pagu' => $anggaran > 0 ? $anggaran - $terbayar : null,
         ], 'Rencana Belanja — Dari Kebutuhan Pekerjaan');
+    }
+
+    /**
+     * Hapus bahan dari rencana belanja: komponen bahan ini di semua analisa
+     * sekolah dihapus lunak (sumber kebutuhan memang dari Analisa), sehingga
+     * bahan hilang dari kebutuhan semua gedung. SPK yang sudah terlanjur
+     * memakai bahan ini tidak berubah. Dapat dipulihkan dari Sampah.
+     */
+    public function hapusBahan($id)
+    {
+        $db = $this->db();
+        $bahan = $db->table('bahan')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        if ($bahan === null) {
+            return redirect()->to(base_url('rencana-belanja'))->with('galat', 'Bahan tidak ditemukan.');
+        }
+        $baris = $db->query(
+            'SELECT ak.id, ak.analisa_id FROM analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             WHERE a.sekolah_id = ? AND ak.jenis = ? AND ak.bahan_id = ? AND ak.is_deleted = 0 AND a.is_deleted = 0',
+            [$this->sid(), 'bahan', (int) $id]
+        )->getResultArray();
+        if ($baris === []) {
+            return redirect()->to(base_url('rencana-belanja'))->with('galat', 'Bahan ini sudah tidak memiliki komponen aktif di Analisa.');
+        }
+        $jmlAnalisa = count(array_unique(array_column($baris, 'analisa_id')));
+        $db->table('analisa_komponen')->whereIn('id', array_map('intval', array_column($baris, 'id')))
+            ->update(['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
+        $diSpk = (int) $db->table('spk_detail')->where(['bahan_id' => (int) $id, 'is_deleted' => 0])->countAllResults();
+        $pesan = 'Bahan ' . $bahan['nama'] . ' dihapus dari rencana: ' . count($baris) . ' komponen di ' . $jmlAnalisa . ' analisa dihapus dari Analisa (dapat dipulihkan lewat Pemeliharaan Database, menu Sampah). Bahan ini hilang dari kebutuhan semua gedung.';
+        if ($diSpk > 0) {
+            $pesan .= ' Catatan: bahan ini sudah tercantum di ' . $diSpk . ' baris SPK — SPK tersebut tidak berubah.';
+        }
+        return redirect()->to(base_url('rencana-belanja'))->with('sukses', $pesan);
     }
 
     /** Buat SPK baru berisi bahan-bahan terpilih dari rencana belanja. */

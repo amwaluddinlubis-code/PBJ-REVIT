@@ -6,13 +6,20 @@
 // window.inisiasiPaginasi(akar) dapat dipanggil ulang untuk tabel yang
 // baru dimuat lewat AJAX (pencarian langsung gaya Livewire).
 window.inisiasiPaginasi = function (akar) {
-  (akar || document).querySelectorAll('table[data-paginasi], table[data-cari]').forEach(function (tabel) {
+  (akar || document).querySelectorAll('table[data-paginasi], table[data-cari]').forEach(function (tabel, nomorTabel) {
     if (tabel.dataset.sudahPaginasi) return;
     tabel.dataset.sudahPaginasi = '1';
     var semua = Array.prototype.slice.call(tabel.querySelectorAll('tr')).filter(function (tr) { return tr.closest('table') === tabel; });
     if (semua.length < 2) return;
     var kepala = semua[0];
-    var wadahBaris = semua[1].parentNode; // tbody (implisit) — baris dipindah di sini, bukan ke <table>
+    // Normalisasi struktur: baris kepala masuk <thead>, sisanya <tbody>,
+    // agar header bisa sticky dan strukturnya baku di semua tabel.
+    if (kepala.parentNode.nodeName !== 'THEAD') {
+      var theadBaru = document.createElement('thead');
+      tabel.insertBefore(theadBaru, kepala.parentNode);
+      theadBaru.appendChild(kepala);
+    }
+    var wadahBaris = semua[1].parentNode; // tbody — baris dipindah di sini, bukan ke <table>
     var jmlKolom = kepala.cells.length;
 
     function isTotal(tr) { return tr.classList.contains('baris-total') || tr.classList.contains('total'); }
@@ -43,14 +50,30 @@ window.inisiasiPaginasi = function (akar) {
       seg.units.push(unitAkhir);
     });
     var semuaUnit = [];
-    segmen.forEach(function (s) { semuaUnit = semuaUnit.concat(s.units); });
+    function segarkanSemuaUnit() {
+      semuaUnit = [];
+      segmen.forEach(function (s) { semuaUnit = semuaUnit.concat(s.units); });
+    }
+    segarkanSemuaUnit();
 
     var adaPaginasi = tabel.hasAttribute('data-paginasi');
     var ukuran = adaPaginasi ? (parseInt(tabel.getAttribute('data-paginasi'), 10) || 10) : 0;
     var halaman = 1;
     var kata = '';
+    var kataTampil = '';
     var urutKolom = -1;
     var urutNaik = true;
+    var kunciStatus = 'tabel-std:' + location.pathname + ':' + nomorTabel;
+    function simpanStatus() {
+      try {
+        sessionStorage.setItem(kunciStatus, JSON.stringify({
+          kata: kataTampil, halaman: halaman, ukuran: ukuran, urutKolom: urutKolom, urutNaik: urutNaik,
+        }));
+      } catch (e) { /* penyimpanan tidak tersedia */ }
+    }
+    function bacaStatus() {
+      try { return JSON.parse(sessionStorage.getItem(kunciStatus) || 'null'); } catch (e) { return null; }
+    }
 
     // Baris empty state (dibuat sekali, ditampilkan saat saringan kosong).
     var barisKosong = document.createElement('tr');
@@ -75,11 +98,21 @@ window.inisiasiPaginasi = function (akar) {
       masukan.type = 'search';
       masukan.placeholder = petunjuk && petunjuk !== '1' ? petunjuk : 'Cari pada tabel ini…';
       masukan.style.cssText = 'flex:1;min-width:200px';
+      masukan.setAttribute('aria-label', 'Cari pada tabel');
       kotak.appendChild(masukan);
+      var btnCsv = document.createElement('button');
+      btnCsv.type = 'button';
+      btnCsv.className = 'kecil abu';
+      btnCsv.textContent = 'Ekspor CSV';
+      btnCsv.title = 'Unduh baris yang sedang tersaring sebagai CSV';
+      btnCsv.addEventListener('click', eksporCsv);
+      kotak.appendChild(btnCsv);
       tabel.parentNode.insertBefore(kotak, tabel);
       masukan.addEventListener('input', function () {
+        kataTampil = masukan.value;
         kata = masukan.value.trim().toLowerCase();
         halaman = 1;
+        simpanStatus();
         gambar();
       });
     }
@@ -99,6 +132,7 @@ window.inisiasiPaginasi = function (akar) {
         '</select></label>';
       tabel.parentNode.insertBefore(wadah, tabel.nextSibling);
       info = wadah.querySelector('.info');
+      info.setAttribute('aria-live', 'polite');
       tombol = wadah.querySelector('.tombol-halaman');
       pemilih = wadah.querySelector('select');
       tombol.addEventListener('click', function (e) {
@@ -108,9 +142,10 @@ window.inisiasiPaginasi = function (akar) {
         if (h === 'prev') halaman--;
         else if (h === 'next') halaman++;
         else halaman = parseInt(h, 10);
+        simpanStatus();
         gambar();
       });
-      pemilih.addEventListener('change', function () { ukuran = parseInt(pemilih.value, 10); halaman = 1; gambar(); });
+      pemilih.addEventListener('change', function () { ukuran = parseInt(pemilih.value, 10); halaman = 1; simpanStatus(); gambar(); });
     }
 
     // --- Pengurutan klik-header ---
@@ -137,21 +172,16 @@ window.inisiasiPaginasi = function (akar) {
       if (a.j === 't' && b.j === 't') return a.v - b.v;
       return String(a.v).localeCompare(String(b.v), 'id', { numeric: true });
     }
-    Array.prototype.forEach.call(kepala.cells, function (th, idx) {
-      if (th.hasAttribute('data-tanpa-urut')) return;
-      if (th.querySelector('input, select, textarea, button')) return;
-      if ((th.textContent || '').trim() === '') return;
-      th.classList.add('bisa-urut');
-      th.title = 'Klik untuk mengurutkan';
-      th.addEventListener('click', function () {
-        if (urutKolom === idx) urutNaik = !urutNaik;
-        else { urutKolom = idx; urutNaik = true; }
-        segmen.forEach(function (s) {
-          s.units.sort(function (u1, u2) {
-            var c = banding(nilaiSel(u1.row.cells[idx]), nilaiSel(u2.row.cells[idx]));
-            return urutNaik ? c : -c;
-          });
+    function terapkanUrut(idx, naik) {
+      urutKolom = idx;
+      urutNaik = naik;
+      segmen.forEach(function (sg) {
+        sg.units.sort(function (u1, u2) {
+          var c = banding(nilaiSel(u1.row.cells[idx]), nilaiSel(u2.row.cells[idx]));
+          return naik ? c : -c;
         });
+      });
+      segarkanSemuaUnit();
         // Terapkan urutan baru ke DOM per segmen; baris total tetap di akhir.
         segmen.forEach(function (s) {
           if (s.header) wadahBaris.appendChild(s.header);
@@ -166,14 +196,59 @@ window.inisiasiPaginasi = function (akar) {
           var p = lain.querySelector('.panah-urut');
           if (p) p.remove();
         });
+        Array.prototype.forEach.call(kepala.cells, function (lain) {
+          lain.removeAttribute('aria-sort');
+        });
+        var thAktif = kepala.cells[idx];
+        thAktif.setAttribute('aria-sort', naik ? 'ascending' : 'descending');
         var panah = document.createElement('span');
         panah.className = 'panah-urut';
-        panah.textContent = urutNaik ? ' ▲' : ' ▼';
-        th.appendChild(panah);
+        panah.textContent = naik ? ' ▲' : ' ▼';
+        thAktif.appendChild(panah);
+      }
+    Array.prototype.forEach.call(kepala.cells, function (th, idx) {
+      if (th.hasAttribute('data-tanpa-urut')) return;
+      if (th.querySelector('input, select, textarea, button')) return;
+      if ((th.textContent || '').trim() === '') return;
+      th.classList.add('bisa-urut');
+      th.title = 'Klik untuk mengurutkan';
+      th.addEventListener('click', function () {
+        terapkanUrut(idx, urutKolom === idx ? !urutNaik : true);
         halaman = 1;
+        simpanStatus();
         gambar();
       });
     });
+
+    // Ekspor CSV: baris yang sedang tersaring, urutan saat ini, semua halaman.
+    function eksporCsv() {
+      var lewati = {};
+      Array.prototype.forEach.call(kepala.cells, function (th, i) {
+        if (th.querySelector('input, select, textarea, button') || (th.textContent || '').trim() === '') lewati[i] = 1;
+      });
+      var hasil = [];
+      var judul = [];
+      Array.prototype.forEach.call(kepala.cells, function (th, i) {
+        if (!lewati[i]) judul.push((th.textContent || '').replace(/\s+/g, ' ').trim());
+      });
+      hasil.push(judul);
+      semuaUnit.filter(function (u) { return cocok(u.row); }).forEach(function (u) {
+        var r = [];
+        Array.prototype.forEach.call(u.row.cells, function (td, i) {
+          if (!lewati[i]) r.push((td.textContent || '').replace(/\s+/g, ' ').trim());
+        });
+        hasil.push(r);
+      });
+      var csv = '\ufeff' + hasil.map(function (r) {
+        return r.map(function (x) { return '"' + String(x).replace(/"/g, '""') + '"'; }).join(';');
+      }).join('\r\n');
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = 'ekspor-tabel.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
 
     function gambar() {
       var tampil = semuaUnit.filter(function (u) { return cocok(u.row); });
@@ -212,6 +287,23 @@ window.inisiasiPaginasi = function (akar) {
       });
       totalRows.forEach(function (tr) { tr.style.display = ''; });
       barisKosong.style.display = kata !== '' && tampil.length === 0 ? '' : 'none';
+    }
+
+    // Pulihkan status tabel (kata cari, urutan, ukuran, halaman) sesi ini.
+    var statusLama = bacaStatus();
+    if (statusLama) {
+      if (statusLama.ukuran && pemilih) {
+        ukuran = parseInt(statusLama.ukuran, 10) || ukuran;
+        pemilih.value = String(ukuran);
+      }
+      if (statusLama.urutKolom >= 0) terapkanUrut(statusLama.urutKolom, statusLama.urutNaik !== false);
+      if (statusLama.kata) {
+        kataTampil = String(statusLama.kata);
+        kata = kataTampil.trim().toLowerCase();
+        var kotakInput = tabel.parentNode.querySelector('.cari-tabel input');
+        if (kotakInput) kotakInput.value = kataTampil;
+      }
+      halaman = parseInt(statusLama.halaman, 10) || 1;
     }
 
     gambar();

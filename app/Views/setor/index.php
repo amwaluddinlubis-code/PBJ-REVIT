@@ -41,7 +41,7 @@
       </label>
       <label>Masa Pajak <input type="month" name="masa"></label>
       <label>Tanggal Setor <input type="date" name="tanggal_setor" value="<?= date('Y-m-d') ?>" required></label>
-      <label>Jumlah Disetor (Rp) <input type="text" name="jumlah" inputmode="numeric" required></label>
+      <label>Jumlah Disetor (Rp) <input type="text" name="jumlah" inputmode="numeric" data-uang required></label>
       <label>Kode Billing <input type="text" name="kode_billing" placeholder="dari e-billing / SIMPONI"></label>
       <label>NTPN <input type="text" name="ntpn" placeholder="Nomor Transaksi Penerimaan Negara"></label>
       <label class="md:col-span-3">Keterangan <input type="text" name="keterangan" placeholder="opsional"></label>

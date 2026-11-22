@@ -112,7 +112,7 @@ $tabAktif = $tab ?? 'boq';
       <label>Kode analisa<input type="text" name="kode_analisa" placeholder="mis. B.01"></label>
       <label>Satuan<input type="text" name="satuan" placeholder="m3 / m2 / ls"></label>
       <label>Volume<input type="text" name="volume" value="0"></label>
-      <label>Harga satuan (Rp)<input type="text" name="harga_satuan" value="0"></label>
+      <label>Harga satuan (Rp)<input type="text" inputmode="numeric" data-uang name="harga_satuan" value="0"></label>
       <div class="aksi md:col-span-2"><button type="submit">Tambah Pekerjaan</button></div>
     </div>
   </form>

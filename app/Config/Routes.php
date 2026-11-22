@@ -17,6 +17,8 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('analisa/(:num)/komponen-simpan', 'Analisa::komponenSimpan/$1');
     $routes->post('analisa/(:num)/komponen-tambah', 'Analisa::komponenTambah/$1');
     $routes->post('analisa/(:num)/komponen-hapus/(:num)', 'Analisa::komponenHapus/$1/$2');
+    $routes->post('analisa/simpan-konversi', 'Analisa::simpanKonversi');
+    $routes->post('analisa/hapus-konversi', 'Analisa::hapusKonversi');
     $routes->get('bahan', 'Bahan::index');
     $routes->get('bahan/baru', 'Bahan::baru');
     $routes->post('bahan/simpan', 'Bahan::simpan');
@@ -155,6 +157,7 @@ $routes->post('biaya-non-gedung/hapus/(:num)', 'BiayaLain::hapus/$1', ['filter' 
 $routes->post('biaya-non-gedung/hapus-massal', 'BiayaLain::hapusMassal', ['filter' => 'auth']);
 $routes->post('biaya-non-gedung/kosongkan', 'BiayaLain::kosongkan', ['filter' => 'auth']);
 $routes->post('rencana-belanja/buat-spk', 'Rencana::buatSpk', ['filter' => 'auth']);
+$routes->post('rencana-belanja/hapus-bahan/(:num)', 'Rencana::hapusBahan/$1', ['filter' => 'auth']);
 $routes->get('upah', 'Upah::index', ['filter' => 'auth']);
 $routes->get('upah/cetak-daftar', 'Upah::cetakDaftar', ['filter' => 'auth']);
 $routes->post('upah/simpan', 'Upah::simpan', ['filter' => 'auth']);

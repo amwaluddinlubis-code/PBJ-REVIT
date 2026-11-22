@@ -3068,6 +3068,9 @@ th.bisa-urut { cursor: pointer; }
 th.bisa-urut:hover { text-decoration: underline; }
 th .panah-urut { font-size: 10px; opacity: .75; }
 tr.baris-kosong td { text-align: center; color: var(--ta-teks-2); padding: 18px 10px; font-style: italic; }
+/* v2: header sticky + sorotan baris untuk tabel standar */
+table[data-cari] thead th, table[data-paginasi] thead th { position: sticky; top: 56px; z-index: 5; }
+table[data-cari] tbody tr:hover td, table[data-paginasi] tbody tr:hover td { background-color: rgba(100, 116, 139, .07); }
 @media print {
   .paginasi { display: none !important; }
   table[data-paginasi] tr, table[data-cari] tr { display: table-row !important; }

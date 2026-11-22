@@ -29,7 +29,7 @@
       </label>
       <label>Nama penerima / mandor<input type="text" name="penerima" placeholder="mis. Sarmin (mandor)"></label>
       <label>Orang-hari (OH)<input type="text" name="orang_hari" required placeholder="mis. 12,5"></label>
-      <label>Tarif per OH (Rp) — kosongkan untuk tarif master<input type="text" name="tarif" placeholder="mis. 93578"></label>
+      <label>Tarif per OH (Rp) — kosongkan untuk tarif master<input type="text" inputmode="numeric" data-uang name="tarif" placeholder="mis. 93578"></label>
       <label>Keterangan<input type="text" name="keterangan" placeholder="mis. Upah pasang pondasi minggu ke-3"></label>
       <div class="aksi md:col-span-2"><button type="submit">Catat Pembayaran</button></div>
     </div>
@@ -81,7 +81,7 @@
       <td>
         <form method="post" action="<?= base_url('upah/tarif/' . $m['id']) ?>" style="display:flex;gap:6px">
           <?= csrf_field() ?>
-          <input type="text" name="tarif" value="<?= (int) round((float) $m['tarif']) ?>" style="margin:0">
+          <input type="text" inputmode="numeric" data-uang name="tarif" value="<?= (int) round((float) $m['tarif']) ?>" style="margin:0">
           <button class="kecil" type="submit">Simpan</button>
         </form>
       </td>
@@ -92,7 +92,7 @@
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <label>Jenis tenaga baru<input type="text" name="jenis" placeholder="mis. Tukang Aluminium"></label>
-      <label>Tarif per OH (Rp)<input type="text" name="tarif" placeholder="mis. 93578"></label>
+      <label>Tarif per OH (Rp)<input type="text" inputmode="numeric" data-uang name="tarif" placeholder="mis. 93578"></label>
       <div class="aksi md:col-span-2"><button type="submit">Tambah ke Master</button></div>
     </div>
   </form>

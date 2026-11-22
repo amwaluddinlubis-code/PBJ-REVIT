@@ -29,7 +29,7 @@
   <form method="post" action="<?= base_url('rencana-belanja/buat-spk') ?>">
     <?= csrf_field() ?>
     <table data-paginasi="25" data-cari="Cari bahan…">
-      <tr><th style="width:34px"></th><th>Bahan</th><th class="angka">Kebutuhan</th><th class="angka">Sudah Dipesan</th><th class="angka">Sisa Kebutuhan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Sisa</th><th style="width:130px">Qty Rencana</th></tr>
+      <tr><th style="width:34px"></th><th>Bahan</th><th class="angka">Kebutuhan</th><th class="angka">Sudah Dipesan</th><th class="angka">Sisa Kebutuhan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Sisa</th><th style="width:130px">Qty Rencana</th><th data-tanpa-urut style="width:150px">Aksi</th></tr>
       <?php $totalSisa = 0; foreach ($kebutuhan['tertaut'] as $b): $nilaiSisa = (float) $b['sisa'] * (float) $b['harga']; $totalSisa += $nilaiSisa; ?>
       <tr>
         <td><input type="checkbox" name="pilih[]" value="<?= (int) $b['bahan_id'] ?>"<?= $b['sisa'] > 0 ? ' checked' : '' ?> style="width:auto;margin:0"></td>
@@ -40,9 +40,13 @@
         <td class="angka"><?= number_format((float) $b['harga'], 0, ',', '.') ?></td>
         <td class="angka"><?= number_format($nilaiSisa, 0, ',', '.') ?></td>
         <td><input type="text" name="qty[<?= (int) $b['bahan_id'] ?>]" value="<?= esc(rtrim(rtrim(number_format((float) $b['sisa'], 2, '.', ''), '0'), '.')) ?>" style="margin:0"></td>
+        <td>
+          <?php if (($b['analisa_pertama'] ?? 0) > 0): ?><a class="tombol kecil abu" href="<?= base_url('analisa/' . (int) $b['analisa_pertama']) ?>" title="Buka analisa sumber bahan ini">Analisa</a> <?php endif; ?>
+          <button type="submit" class="tombol kecil bahaya" form="hapus-rencana-bahan-<?= (int) $b['bahan_id'] ?>">Hapus</button>
+        </td>
       </tr>
       <?php endforeach; ?>
-      <tr class="total"><td colspan="6">Total Nilai Sisa Kebutuhan</td><td class="angka"><?= number_format($totalSisa, 0, ',', '.') ?></td><td></td></tr>
+      <tr class="total"><td colspan="6">Total Nilai Sisa Kebutuhan</td><td class="angka"><?= number_format($totalSisa, 0, ',', '.') ?></td><td></td><td></td></tr>
     </table>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" style="margin-top:14px">
       <label>Gedung tujuan SPK
@@ -57,6 +61,11 @@
     </div>
     <p class="kecil-teks">SPK dibuat dengan nomor berikutnya, tanggal hari ini, dan harga acuan saat ini. Penyedia dapat dilengkapi sesudahnya di Register SPK. Jumlah rencana bawaan = sisa kebutuhan; silakan sesuaikan (mis. dibeli bertahap).</p>
   </form>
+  <?php foreach ($kebutuhan['tertaut'] as $b): ?>
+  <form id="hapus-rencana-bahan-<?= (int) $b['bahan_id'] ?>" method="post" action="<?= base_url('rencana-belanja/hapus-bahan/' . (int) $b['bahan_id']) ?>" data-konfirmasi="Hapus bahan <?= esc($b['nama']) ?> dari rencana belanja? Bahan ini berasal dari <?= (int) ($b['komponen_dari'] ?? 0) ?> komponen di <?= (int) ($b['analisa_dari'] ?? 0) ?> analisa — komponennya akan dihapus dari modul Analisa sehingga bahan hilang dari kebutuhan SEMUA gedung. SPK yang sudah terlanjur memakai bahan ini tidak berubah, dan penghapusan dapat dipulihkan lewat Pemeliharaan Database (Sampah)." hidden>
+    <?= csrf_field() ?>
+  </form>
+  <?php endforeach; ?>
 </div>
 
 <div class="panel">

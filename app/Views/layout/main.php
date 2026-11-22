@@ -187,6 +187,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
 <script defer src="<?= base_url('assets/alpine.min.js') ?>?v=<?= file_exists(FCPATH . 'assets/alpine.min.js') ? filemtime(FCPATH . 'assets/alpine.min.js') : 0 ?>"></script>
 <script src="<?= base_url('assets/paginasi.js') ?>?v=<?= file_exists(FCPATH . 'assets/paginasi.js') ? filemtime(FCPATH . 'assets/paginasi.js') : 0 ?>"></script>
 <script src="<?= base_url('assets/bulk.js') ?>?v=<?= file_exists(FCPATH . 'assets/bulk.js') ? filemtime(FCPATH . 'assets/bulk.js') : 0 ?>"></script>
+<script src="<?= base_url('assets/uang.js') ?>?v=<?= file_exists(FCPATH . 'assets/uang.js') ? filemtime(FCPATH . 'assets/uang.js') : 0 ?>"></script>
 <script src="<?= base_url('assets/select-cari.js') ?>?v=<?= file_exists(FCPATH . 'assets/select-cari.js') ? filemtime(FCPATH . 'assets/select-cari.js') : 0 ?>"></script>
 <script>
 // Toggle menu samping gaya TailAdmin — pilihan tersimpan di peramban.

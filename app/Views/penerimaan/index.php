@@ -27,7 +27,7 @@
       <label>Tahap
         <select data-select-cari name="tahap"><option value="1">Tahap 1 (70%)</option><option value="2">Tahap 2 (30%)</option></select>
       </label>
-      <label>Jumlah Diterima (Rp) <input type="text" name="jumlah" inputmode="numeric" required placeholder="437500000"></label>
+      <label>Jumlah Diterima (Rp) <input type="text" name="jumlah" inputmode="numeric" data-uang required placeholder="437500000"></label>
       <label>Kanal
         <select data-select-cari name="kanal"><option value="bank">Bank (rekening sekolah)</option><option value="tunai">Tunai</option></select>
       </label>

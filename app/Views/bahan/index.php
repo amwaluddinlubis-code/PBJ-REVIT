@@ -16,7 +16,7 @@
         <td><?= esc($b['kode']) ?></td>
         <td class="potong" title="<?= esc($b['nama']) ?>"><?= esc($b['nama']) ?></td>
         <td><?= esc($b['satuan']) ?></td>
-        <td><input type="number" name="harga[<?= (int) $b['id'] ?>]" min="1" placeholder="isi harga…" style="width:170px"></td>
+        <td><input type="text" inputmode="numeric" data-uang name="harga[<?= (int) $b['id'] ?>]" min="1" placeholder="isi harga…" style="width:170px"></td>
       </tr>
       <?php endforeach; ?>
     </table></div>
@@ -28,7 +28,7 @@
       <?php foreach ($upahTanpaTarif as $u): ?>
       <tr>
         <td><?= esc($u['jenis']) ?></td>
-        <td><input type="number" name="tarif[<?= (int) $u['id'] ?>]" min="1" placeholder="isi tarif…" style="width:170px"></td>
+        <td><input type="text" inputmode="numeric" data-uang name="tarif[<?= (int) $u['id'] ?>]" min="1" placeholder="isi tarif…" style="width:170px"></td>
       </tr>
       <?php endforeach; ?>
     </table></div>
@@ -111,7 +111,7 @@
     </table>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:8px 0">
       <label>Satuan final (perbaiki bila perlu) <input type="text" name="satuan_final" value="<?= esc($grup['anggota'][0]['satuan'] ?? '') ?>" size="8"></label>
-      <label>Harga final (Rp) <input type="text" name="harga_final" value="<?= (int) $grup['anggota'][0]['harga_rab'] ?>"></label>
+      <label>Harga final (Rp) <input type="text" data-uang name="harga_final" value="<?= (int) $grup['anggota'][0]['harga_rab'] ?>"></label>
       <span class="kecil-teks">Satuan &amp; harga final ini yang menjadi acuan master setelah digabung.</span>
     </div>
     <div class="aksi" style="justify-content:flex-start"><button type="submit">Perbaiki &amp; Gabungkan "<?= esc($grup['nama']) ?>"</button></div>
@@ -167,7 +167,7 @@
       <td><?= esc($u['satuan'] ?? 'OH') ?></td>
       <td class="angka"><?= $rp($u['tarif']) ?></td>
       <td>
-        <form class="inline" method="post" action="<?= base_url('bahan/upah-perbarui/' . $u['id']) ?>"><?= csrf_field() ?><input type="text" name="tarif" value="<?= (int) $u['tarif'] ?>" size="10"> <button class="kecil" type="submit">Simpan</button></form>
+        <form class="inline" method="post" action="<?= base_url('bahan/upah-perbarui/' . $u['id']) ?>"><?= csrf_field() ?><input type="text" inputmode="numeric" data-uang name="tarif" value="<?= (int) $u['tarif'] ?>" size="10"> <button class="kecil" type="submit">Simpan</button></form>
       </td>
       <td><form class="inline" method="post" action="<?= base_url('bahan/upah-hapus/' . $u['id']) ?>" data-konfirmasi="Hapus jenis tenaga ini dari Master Upah? Pembayaran lama tidak berubah."><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
     </tr>
@@ -178,7 +178,7 @@
     <?= csrf_field() ?>
     <label>Jenis tenaga baru <input type="text" name="jenis" required placeholder="mis. Tukang Batu"></label>
     <label>Satuan <input type="text" name="satuan" value="OH" size="5"></label>
-    <label>Tarif (Rp) <input type="text" name="tarif" required placeholder="mis. 93578"></label>
+    <label>Tarif (Rp) <input type="text" inputmode="numeric" data-uang name="tarif" required placeholder="mis. 93578"></label>
     <button type="submit" class="kecil">+ Tambah ke Master Upah</button>
   </form>
 
@@ -199,7 +199,7 @@
       <?php endforeach; ?>
     </table>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:8px 0">
-      <label>Tarif final (Rp) <input type="text" name="tarif_final" value="<?= (int) $grup['anggota'][0]['tarif'] ?>"></label>
+      <label>Tarif final (Rp) <input type="text" data-uang name="tarif_final" value="<?= (int) $grup['anggota'][0]['tarif'] ?>"></label>
       <span class="kecil-teks">Tarif final ini yang menjadi acuan Master Upah setelah digabung.</span>
     </div>
     <div class="aksi" style="justify-content:flex-start"><button type="submit" class="kecil">Perbaiki &amp; Gabungkan "<?= esc($grup['nama']) ?>"</button></div>
@@ -213,7 +213,7 @@
     <?= csrf_field() ?>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:8px 0">
       <label>Jenis tujuan <?= select_cari('tujuan', array_map(static fn ($u) => ['value' => (int) $u['id'], 'label' => $u['jenis'] . ' — ' . $rp($u['tarif'])], $upah), null, ['id' => 'gabung-tujuan']) ?></label>
-      <label>Tarif final tujuan (Rp) <input type="text" name="tarif_final" placeholder="kosongkan = tarif tujuan tetap"></label>
+      <label>Tarif final tujuan (Rp) <input type="text" data-uang name="tarif_final" placeholder="kosongkan = tarif tujuan tetap"></label>
     </div>
     <div style="display:flex;gap:6px 16px;flex-wrap:wrap;margin:6px 0">
       <?php foreach ($upah as $u): ?>

@@ -30,7 +30,7 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
     <h2>Pagu Anggaran (Kontrol Belanja)</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <label>Total Anggaran / Bantuan (Rp)
-        <input name="total_anggaran" value="<?= $anggaran > 0 ? $rp($anggaran) : '' ?>" placeholder="mis. 2.540.292.000">
+        <input data-uang name="total_anggaran" value="<?= $anggaran > 0 ? $rp($anggaran) : '' ?>" placeholder="mis. 2.540.292.000">
         <span class="kecil-teks">Terisi otomatis dari Rekap RAB saat impor dokumen perencana. Isi manual bila sekolah tidak memakai impor.</span>
       </label>
       <label>Belanja terbayar saat ini (terkunci)

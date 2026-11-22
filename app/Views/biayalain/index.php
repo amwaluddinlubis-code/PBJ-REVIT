@@ -190,7 +190,7 @@ $warnaSelisih = $selisih < 0 ? 'negatif' : ($selisih > 0 ? 'positif' : '');
 
           <div class="form-field">
             <label>Harga Satuan (Rp)</label>
-            <input type="text" name="harga_satuan" id="f-harga-modal" inputmode="numeric" required placeholder="750000">
+            <input type="text" name="harga_satuan" id="f-harga-modal" inputmode="numeric" data-uang required placeholder="750000">
           </div>
 
           <div class="form-field">

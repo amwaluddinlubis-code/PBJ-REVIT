@@ -19,13 +19,13 @@ foreach ($komponen as $k) {
     <?= csrf_field() ?>
     <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari komponen…">
       <tr><th>Jenis</th><th>Komponen</th><th style="width:120px">Koefisien</th><th>Satuan</th><th style="width:150px">Tarif (Rp)</th><th class="angka">Nilai / Satuan</th><th>Aksi</th></tr>
-      <?php foreach ($komponen as $k): ?>
-      <tr>
+      <?php foreach ($komponen as $k): $nol = (float) ($k['tarif'] ?? 0) <= 0; ?>
+      <tr<?= $nol ? ' style="background:#fffbeb"' : '' ?>>
         <td><span style="background:<?= $lencana[$k['jenis']] ?? '#e5e7eb' ?>;padding:1px 7px;border-radius:99px;font-size:11px"><?= esc(ucfirst($k['jenis'])) ?></span></td>
         <td class="potong" title="<?= esc($k['nama']) ?>"><?= esc($k['nama_master'] ?? $k['nama']) ?><?php if (! empty($k['kode_master'])): ?> <span class="kecil-teks">(<?= esc($k['kode_master']) ?>)</span><?php endif; ?></td>
         <td><input type="text" name="komp[<?= (int) $k['id'] ?>][koefisien]" value="<?= esc((string) $k['koefisien']) ?>" style="width:105px"></td>
         <td><?= esc($k['satuan'] ?? '') ?></td>
-        <td><input type="text" name="komp[<?= (int) $k['id'] ?>][tarif]" value="<?= (int) ($k['tarif'] ?? 0) ?>" style="width:135px"></td>
+        <td><input type="text" data-uang name="komp[<?= (int) $k['id'] ?>][tarif]" value="<?= (int) ($k['tarif'] ?? 0) ?>" style="width:135px"><?php if ($nol): ?> <span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:99px;font-size:11px">tarif 0</span><?php endif; ?></td>
         <td class="angka"><?= $rp((float) $k['koefisien'] * (float) ($k['tarif'] ?? 0)) ?></td>
         <td><button type="submit" class="tombol kecil abu" form="hapus-komp-<?= (int) $k['id'] ?>">Hapus</button></td>
       </tr>
@@ -56,7 +56,7 @@ foreach ($komponen as $k) {
     <label>Nama komponen <input type="text" name="nama" placeholder="nama komponen"></label>
     <label>Koefisien <input type="text" name="koefisien" size="8" placeholder="0,0000"></label>
     <label>Satuan <input type="text" name="satuan" size="6" placeholder="m3 / OH / zak"></label>
-    <label>Tarif (Rp) <input type="text" name="tarif" size="10" placeholder="otomatis bila dari master"></label>
+    <label>Tarif (Rp) <input type="text" inputmode="numeric" data-uang name="tarif" size="10" placeholder="otomatis bila dari master"></label>
     <button type="submit" class="tombol kecil">+ Tambah Komponen</button>
   </form>
   <p class="kecil-teks">Untuk jenis Upah, isi Nama persis seperti jenis di Master Upah agar tarif master berlaku. Untuk jenis Bahan dari master, tarif otomatis memakai harga acuan bahan bila kolom tarif dikosongkan.</p>

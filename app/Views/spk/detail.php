@@ -33,7 +33,7 @@
       <form class="inline" method="post" action="<?= base_url('spk/detail-ubah/' . $d['id']) ?>">
         <?= csrf_field() ?>
         <input type="number" name="qty" step="0.001" value="<?= esc($d['qty']) ?>" style="width:80px">
-        <input type="number" name="harga" step="1" value="<?= esc($d['harga']) ?>" style="width:110px">
+        <input type="text" inputmode="numeric" data-uang name="harga" step="1" value="<?= esc($d['harga']) ?>" style="width:110px">
         <label class="kecil-teks"><input type="checkbox" name="pajak" value="1" style="width:auto"<?= $d['pajak'] ? ' checked' : '' ?>> kena PPN</label>
         <button type="submit" class="kecil abu">Simpan</button>
       </form>
@@ -86,7 +86,7 @@
       </select>
     </label>
     <label>Qty <input type="number" name="qty" step="0.001" min="0" required></label>
-    <label>Harga Satuan (kosongkan = harga acuan) <input type="number" name="harga" step="1" id="hargaIsi" placeholder="otomatis"></label>
+    <label>Harga Satuan (kosongkan = harga acuan) <input type="text" inputmode="numeric" data-uang name="harga" step="1" id="hargaIsi" placeholder="otomatis"></label>
     <label>Kena PPN
       <select data-select-cari name="pajak"><option value="0">Tidak</option><option value="1">Ya</option></select>
     </label>
