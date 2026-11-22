@@ -139,7 +139,7 @@ $warnaSelisih = $selisih < 0 ? 'negatif' : ($selisih > 0 ? 'positif' : '');
 </div>
 
 <!-- Modal Form Tambah / Ubah -->
-<div class="biaya-modal-lapik" id="modal-biaya" hidden>
+<div class="biaya-modal-lapik" id="modal-biaya" hidden role="dialog" aria-modal="true" aria-labelledby="judul-modal">
   <div class="biaya-modal-kotak biaya-form">
     <div class="biaya-modal-kepala">
       <h3 id="judul-modal">Tambah Baris Biaya</h3>
