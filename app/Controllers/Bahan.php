@@ -186,7 +186,86 @@ class Bahan extends BaseController
             }
         }
         unset($r);
+        $this->lampirkanTarifGedung($baris);
         return $baris;
+    }
+
+
+    /**
+     * Tarif komponen analisa per gedung didanai untuk tiap bahan, sebagai
+     * pembanding harga modul Bahan vs modul Analisa. Status 'sama' bila
+     * semua tarif komponen — sesudah dinormalkan ke satuan master lewat
+     * faktorSatuan() (mis. tarif per kg ÷ 1/50 = per zak) — sama dengan
+     * harga acuan bahan; 'beda' bila ada yang menyimpang; 'nol' bila
+     * harga acuan bahan sendiri masih 0 sehingga tak bisa dibandingkan.
+     */
+    private function lampirkanTarifGedung(array &$baris): void
+    {
+        if ($baris === []) {
+            return;
+        }
+        $sid = $this->sid();
+        $perBahan = [];
+        foreach ($this->db()->query(
+            'SELECT ak.bahan_id, g.nama AS gedung, ak.tarif, ak.satuan AS satuan_komp
+             FROM analisa_komponen ak
+             JOIN analisa a ON a.id = ak.analisa_id AND a.is_deleted = 0 AND a.sekolah_id = ?
+             JOIN pekerjaan p ON p.kode_analisa = a.kode AND p.is_deleted = 0
+             JOIN gedung g ON g.id = p.gedung_id AND g.is_deleted = 0 AND g.didanai = 1 AND g.sekolah_id = ?
+             WHERE ak.jenis = ? AND ak.bahan_id IS NOT NULL AND ak.is_deleted = 0
+             ORDER BY g.nama, ak.tarif',
+            [$sid, $sid, 'bahan']
+        )->getResultArray() as $k) {
+            $perBahan[(int) $k['bahan_id']][(string) $k['gedung']][] = $k;
+        }
+        $nego = [];
+        foreach ($this->db()->table('negosiasi')->where(['is_deleted' => 0])->get()->getResultArray() as $n) {
+            $nego[(int) $n['bahan_id']] = $n;
+        }
+        foreach ($baris as &$r) {
+            $id = (int) $r['id'];
+            $r['tarif_gedung'] = [];
+            $r['status_harga'] = null;
+            if (! isset($perBahan[$id])) {
+                continue;
+            }
+            $acuan = (float) ($r['harga_rab'] ?? 0);
+            if (isset($nego[$id])) {
+                if (! empty($nego[$id]['harga_nego'])) {
+                    $acuan = (float) $nego[$id]['harga_nego'];
+                } elseif (! empty($nego[$id]['harga_penawaran'])) {
+                    $acuan = (float) $nego[$id]['harga_penawaran'];
+                }
+            }
+            $semuaSama = $acuan > 0;
+            foreach ($perBahan[$id] as $gedung => $komps) {
+                $unik = [];
+                foreach ($komps as $k) {
+                    $tarif = (float) $k['tarif'];
+                    $faktor = $this->faktorSatuan($k['satuan_komp'] ?? null, $r);
+                    $normal = $faktor > 0 ? $tarif / $faktor : $tarif;
+                    if ($acuan <= 0 || abs($normal - $acuan) >= 1) {
+                        $semuaSama = false;
+                    }
+                    $kunci = number_format($tarif, 2, '.', '') . '|' . (string) ($k['satuan_komp'] ?? '');
+                    $unik[$kunci] = ['tarif' => $tarif, 'satuan' => (string) ($k['satuan_komp'] ?? ''), 'sama' => $acuan > 0 && abs($normal - $acuan) < 1];
+                }
+                $r['tarif_gedung'][] = ['gedung' => $gedung, 'nilai' => array_values($unik)];
+            }
+            $r['status_harga'] = $acuan <= 0 ? 'nol' : ($semuaSama ? 'sama' : 'beda');
+            // Bila tarifnya sama persis di semua gedung, ringkas jadi satu
+            // baris "Semua Gedung" agar baris tabel tidak menjulang.
+            $pasangan = [];
+            foreach ($r['tarif_gedung'] as $tg) {
+                foreach ($tg['nilai'] as $n) {
+                    $pasangan[number_format($n['tarif'], 2, '.', '') . '|' . $n['satuan']] = $n;
+                }
+            }
+            $r['tarif_seragam'] = count($pasangan) === 1
+                ? ['nilai' => array_values($pasangan)[0], 'jumlah' => count($r['tarif_gedung'])]
+                : null;
+        }
+        unset($r);
     }
 
     /** Potongan tabel bahan untuk pencarian langsung (AJAX gaya Livewire). */
