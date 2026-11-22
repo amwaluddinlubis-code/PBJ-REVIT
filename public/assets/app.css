@@ -283,6 +283,18 @@ html.gelap .toast-isi p { color: #b8c2d4; }
 html.gelap .mk-kartu { background: #1c2534; }
 html.gelap .mk-kartu p { color: #b8c2d4; }
 html.gelap .mk-tombol.batal { background: transparent; border-color: #3b4a61; color: #e6ebf2; }
+.mk-kartu.lebar { max-width: 580px; text-align: left; }
+.mk-kartu.lebar .mk-ikon { margin: 0 0 14px; }
+.mk-kartu.lebar #mk-pesan { max-height: 46vh; overflow-y: auto; }
+.mk-kartu .mk-rinci p { margin: 0 0 6px; }
+.mk-rinci ul { margin: 2px 0 12px; padding-left: 18px; font-size: 11.2px; line-height: 1.55; color: var(--ta-teks-2); }
+html.gelap .mk-rinci ul { color: #b8c2d4; }
+.btn-hapus-baris { background: transparent; border: 1px solid var(--ina-red-600, #d92d20); color: var(--ina-red-600, #d92d20); border-radius: 8px; padding: 5px 10px; font-size: 10.4px; font-weight: 600; cursor: pointer; }
+.btn-hapus-baris:hover { background: var(--ina-red-600, #d92d20); color: #fff; }
+tr.baris-terhapus td { background: var(--ina-red-100, #fef3f2); color: var(--ta-teks-2); font-size: 10.4px; }
+html.gelap tr.baris-terhapus td { background: #3a2430; color: #b8c2d4; }
+.btn-kembalikan { background: transparent; border: 1px solid var(--ta-garis-2); border-radius: 8px; padding: 3px 9px; font-size: 10.4px; font-weight: 600; cursor: pointer; color: var(--ta-teks); margin-left: 8px; }
+.btn-kembalikan:hover { background: var(--ta-biru-50); }
 
 /* ===== Modernisasi visual 2026 ===== */
 :root {
