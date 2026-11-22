@@ -545,8 +545,13 @@ textarea:focus-visible {
 }
 
 button.bahaya {
-  background: var(--ina-red-500, #f02d2d);
-  border-color: var(--ina-red-500, #f02d2d);
+  background: #800000;
+  border-color: #800000;
+}
+
+button.bahaya:hover {
+  background: #660000;
+  border-color: #660000;
 }
 
 button.kecil,
@@ -560,6 +565,18 @@ button.abu,
   background: #fff;
   color: var(--ta-teks);
   border-color: var(--ta-garis-2);
+}
+
+button.ekspor,
+.tombol.ekspor {
+  background: #cdeac0;
+  border-color: #a9d69a;
+  color: #1e5631;
+}
+
+button.ekspor:hover,
+.tombol.ekspor:hover {
+  background: #bce0ab;
 }
 
 button.abu:hover,
@@ -1683,13 +1700,13 @@ html.gelap .toast-isi p {
 }
 
 .mk-tombol.bahaya {
-  background: var(--ina-red-600, #d92d20);
-  border-color: var(--ina-red-600, #d92d20);
+  background: #800000;
+  border-color: #800000;
   color: #fff;
 }
 
 .mk-tombol.bahaya:hover {
-  background: var(--ina-red-700, #b42318);
+  background: #660000;
 }
 
 .mk-tombol.utama {
@@ -1748,8 +1765,8 @@ html.gelap .mk-rinci ul {
 
 .btn-hapus-baris {
   background: transparent;
-  border: 1px solid var(--ina-red-600, #d92d20);
-  color: var(--ina-red-600, #d92d20);
+  border: 1px solid #800000;
+  color: #800000;
   border-radius: 8px;
   padding: 5px 10px;
   font-size: 10.4px;
@@ -1758,7 +1775,7 @@ html.gelap .mk-rinci ul {
 }
 
 .btn-hapus-baris:hover {
-  background: var(--ina-red-600, #d92d20);
+  background: #800000;
   color: #fff;
 }
 
@@ -3308,7 +3325,9 @@ body:not(.login) .tombol:hover,
 body:not(.login) .tombol-buka-form:hover { box-shadow: 0 9px 18px rgba(9, 104, 246, .14); }
 body:not(.login) button.abu,
 body:not(.login) .tombol.abu { background: #fff; border-color: var(--ui-border-strong); box-shadow: none; }
-body:not(.login) button.bahaya { box-shadow: 0 5px 12px rgba(240, 45, 45, .12); }
+body:not(.login) button.bahaya { box-shadow: 0 5px 12px rgba(128, 0, 0, .18); }
+body:not(.login) button.ekspor { background: #cdeac0; border-color: #a9d69a; color: #1e5631; }
+body:not(.login) button.ekspor:hover { background: #bce0ab; }
 
 body:not(.login) .aksi {
   align-items: center;

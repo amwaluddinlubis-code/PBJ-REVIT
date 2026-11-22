@@ -43,7 +43,7 @@
             <?= csrf_field() ?>
             <input type="hidden" name="bahan_id" value="<?= (int) $r['bahan_id'] ?>">
             <input type="hidden" name="satuan_komponen" value="<?= esc($r['satuan_komponen']) ?>">
-            <button type="submit" class="tombol kecil abu">Hapus Manual</button>
+            <button type="submit" class="tombol kecil bahaya">Hapus Manual</button>
           </form>
           <?php endif; ?>
         </td>

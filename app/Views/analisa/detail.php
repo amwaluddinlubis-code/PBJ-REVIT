@@ -28,7 +28,7 @@ foreach ($komponen as $k) {
         <td class="angka"><?= $rp((float) $k['koefisien'] * (float) ($k['tarif'] ?? 0)) ?></td>
         <td style="white-space:nowrap">
           <button type="button" class="tombol kecil abu" data-ubah-komp data-id="<?= (int) $k['id'] ?>" data-nama="<?= esc($k['nama_master'] ?? $k['nama'], 'attr') ?>" data-jenis="<?= esc(ucfirst($k['jenis']), 'attr') ?>" data-koefisien="<?= esc((string) $k['koefisien'], 'attr') ?>" data-satuan="<?= esc($k['satuan'] ?? '', 'attr') ?>" data-tarif="<?= (int) ($k['tarif'] ?? 0) ?>">Ubah</button>
-          <button type="submit" class="tombol kecil abu" form="hapus-komp-<?= (int) $k['id'] ?>">Hapus</button>
+          <button type="submit" class="tombol kecil bahaya" form="hapus-komp-<?= (int) $k['id'] ?>">Hapus</button>
         </td>
       </tr>
       <?php endforeach; ?>
