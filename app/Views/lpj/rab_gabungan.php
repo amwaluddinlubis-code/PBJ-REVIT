@@ -18,7 +18,7 @@
 
 <div class="panel">
   <h2>Ringkasan per Gedung Terpilih</h2>
-  <table>
+  <table data-cari="Cari gedung…">
     <tr><th>Gedung</th><th class="angka">Nilai BOQ (RAB)</th><th class="angka">Realisasi</th><th class="angka">Fisik</th><th></th></tr>
     <?php $totBoq = 0; foreach ($perGedung as $g): $totBoq += (float) $g['nilai_boq']; ?>
     <tr>
@@ -35,7 +35,7 @@
 
 <div class="panel">
   <h2>Pekerjaan Gabungan (<?= count($gabungan) ?> jenis pekerjaan)</h2>
-  <table data-paginasi="25">
+  <table data-paginasi="25" data-cari="Cari pekerjaan…">
     <tr><th>Pekerjaan</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Volume Gabungan</th><th class="angka">Jumlah</th><th class="angka">Di Gedung</th></tr>
     <?php foreach ($gabungan as $p): ?>
     <tr>

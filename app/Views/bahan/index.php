@@ -9,7 +9,7 @@
     <?= csrf_field() ?>
     <?php if (! empty($bahanTanpaHarga)): ?>
     <p style="margin:8px 0 4px"><strong><?= count($bahanTanpaHarga) ?> bahan belum punya harga acuan</strong></p>
-    <div class="bungkus-tabel"><table class="satu-baris">
+    <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari bahan…">
       <tr><th>Kode</th><th>Bahan</th><th>Satuan</th><th style="width:190px">Harga Acuan (Rp)</th></tr>
       <?php foreach ($bahanTanpaHarga as $b): ?>
       <tr>
@@ -23,7 +23,7 @@
     <?php endif; ?>
     <?php if (! empty($upahTanpaTarif)): ?>
     <p style="margin:12px 0 4px"><strong><?= count($upahTanpaTarif) ?> jenis upah belum punya tarif</strong></p>
-    <div class="bungkus-tabel"><table class="satu-baris">
+    <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari jenis tenaga…">
       <tr><th>Jenis Tenaga</th><th style="width:190px">Tarif per Hari (Rp)</th></tr>
       <?php foreach ($upahTanpaTarif as $u): ?>
       <tr>
@@ -155,7 +155,7 @@
       <button type="submit" class="bahaya">Kosongkan Master Upah</button>
     </form>
   </div>
-  <table>
+  <table data-cari="Cari jenis tenaga…">
     <tr>
       <th style="width:34px"><input type="checkbox" title="Pilih semua jenis tenaga" @change="pilihSemuaUpah($event)"></th>
       <th>Jenis Tenaga</th><th>Satuan</th><th class="angka">Tarif</th><th style="width:300px">Ubah Tarif</th><th></th>

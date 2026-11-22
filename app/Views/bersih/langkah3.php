@@ -17,7 +17,7 @@
   <?= csrf_field() ?>
   <div class="panel">
     <h2>Kelompok A — Hanya Dipakai Analisa yang Dibuang</h2>
-    <table>
+    <table data-cari="Cari bahan…">
       <tr><th style="width:36px">Hapus</th><th>Kode</th><th>Nama Bahan</th><th>Satuan</th><th class="angka">Harga RAB</th></tr>
       <?php foreach ($grupA as $b): ?>
       <tr>
@@ -31,7 +31,7 @@
   </div>
   <div class="panel">
     <h2>Kelompok B — Tidak Dirujuk Apa Pun</h2>
-    <table>
+    <table data-cari="Cari bahan…">
       <tr><th style="width:36px">Hapus</th><th>Kode</th><th>Nama Bahan</th><th>Satuan</th><th class="angka">Harga RAB</th></tr>
       <?php foreach ($grupB as $b): ?>
       <tr>

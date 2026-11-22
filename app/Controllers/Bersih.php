@@ -282,7 +282,7 @@ class Bersih extends BaseController
     private function ringkasanDampak(array $pekerjaanIds, array $analisaIds): array
     {
         $db = $this->db();
-        $in = implode(',', $pekerjaanIds ?: [0]);
+        $in = implode(',', array_map('intval', $pekerjaanIds ?: [0]));
         $nilai = (float) $db->query("SELECT COALESCE(SUM(jumlah), 0) t FROM pekerjaan WHERE id IN ($in)")->getRow()->t;
         $gedung = $db->query(
             "SELECT g.nama, g.nilai_boq, COUNT(*) c FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id WHERE p.id IN ($in) GROUP BY g.id, g.nama, g.nilai_boq ORDER BY g.urutan"

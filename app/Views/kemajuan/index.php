@@ -19,7 +19,7 @@
 
 <div class="panel">
   <h2>Kemajuan per Gedung</h2>
-  <table>
+  <table data-cari="Cari gedung…">
     <tr><th>Gedung / Paket</th><th class="angka">Nilai BOQ</th><th class="angka">Nilai Realisasi</th><th class="angka">Kemajuan Fisik</th></tr>
     <?php foreach ($gedung as $g): ?>
     <tr>

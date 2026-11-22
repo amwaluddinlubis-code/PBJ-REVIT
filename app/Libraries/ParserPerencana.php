@@ -129,6 +129,9 @@ class ParserPerencana
      */
     public function impor(string $path, array $pilihan = []): array
     {
+        // Satu transaksi untuk seluruh impor multi-tabel (aturan AGENTS.md):
+        // gagal di tengah berarti tidak ada perubahan yang tertinggal setengah.
+        $this->db->transStart();
         $p = new PembacaXlsxMentah($path);
         $semuaSheet = $p->daftarSheet();
         $ringkas = [
@@ -303,6 +306,7 @@ class ParserPerencana
             ];
         }
 
+        $this->db->transComplete();
         return $ringkas;
     }
 
@@ -544,7 +548,7 @@ class ParserPerencana
      */
     private function imporBiayaLain(PembacaXlsxMentah $p, array $pilihan = []): array
     {
-        $this->db->table('biaya_lain')->where(['sekolah_id' => $this->sid, 'sumber' => 'impor'])->delete();
+        $this->db->table('biaya_lain')->where(['sekolah_id' => $this->sid, 'sumber' => 'impor', 'is_deleted' => 0])->update(['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
         $hasil = ['baris' => 0, 'total' => 0.0];
         $sisip = function (array $r) use (&$hasil) {
             $r['sekolah_id'] = $this->sid;
@@ -753,7 +757,7 @@ class ParserPerencana
         }
         $items = $this->barisPerabot($p, $sheet);
         $this->db->table('biaya_lain')->where('sekolah_id', $this->sid)
-            ->where('sumber', 'impor')->like('kelompok', 'Perabot', 'after')->delete();
+            ->where('sumber', 'impor')->where('is_deleted', 0)->like('kelompok', 'Perabot', 'after')->update(['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
         $total = 0.0;
         foreach ($items as $it) {
             $this->db->table('biaya_lain')->insert([
@@ -1074,7 +1078,7 @@ class ParserPerencana
                 $row = $this->db->table('analisa')->where(['sekolah_id' => $this->sid, 'kode' => $kode])->get()->getRowArray();
                 $aid = (int) $row['id'];
                 $this->db->table('analisa')->where('id', $aid)->update(['nama' => $blok['nama'], 'satuan' => $blok['satuan'], 'is_deleted' => 0, 'deleted_at' => null]);
-                $this->db->table('analisa_komponen')->where('analisa_id', $aid)->delete();
+                $this->db->table('analisa_komponen')->where(['analisa_id' => $aid, 'is_deleted' => 0])->update(['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
                 foreach ($blok['komponen'] as $k) {
                     $bahanId = null;
                     // Harga satuan komponen dari sheet Analisa adalah acuan utama
@@ -1267,7 +1271,7 @@ class ParserPerencana
                 $ubah['nama'] = trim($namaTampil);
             }
             $db->table('gedung')->where('id', $gid)->update($ubah);
-            $db->table('pekerjaan')->where('gedung_id', $gid)->delete();
+            $db->table('pekerjaan')->where(['gedung_id' => $gid, 'is_deleted' => 0])->update(['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
         } else {
             $urut = (int) ($db->query('SELECT COALESCE(MAX(urutan),0) m FROM gedung WHERE sekolah_id = ?', [$this->sid])->getRow()->m ?? 0) + 1;
             $db->table('gedung')->insert([

@@ -129,7 +129,7 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
   <datalist id="daftar-bahan">
     <?php foreach ($semua_bahan as $b): ?><option value="<?= esc($b['kode']) ?> — <?= esc($b['nama']) ?>" data-id="<?= (int) $b['id'] ?>"></option><?php endforeach; ?>
   </datalist>
-  <table data-paginasi="25">
+  <table data-paginasi="25" data-cari="Cari komponen…">
     <tr><th>Komponen (dari analisa)</th><th class="angka">Dipakai</th><th>Saran Padanan Master</th><th style="width:130px">Aksi</th></tr>
     <?php foreach ($tak_tertaut as $t): ?>
     <tr>

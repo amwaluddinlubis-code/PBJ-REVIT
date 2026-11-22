@@ -28,7 +28,7 @@
   <h2>Rencana Belanja Bahan — Dari Kebutuhan Pekerjaan</h2>
   <form method="post" action="<?= base_url('rencana-belanja/buat-spk') ?>">
     <?= csrf_field() ?>
-    <table data-paginasi="25">
+    <table data-paginasi="25" data-cari="Cari bahan…">
       <tr><th style="width:34px"></th><th>Bahan</th><th class="angka">Kebutuhan</th><th class="angka">Sudah Dipesan</th><th class="angka">Sisa Kebutuhan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Sisa</th><th style="width:130px">Qty Rencana</th></tr>
       <?php $totalSisa = 0; foreach ($kebutuhan['tertaut'] as $b): $nilaiSisa = (float) $b['sisa'] * (float) $b['harga']; $totalSisa += $nilaiSisa; ?>
       <tr>
@@ -61,7 +61,7 @@
 
 <div class="panel">
   <h2>Rencana Upah — Dari Kebutuhan Tenaga</h2>
-  <table>
+  <table data-paginasi="25" data-cari="Cari jenis tenaga…">
     <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Tarif / OH</th><th class="angka">Nilai Kebutuhan</th></tr>
     <?php $totalUpah = 0; foreach ($kebutuhan_upah as $u): $n = (float) $u['orang_hari'] * (float) $u['tarif']; $totalUpah += $n; ?>
     <tr><td><?= esc($u['jenis']) ?></td><td class="angka"><?= number_format((float) $u['orang_hari'], 2, ',', '.') ?></td><td class="angka"><?= number_format((float) $u['tarif'], 0, ',', '.') ?></td><td class="angka"><?= number_format($n, 0, ',', '.') ?></td></tr>

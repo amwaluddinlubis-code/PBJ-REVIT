@@ -68,6 +68,7 @@ window.inisiasiSelectCari = function (akar) {
     }
     bangunItem();
     new MutationObserver(function () { bangunItem(); segarkan(); }).observe(sel, { childList: true });
+    sel._scPerbarui = function () { bangunItem(); segarkan(); };
 
     function segarkan() {
       var op = sel.options[sel.selectedIndex];
@@ -150,4 +151,9 @@ window.inisiasiSelectCari = function (akar) {
     segarkan();
   });
 };
+// Segarkan tampilan satu select yang nilainya/opsi diubah lewat JavaScript.
+window.perbaruiSelectCari = function (sel) {
+  if (sel && typeof sel._scPerbarui === 'function') sel._scPerbarui();
+};
+
 document.addEventListener('DOMContentLoaded', function () { window.inisiasiSelectCari(document); });

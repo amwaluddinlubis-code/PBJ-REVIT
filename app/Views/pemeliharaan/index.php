@@ -24,7 +24,7 @@
   </form>
   <?php if ($backups): ?>
   <div class="bungkus-tabel" style="margin-top:12px">
-  <table class="satu-baris">
+  <table class="satu-baris" data-cari="Cari backup…">
     <tr><th>Berkas</th><th>Tanggal</th><th class="angka">Ukuran</th><th style="width:190px">Aksi</th></tr>
     <?php foreach ($backups as $b): ?>
     <tr>
@@ -67,7 +67,7 @@
   <h2>Sampah — Baris Terhapus</h2>
   <p style="margin-top:0;color:var(--ta-teks-2)">Penghapusan di aplikasi ini bersifat lunak: baris disembunyikan, bukan dimusnahkan. Di sini baris terhapus bisa <strong>dipulihkan</strong> (tampil lagi) atau <strong>dihapus permanen</strong> (tidak bisa dikembalikan).</p>
   <div class="bungkus-tabel">
-  <table class="satu-baris">
+  <table class="satu-baris" data-cari="Cari tabel…">
     <tr><th>Tabel</th><th class="angka">Baris Aktif</th><th class="angka">Baris Terhapus</th><th style="width:300px">Aksi</th></tr>
     <?php foreach ($sampah as $t): ?>
     <tr>

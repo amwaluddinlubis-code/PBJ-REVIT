@@ -11,7 +11,7 @@
 
 <div class="panel">
   <h2>Kemajuan Pekerjaan</h2>
-  <table data-paginasi="25">
+  <table data-paginasi="25" data-cari="Cari…">
     <tr><th>Pekerjaan</th><th class="angka">Volume BOQ</th><th class="angka">Terealisasi</th><th>% </th><th class="angka">Nilai BOQ</th><th class="angka">Nilai Realisasi</th></tr>
     <?php $babLalu = null; foreach ($pekerjaan as $p): $persen = (float) $p['volume'] > 0 ? min(100, (float) $p['volume_terealisasi'] / (float) $p['volume'] * 100) : 0; $nilaiReal = (float) $p['volume_terealisasi'] * (float) $p['harga_satuan']; ?>
       <?php if ($p['bab'] !== $babLalu): $babLalu = $p['bab']; ?>
@@ -32,7 +32,7 @@
 
 <div class="panel">
   <h2>Bahan: Kebutuhan vs Dipesan</h2>
-  <table data-paginasi="25">
+  <table data-paginasi="25" data-cari="Cari…">
     <tr><th>Bahan</th><th class="angka">Kebutuhan</th><th class="angka">Dipesan (SPK)</th><th class="angka">Sisa</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Dipesan</th></tr>
     <?php foreach ($kebutuhan['tertaut'] as $b): ?>
     <tr>
@@ -49,7 +49,7 @@
 
 <div class="panel">
   <h2>Upah: Kebutuhan vs Dibayar</h2>
-  <table>
+  <table data-paginasi="25" data-cari="Cari jenis tenaga…">
     <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Tarif</th><th class="angka">Nilai Kebutuhan</th></tr>
     <?php $tot = 0; foreach ($kebutuhan_upah as $u): $n = (float) $u['orang_hari'] * (float) $u['tarif']; $tot += $n; ?>
     <tr><td><?= esc($u['jenis']) ?></td><td class="angka"><?= number_format((float) $u['orang_hari'], 2, ',', '.') ?></td><td class="angka"><?= number_format((float) $u['tarif'], 0, ',', '.') ?></td><td class="angka"><?= number_format($n, 0, ',', '.') ?></td></tr>

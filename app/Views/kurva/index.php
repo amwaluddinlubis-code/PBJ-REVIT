@@ -16,7 +16,7 @@
 <div class="panel">
   <h2><?= esc($g['nama']) ?> — Nilai BOQ <?= $rp($g['nilai_boq']) ?> · Realisasi saat ini <?= number_format((float) $g['persen_fisik'], 1, ',', '.') ?>%</h2>
   <?= $svg ?>
-  <table data-paginasi="20">
+  <table data-paginasi="20" data-cari="Cari gedung…">
     <tr><th>Minggu ke-</th><th>Sampai Tanggal</th><th class="angka">Rencana Kumulatif</th><th class="angka">Realisasi Kumulatif</th><th class="angka">Nilai Realisasi</th><th class="angka">Deviasi</th></tr>
     <?php foreach ($minggu as $m): ?>
     <tr>

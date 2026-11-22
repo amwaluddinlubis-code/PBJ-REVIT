@@ -6,7 +6,7 @@
 <title><?= esc($judul ?? 'Analisa Perencana') ?></title>
 <link rel="stylesheet" href="<?= base_url('assets/idds.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/tailwind.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/app.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/app.css') ?>?v=<?= file_exists(FCPATH . 'assets/app.css') ? filemtime(FCPATH . 'assets/app.css') : 0 ?>">
 <script>
 try {
   if (localStorage.getItem('ap-tema') === 'gelap') document.documentElement.classList.add('gelap');
@@ -137,7 +137,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       </button>
       <form class="cari" method="get" action="<?= base_url('bahan') ?>">
         <span aria-hidden="true">⌕</span>
-        <input type="text" name="q" aria-label="Cari bahan" placeholder="Cari bahan…" value="<?= esc($_GET['q'] ?? '') ?>">
+        <input type="text" name="q" aria-label="Cari bahan" placeholder="Cari bahan…" value="<?= esc($q ?? '') ?>">
       </form>
       <div class="topbar-kanan">
         <span class="cip-top"><?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></span>
@@ -184,10 +184,10 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
     </main>
   </div>
 </div>
-<script defer src="<?= base_url('assets/alpine.min.js') ?>"></script>
-<script src="<?= base_url('assets/paginasi.js') ?>"></script>
-<script src="<?= base_url('assets/bulk.js') ?>"></script>
-<script src="<?= base_url('assets/select-cari.js') ?>"></script>
+<script defer src="<?= base_url('assets/alpine.min.js') ?>?v=<?= file_exists(FCPATH . 'assets/alpine.min.js') ? filemtime(FCPATH . 'assets/alpine.min.js') : 0 ?>"></script>
+<script src="<?= base_url('assets/paginasi.js') ?>?v=<?= file_exists(FCPATH . 'assets/paginasi.js') ? filemtime(FCPATH . 'assets/paginasi.js') : 0 ?>"></script>
+<script src="<?= base_url('assets/bulk.js') ?>?v=<?= file_exists(FCPATH . 'assets/bulk.js') ? filemtime(FCPATH . 'assets/bulk.js') : 0 ?>"></script>
+<script src="<?= base_url('assets/select-cari.js') ?>?v=<?= file_exists(FCPATH . 'assets/select-cari.js') ? filemtime(FCPATH . 'assets/select-cari.js') : 0 ?>"></script>
 <script>
 // Toggle menu samping gaya TailAdmin — pilihan tersimpan di peramban.
 // Desktop: tombol sembunyikan/tunjukkan sidebar (sebagaimana awalnya).

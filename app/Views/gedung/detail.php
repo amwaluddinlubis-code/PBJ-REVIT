@@ -131,7 +131,7 @@ $tabAktif = $tab ?? 'boq';
 <?php elseif ($tabAktif === 'bahan'): ?>
 <div class="panel">
   <h2>Kebutuhan Bahan — Dihitung dari BOQ × Koefisien AHSP</h2>
-  <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25">
+  <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25" data-cari="Cari…">
     <tr><th>Kode</th><th>Bahan</th><th class="angka">Kebutuhan</th><th>Satuan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Kebutuhan</th><th class="angka">Sudah Dipesan*</th><th class="angka">Sisa</th></tr>
     <?php $totalNilai = 0; foreach ($kebutuhan['tertaut'] as $b): $nilai = (float) $b['qty_butuh'] * (float) $b['harga']; $totalNilai += $nilai; $sisa = (float) $b['qty_butuh'] - (float) $b['dipesan']; ?>
     <tr>
@@ -153,7 +153,7 @@ $tabAktif = $tab ?? 'boq';
 <div class="panel">
   <h2>Komponen Belum Tertaut ke Master Bahan (<?= count($kebutuhan['tak_tertaut']) ?>)</h2>
   <p style="margin-top:0" class="kecil-teks">Komponen AHSP berikut belum punya padanan di master bahan sehingga belum terhitung. Tautkan ke bahan yang sesuai — penautan berlaku untuk semua gedung.</p>
-  <div class="bungkus-tabel"><table class="satu-baris">
+  <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25" data-cari="Cari komponen…">
     <tr><th>Komponen AHSP</th><th class="angka">Kebutuhan</th><th style="width:46%">Tautkan ke Bahan Master</th></tr>
     <?php foreach ($kebutuhan['tak_tertaut'] as $t): ?>
     <tr>
@@ -180,7 +180,7 @@ $tabAktif = $tab ?? 'boq';
 <?php elseif ($tabAktif === 'upah'): ?>
 <div class="panel">
   <h2>Kebutuhan Upah — Dihitung dari BOQ × Koefisien Tenaga</h2>
-  <div class="bungkus-tabel"><table class="satu-baris">
+  <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25" data-cari="Cari jenis tenaga…">
     <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Tarif / OH</th><th class="angka">Nilai Kebutuhan</th><th class="angka">Sudah Dibayar (OH)</th><th class="angka">Sudah Dibayar (Rp)</th></tr>
     <?php $totalU = 0; foreach ($kebutuhan_upah as $u): $nilai = (float) $u['orang_hari'] * (float) $u['tarif']; $totalU += $nilai; $byr = $upah_dibayar[$u['jenis']] ?? null; ?>
     <tr>
@@ -200,7 +200,7 @@ $tabAktif = $tab ?? 'boq';
 <?php elseif ($tabAktif === 'realisasi'): ?>
 <div class="panel">
   <h2>Kemajuan per Pekerjaan</h2>
-  <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25">
+  <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25" data-cari="Cari…">
     <tr><th>Pekerjaan</th><th class="angka">Volume BOQ</th><th class="angka">Terealisasi</th><th>% Fisik</th><th style="width:300px">Catat Kemajuan</th></tr>
     <?php foreach ($pekerjaan as $p): $persen = (float) $p['volume'] > 0 ? min(100, (float) $p['volume_terealisasi'] / (float) $p['volume'] * 100) : 0; ?>
     <tr>
@@ -222,7 +222,7 @@ $tabAktif = $tab ?? 'boq';
 </div>
 <div class="panel">
   <h2>Riwayat Pencatatan Terakhir</h2>
-  <div class="bungkus-tabel"><table class="satu-baris">
+  <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari riwayat…">
     <tr><th>Tanggal</th><th>Pekerjaan</th><th class="angka">Volume</th><th>Keterangan</th><th>Aksi</th></tr>
     <?php foreach ($riwayat as $r): ?>
     <tr>

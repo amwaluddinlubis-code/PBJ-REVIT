@@ -43,6 +43,7 @@ class ParserTemplate
      */
     public function impor(string $path, array $pilihan = []): array
     {
+        $this->db->transStart();
         $p = new PembacaXlsxMentah($path);
         $stat = ['bahan_baru' => 0, 'bahan_diperbarui' => 0, 'upah' => 0, 'analisa' => 0,
             'komponen' => 0, 'tak_tertaut' => 0, 'gedung' => 0, 'pekerjaan' => 0, 'nilai_boq' => 0.0,
@@ -66,6 +67,7 @@ class ParserTemplate
         if ($tujuan('BOQ', 'gedung') !== 'lewati') {
             $this->imporBoq($p, $stat, $petaHarsat, $tujuan('BOQ', 'gedung'));
         }
+        $this->db->transComplete();
         return $stat;
     }
 
@@ -241,7 +243,7 @@ class ParserTemplate
                     $ubah['harga_satuan'] = $hargaResmi;
                 }
                 $this->db->table('analisa')->where('id', $aid)->update($ubah);
-                $this->db->table('analisa_komponen')->where('analisa_id', $aid)->delete();
+                $this->db->table('analisa_komponen')->where(['analisa_id' => $aid, 'is_deleted' => 0])->update(['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
             } else {
                 $this->db->table('analisa')->insert(['sekolah_id' => $this->sid, 'kode' => $kode, 'nama' => $g['nama'], 'satuan' => $g['satuan'], 'harga_satuan' => $hargaResmi]);
                 $aid = (int) $this->db->insertID();
@@ -335,7 +337,7 @@ class ParserTemplate
             $total = array_sum(array_column($items, 'jumlah'));
             if ($ada) {
                 $gid = (int) $ada['id'];
-                $this->db->table('pekerjaan')->where('gedung_id', $gid)->delete();
+                $this->db->table('pekerjaan')->where(['gedung_id' => $gid, 'is_deleted' => 0])->update(['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
                 $this->db->table('gedung')->where('id', $gid)->update(['nilai_boq' => $total, 'updated_at' => date('Y-m-d H:i:s')]);
             } else {
                 $this->db->table('gedung')->insert([
@@ -371,7 +373,7 @@ class ParserTemplate
         if (! $p->adaSheet('BiayaLain')) {
             return;
         }
-        $this->db->table('biaya_lain')->where(['sekolah_id' => $this->sid, 'sumber' => 'impor'])->delete();
+        $this->db->table('biaya_lain')->where(['sekolah_id' => $this->sid, 'sumber' => 'impor', 'is_deleted' => 0])->update(['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
         foreach ($this->barisData($p, 'BiayaLain', 8, 'kelompok') as $sel) {
             $kelompok = trim((string) ($sel[0] ?? ''));
             $uraian = trim((string) ($sel[1] ?? ''));

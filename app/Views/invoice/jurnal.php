@@ -18,7 +18,7 @@
 </div>
 <div class="panel">
   <h2>Jurnal Pembayaran</h2>
-  <table data-paginasi="10">
+  <table data-paginasi="10" data-cari="Cari jurnal…">
     <tr><th>Tanggal</th><th>Invoice</th><th>SPK</th><th class="angka">Nilai Tagihan</th><th class="angka">PPN Dipungut</th><th class="angka">DPP</th><th class="angka">PPh 22 (1,5% dari DPP)</th><th class="angka">Nilai Dibayar</th><th>Keterangan</th><th></th></tr>
     <?php foreach ($baris as $r): $tot += (float) $r['dibayar']; ?>
     <tr>

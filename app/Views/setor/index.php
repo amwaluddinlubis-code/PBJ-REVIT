@@ -3,7 +3,7 @@
 <div class="panel">
   <h2>Kewajiban Pajak per Masa — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></h2>
   <p style="margin-top:0;color:var(--ta-teks-2)">Pajak yang dipungut/dipotong dari pembayaran invoice (PPh 22 &amp; PPN), pembayaran upah (PPh 21), dan biaya non-gedung (PPh 23 / PPh 4 ayat 2 / PPh 21 honor) wajib disetor ke kas negara dengan kode e-billing; bukti sahnya adalah NTPN. Tabel ini membandingkan kewajiban dengan bukti setor yang sudah dicatat.</p>
-  <table>
+  <table data-cari="Cari pajak / masa…">
     <tr><th>Jenis Pajak</th><th>Masa</th><th class="angka">Kewajiban</th><th class="angka">Sudah Disetor</th><th class="angka">Kekurangan</th><th>Status</th></tr>
     <?php foreach ($baris as $b): ?>
     <tr>

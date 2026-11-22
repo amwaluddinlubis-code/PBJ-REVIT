@@ -9,7 +9,7 @@
     <?php if ($kandidat === []): ?>
     <p>Tidak ada analisa yang menjadi tak terpakai — pekerjaan terpilih tidak menaut analisa apa pun secara eksklusif. Lanjut saja ke langkah 3.</p>
     <?php else: ?>
-    <table>
+    <table data-cari="Cari analisa…">
       <tr><th style="width:36px">Buang</th><th>Kode</th><th>Nama Analisa</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Komponen</th></tr>
       <?php foreach ($kandidat as $a): ?>
       <tr>

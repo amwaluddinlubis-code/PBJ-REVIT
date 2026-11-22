@@ -9,7 +9,7 @@
 <form method="post" action="<?= base_url('impor/eksekusi') ?>" id="form-petakan" data-berkas="<?= esc($stage['nama']) ?>" data-sekolah="<?= esc($nama_sekolah) ?>" data-konfirmasi-judul="Konfirmasi Impor" data-konfirmasi-tombol="Ya, Impor Sekarang">
   <?= csrf_field() ?>
   <div class="panel">
-    <table>
+    <table data-cari="Cari sheet…">
       <tr><th style="width:20%">Sheet</th><th style="width:19%">Jenis Terdeteksi</th><th class="angka" style="width:12%">Isi</th><th style="width:18%">Tujuan Impor</th><th>Nama Gedung (bila tujuan Gedung)</th><th style="width:9%">Aksi</th></tr>
       <?php foreach ($stage['lembar'] as $i => $l): ?>
       <?php

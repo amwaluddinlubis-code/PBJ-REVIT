@@ -16,7 +16,7 @@
     <?php foreach ($gedung as $g): ?>
     <tr>
       <td><input type="checkbox" data-pilih value="<?= (int) $g['id'] ?>" x-model="terpilih"></td>
-      <td><b><?= esc($g['nama']) ?></b><?php if ((int) ($g['didanai'] ?? 1) !== 1): ?> <span style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:99px;font-size:11px">Tidak didanai</span><?php endif; ?><?= $g['keterangan'] ? '<br><span class="kecil-teks">' . esc($g['keterangan']) . '</span>' : '' ?></td>
+      <td><b><?= esc($g['nama']) ?></b><?php if ((int) ($g['didanai'] ?? 1) !== 1): ?> <span style="background:var(--ina-red-100);color:var(--ina-red-700);padding:1px 7px;border-radius:99px;font-size:11px">Tidak didanai</span><?php endif; ?><?= $g['keterangan'] ? '<br><span class="kecil-teks">' . esc($g['keterangan']) . '</span>' : '' ?></td>
       <td class="angka"><?= (int) $g['jml_pekerjaan'] ?></td>
       <td class="angka">Rp <?= number_format((float) $g['nilai_boq'], 0, ',', '.') ?></td>
       <td class="angka">Rp <?= number_format((float) $g['nilai_realisasi'], 0, ',', '.') ?></td>

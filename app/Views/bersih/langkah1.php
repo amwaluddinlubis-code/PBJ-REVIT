@@ -23,7 +23,7 @@
   <?php foreach ($perGedung as $namaGedung => $rows): ?>
   <div class="panel">
     <h2><?= esc($namaGedung) ?> <span class="kecil-teks">(<?= count($rows) ?> pekerjaan volume &lt; 1)</span></h2>
-    <table>
+    <table data-cari="Cari pekerjaan…">
       <tr><th style="width:36px">Buang</th><th>Pekerjaan</th><th>Kode Analisa</th><th class="angka">Volume</th><th>Satuan</th><th class="angka">Jumlah</th><th></th></tr>
       <?php foreach ($rows as $p): $nol = (float) $p['volume'] <= 0; $adaReal = (int) $p['punya_realisasi'] > 0; ?>
       <tr>

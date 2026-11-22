@@ -17,7 +17,7 @@ foreach ($komponen as $k) {
 
   <form method="post" action="<?= base_url('analisa/' . $a['id'] . '/komponen-simpan') ?>">
     <?= csrf_field() ?>
-    <div class="bungkus-tabel"><table class="satu-baris">
+    <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari komponen…">
       <tr><th>Jenis</th><th>Komponen</th><th style="width:120px">Koefisien</th><th>Satuan</th><th style="width:150px">Tarif (Rp)</th><th class="angka">Nilai / Satuan</th><th>Aksi</th></tr>
       <?php foreach ($komponen as $k): ?>
       <tr>

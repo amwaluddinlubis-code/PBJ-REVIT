@@ -56,7 +56,7 @@
 <?php if (! empty($semuaGedung)): ?>
 <div class="panel">
   <h2>Pembangunan Gedung — Dari Dokumen Perencana</h2>
-  <table>
+  <table data-paginasi="10" data-cari="Cari gedung…">
     <tr><th>Gedung</th><th class="angka">Nilai BOQ</th><th>Fisik</th><th>Aksi</th></tr>
     <?php foreach ($semuaGedung as $gd): ?>
     <tr>
@@ -75,7 +75,7 @@
 
 <div class="panel">
   <h2>Ringkasan per SPK</h2>
-  <table>
+  <table data-paginasi="10" data-cari="Cari SPK…">
     <tr><th>No. SPK</th><th>Tanggal</th><th>Penyedia</th><th>Paket</th><th class="angka">Jml Bahan</th><th class="angka">Nilai</th><th>Status</th></tr>
     <?php foreach ($perSpk as $s): ?>
     <tr>

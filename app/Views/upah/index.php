@@ -73,7 +73,7 @@
 
 <div class="panel">
   <h2>Master Tarif Upah (per OH)</h2>
-  <table>
+  <table data-cari="Cari jenis tenaga…">
     <tr><th>Jenis Tenaga</th><th style="width:300px">Tarif (Rp)</th></tr>
     <?php foreach ($master as $m): ?>
     <tr>

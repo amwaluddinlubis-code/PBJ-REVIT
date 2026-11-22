@@ -13,7 +13,7 @@
 <?php endif; ?>
 <div class="panel">
   <h2>Rekap LPJ per Gedung <a class="tombol kecil" style="float:right" href="<?= base_url('lpj/cetak') ?>" target="_blank">Cetak LPJ Sekolah</a></h2>
-  <table data-paginasi="25">
+  <table data-paginasi="25" data-cari="Cari gedung…">
     <tr><th>Gedung</th><th class="angka">Nilai BOQ</th><th>Fisik</th><th class="angka">Kebutuhan Bahan</th><th class="angka">SPK (Dipesan)</th><th class="angka">Invoice Terbayar</th><th class="angka">Upah Dibayar</th><th>Aksi</th></tr>
     <?php foreach ($rekap as $g): ?>
     <tr>

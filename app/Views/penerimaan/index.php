@@ -51,7 +51,7 @@
       <button type="submit" class="bahaya">Kosongkan Catatan Penerimaan</button>
     </form>
   </div>
-  <table data-cari="Cari penerimaan…">
+  <table data-paginasi="25" data-cari="Cari penerimaan…">
     <tr><th style="width:34px"><input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Tahap</th><th class="angka">Jumlah</th><th>Keterangan</th><th></th></tr>
     <?php foreach ($daftar as $d): ?>
     <tr>

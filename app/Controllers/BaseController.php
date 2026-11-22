@@ -64,6 +64,7 @@ abstract class BaseController extends Controller
 
     protected function tampil(string $view, array $data = [], string $judul = 'Aplikasi PBJ Sekolah')
     {
+        $data['q']            = $data['q'] ?? (string) ($this->request->getGet('q') ?? '');
         $data['judul']        = $judul;
         $data['pengguna']     = $this->pengguna;
         $data['sekolahAktif'] = $this->sekolahAktif();

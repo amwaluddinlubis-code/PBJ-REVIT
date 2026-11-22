@@ -52,7 +52,7 @@
 <div class="panel">
   <h2>Ceklis Kelengkapan Dokumen Bukti Belanja</h2>
   <p class="kecil-teks" style="margin-top:0">Menurut Juknis, pengadaan di luar SIPLah dibuktikan dengan dokumen perencanaan, hasil pembandingan, hasil negosiasi, surat pemesanan, hasil pemeriksaan barang, dan BAST. Status modul terisi otomatis; dokumen fisik ditandai manual.</p>
-  <table>
+  <table data-cari="Cari dokumen…">
     <tr><th style="width:60px">Status</th><th>Dokumen</th><th style="width:170px">Penanda</th></tr>
     <?php foreach ($ceklis as $c): ?>
     <tr>

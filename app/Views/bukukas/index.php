@@ -18,7 +18,7 @@
 
 <div class="panel">
   <h2><?= esc($nama_buku) ?> — Bulan <?= esc($namaBulan($bulan)) ?></h2>
-  <table>
+  <table data-paginasi="25" data-cari="Cari transaksi…">
     <tr><th>Tanggal</th><th>Uraian</th><th class="angka">Penerimaan</th><th class="angka">Pengeluaran</th><th class="angka">Saldo</th></tr>
     <tr><td colspan="2"><b>Saldo awal bulan</b></td><td></td><td></td><td class="angka"><b><?= $rp($saldo_awal) ?></b></td></tr>
     <?php foreach ($baris as $e): ?>
