@@ -61,6 +61,10 @@ class Material extends BaseController
 
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('buku_material', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $n = (int) $this->db()->query(
             'SELECT COUNT(*) j FROM buku_material m JOIN bahan b ON b.id = m.bahan_id WHERE b.sekolah_id = ? AND m.is_deleted = 0',
             [$this->sid()]

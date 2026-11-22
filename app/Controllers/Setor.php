@@ -96,6 +96,9 @@ class Setor extends BaseController
 
     public function simpan()
     {
+        if ($d = $this->penjagaPeran(['bendahara'])) {
+            return $d;
+        }
         $r = $this->request;
         $jenis = (string) $r->getPost('jenis');
         $jumlah = (float) preg_replace('/[^0-9]/', '', (string) $r->getPost('jumlah'));
@@ -115,12 +118,14 @@ class Setor extends BaseController
             'keterangan' => trim((string) $r->getPost('keterangan')) ?: null,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->catatAudit('bukti_setor', (int) $this->db()->insertID(), 'buat', 'Bukti setor pajak dicatat.');
         return redirect()->to('/bukti-setor')->with('sukses', 'Bukti setor dicatat dan masuk Buku Kas sebagai uang keluar.');
     }
 
     public function hapus($id)
     {
         $this->hapusLunak('bukti_setor', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        $this->catatAudit('bukti_setor', (int) $id, 'hapus', 'Bukti setor dihapus.');
         return redirect()->to('/bukti-setor')->with('sukses', 'Bukti setor dihapus.');
     }
 
@@ -140,6 +145,10 @@ class Setor extends BaseController
 
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('bukti_setor', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $ids = array_column($this->db()->table('bukti_setor')->select('id')
             ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
         foreach ($ids as $id) {

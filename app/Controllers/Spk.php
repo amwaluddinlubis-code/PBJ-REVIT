@@ -99,6 +99,10 @@ class Spk extends BaseController
 
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('spk', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $ids = array_column($this->db()->table('spk')->select('id')
             ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
         $n = 0;

@@ -93,6 +93,10 @@ class Gedung extends BaseController
 
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('gedung', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $ids = array_column($this->db()->table('gedung')->select('id')
             ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
         $n = 0;
@@ -285,6 +289,10 @@ class Gedung extends BaseController
     /** Kosongkan BOQ satu gedung (semua pekerjaan + realisasinya). */
     public function kosongkanPekerjaan($gedungId)
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('gedung', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $gid = (int) $gedungId;
         if ($this->ambilGedung($gid) === null) {
             return redirect()->to('/gedung')->with('galat', 'Gedung tidak ditemukan.');

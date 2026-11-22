@@ -13,6 +13,12 @@ class AuthFilter implements FilterInterface
         if (! session()->get('pengguna_id')) {
             return redirect()->to('login')->with('galat', 'Silakan masuk dahulu.');
         }
+        if (session()->get('harus_ganti_sandi')) {
+            $path = $request->getUri()->getPath();
+            if (! str_contains($path, 'profil') && ! str_contains($path, 'logout')) {
+                return redirect()->to('profil')->with('galat', 'Demi keamanan, ganti kata sandi Anda terlebih dahulu.');
+            }
+        }
         return null;
     }
 

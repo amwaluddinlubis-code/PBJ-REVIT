@@ -82,6 +82,10 @@ class Negosiasi extends BaseController
     /** Kosongkan seluruh hasil negosiasi sekolah aktif. */
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('negosiasi', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $n = (int) $this->db()->query(
             'SELECT COUNT(*) j FROM negosiasi n JOIN bahan b ON b.id = n.bahan_id WHERE b.sekolah_id = ? AND n.is_deleted = 0',
             [$this->sid()]

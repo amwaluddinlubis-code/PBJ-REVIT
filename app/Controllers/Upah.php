@@ -48,6 +48,9 @@ class Upah extends BaseController
 
     public function simpan()
     {
+        if ($d = $this->penjagaPeran(['bendahara'])) {
+            return $d;
+        }
         $r = $this->request;
         $gedungId = (int) $r->getPost('gedung_id') ?: null;
         if ($gedungId !== null && $this->ambilGedung($gedungId) === null) {
@@ -83,12 +86,14 @@ class Upah extends BaseController
             'keterangan' => trim((string) $r->getPost('keterangan')) ?: null,
             'created_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->catatAudit('upah_bayar', (int) $this->db()->insertID(), 'buat', 'Pembayaran upah ' . $jenis . ' sebesar ' . $this->rp($jumlah));
         return redirect()->to('/upah')->with('sukses', 'Pembayaran upah ' . $jenis . ' sebesar ' . $this->rp($jumlah) . ' dicatat.');
     }
 
     public function hapus($id)
     {
         $this->hapusLunak('upah_bayar', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        $this->catatAudit('upah_bayar', (int) $id, 'hapus', 'Catatan pembayaran upah dihapus.');
         return redirect()->to('/upah')->with('sukses', 'Catatan pembayaran upah dihapus.');
     }
 
@@ -108,6 +113,10 @@ class Upah extends BaseController
 
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('upah_bayar', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $ids = array_column($this->db()->table('upah_bayar')->select('id')
             ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
         foreach ($ids as $id) {

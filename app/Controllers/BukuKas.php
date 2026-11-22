@@ -66,6 +66,9 @@ class BukuKas extends BaseController
 
     public function simpan()
     {
+        if ($d = $this->penjagaPeran(['bendahara'])) {
+            return $d;
+        }
         $r = $this->request;
         $uraian = trim((string) $r->getPost('uraian'));
         $jumlah = (float) preg_replace('/[^0-9]/', '', (string) $r->getPost('jumlah'));
@@ -91,12 +94,14 @@ class BukuKas extends BaseController
             'keterangan' => trim((string) $r->getPost('keterangan')) ?: null,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->catatAudit('kas', (int) $this->db()->insertID(), 'buat', 'Transaksi kas manual: ' . $uraian . ' ' . $this->rp($jumlah));
         return redirect()->to('/buku-kas')->with('sukses', 'Transaksi kas dicatat dan masuk ke buku kas.');
     }
 
     public function hapus($id)
     {
         $this->hapusLunak('kas_transaksi', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        $this->catatAudit('kas', (int) $id, 'hapus', 'Transaksi kas manual dihapus.');
         return redirect()->to('/buku-kas')->with('sukses', 'Transaksi kas dihapus dari buku.');
     }
 
@@ -116,6 +121,10 @@ class BukuKas extends BaseController
 
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('kas', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $ids = array_column($this->db()->table('kas_transaksi')->select('id')
             ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
         foreach ($ids as $id) {

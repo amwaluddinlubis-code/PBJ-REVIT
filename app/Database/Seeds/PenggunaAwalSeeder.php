@@ -14,6 +14,7 @@ class PenggunaAwalSeeder extends Seeder
                 'nama'          => 'Administrator',
                 'password_hash' => password_hash('admin123', PASSWORD_DEFAULT),
                 'peran'         => 'admin',
+                'harus_ganti_sandi' => 1,
                 'created_at'    => date('Y-m-d H:i:s'),
                 'updated_at'    => date('Y-m-d H:i:s'),
             ]);

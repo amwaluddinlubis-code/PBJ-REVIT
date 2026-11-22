@@ -47,6 +47,48 @@ abstract class BaseController extends Controller
     }
 
     /** Id tercentang dari formulir hapus massal (POST ids[]). */
+    /**
+     * Catat jejak audit untuk aksi penting (uang & persetujuan).
+     * Best-effort: kegagalan mencatat tidak boleh menggagalkan aksi utama.
+     */
+    protected function catatAudit(string $entitas, ?int $entitasId, string $aksi, ?string $keterangan = null): void
+    {
+        try {
+            $db = $this->db();
+            if (! $db->tableExists('audit_events')) {
+                return;
+            }
+            $db->table('audit_events')->insert([
+                'sekolah_id' => $this->pengguna ? $this->sid() : null,
+                'user_id'    => $this->pengguna['id'] ?? null,
+                'username'   => $this->pengguna['username'] ?? null,
+                'entitas'    => $entitas,
+                'entitas_id' => $entitasId,
+                'aksi'       => $aksi,
+                'keterangan' => $keterangan,
+                'ip'         => $this->request->getIPAddress(),
+                'created_at' => date('Y-m-d H:i:s'),
+            ]);
+        } catch (\Throwable $e) {
+            // abaikan — audit tidak boleh menghalangi pekerjaan
+        }
+    }
+
+    /**
+     * Gerbang peran: kembalikan respons penolakan bila peran pengguna tidak
+     * termasuk daftar yang diizinkan; admin selalu lolos. Pemakaian:
+     * if ($d = $this->penjagaPeran(['bendahara'])) { return $d; }
+     * Daftar kosong berarti khusus admin.
+     */
+    protected function penjagaPeran(array $peran)
+    {
+        $saya = (string) ($this->pengguna['peran'] ?? '');
+        if ($saya === 'admin' || in_array($saya, $peran, true)) {
+            return null;
+        }
+        return redirect()->back()->with('galat', 'Peran Anda (' . ($saya ?: '-') . ') tidak berwenang melakukan tindakan ini.');
+    }
+
     protected function idsTerpilih(): array
     {
         return array_values(array_unique(array_map('intval', (array) $this->request->getPost('ids'))));

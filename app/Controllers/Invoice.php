@@ -67,6 +67,9 @@ class Invoice extends BaseController
 
     public function perbarui($id)
     {
+        if ($this->sudahTerbayar((int) $id)) {
+            return redirect()->to('invoice')->with('galat', 'Invoice ini sudah dibayar dan terkunci. Koreksi dilakukan dengan menghapus jurnal pembayaran terlebih dahulu.');
+        }
         $data = $this->ambilForm();
         if ($this->nomorDipakai((int) $data['nomor_urut'], (int) $id)) {
             return redirect()->back()->withInput()->with('galat', 'Nomor urut invoice ' . $data['nomor_urut'] . ' sudah dipakai di sekolah ini.');
@@ -76,10 +79,20 @@ class Invoice extends BaseController
         return redirect()->to('invoice')->with('sukses', 'Invoice diperbarui.');
     }
 
+    /** Invoice terkunci bila sudah memiliki jurnal pembayaran aktif. */
+    private function sudahTerbayar(int $invoiceId): bool
+    {
+        return $this->db()->table('pembayaran')->where(['invoice_id' => $invoiceId, 'is_deleted' => 0])->countAllResults() > 0;
+    }
+
     public function hapus($id)
     {
+        if ($this->sudahTerbayar((int) $id)) {
+            return redirect()->to('invoice')->with('galat', 'Invoice ini sudah dibayar dan terkunci — hapus jurnal pembayarannya terlebih dahulu bila memang perlu dikoreksi.');
+        }
         $this->hapusLunak('invoice', ['id' => (int) $id]);
-        return redirect()->to('invoice')->with('sukses', 'Invoice dihapus (jurnal pembayaran terkait ikut terhapus).');
+        $this->catatAudit('invoice', (int) $id, 'hapus', 'Invoice dihapus.');
+        return redirect()->to('invoice')->with('sukses', 'Invoice dihapus.');
     }
 
     /** Id invoice milik sekolah aktif (invoice tertaut sekolah lewat SPK). */
@@ -95,23 +108,47 @@ class Invoice extends BaseController
     {
         $milik = $this->idInvoiceSekolah();
         $n = 0;
+        $terkunci = 0;
         foreach ($this->idsTerpilih() as $id) {
             if (in_array($id, $milik, true)) {
+                if ($this->sudahTerbayar($id)) {
+                    $terkunci++;
+                    continue;
+                }
                 $this->hapusLunak('invoice', ['id' => $id]);
                 $n++;
             }
         }
-        return redirect()->to('invoice')->with($n > 0 ? 'sukses' : 'galat',
-            $n > 0 ? $n . ' invoice terpilih dihapus.' : 'Tidak ada invoice yang diproses.');
+        if ($n > 0) {
+            $this->catatAudit('invoice', null, 'hapus-massal', $n . ' invoice terpilih dihapus.');
+        }
+        $pesan = $n > 0 ? $n . ' invoice terpilih dihapus.' : 'Tidak ada invoice yang diproses.';
+        if ($terkunci > 0) {
+            $pesan .= ' ' . $terkunci . ' invoice dilewati karena sudah dibayar (terkunci).';
+        }
+        return redirect()->to('invoice')->with($n > 0 ? 'sukses' : 'galat', $pesan);
     }
 
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('invoice', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $ids = $this->idInvoiceSekolah();
+        $terkunci = 0;
         foreach ($ids as $id) {
+            if ($this->sudahTerbayar($id)) {
+                $terkunci++;
+                continue;
+            }
             $this->hapusLunak('invoice', ['id' => $id]);
         }
-        return redirect()->to('invoice')->with('sukses', 'Daftar invoice dikosongkan: ' . count($ids) . ' invoice dihapus.');
+        $pesan = 'Daftar invoice dikosongkan: ' . (count($ids) - $terkunci) . ' invoice dihapus.';
+        if ($terkunci > 0) {
+            $pesan .= ' ' . $terkunci . ' invoice dilewati karena sudah dibayar (terkunci).';
+        }
+        return redirect()->to('invoice')->with('sukses', $pesan);
     }
 
     private function daftarSpk(): array
@@ -204,6 +241,9 @@ class Invoice extends BaseController
 
     public function jurnalTambah()
     {
+        if ($d = $this->penjagaPeran(['bendahara'])) {
+            return $d;
+        }
         $invoiceId = (int) $this->request->getPost('invoice_id');
         if ($invoiceId <= 0) {
             return redirect()->to('invoice/jurnal')->with('galat', 'Pilih invoice yang dibayar.');
@@ -234,17 +274,22 @@ class Invoice extends BaseController
         ]);
         $this->db()->table('invoice')->where('id', $invoiceId)->update(['status' => 'Sudah Bayar', 'updated_at' => date('Y-m-d H:i:s')]);
         $this->db()->transComplete();
+        $this->catatAudit('pembayaran', $invoiceId, 'buat', 'Pembayaran invoice sebesar ' . $this->rp($inv['nilai']) . ' dicatat.');
         return redirect()->to('invoice/jurnal')->with('sukses', 'Pembayaran dicatat; PPh 22 dan nilai bersih terhitung otomatis.');
     }
 
     public function jurnalHapus($id)
     {
+        if ($d = $this->penjagaPeran(['bendahara'])) {
+            return $d;
+        }
         $p = $this->db()->table('pembayaran')->where(['id' => (int) $id, 'is_deleted' => 0])->get()->getRowArray();
         if ($p) {
             $this->db()->transStart();
             $this->hapusLunak('pembayaran', ['id' => (int) $id]);
             $this->db()->table('invoice')->where('id', $p['invoice_id'])->update(['status' => 'Belum Bayar', 'updated_at' => date('Y-m-d H:i:s')]);
             $this->db()->transComplete();
+            $this->catatAudit('pembayaran', (int) $id, 'hapus', 'Jurnal pembayaran dihapus; invoice kembali Belum Bayar.');
         }
         return redirect()->to('invoice/jurnal')->with('sukses', 'Baris jurnal dihapus; invoice kembali Belum Bayar.');
     }

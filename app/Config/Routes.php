@@ -218,6 +218,7 @@ $routes->post('pengguna/(:num)/ubah', 'Pengguna::ubah/$1', ['filter' => 'auth'])
 $routes->post('pengguna/(:num)/hapus', 'Pengguna::hapus/$1', ['filter' => 'auth']);
 $routes->post('pengguna/hapus-massal', 'Pengguna::hapusMassal', ['filter' => 'auth']);
 $routes->get('pemeliharaan-db', 'Pemeliharaan::index', ['filter' => 'auth']);
+$routes->get('audit', 'Audit::index', ['filter' => 'auth']);
 $routes->post('pemeliharaan-db/backup', 'Pemeliharaan::backup', ['filter' => 'auth']);
 $routes->get('pemeliharaan-db/unduh/(:segment)', 'Pemeliharaan::unduh/$1', ['filter' => 'auth']);
 $routes->post('pemeliharaan-db/hapus-backup', 'Pemeliharaan::hapusBackup', ['filter' => 'auth']);

@@ -111,6 +111,9 @@ class Revisi extends BaseController
 
     public function sahkan($id)
     {
+        if ($d = $this->penjagaPeran(['ketua', 'kepsek'])) {
+            return $d;
+        }
         $db = $this->db();
         $r = $db->table('revisi_pekerjaan')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         if (! $r) {
@@ -151,6 +154,7 @@ class Revisi extends BaseController
             $db->table('revisi_pekerjaan')->where('id', (int) $id)->update(['pekerjaan_baru_id' => $baruId]);
         }
         $db->transComplete();
+        $this->catatAudit('revisi', (int) $id, 'sahkan', 'Revisi disahkan; selisih RAB berjalan ' . ($delta >= 0 ? '+' : '-') . 'Rp ' . number_format(abs($delta), 0, ',', '.'));
         return redirect()->to('/revisi-pekerjaan')->with('sukses',
             'Revisi disahkan — RAB berjalan diperbarui (selisih ' . ($delta >= 0 ? '+' : '−') . 'Rp ' . number_format(abs($delta), 0, ',', '.') . ').');
     }
@@ -168,6 +172,9 @@ class Revisi extends BaseController
 
     public function batalSah($id)
     {
+        if ($d = $this->penjagaPeran(['ketua', 'kepsek'])) {
+            return $d;
+        }
         $db = $this->db();
         $r = $db->table('revisi_pekerjaan')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         if (! $r || $r['status'] !== 'disahkan') {
@@ -178,6 +185,7 @@ class Revisi extends BaseController
             ->update(['status' => 'draft', 'disahkan_at' => null, 'pekerjaan_baru_id' => null, 'updated_at' => date('Y-m-d H:i:s')]);
         $this->batalkanDampak($r);
         $db->transComplete();
+        $this->catatAudit('revisi', (int) $id, 'batal-sah', 'Pengesahan revisi dibatalkan; RAB berjalan dikembalikan.');
         return redirect()->to('/revisi-pekerjaan')->with('sukses', 'Pengesahan dibatalkan — RAB berjalan kembali seperti sebelum revisi ini.');
     }
 
@@ -209,6 +217,10 @@ class Revisi extends BaseController
 
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('revisi', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $ids = array_column($this->db()->table('revisi_pekerjaan')->select('id')
             ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
         foreach ($ids as $id) {

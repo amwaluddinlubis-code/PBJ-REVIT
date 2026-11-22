@@ -49,6 +49,7 @@ class Pengguna extends BaseController
         }
         $this->db()->table('users')->insert([
             'username' => $username, 'nama' => $nama, 'peran' => $peran,
+            'harus_ganti_sandi' => 1,
             'password_hash' => password_hash($sandi, PASSWORD_DEFAULT),
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
@@ -179,8 +180,10 @@ class Pengguna extends BaseController
             return redirect()->to('/profil')->with('galat', 'Ulangi kata sandi baru tidak sama.');
         }
         $this->db()->table('users')->where('id', (int) $this->pengguna['id'])->update([
-            'password_hash' => password_hash($baru, PASSWORD_DEFAULT), 'updated_at' => date('Y-m-d H:i:s'),
+            'password_hash' => password_hash($baru, PASSWORD_DEFAULT),
+            'harus_ganti_sandi' => 0, 'updated_at' => date('Y-m-d H:i:s'),
         ]);
+        session()->set('harus_ganti_sandi', false);
         return redirect()->to('/profil')->with('sukses', 'Kata sandi berhasil diganti.');
     }
 }

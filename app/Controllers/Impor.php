@@ -179,6 +179,7 @@ class Impor extends BaseController
             'sekolah_id' => $sekolahId, 'berkas' => $namaTampil,
             'ringkasan' => json_encode($r), 'created_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->catatAudit('impor', null, 'buat', $pesan);
         return redirect()->to('/impor')->with('sukses', $pesan);
     }
 
@@ -254,6 +255,9 @@ class Impor extends BaseController
     /** Tahap 3 impor: jalankan impor sesuai pilihan peninjauan. */
     public function eksekusi()
     {
+        if ($d = $this->penjagaPeran(['operator'])) {
+            return $d;
+        }
         $stage = session()->get('impor_stage');
         if (! is_array($stage) || ! is_file((string) ($stage['path'] ?? ''))) {
             return redirect()->to('/impor')->with('galat', 'Tahap peninjauan sudah berakhir. Ulangi pemilihan berkas.');

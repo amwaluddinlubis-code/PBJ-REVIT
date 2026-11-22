@@ -150,6 +150,7 @@ class Pemeliharaan extends BaseController
             return $this->tolak();
         }
         $nama = $this->buatBerkasBackup('backup');
+        $this->catatAudit('pemeliharaan', null, 'backup', 'Backup dibuat: ' . $nama);
         return redirect()->to('/pemeliharaan-db')->with('sukses', 'Backup dibuat: ' . $nama . ' — unduh dari daftar Backup Tersimpan.');
     }
 
@@ -230,6 +231,7 @@ class Pemeliharaan extends BaseController
         if ($galat !== null) {
             return redirect()->to('/pemeliharaan-db')->with('galat', 'Pemulihan berhenti karena galat: ' . $galat . ' — keadaan sebelum pemulihan tersimpan sebagai ' . $praNama . ', pulihkan berkas itu untuk mengembalikan.');
         }
+        $this->catatAudit('pemeliharaan', null, 'pulih', 'Database dipulihkan dari ' . $asal . '; backup pra-pulih: ' . $praNama);
         return redirect()->to('/pemeliharaan-db')->with('sukses', 'Database dipulihkan dari ' . $asal . '. Backup keadaan sebelumnya tersimpan sebagai ' . $praNama . '.');
     }
 

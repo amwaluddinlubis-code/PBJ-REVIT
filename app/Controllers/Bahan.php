@@ -112,6 +112,10 @@ class Bahan extends BaseController
     /** Kosongkan master bahan sekolah aktif (yang dipakai SPK dipertahankan). */
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('master', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $ids = array_column($this->db()->table('bahan')->select('id')
             ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
         [$dihapus, $dilewati] = $this->hapusBahanBanyak(array_map('intval', $ids));

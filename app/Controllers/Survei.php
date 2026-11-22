@@ -65,6 +65,10 @@ class Survei extends BaseController
     /** Kosongkan seluruh harga survei sekolah aktif. */
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('survei', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $n = (int) $this->db()->query(
             'SELECT COUNT(*) j FROM survei_harga s JOIN bahan b ON b.id = s.bahan_id WHERE b.sekolah_id = ? AND s.is_deleted = 0',
             [$this->sid()]

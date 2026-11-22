@@ -39,6 +39,9 @@ class Penerimaan extends BaseController
 
     public function simpan()
     {
+        if ($d = $this->penjagaPeran(['bendahara'])) {
+            return $d;
+        }
         $r = $this->request;
         $jumlah = (float) preg_replace('/[^0-9]/', '', (string) $r->getPost('jumlah'));
         $tahap = (int) $r->getPost('tahap');
@@ -58,6 +61,7 @@ class Penerimaan extends BaseController
             'keterangan' => trim((string) $r->getPost('keterangan')) ?: null,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->catatAudit('penerimaan', (int) $this->db()->insertID(), 'buat', 'Penerimaan tahap ' . $tahap . ' sebesar ' . $this->rp($jumlah));
         return redirect()->to('/penerimaan-dana')->with('sukses', 'Penerimaan tahap ' . $tahap . ' dicatat dan masuk Buku Kas.');
     }
 
@@ -83,6 +87,10 @@ class Penerimaan extends BaseController
 
     public function kosongkan()
     {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $this->catatAudit('penerimaan', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
         $ids = array_column($this->db()->table('kas_transaksi')->select('id')
             ->where($this->syaratPenerimaan())->get()->getResultArray(), 'id');
         foreach ($ids as $id) {
