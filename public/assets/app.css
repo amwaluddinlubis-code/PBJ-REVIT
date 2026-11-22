@@ -3080,10 +3080,6 @@ table.satu-baris .sel-fisik .bar {
   white-space: nowrap;
 }
 
-.tautan-pekerjaan:hover {
-  text-decoration: underline;
-}
-
 .tautan-pekerjaan .panah {
   font-size: 9px;
 }
