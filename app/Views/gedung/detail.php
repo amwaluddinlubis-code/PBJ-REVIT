@@ -34,9 +34,10 @@ $tabAktif = $tab ?? 'boq';
   </div>
   <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25" data-cari="Cari pekerjaan…">
     <tr><th style="width:34px"><input type="checkbox" title="Pilih semua pekerjaan" @change="pilihSemua($event)"></th><th>Pekerjaan</th><th>Kode</th><th class="angka">Volume Awal</th><th class="angka">Vol. Berjalan</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah Berjalan</th><th style="width:210px">Ubah Volume / Hapus</th></tr>
+    <?php $subtotalBab = []; foreach ($pekerjaan as $px) { $kb = (string) ($px['bab'] ?? ''); $subtotalBab[$kb] = ($subtotalBab[$kb] ?? 0) + (float) ($px['volume_revisi'] ?? $px['volume']) * (float) ($px['harga_berjalan'] ?? $px['harga_satuan']); } ?>
     <?php $babLalu = null; $total = 0; foreach ($pekerjaan as $p): $total += (float) ($p['volume_revisi'] ?? $p['volume']) * (float) ($p['harga_berjalan'] ?? $p['harga_satuan']); ?>
       <?php if ($p['bab'] !== $babLalu): $babLalu = $p['bab']; ?>
-      <tr><td colspan="9" style="font-weight:600;background:#fcfcfd"><?= esc($babLalu ?: '—') ?></td></tr>
+      <tr><td colspan="7" style="font-weight:600;background:#fcfcfd"><?= esc($babLalu ?: '—') ?></td><td class="angka" style="font-weight:700;background:#fcfcfd"><?= number_format($subtotalBab[(string) ($babLalu ?? '')] ?? 0, 0, ',', '.') ?></td><td style="background:#fcfcfd"></td></tr>
       <?php endif; ?>
       <tr id="pekerjaan-<?= (int) $p['id'] ?>">
         <td><input type="checkbox" data-pilih value="<?= (int) $p['id'] ?>" x-model="terpilih"></td>
