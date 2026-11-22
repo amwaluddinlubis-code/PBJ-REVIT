@@ -46,6 +46,27 @@ class Analisa extends BaseController
         $norm = static fn ($x) => str_replace(['³', '²'], ['3', '2'], mb_strtolower(trim((string) $x)));
         $bedaSatuan = [];
         $inTab = $idsTab === [] ? '0' : implode(',', array_map('intval', $idsTab));
+        // Satu komponen contoh per pasangan (bahan, satuan komponen) agar kolom
+        // Satuan Komponen bisa bertautan langsung ke editor analisa komponen itu.
+        $contoh = [];
+        foreach ($db->query(
+            'SELECT ak.bahan_id, ak.satuan, MIN(ak.id) AS kid
+             FROM analisa_komponen ak
+             JOIN analisa a ON a.id = ak.analisa_id
+             WHERE a.sekolah_id = ? AND ak.jenis = ? AND ak.is_deleted = 0 AND a.is_deleted = 0
+               AND ak.analisa_id IN (' . $inTab . ')
+             GROUP BY ak.bahan_id, ak.satuan',
+            [$this->sid(), 'bahan']
+        )->getResultArray() as $c) {
+            $contoh[$c['bahan_id'] . '|' . $c['satuan']] = (int) $c['kid'];
+        }
+        $petaAid = [];
+        if ($contoh !== []) {
+            foreach ($db->table('analisa_komponen')->select('id, analisa_id')
+                ->whereIn('id', array_values($contoh))->get()->getResultArray() as $m) {
+                $petaAid[(int) $m['id']] = (int) $m['analisa_id'];
+            }
+        }
         foreach ($db->query(
             'SELECT b.id AS bahan_id, b.kode, b.nama, b.satuan AS satuan_master, ak.satuan AS satuan_komponen, COUNT(*) AS jml
              FROM analisa_komponen ak
@@ -61,6 +82,8 @@ class Analisa extends BaseController
             }
             $r['faktor_manual'] = $this->faktorManual((int) $r['bahan_id'], (string) $r['satuan_komponen']);
             $r['faktor_berlaku'] = $this->faktorSatuan($r['satuan_komponen'], $r);
+            $r['contoh_kid'] = $contoh[$r['bahan_id'] . '|' . $r['satuan_komponen']] ?? null;
+            $r['contoh_aid'] = $r['contoh_kid'] !== null ? ($petaAid[$r['contoh_kid']] ?? null) : null;
             $bedaSatuan[] = $r;
         }
         // Dua tab: analisa yang dipakai gedung didanai vs sisanya

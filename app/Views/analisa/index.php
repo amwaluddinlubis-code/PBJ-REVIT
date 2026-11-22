@@ -32,8 +32,8 @@
       <?php foreach ($beda_satuan as $r): ?>
       <tr>
         <td class="potong" title="<?= esc($r['nama']) ?>"><strong><?= esc($r['kode']) ?></strong> <?= esc($r['nama']) ?></td>
-        <td><?= esc($r['satuan_master']) ?></td>
-        <td><?= esc($r['satuan_komponen']) ?></td>
+        <td><a href="<?= base_url('bahan/ubah/' . (int) $r['bahan_id']) ?>" title="Klik untuk memperbaiki satuan bahan ini di Master Bahan"><?= esc($r['satuan_master']) ?></a></td>
+        <td><?php if (! empty($r['contoh_aid'])): ?><a href="<?= base_url('analisa/' . (int) $r['contoh_aid']) ?>#komponen-<?= (int) $r['contoh_kid'] ?>" title="Klik untuk memperbaiki satuan komponen ini di editor analisa"><?= esc($r['satuan_komponen']) ?></a><?php else: ?><?= esc($r['satuan_komponen']) ?><?php endif; ?></td>
         <td class="angka"><?= (int) $r['jml'] ?></td>
         <td class="angka"><?= rtrim(rtrim(number_format((float) $r['faktor_berlaku'], 8, ',', '.'), '0'), ',') ?><?= $r['faktor_manual'] !== null ? ' <span style="background:#dcfce7;color:#166534;padding:1px 7px;border-radius:99px;font-size:11px">manual</span>' : '' ?></td>
         <td>
