@@ -700,9 +700,16 @@ class Bahan extends BaseController
             if (! $lain) {
                 continue;
             }
-            foreach (['spk_detail', 'analisa_komponen', 'survei_harga', 'negosiasi', 'buku_material'] as $tabel) {
+            foreach (['spk_detail', 'analisa_komponen', 'buku_material'] as $tabel) {
                 $db->table($tabel)->where('bahan_id', $aid)->update(['bahan_id' => $utamaId]);
             }
+            // Tabel berkunci unik per bahan tidak bisa dialihkan mentah:
+            // negosiasi unik per bahan, survei unik per (bahan, toko),
+            // konversi unik per (bahan, satuan komponen) — tabrakan kunci
+            // menggagalkan seluruh transaksi gabung.
+            $this->alihkanUnik('negosiasi', $aid, $utamaId, []);
+            $this->alihkanUnik('survei_harga', $aid, $utamaId, ['toko']);
+            $this->alihkanUnik('bahan_konversi', $aid, $utamaId, ['satuan_komponen']);
             $db->table('bahan')->where('id', $utamaId)->update([
                 'qty_rkb' => (float) $utama['qty_rkb'] + (float) $lain['qty_rkb'],
                 'qty_adm' => (float) $utama['qty_adm'] + (float) $lain['qty_adm'],
@@ -716,6 +723,38 @@ class Bahan extends BaseController
         }
         $db->transComplete();
         return redirect()->to('bahan')->with('sukses', 'Duplikat "' . $utama['nama'] . '" digabung ke ' . $utama['kode'] . ' — semua referensi dialihkan dan kuantitas RAB dijumlahkan.');
+    }
+
+    /**
+     * Alihkan baris aktif tabel berkunci unik dari bahan duplikat ke bahan
+     * utama. Bila utama sudah memiliki baris aktif untuk kunci yang sama,
+     * baris duplikat dihapus lunak (data utama yang dipertahankan); bila
+     * yang ada di utama hanya baris terhapus, baris sampah itu dibuang
+     * permanen agar kunci unik bebas lalu baris duplikat dialihkan.
+     */
+    private function alihkanUnik(string $tabel, int $dari, int $ke, array $kolomKunci): void
+    {
+        $db = $this->db();
+        if (! $db->tableExists($tabel)) {
+            return;
+        }
+        $rows = $db->table($tabel)->where('bahan_id', $dari)->where('is_deleted', 0)->get()->getResultArray();
+        foreach ($rows as $r) {
+            $syarat = ['bahan_id' => $ke];
+            foreach ($kolomKunci as $k) {
+                $syarat[$k] = $r[$k];
+            }
+            $aktif = $db->table($tabel)->where($syarat)->where('is_deleted', 0)->get()->getRowArray();
+            if ($aktif) {
+                $db->table($tabel)->where('id', $r['id'])->update(['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
+                continue;
+            }
+            $mati = $db->table($tabel)->where($syarat)->where('is_deleted', 1)->get()->getRowArray();
+            if ($mati) {
+                $db->table($tabel)->where('id', $mati['id'])->delete();
+            }
+            $db->table($tabel)->where('id', $r['id'])->update(['bahan_id' => $ke]);
+        }
     }
 
     // ---------- Master Upah (referensi bersama modul Upah & Analisa) ----------
