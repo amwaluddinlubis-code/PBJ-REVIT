@@ -5,9 +5,6 @@
   <label>Nama Bahan <input name="nama" value="<?= esc(old('nama', $b['nama'] ?? '')) ?>" required></label>
   <label>Satuan <input name="satuan" value="<?= esc(old('satuan', $b['satuan'] ?? '')) ?>"></label>
   <label>Harga RAB (Rp) <input type="text" inputmode="numeric" data-uang name="harga_rab" value="<?= esc(old('harga_rab', $b['harga_rab'] ?? '')) ?>" required></label>
-  <label>Qty Gedung RKB <input type="number" name="qty_rkb" step="0.001" value="<?= esc(old('qty_rkb', $b['qty_rkb'] ?? 0)) ?>"></label>
-  <label>Qty Ruang ADM <input type="number" name="qty_adm" step="0.001" value="<?= esc(old('qty_adm', $b['qty_adm'] ?? 0)) ?>"></label>
-  <label>Qty Toilet <input type="number" name="qty_toilet" step="0.001" value="<?= esc(old('qty_toilet', $b['qty_toilet'] ?? 0)) ?>"></label>
   <div class="aksi md:col-span-2">
     <button type="submit">Simpan</button>
     <a class="tombol abu" href="<?= base_url('bahan') ?>">Batal</a>

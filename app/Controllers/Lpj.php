@@ -124,7 +124,7 @@ class Lpj extends BaseController
             $in = implode(',', $ids);
             $grup = [];
             foreach ($this->db()->query(
-                "SELECT p.nama, p.satuan, p.volume, p.volume_revisi, p.harga_satuan, p.harga_revisi, p.kode_analisa, p.gedung_id
+                "SELECT p.nama, p.satuan, p.volume, p.volume_revisi, p.harga_satuan, p.harga_revisi, p.kode_analisa, p.analisa_id, p.gedung_id
                  FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
                  WHERE p.gedung_id IN ($in) AND p.is_deleted = 0 AND g.is_deleted = 0"
             )->getResultArray() as $p) {

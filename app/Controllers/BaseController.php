@@ -261,7 +261,7 @@ abstract class BaseController extends Controller
             "SELECT b.id AS bahan_id, b.kode, b.nama, b.satuan, ak.satuan AS satuan_komponen,
                     SUM(COALESCE(p.volume_revisi, p.volume) * ak.koefisien) AS qty_mentah
              FROM pekerjaan p
-             JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
+             JOIN analisa a ON (a.id = p.analisa_id OR (p.analisa_id IS NULL AND a.kode = p.kode_analisa AND a.sekolah_id = ?))
              JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'bahan' AND ak.bahan_id IS NOT NULL
              JOIN bahan b ON b.id = ak.bahan_id
              WHERE p.gedung_id = ? AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0 AND b.is_deleted = 0
@@ -288,7 +288,7 @@ abstract class BaseController extends Controller
         $takTertaut = $db->query(
             "SELECT ak.nama, SUM(COALESCE(p.volume_revisi, p.volume) * ak.koefisien) AS qty_butuh, COUNT(DISTINCT p.id) AS dipakai_pekerjaan
              FROM pekerjaan p
-             JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
+             JOIN analisa a ON (a.id = p.analisa_id OR (p.analisa_id IS NULL AND a.kode = p.kode_analisa AND a.sekolah_id = ?))
              JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'bahan' AND ak.bahan_id IS NULL
              WHERE p.gedung_id = ? AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0
              GROUP BY ak.nama ORDER BY qty_butuh DESC",
@@ -302,13 +302,15 @@ abstract class BaseController extends Controller
     {
         return $this->db()->query(
             "SELECT ak.nama AS jenis, SUM(COALESCE(p.volume_revisi, p.volume) * ak.koefisien) AS orang_hari,
-                    COALESCE(MAX(um.tarif), MAX(ak.tarif), 0) AS tarif
+                    COALESCE(MAX(um.tarif), MAX(umn.tarif), MAX(ak.tarif), 0) AS tarif
              FROM pekerjaan p
-             JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
+             JOIN analisa a ON (a.id = p.analisa_id OR (p.analisa_id IS NULL AND a.kode = p.kode_analisa AND a.sekolah_id = ?))
              JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'upah'
-             LEFT JOIN upah_master um ON um.sekolah_id = a.sekolah_id AND um.jenis = ak.nama AND um.is_deleted = 0
+             LEFT JOIN upah_master um ON um.id = ak.upah_id AND um.is_deleted = 0
+             LEFT JOIN upah_master umn ON ak.upah_id IS NULL AND umn.sekolah_id = a.sekolah_id AND umn.jenis = ak.nama AND umn.is_deleted = 0
              WHERE p.gedung_id = ? AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0
-               AND NOT EXISTS (SELECT 1 FROM upah_master umh WHERE umh.sekolah_id = a.sekolah_id AND umh.jenis = ak.nama AND umh.is_deleted = 1)
+               AND NOT EXISTS (SELECT 1 FROM upah_master umh WHERE umh.is_deleted = 1
+                     AND (umh.id = ak.upah_id OR (ak.upah_id IS NULL AND umh.sekolah_id = a.sekolah_id AND umh.jenis = ak.nama)))
              GROUP BY ak.nama ORDER BY orang_hari DESC",
             [$this->sid(), $gedungId]
         )->getResultArray();
@@ -382,6 +384,10 @@ abstract class BaseController extends Controller
     /** @var array<int, array<string, float>> cache peta harga AHSP per sekolah */
     private array $petaAhsp = [];
 
+    private array $petaAhspId = [];
+
+    private array $cacheAnalisaId = [];
+
     /**
      * Harga satuan hasil AHSP per kode analisa: jumlah koefisien x tarif
      * komponen aktif saat ini. Tarif komponen upah memakai yang terbesar
@@ -395,15 +401,19 @@ abstract class BaseController extends Controller
             return $this->petaAhsp[$sid];
         }
         $this->petaAhsp[$sid] = [];
+        $this->petaAhspId[$sid] = [];
         foreach ($this->db()->query(
-            "SELECT a.kode, SUM(ak.koefisien * CASE WHEN ak.jenis = 'upah'
-                        THEN GREATEST(COALESCE(ak.tarif, 0), COALESCE((SELECT MAX(um.tarif) FROM upah_master um WHERE um.sekolah_id = a.sekolah_id AND um.jenis = ak.nama AND um.is_deleted = 0), 0))
+            "SELECT a.id, a.kode, SUM(ak.koefisien * CASE WHEN ak.jenis = 'upah'
+                        THEN GREATEST(COALESCE(ak.tarif, 0), COALESCE(
+                            (SELECT MAX(um.tarif) FROM upah_master um WHERE um.id = ak.upah_id AND um.is_deleted = 0),
+                            (SELECT MAX(um2.tarif) FROM upah_master um2 WHERE ak.upah_id IS NULL AND um2.sekolah_id = a.sekolah_id AND um2.jenis = ak.nama AND um2.is_deleted = 0), 0))
                         ELSE COALESCE(ak.tarif, 0) END) AS harga
              FROM analisa a JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.is_deleted = 0
-             WHERE a.sekolah_id = ? AND a.is_deleted = 0 GROUP BY a.kode",
+             WHERE a.sekolah_id = ? AND a.is_deleted = 0 GROUP BY a.id, a.kode",
             [$sid]
         )->getResultArray() as $r) {
             $this->petaAhsp[$sid][(string) $r['kode']] = (float) $r['harga'];
+            $this->petaAhspId[$sid][(int) $r['id']] = (float) $r['harga'];
         }
         return $this->petaAhsp[$sid];
     }
@@ -418,12 +428,45 @@ abstract class BaseController extends Controller
         return $peta[$kode] ?? null;
     }
 
+    /** Harga AHSP satu analisa menurut id; null bila analisa/komponennya tidak ada. */
+    protected function hargaAhspId(?int $analisaId, ?int $sid = null): ?float
+    {
+        if ($analisaId === null || $analisaId <= 0) {
+            return null;
+        }
+        $sid = $sid ?? $this->sid();
+        $this->petaHargaAhsp($sid);
+        return $this->petaAhspId[$sid][$analisaId] ?? null;
+    }
+
+    /**
+     * Id analisa dari kode pada satu sekolah (relasi pekerjaan -> analisa
+     * sejak migrasi 000018). Dipakai jalur tulis agar analisa_id selalu
+     * terisi mengikuti kode_analisa; null bila kode kosong/tidak dikenal.
+     */
+    protected function analisaIdDariKode(?string $kode, ?int $sid = null): ?int
+    {
+        $kode = trim((string) $kode);
+        if ($kode === '') {
+            return null;
+        }
+        $sid = $sid ?? $this->sid();
+        $kunci = $sid . '|' . $kode;
+        if (! array_key_exists($kunci, $this->cacheAnalisaId)) {
+            $a = $this->db()->table('analisa')->select('id')
+                ->where(['sekolah_id' => $sid, 'kode' => $kode, 'is_deleted' => 0])
+                ->get()->getRowArray();
+            $this->cacheAnalisaId[$kunci] = $a ? (int) $a['id'] : null;
+        }
+        return $this->cacheAnalisaId[$kunci];
+    }
+
     /** Total BOQ berjalan satu gedung dengan dasar harga berjalan (AHSP). */
     protected function totalBoqGedung(int $gedungId): float
     {
         $total = 0.0;
         foreach ($this->db()->table('pekerjaan')
-            ->select('volume, volume_revisi, harga_satuan, harga_revisi, kode_analisa')
+            ->select('volume, volume_revisi, harga_satuan, harga_revisi, kode_analisa, analisa_id')
             ->where(['gedung_id' => $gedungId, 'is_deleted' => 0])->get()->getResultArray() as $p) {
             $total += $this->volBerjalan($p) * $this->hargaBerjalan($p);
         }
@@ -435,7 +478,7 @@ abstract class BaseController extends Controller
     {
         $total = 0.0;
         foreach ($this->db()->query(
-            'SELECT r.volume, p.harga_satuan, p.harga_revisi, p.kode_analisa
+            'SELECT r.volume, p.harga_satuan, p.harga_revisi, p.kode_analisa, p.analisa_id
              FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id
              WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
             [$gedungId]
@@ -450,7 +493,7 @@ abstract class BaseController extends Controller
     {
         $per = [];
         foreach ($this->db()->query(
-            'SELECT r.tanggal, r.volume, p.harga_satuan, p.harga_revisi, p.kode_analisa
+            'SELECT r.tanggal, r.volume, p.harga_satuan, p.harga_revisi, p.kode_analisa, p.analisa_id
              FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id
              WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0
              ORDER BY r.tanggal',
@@ -470,7 +513,7 @@ abstract class BaseController extends Controller
         $sid = $sid ?? $this->sid();
         $total = 0.0;
         foreach ($this->db()->query(
-            'SELECT p.volume, p.volume_revisi, p.harga_satuan, p.harga_revisi, p.kode_analisa
+            'SELECT p.volume, p.volume_revisi, p.harga_satuan, p.harga_revisi, p.kode_analisa, p.analisa_id
              FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
              WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 AND g.didanai = 1',
             [$sid]
@@ -522,12 +565,15 @@ abstract class BaseController extends Controller
         $sid = $sid ?? $this->sid();
         $total = 0.0;
         foreach ($this->db()->query(
-            'SELECT p.volume, p.harga_satuan, p.kode_analisa
+            'SELECT p.volume, p.harga_satuan, p.kode_analisa, p.analisa_id
              FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
              WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 AND g.didanai = 1',
             [$sid]
         )->getResultArray() as $p) {
-            $total += (float) $p['volume'] * ($this->hargaAhspKode($p['kode_analisa'] ?? null, $sid) ?? (float) $p['harga_satuan']);
+            $harga = $this->hargaAhspId(isset($p['analisa_id']) ? (int) $p['analisa_id'] : null, $sid)
+                ?? $this->hargaAhspKode($p['kode_analisa'] ?? null, $sid)
+                ?? (float) $p['harga_satuan'];
+            $total += (float) $p['volume'] * $harga;
         }
         return $total;
     }
@@ -549,7 +595,9 @@ abstract class BaseController extends Controller
         if (($p['harga_revisi'] ?? null) !== null) {
             return (float) $p['harga_revisi'];
         }
-        return $this->hargaAhspKode($p['kode_analisa'] ?? null, $sid) ?? (float) ($p['harga_satuan'] ?? 0);
+        return $this->hargaAhspId(isset($p['analisa_id']) ? (int) $p['analisa_id'] : null, $sid)
+            ?? $this->hargaAhspKode($p['kode_analisa'] ?? null, $sid)
+            ?? (float) ($p['harga_satuan'] ?? 0);
     }
 
     /**

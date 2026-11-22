@@ -146,6 +146,7 @@ class Revisi extends BaseController
             $db->table('pekerjaan')->insert([
                 'gedung_id' => (int) $r['gedung_id'], 'bab' => 'Pekerjaan Revisi',
                 'nama' => $r['nama_baru'], 'kode_analisa' => $r['kode_analisa_baru'],
+                'analisa_id' => $this->analisaIdDariKode($r['kode_analisa_baru'] ?? null),
                 'volume' => 0, 'volume_revisi' => (float) $r['volume_baru'],
                 'satuan' => $r['satuan_baru'] ?: 'ls', 'harga_satuan' => (float) $r['harga_baru'],
                 'jumlah' => 0, 'urutan' => $urutan, 'dari_revisi_id' => (int) $id,

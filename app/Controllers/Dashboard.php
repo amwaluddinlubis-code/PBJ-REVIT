@@ -133,7 +133,33 @@ class Dashboard extends BaseController
         )->getRow()->j ?? 0);
         $tanpaTarif = (int) $db->table('upah_master')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->where('tarif <=', 0)->countAllResults();
 
+        // Panel Pembangunan Gedung: bandingkan Nilai BOQ Asli (volume awal x
+        // harga dokumen perencana) dengan Nilai Analisa (AHSP berjalan) agar
+        // perubahan akibat perbaikan harga/tarif analisa terlihat per gedung.
+        $asliPerGedung = [];
+        foreach ($db->query(
+            'SELECT p.gedung_id AS gid, SUM(p.volume * p.harga_satuan) AS t
+             FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
+             WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0
+             GROUP BY p.gedung_id',
+            [$sid]
+        )->getResultArray() as $r) {
+            $asliPerGedung[(int) $r['gid']] = (float) $r['t'];
+        }
+        $panelGedung = [];
+        $panelTotal = ['asli' => 0.0, 'analisa' => 0.0, 'perubahan' => 0.0];
+        foreach ($this->semuaGedung() as $g) {
+            $g['boq_asli'] = $asliPerGedung[(int) $g['id']] ?? 0.0;
+            $g['nilai_analisa'] = $this->totalBoqGedung((int) $g['id']);
+            $g['perubahan'] = $g['nilai_analisa'] - $g['boq_asli'];
+            $panelTotal['asli'] += $g['boq_asli'];
+            $panelTotal['analisa'] += $g['nilai_analisa'];
+            $panelTotal['perubahan'] += $g['perubahan'];
+            $panelGedung[] = $g;
+        }
+
         return $this->tampil('dashboard/index', [
+            'panelGedung' => $panelGedung, 'panelTotal' => $panelTotal,
             'tanpaHarga' => $tanpaHarga, 'tanpaTarif' => $tanpaTarif,
             'identitas'   => $identitas,
             'totalRab'    => $totalRab,

@@ -94,9 +94,6 @@
     f.nama.value = ds.nama || '';
     f.satuan.value = ds.satuan || '';
     f.harga_rab.value = window.formatUang ? window.formatUang(ds.harga || '') : (ds.harga || '');
-    f.qty_rkb.value = ds.qrkb || 0;
-    f.qty_adm.value = ds.qadm || 0;
-    f.qty_toilet.value = ds.qtoilet || 0;
     document.getElementById('modal-bahan').hidden = false;
     setTimeout(() => f.nama.focus(), 30);
   },
@@ -204,9 +201,6 @@
           <label>Nama Bahan <input name="nama" required></label>
           <label>Satuan <input name="satuan"></label>
           <label>Harga RAB (Rp) <input type="text" inputmode="numeric" data-uang name="harga_rab" required></label>
-          <label>Qty Gedung RKB <input type="number" name="qty_rkb" step="0.001" value="0"></label>
-          <label>Qty Ruang ADM <input type="number" name="qty_adm" step="0.001" value="0"></label>
-          <label>Qty Toilet <input type="number" name="qty_toilet" step="0.001" value="0"></label>
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
           <button type="button" @click="tutupBahan()">Batal</button>

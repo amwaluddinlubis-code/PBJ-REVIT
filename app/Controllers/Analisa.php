@@ -14,9 +14,9 @@ class Analisa extends BaseController
         $db = $this->db();
         $semua = $db->query(
             'SELECT a.*, (SELECT COUNT(*) FROM analisa_komponen k WHERE k.analisa_id = a.id AND k.is_deleted = 0) AS jml_komponen,
-                    (SELECT COUNT(*) FROM pekerjaan p WHERE p.kode_analisa = a.kode AND p.is_deleted = 0 AND p.gedung_id IN (SELECT id FROM gedung WHERE sekolah_id = a.sekolah_id)) AS dipakai,
-                    (SELECT COUNT(*) FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id WHERE p.kode_analisa = a.kode AND p.is_deleted = 0 AND g.sekolah_id = a.sekolah_id AND g.is_deleted = 0 AND g.didanai = 1) AS dipakai_didanai,
-                    (SELECT COUNT(*) FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id WHERE p.kode_analisa = a.kode AND p.is_deleted = 0 AND g.sekolah_id = a.sekolah_id AND g.is_deleted = 0 AND g.didanai = 0) AS dipakai_lain
+                    (SELECT COUNT(*) FROM pekerjaan p WHERE (p.analisa_id = a.id OR (p.analisa_id IS NULL AND p.kode_analisa = a.kode)) AND p.is_deleted = 0 AND p.gedung_id IN (SELECT id FROM gedung WHERE sekolah_id = a.sekolah_id)) AS dipakai,
+                    (SELECT COUNT(*) FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id WHERE (p.analisa_id = a.id OR (p.analisa_id IS NULL AND p.kode_analisa = a.kode)) AND p.is_deleted = 0 AND g.sekolah_id = a.sekolah_id AND g.is_deleted = 0 AND g.didanai = 1) AS dipakai_didanai,
+                    (SELECT COUNT(*) FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id WHERE (p.analisa_id = a.id OR (p.analisa_id IS NULL AND p.kode_analisa = a.kode)) AND p.is_deleted = 0 AND g.sekolah_id = a.sekolah_id AND g.is_deleted = 0 AND g.didanai = 0) AS dipakai_lain
              FROM analisa a WHERE a.sekolah_id = ? AND a.is_deleted = 0 ORDER BY a.kode',
             [$this->sid()]
         )->getResultArray();
@@ -211,6 +211,7 @@ class Analisa extends BaseController
         }
         $db = $this->db();
         $bahanId = null;
+        $upahId = null;
         $nama = trim((string) $this->request->getPost('nama'));
         $satuan = trim((string) $this->request->getPost('satuan'));
         $tarif = (float) str_replace(['.', ','], ['', '.'], (string) $this->request->getPost('tarif'));
@@ -227,8 +228,11 @@ class Analisa extends BaseController
         }
         if ($jenis === 'upah' && $nama !== '') {
             $m = $db->table('upah_master')->where(['sekolah_id' => $this->sid(), 'jenis' => $nama, 'is_deleted' => 0])->get()->getRowArray();
-            if ($m && $tarif <= 0) {
-                $tarif = (float) $m['tarif'];
+            if ($m) {
+                $upahId = (int) $m['id'];
+                if ($tarif <= 0) {
+                    $tarif = (float) $m['tarif'];
+                }
             }
             if ($satuan === '') {
                 $satuan = 'OH';
@@ -240,7 +244,7 @@ class Analisa extends BaseController
         $db->table('analisa_komponen')->insert([
             'analisa_id' => $a['id'], 'jenis' => $jenis, 'nama' => $nama, 'satuan' => $satuan ?: null,
             'koefisien' => (float) str_replace(',', '.', (string) $this->request->getPost('koefisien')),
-            'bahan_id' => $bahanId, 'tarif' => $tarif,
+            'bahan_id' => $bahanId, 'upah_id' => $upahId, 'tarif' => $tarif,
         ]);
         $this->hitungUlangHargaSatuan((int) $a['id']);
         return $this->balasKomponen(true, 'Komponen "' . $nama . '" ditambahkan.');

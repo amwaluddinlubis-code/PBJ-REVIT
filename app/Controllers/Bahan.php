@@ -33,7 +33,7 @@ class Bahan extends BaseController
         foreach ($this->db()->query(
             'SELECT DISTINCT ak.bahan_id FROM analisa_komponen ak
              JOIN analisa a ON a.id = ak.analisa_id AND a.is_deleted = 0
-             JOIN pekerjaan pk ON pk.kode_analisa = a.kode AND pk.is_deleted = 0
+             JOIN pekerjaan pk ON (pk.analisa_id = a.id OR (pk.analisa_id IS NULL AND pk.kode_analisa = a.kode)) AND pk.is_deleted = 0
              JOIN gedung g ON g.id = pk.gedung_id AND g.is_deleted = 0 AND g.didanai = 1
              WHERE a.sekolah_id = ? AND g.sekolah_id = ? AND ak.jenis = ? AND ak.bahan_id IS NOT NULL AND ak.is_deleted = 0',
             [$this->sid(), $this->sid(), 'bahan']
@@ -225,7 +225,7 @@ class Bahan extends BaseController
             'SELECT ak.bahan_id, g.nama AS gedung, ak.tarif, ak.satuan AS satuan_komp
              FROM analisa_komponen ak
              JOIN analisa a ON a.id = ak.analisa_id AND a.is_deleted = 0 AND a.sekolah_id = ?
-             JOIN pekerjaan p ON p.kode_analisa = a.kode AND p.is_deleted = 0
+             JOIN pekerjaan p ON (p.analisa_id = a.id OR (p.analisa_id IS NULL AND p.kode_analisa = a.kode)) AND p.is_deleted = 0
              JOIN gedung g ON g.id = p.gedung_id AND g.is_deleted = 0 AND g.didanai = 1 AND g.sekolah_id = ?
              WHERE ak.jenis = ? AND ak.bahan_id IS NOT NULL AND ak.is_deleted = 0
              ORDER BY g.nama, ak.tarif',
@@ -327,10 +327,24 @@ class Bahan extends BaseController
                 $dilewati[] = $b['kode'];
                 continue;
             }
+            $this->putusTautanKomponen($id);
             $this->hapusLunak('bahan', ['id' => $id, 'sekolah_id' => $this->sid()]);
             $dihapus++;
         }
         return [$dihapus, $dilewati];
+    }
+
+    /**
+     * Penjaga relasi saat bahan dihapus: komponen analisa yang tertaut
+     * diputus tautannya (bahan_id -> NULL) agar muncul kembali di panel
+     * Komponen Belum Tertaut dan bisa ditautkan ulang, bukan menunjuk
+     * bahan yang sudah tidak aktif (audit relasi 22 Nov 2026).
+     */
+    private function putusTautanKomponen(int $bahanId): void
+    {
+        $this->db()->table('analisa_komponen')
+            ->where(['bahan_id' => $bahanId, 'is_deleted' => 0])
+            ->update(['bahan_id' => null]);
     }
 
     private function laporHapusBahan(int $dihapus, array $dilewati, string $konteks)
@@ -507,6 +521,12 @@ class Bahan extends BaseController
             return $this->balasForm(false, 'Bahan tidak ditemukan.');
         }
         $data = $this->ambilForm();
+        // Kolom qty warisan (qty_rkb/adm/toilet) tidak lagi tampil di form
+        // (audit relasi 22 Nov 2026): bila tidak terkirim, nilai lama
+        // dipertahankan agar data impor Excel v4 tidak terhapus.
+        if ($this->request->getPost('qty_rkb') === null) {
+            unset($data['qty_rkb'], $data['qty_adm'], $data['qty_toilet']);
+        }
         if ($sama = $this->namaBahanDipakai($data['nama'], (int) $id)) {
             return $this->balasForm(false, 'Nama itu sudah dipakai bahan ' . $sama['kode'] . '. Satu bahan hanya boleh punya satu satuan dan satu harga — gunakan fitur Gabungkan Duplikat di halaman Master Bahan.');
         }
@@ -521,6 +541,7 @@ class Bahan extends BaseController
         if ($dipakai > 0) {
             return redirect()->to('bahan')->with('galat', 'Bahan ini sudah dipakai di SPK Detail — tidak bisa dihapus.');
         }
+        $this->putusTautanKomponen((int) $id);
         $this->hapusLunak('bahan', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
         return redirect()->to('bahan')->with('sukses', 'Bahan dihapus.');
     }
@@ -638,10 +659,12 @@ class Bahan extends BaseController
             return;
         }
         $db = $this->db();
+        $tujuan = $db->table('upah_master')->where(['sekolah_id' => $this->sid(), 'jenis' => $ke, 'is_deleted' => 0])->get()->getRowArray();
+        $sumber = $db->table('upah_master')->where(['sekolah_id' => $this->sid(), 'jenis' => $dari])->get()->getRowArray();
         $db->query(
-            'UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id SET ak.nama = ?
-             WHERE a.sekolah_id = ? AND ak.jenis = \'upah\' AND ak.nama = ?',
-            [$ke, $this->sid(), $dari]
+            'UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id SET ak.nama = ?, ak.upah_id = ?
+             WHERE a.sekolah_id = ? AND ak.jenis = \'upah\' AND (ak.nama = ? OR ak.upah_id = ?)',
+            [$ke, $tujuan ? (int) $tujuan['id'] : null, $this->sid(), $dari, $sumber ? (int) $sumber['id'] : 0]
         );
         $db->table('upah_bayar')->where(['sekolah_id' => $this->sid(), 'jenis_tenaga' => $dari])->update(['jenis_tenaga' => $ke]);
     }

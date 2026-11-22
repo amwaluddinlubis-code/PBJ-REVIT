@@ -243,6 +243,7 @@ class Gedung extends BaseController
             'gedung_id' => $gid, 'bab' => trim((string) $this->request->getPost('bab')) ?: null,
             'nama' => trim((string) $this->request->getPost('nama')),
             'kode_analisa' => trim((string) $this->request->getPost('kode_analisa')) ?: null,
+            'analisa_id' => $this->analisaIdDariKode(trim((string) $this->request->getPost('kode_analisa')) ?: null),
             'volume' => $volume, 'satuan' => trim((string) $this->request->getPost('satuan')) ?: null,
             'harga_satuan' => $harga, 'jumlah' => $volume * $harga, 'urutan' => $urut,
         ]);

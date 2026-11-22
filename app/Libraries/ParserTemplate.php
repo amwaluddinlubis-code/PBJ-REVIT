@@ -16,6 +16,7 @@ class ParserTemplate
 {
     private $db;
     private int $sid;
+    private array $cacheAnalisaId = [];
 
     public function __construct(int $sekolahId)
     {
@@ -67,6 +68,7 @@ class ParserTemplate
         if ($tujuan('BOQ', 'gedung') !== 'lewati') {
             $this->imporBoq($p, $stat, $petaHarsat, $tujuan('BOQ', 'gedung'));
         }
+        $this->tautkanKomponenUpah();
         $this->db->transComplete();
         return $stat;
     }
@@ -350,7 +352,8 @@ class ParserTemplate
             foreach ($items as $i => $it) {
                 $this->db->table('pekerjaan')->insert([
                     'gedung_id' => $gid, 'bab' => $it['bab'], 'nama' => $it['nama'],
-                    'kode_analisa' => $it['kode_analisa'], 'volume' => $it['volume'],
+                    'kode_analisa' => $it['kode_analisa'], 'analisa_id' => $this->analisaIdDariKode($it['kode_analisa']),
+                    'volume' => $it['volume'],
                     'satuan' => $it['satuan'], 'harga_satuan' => $it['harga_satuan'],
                     'jumlah' => $it['jumlah'], 'urutan' => $i + 1,
                 ]);
@@ -362,6 +365,36 @@ class ParserTemplate
     }
 
     // ---------- Pembantu ----------
+    /** Id analisa dari kode pada sekolah ini (relasi id sejak migrasi 000018). */
+    private function analisaIdDariKode(?string $kode): ?int
+    {
+        $kode = trim((string) $kode);
+        if ($kode === '') {
+            return null;
+        }
+        if (! array_key_exists($kode, $this->cacheAnalisaId)) {
+            $a = $this->db->table('analisa')->select('id')
+                ->where(['sekolah_id' => $this->sid, 'kode' => $kode, 'is_deleted' => 0])
+                ->get()->getRowArray();
+            $this->cacheAnalisaId[$kode] = $a ? (int) $a['id'] : null;
+        }
+        return $this->cacheAnalisaId[$kode];
+    }
+
+    /** Tautkan komponen upah ke upah_master lewat id (kecocokan nama persis). */
+    private function tautkanKomponenUpah(): void
+    {
+        $this->db->query(
+            'UPDATE analisa_komponen ak
+             JOIN analisa a ON a.id = ak.analisa_id
+             JOIN upah_master um ON um.sekolah_id = a.sekolah_id
+               AND LOWER(TRIM(um.jenis)) = LOWER(TRIM(ak.nama)) AND um.is_deleted = 0
+             SET ak.upah_id = um.id
+             WHERE a.sekolah_id = ? AND ak.jenis = \'upah\' AND ak.upah_id IS NULL AND ak.is_deleted = 0',
+            [$this->sid]
+        );
+    }
+
     /**
      * Baris data sesudah baris judul kolom. Judul dikenali dari isi sel
      * pertama (bukan nomor baris — pembaca mentah melewati baris kosong,

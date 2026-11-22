@@ -123,7 +123,7 @@ class RencanaMingguan extends BaseController
                     ak.koefisien, d.volume_target, p.id AS pekerjaan_id
              FROM rencana_mingguan_detail d
              JOIN pekerjaan p ON p.id = d.pekerjaan_id AND p.is_deleted = 0
-             JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
+             JOIN analisa a ON (a.id = p.analisa_id OR (p.analisa_id IS NULL AND a.kode = p.kode_analisa AND a.sekolah_id = ?))
              JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'bahan' AND ak.bahan_id IS NOT NULL
              JOIN bahan b ON b.id = ak.bahan_id
              WHERE d.rencana_id = ? AND d.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0 AND b.is_deleted = 0",
@@ -178,7 +178,7 @@ class RencanaMingguan extends BaseController
             "SELECT ak.nama, SUM(d.volume_target * ak.koefisien) AS oh, SUM(d.volume_target * ak.koefisien * COALESCE(ak.tarif, 0)) AS nilai
              FROM rencana_mingguan_detail d
              JOIN pekerjaan p ON p.id = d.pekerjaan_id AND p.is_deleted = 0
-             JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
+             JOIN analisa a ON (a.id = p.analisa_id OR (p.analisa_id IS NULL AND a.kode = p.kode_analisa AND a.sekolah_id = ?))
              JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'upah'
              WHERE d.rencana_id = ? AND d.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0
                AND NOT EXISTS (SELECT 1 FROM upah_master um WHERE um.sekolah_id = a.sekolah_id AND um.jenis = ak.nama AND um.is_deleted = 1)
