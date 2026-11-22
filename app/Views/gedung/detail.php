@@ -31,7 +31,7 @@ $tabAktif = $tab ?? 'boq';
       <button type="submit" class="bahaya">Kosongkan BOQ</button>
     </form>
   </div>
-  <table data-paginasi="25" data-cari="Cari pekerjaan…">
+  <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25" data-cari="Cari pekerjaan…">
     <tr><th style="width:34px"><input type="checkbox" title="Pilih semua pekerjaan" @change="pilihSemua($event)"></th><th>Pekerjaan</th><th>Kode</th><th class="angka">Volume</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah</th><th style="width:210px">Ubah Volume / Hapus</th></tr>
     <?php $babLalu = null; $total = 0; foreach ($pekerjaan as $p): $total += (float) $p['jumlah']; ?>
       <?php if ($p['bab'] !== $babLalu): $babLalu = $p['bab']; ?>
@@ -39,7 +39,7 @@ $tabAktif = $tab ?? 'boq';
       <?php endif; ?>
       <tr>
         <td><input type="checkbox" data-pilih value="<?= (int) $p['id'] ?>" x-model="terpilih"></td>
-        <td><?= esc($p['nama']) ?></td>
+        <td class="potong" title="<?= esc($p['nama']) ?>"><?= esc($p['nama']) ?></td>
         <td><?= $p['kode_analisa'] ? '<span class="lencana abu">' . esc($p['kode_analisa']) . '</span>' : '—' ?></td>
         <td class="angka"><?= rtrim(rtrim(number_format((float) $p['volume'], 3, ',', '.'), '0'), ',') ?></td>
         <td><?= esc($p['satuan'] ?? '') ?></td>
@@ -58,7 +58,7 @@ $tabAktif = $tab ?? 'boq';
       </tr>
     <?php endforeach; ?>
     <tr class="total"><td colspan="6">Grand Total BOQ</td><td class="angka"><?= number_format($total, 0, ',', '.') ?></td><td></td></tr>
-  </table>
+  </table></div>
   <p class="kecil-teks">Mengubah volume pekerjaan menghitung ulang kebutuhan bahan &amp; upah gedung ini secara otomatis.</p>
 </div>
 <div class="panel">
@@ -92,12 +92,12 @@ $tabAktif = $tab ?? 'boq';
 <?php elseif ($tabAktif === 'bahan'): ?>
 <div class="panel">
   <h2>Kebutuhan Bahan — Dihitung dari BOQ × Koefisien AHSP</h2>
-  <table data-paginasi="25">
+  <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25">
     <tr><th>Kode</th><th>Bahan</th><th class="angka">Kebutuhan</th><th>Satuan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Kebutuhan</th><th class="angka">Sudah Dipesan*</th><th class="angka">Sisa</th></tr>
     <?php $totalNilai = 0; foreach ($kebutuhan['tertaut'] as $b): $nilai = (float) $b['qty_butuh'] * (float) $b['harga']; $totalNilai += $nilai; $sisa = (float) $b['qty_butuh'] - (float) $b['dipesan']; ?>
     <tr>
       <td><?= esc($b['kode']) ?></td>
-      <td><?= esc($b['nama']) ?><?= ! empty($b['dikonversi']) ? ' <span class="lencana kuning" title="Dikonversi dari satuan AHSP ke satuan beli">dikonversi</span>' : '' ?><?= ! empty($b['satuan_beda']) ? ' <span class="lencana abu" title="Satuan komponen AHSP berbeda dari satuan bahan master — periksa kewajaran jumlahnya">satuan beda</span>' : '' ?></td>
+      <td class="potong" title="<?= esc($b['nama']) ?>"><?= esc($b['nama']) ?><?= ! empty($b['dikonversi']) ? ' <span class="lencana kuning" title="Dikonversi dari satuan AHSP ke satuan beli">dikonversi</span>' : '' ?><?= ! empty($b['satuan_beda']) ? ' <span class="lencana abu" title="Satuan komponen AHSP berbeda dari satuan bahan master — periksa kewajaran jumlahnya">satuan beda</span>' : '' ?></td>
       <td class="angka"><?= number_format((float) $b['qty_butuh'], 2, ',', '.') ?></td>
       <td><?= esc($b['satuan']) ?></td>
       <td class="angka"><?= number_format((float) $b['harga'], 0, ',', '.') ?></td>
@@ -107,18 +107,18 @@ $tabAktif = $tab ?? 'boq';
     </tr>
     <?php endforeach; ?>
     <tr class="total"><td colspan="5">Total Nilai Kebutuhan Bahan Tertaut</td><td class="angka"><?= number_format($totalNilai, 0, ',', '.') ?></td><td colspan="2"></td></tr>
-  </table>
+  </table></div>
   <p class="kecil-teks">*Sudah dipesan = jumlah pada SPK yang tertaut ke gedung ini. Harga acuan mengikuti jenjang aplikasi (negosiasi → penawaran → RAB). Kebutuhan semen/agregat dikonversi dari kg AHSP: semen ÷50 per zak, pasir ÷1.400 per m³, kerikil/batu ÷1.600 per m³.</p>
 </div>
 <?php if (! empty($kebutuhan['tak_tertaut'])): ?>
 <div class="panel">
   <h2>Komponen Belum Tertaut ke Master Bahan (<?= count($kebutuhan['tak_tertaut']) ?>)</h2>
   <p style="margin-top:0" class="kecil-teks">Komponen AHSP berikut belum punya padanan di master bahan sehingga belum terhitung. Tautkan ke bahan yang sesuai — penautan berlaku untuk semua gedung.</p>
-  <table>
+  <div class="bungkus-tabel"><table class="satu-baris">
     <tr><th>Komponen AHSP</th><th class="angka">Kebutuhan</th><th style="width:46%">Tautkan ke Bahan Master</th></tr>
     <?php foreach ($kebutuhan['tak_tertaut'] as $t): ?>
     <tr>
-      <td><?= esc($t['nama']) ?></td>
+      <td class="potong" title="<?= esc($t['nama']) ?>"><?= esc($t['nama']) ?></td>
       <td class="angka"><?= number_format((float) $t['qty_butuh'], 2, ',', '.') ?></td>
       <td>
         <form method="post" action="<?= base_url('gedung/tautkan') ?>" style="display:flex;gap:6px">
@@ -134,14 +134,14 @@ $tabAktif = $tab ?? 'boq';
       </td>
     </tr>
     <?php endforeach; ?>
-  </table>
+  </table></div>
 </div>
 <?php endif; ?>
 
 <?php elseif ($tabAktif === 'upah'): ?>
 <div class="panel">
   <h2>Kebutuhan Upah — Dihitung dari BOQ × Koefisien Tenaga</h2>
-  <table>
+  <div class="bungkus-tabel"><table class="satu-baris">
     <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Tarif / OH</th><th class="angka">Nilai Kebutuhan</th><th class="angka">Sudah Dibayar (OH)</th><th class="angka">Sudah Dibayar (Rp)</th></tr>
     <?php $totalU = 0; foreach ($kebutuhan_upah as $u): $nilai = (float) $u['orang_hari'] * (float) $u['tarif']; $totalU += $nilai; $byr = $upah_dibayar[$u['jenis']] ?? null; ?>
     <tr>
@@ -154,21 +154,21 @@ $tabAktif = $tab ?? 'boq';
     </tr>
     <?php endforeach; ?>
     <tr class="total"><td colspan="3">Total Nilai Kebutuhan Upah</td><td class="angka"><?= number_format($totalU, 0, ',', '.') ?></td><td colspan="2"></td></tr>
-  </table>
+  </table></div>
   <p class="kecil-teks">OH = orang-hari. Pembayaran upah dicatat di menu <a href="<?= base_url('upah') ?>">Pembayaran Upah</a>. Tarif mengikuti daftar upah dokumen perencana (berbasis UMK) dan dapat diubah di sana.</p>
 </div>
 
 <?php elseif ($tabAktif === 'realisasi'): ?>
 <div class="panel">
   <h2>Kemajuan per Pekerjaan</h2>
-  <table data-paginasi="25">
+  <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25">
     <tr><th>Pekerjaan</th><th class="angka">Volume BOQ</th><th class="angka">Terealisasi</th><th>% Fisik</th><th style="width:300px">Catat Kemajuan</th></tr>
     <?php foreach ($pekerjaan as $p): $persen = (float) $p['volume'] > 0 ? min(100, (float) $p['volume_terealisasi'] / (float) $p['volume'] * 100) : 0; ?>
     <tr>
-      <td><?= esc($p['nama']) ?><br><span class="kecil-teks"><?= esc($p['bab'] ?? '') ?></span></td>
+      <td class="potong" title="<?= esc($p['nama']) ?>"><?= esc($p['nama']) ?><?php if (! empty($p['bab'])): ?> <span class="kecil-teks">(<?= esc($p['bab']) ?>)</span><?php endif; ?></td>
       <td class="angka"><?= rtrim(rtrim(number_format((float) $p['volume'], 3, ',', '.'), '0'), ',') ?> <?= esc($p['satuan'] ?? '') ?></td>
       <td class="angka"><?= rtrim(rtrim(number_format((float) $p['volume_terealisasi'], 3, ',', '.'), '0'), ',') ?></td>
-      <td><div class="bar<?= $persen >= 99.5 ? ' hijau' : '' ?>"><div style="width:<?= $persen ?>%"></div></div><span class="kecil-teks"><?= number_format($persen, 1, ',', '.') ?>%</span></td>
+      <td><div class="sel-fisik"><div class="bar<?= $persen >= 99.5 ? ' hijau' : '' ?>"><div style="width:<?= $persen ?>%"></div></div><span class="kecil-teks"><?= number_format($persen, 1, ',', '.') ?>%</span></div></td>
       <td>
         <form method="post" action="<?= base_url('gedung/pekerjaan/' . $p['id'] . '/realisasi') ?>" style="display:flex;gap:5px">
           <?= csrf_field() ?>
@@ -179,11 +179,11 @@ $tabAktif = $tab ?? 'boq';
       </td>
     </tr>
     <?php endforeach; ?>
-  </table>
+  </table></div>
 </div>
 <div class="panel">
   <h2>Riwayat Pencatatan Terakhir</h2>
-  <table>
+  <div class="bungkus-tabel"><table class="satu-baris">
     <tr><th>Tanggal</th><th>Pekerjaan</th><th class="angka">Volume</th><th>Keterangan</th><th>Aksi</th></tr>
     <?php foreach ($riwayat as $r): ?>
     <tr>
@@ -195,6 +195,6 @@ $tabAktif = $tab ?? 'boq';
     </tr>
     <?php endforeach; ?>
     <?php if ($riwayat === []): ?><tr><td colspan="5">Belum ada pencatatan kemajuan.</td></tr><?php endif; ?>
-  </table>
+  </table></div>
 </div>
 <?php endif; ?>

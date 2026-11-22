@@ -811,3 +811,12 @@ html.gelap .sc-tombol { background: #0c1526; }
 html.gelap .sc-tombol:hover { background: #0c1526; }
 html.gelap .sc-panel { background: #0c1526; }
 html.gelap .sc-opsi.aktif { background: #1e293b; }
+
+/* Tabel satu baris per item (halaman detail gedung): teks tidak membungkus,
+   nama panjang dipotong ellipsis (judul lengkap di title), tabel bisa digulir mendatar. */
+.bungkus-tabel { overflow-x: auto; }
+table.satu-baris th, table.satu-baris td { white-space: nowrap; padding-top: 5px; padding-bottom: 5px; }
+table.satu-baris td.potong { max-width: 360px; overflow: hidden; text-overflow: ellipsis; }
+table.satu-baris form.inline { display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; }
+table.satu-baris .sel-fisik { display: flex; align-items: center; gap: 6px; }
+table.satu-baris .sel-fisik .bar { flex: 1 1 auto; min-width: 64px; }
