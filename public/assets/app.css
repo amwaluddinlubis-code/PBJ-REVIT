@@ -998,17 +998,34 @@ form.inline button {
 }
 
 @media (min-width: 761px) {
+  /* Terlipat = rel ikon: lebar menyusut, ikon grup tetap tampil dan bisa
+     diklik untuk membuka lagi (nama grup muncul sebagai title). Label,
+     isi grup, pemilih sekolah, dan nama pengguna disembunyikan. */
   .kerangka.samping-tutup .samping {
-    width: 0;
-    padding-left: 0;
-    padding-right: 0;
-    opacity: 0;
-    border-right: 0;
-    overflow: hidden;
+    width: 66px;
+    padding-left: 9px;
+    padding-right: 9px;
   }
 
-  .kerangka .tombol-samping {
+  .kerangka.samping-tutup .nama-logo,
+  .kerangka.samping-tutup .logo form,
+  .kerangka.samping-tutup .judul-induk,
+  .kerangka.samping-tutup .samping nav .induk .anak,
+  .kerangka.samping-tutup .samping nav .parent .panah,
+  .kerangka.samping-tutup .samping .profil .siapa {
     display: none;
+  }
+
+  .kerangka.samping-tutup .logo .baris-ap,
+  .kerangka.samping-tutup .samping .profil {
+    justify-content: center;
+  }
+
+  .kerangka.samping-tutup .samping nav a,
+  .kerangka.samping-tutup .samping nav .parent {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 

@@ -62,7 +62,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       </form>
     </div>
     <nav>
-      <a href="<?= base_url('/') ?>"<?= $seg === '' ? ' class="aktif"' : '' ?>><?= $svg('grid') ?>Dashboard</a>
+      <a href="<?= base_url('/') ?>"<?= $seg === '' ? ' class="aktif"' : '' ?> title="Dashboard"><?= $svg('grid') ?><span class="judul-induk">Dashboard</span></a>
       <?php
       $uriPenuh = uri_string();
       $indukAktif = [
@@ -87,7 +87,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       $induk = static function (string $kunci, string $ikonNama, string $label) use ($indukAktif, $svg): void {
           $buka = $indukAktif[$kunci] ?? false;
           echo '<div class="induk' . ($buka ? ' buka' : '') . '" data-induk="' . $kunci . '">'
-             . '<button type="button" class="parent' . ($buka ? ' aktif' : '') . '">' . $svg($ikonNama) . $label
+             . '<button type="button" class="parent' . ($buka ? ' aktif' : '') . '" title="' . esc($label) . '">' . $svg($ikonNama) . '<span class="judul-induk">' . $label . '</span>'
              . '<svg class="panah" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button><div class="anak">';
       };
       $tutupInduk = static fn (): string => '</div></div>';
@@ -263,6 +263,16 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       localStorage.setItem('ap-samping', tutup ? 'tutup' : 'buka');
     }
     aria();
+  });
+  // Saat terlipat jadi rel ikon, klik ikon grup membuka sidebar lagi.
+  kerangka.querySelectorAll('.samping .parent').forEach(function (t) {
+    t.addEventListener('click', function () {
+      if (!mobile() && kerangka.classList.contains('samping-tutup')) {
+        kerangka.classList.remove('samping-tutup');
+        localStorage.setItem('ap-samping', 'buka');
+        aria();
+      }
+    });
   });
   aria();
 })();
