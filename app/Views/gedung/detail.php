@@ -37,7 +37,7 @@ $tabAktif = $tab ?? 'boq';
       <?php if ($p['bab'] !== $babLalu): $babLalu = $p['bab']; ?>
       <tr><td colspan="9" style="font-weight:600;background:#fcfcfd"><?= esc($babLalu ?: '—') ?></td></tr>
       <?php endif; ?>
-      <tr>
+      <tr id="pekerjaan-<?= (int) $p['id'] ?>">
         <td><input type="checkbox" data-pilih value="<?= (int) $p['id'] ?>" x-model="terpilih"></td>
         <td class="potong" title="<?= esc($p['nama']) ?>"><?php if (! empty($p['kode_analisa']) && isset($petaAnalisa[$p['kode_analisa']])): ?><button type="button" class="tautan-pekerjaan" data-buka-detail="<?= (int) $p['id'] ?>" title="Klik untuk melihat rincian bahan &amp; upah"><span class="panah">&#9656;</span> <?= esc($p['nama']) ?></button><?php else: ?><?= esc($p['nama']) ?><?php endif; ?></td>
         <td><?= $p['kode_analisa'] ? '<span class="lencana abu">' . esc($p['kode_analisa']) . '</span>' : '—' ?></td>
@@ -101,6 +101,38 @@ $tabAktif = $tab ?? 'boq';
   </table></div>
   <p class="kecil-teks">Mengubah volume pekerjaan menghitung ulang kebutuhan bahan &amp; upah gedung ini secara otomatis.</p>
 </div>
+<script>
+// Tautan dalam #pekerjaan-<id> (mis. dari panel "Dipakai di Pekerjaan" di
+// halaman Analisa): bersihkan saringan tabel, pindah ke halaman paginasi
+// yang memuat barisnya, gulir ke sana, sorot, dan buka rinciannya.
+(function () {
+  var m = location.hash.match(/^#pekerjaan-(\d+)$/);
+  if (!m) return;
+  var jalan = function () {
+    var baris = document.getElementById('pekerjaan-' + m[1]);
+    if (!baris) return;
+    var tabel = baris.closest('table');
+    if (tabel) {
+      var wadah = tabel.closest('.bungkus-tabel') || tabel.parentElement;
+      var akar = wadah ? wadah.parentElement : document;
+      var cari = akar.querySelector('input[type="search"], .kotak-cari input');
+      if (cari && cari.value) { cari.value = ''; cari.dispatchEvent(new Event('input', { bubbles: true })); }
+      var berikut = function () { return akar.querySelector('.tombol-halaman button[data-h="next"]:not([disabled])'); };
+      var jaga = 0;
+      while (baris.style.display === 'none' && berikut() && jaga++ < 60) { berikut().click(); }
+    }
+    baris.scrollIntoView({ block: 'center' });
+    baris.style.background = '#fef3c7';
+    var tombol = baris.querySelector('[data-buka-detail]');
+    if (tombol) tombol.click();
+    setTimeout(function () { baris.style.background = ''; }, 4000);
+  };
+  // Tunggu paginasi.js selesai menginisialisasi tabel (ia menyembunyikan
+  // baris di luar halaman aktif) sebelum memeriksa keterlihatan baris.
+  if (document.readyState === 'complete') { setTimeout(jalan, 200); }
+  else { window.addEventListener('load', function () { setTimeout(jalan, 200); }); }
+})();
+</script>
 <div class="panel">
   <h2>Tambah Pekerjaan Manual</h2>
   <form method="post" action="<?= base_url('gedung/pekerjaan/simpan') ?>">

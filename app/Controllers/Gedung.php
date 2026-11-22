@@ -12,8 +12,21 @@ class Gedung extends BaseController
              FROM gedung g WHERE g.sekolah_id = ? AND g.is_deleted = 0 ORDER BY g.urutan, g.id',
             [$this->sid()]
         )->getResultArray();
+        $asliPerGedung = [];
+        foreach ($db->query(
+            'SELECT p.gedung_id AS gid, SUM(p.volume * p.harga_satuan) AS t
+             FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
+             WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0
+             GROUP BY p.gedung_id',
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $asliPerGedung[(int) $r['gid']] = (float) $r['t'];
+        }
         foreach ($gedung as &$g) {
             $g['nilai_boq'] = $this->totalBoqGedung((int) $g['id']);
+            $g['boq_asli'] = $asliPerGedung[(int) $g['id']] ?? 0.0;
+            $g['nilai_analisa'] = $g['nilai_boq'];
+            $g['perubahan'] = $g['nilai_analisa'] - $g['boq_asli'];
             $g['nilai_realisasi'] = $this->nilaiRealisasiGedung((int) $g['id']);
             $g['persen_fisik'] = $g['nilai_boq'] > 0 ? min(100, $g['nilai_realisasi'] / $g['nilai_boq'] * 100) : 0;
         }

@@ -140,8 +140,17 @@ class Analisa extends BaseController
         )->getResultArray();
         $bahan = $db->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray();
         $upah = $db->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray();
+        $pemakai = $db->query(
+            "SELECT p.id AS pekerjaan_id, p.nama, p.volume, p.volume_revisi, p.satuan,
+                    g.id AS gedung_id, g.nama AS gedung
+             FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
+             WHERE (p.analisa_id = ? OR (p.analisa_id IS NULL AND p.kode_analisa = ?))
+               AND p.is_deleted = 0 AND g.is_deleted = 0 AND g.sekolah_id = ?
+             ORDER BY g.urutan, g.id, p.urutan, p.id",
+            [$a['id'], $a['kode'], $this->sid()]
+        )->getResultArray();
         return $this->tampil('analisa/detail', [
-            'a' => $a, 'komponen' => $komponen, 'bahan' => $bahan, 'upah' => $upah,
+            'a' => $a, 'komponen' => $komponen, 'bahan' => $bahan, 'upah' => $upah, 'pemakai' => $pemakai,
         ], 'Analisa ' . $a['kode'] . ' — Aplikasi PBJ Sekolah');
     }
 
