@@ -3063,3 +3063,14 @@ table.satu-baris tr.baris-detail>td {
   font-weight: 600;
   background: rgba(120, 140, 170, .05);
 }
+/* === Tabel Standar v1 (paginasi.js) === */
+th.bisa-urut { cursor: pointer; }
+th.bisa-urut:hover { text-decoration: underline; }
+th .panah-urut { font-size: 10px; opacity: .75; }
+tr.baris-kosong td { text-align: center; color: var(--ta-teks-2); padding: 18px 10px; font-style: italic; }
+@media print {
+  .paginasi { display: none !important; }
+  table[data-paginasi] tr, table[data-cari] tr { display: table-row !important; }
+  table[data-paginasi] tr.baris-detail:not(.terbuka), table[data-cari] tr.baris-detail:not(.terbuka) { display: none !important; }
+  table[data-paginasi] tr.baris-kosong, table[data-cari] tr.baris-kosong { display: none !important; }
+}

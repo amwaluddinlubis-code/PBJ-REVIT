@@ -11,7 +11,12 @@ window.komponenBulk = function (formId, wadahId) {
     terpilih: [],
     pilihSemua(ev) {
       const akar = ev.target.closest('[data-bulk-akar]') || document;
-      const ids = [...akar.querySelectorAll('[data-pilih]')].map((el) => el.value);
+      const ids = [...akar.querySelectorAll('[data-pilih]')]
+        .filter((el) => {
+          const baris = el.closest('tr, figure, li, div');
+          return !baris || baris.style.display !== 'none';
+        })
+        .map((el) => el.value);
       if (ev.target.checked) this.terpilih = [...new Set([...this.terpilih, ...ids])];
       else this.terpilih = this.terpilih.filter((id) => !ids.includes(id));
     },
