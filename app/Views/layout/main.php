@@ -49,16 +49,18 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
 <div class="kerangka">
   <div class="lapik" id="lapik-samping"></div>
   <aside class="samping" id="samping">
-    <div class="logo"><div class="kotak-logo">AP</div><div class="nama-logo">Analisa Perencana<small>Perencanaan · Belanja · LPJ</small></div></div>
-    <form method="post" action="<?= base_url('sekolah/pilih') ?>">
-      <?= csrf_field() ?>
-      <label class="label-samping" for="pilihan-sekolah">Sekolah aktif</label>
-      <select data-select-cari id="pilihan-sekolah" name="sekolah_id" onchange="this.form.submit()">
-        <?php foreach ($semuaSekolah ?? [] as $sk): ?>
-          <option value="<?= (int) $sk['id'] ?>"<?= ((int) ($sekolahAktif['id'] ?? 0) === (int) $sk['id']) ? ' selected' : '' ?>><?= esc($sk['nama_sekolah'] ?? ('Sekolah #' . $sk['id'])) ?></option>
-        <?php endforeach; ?>
-      </select>
-    </form>
+    <div class="logo">
+      <div class="baris-ap"><div class="kotak-logo">AP</div><div class="nama-logo">Analisa Perencana<small>Perencanaan · Belanja · LPJ</small></div></div>
+      <form method="post" action="<?= base_url('sekolah/pilih') ?>">
+        <?= csrf_field() ?>
+        <label class="label-samping" for="pilihan-sekolah">Sekolah aktif</label>
+        <select data-select-cari id="pilihan-sekolah" name="sekolah_id" onchange="this.form.submit()">
+          <?php foreach ($semuaSekolah ?? [] as $sk): ?>
+            <option value="<?= (int) $sk['id'] ?>"<?= ((int) ($sekolahAktif['id'] ?? 0) === (int) $sk['id']) ? ' selected' : '' ?>><?= esc($sk['nama_sekolah'] ?? ('Sekolah #' . $sk['id'])) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </form>
+    </div>
     <nav>
       <a href="<?= base_url('/') ?>"<?= $seg === '' ? ' class="aktif"' : '' ?>><?= $svg('grid') ?>Dashboard</a>
       <?php

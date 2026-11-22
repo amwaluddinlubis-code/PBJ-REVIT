@@ -43,24 +43,45 @@ a:hover {
 .samping {
   width: 248px;
   flex-shrink: 0;
-  background: #fff;
-  border-right: 1px solid var(--ta-garis);
+  background: linear-gradient(145deg,#092b55 0%,#075b83 52%,#16a19a 100%);
+  border: none;
   padding: 16px 14px;
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
   height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar: logo & profil statis di atasnya; scroll hanya menu di dalamnya. */
+.samping .logo,
+.samping .profil {
+  flex: none;
+  position: static;
+}
+.samping nav {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
 }
 
 .logo {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
   padding: 2px 8px 14px;
   border-bottom: 1px solid var(--ina-neutral-100, #f2f2f2);
   margin-bottom: 12px;
+}
+.logo .baris-ap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo select {
+  width: 100%;
 }
 
 .kotak-logo {
@@ -1330,7 +1351,9 @@ html.gelap {
   --ina-neutral-400: #35526b;
 }
 
-html.gelap .samping,
+html.gelap .samping {
+  background: linear-gradient(145deg,#081f2e 0%,#0b3a33 100%);
+}
 html.gelap .topbar,
 html.gelap .panel,
 html.gelap .kpi {
@@ -3100,9 +3123,8 @@ body:not(.login) {
 }
 
 body:not(.login) .samping {
-  background: rgba(255, 255, 255, .9);
-  border-right-color: rgba(214, 223, 235, .8);
-  box-shadow: 10px 0 32px rgba(18, 44, 77, .035);
+  border-right-color: transparent;
+  box-shadow: none;
   backdrop-filter: blur(18px);
 }
 
@@ -3371,3 +3393,92 @@ body:not(.login) .paginasi button { min-height: 28px; padding-top: 4px; padding-
   body:not(.login) .tombol,
   body:not(.login) .tombol-buka-form { min-height: 38px; }
 }
+
+/* Sidebar: identitas kuat, navigasi ringan, dan hierarki menu lebih jelas */
+body:not(.login) .samping {
+  background: linear-gradient(180deg, #092b55 0%, #0a466c 58%, #0d6d73 100%);
+  border-right: 0;
+  padding: 12px 10px;
+  box-shadow: 12px 0 34px rgba(8, 35, 66, .16);
+  color: #f5fbff;
+}
+
+body:not(.login) .samping .logo {
+  padding: 4px 6px 13px;
+  margin-bottom: 10px;
+  border-bottom-color: rgba(255, 255, 255, .16);
+}
+
+body:not(.login) .samping .kotak-logo {
+  background: linear-gradient(145deg, #51d4d0, #0b8caa);
+  border: 1px solid rgba(255, 255, 255, .3);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .16);
+}
+
+body:not(.login) .samping .nama-logo { color: #fff; }
+body:not(.login) .samping .nama-logo small,
+body:not(.login) .samping .label-samping,
+body:not(.login) .samping .grup { color: rgba(231, 247, 255, .68); }
+
+body:not(.login) .samping .sc-tombol,
+body:not(.login) .samping > .logo select {
+  min-height: 32px;
+  padding: 6px 9px;
+  border-color: rgba(255, 255, 255, .2);
+  border-radius: 8px;
+  background: rgba(3, 26, 54, .28);
+  color: #f5fbff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
+}
+
+body:not(.login) .samping .sc-tombol:hover,
+body:not(.login) .samping .sc-tombol:focus-visible { background: rgba(3, 26, 54, .46); }
+body:not(.login) .samping .sc-label.sc-kosong-teks,
+body:not(.login) .samping .sc-panah { color: rgba(231, 247, 255, .72); }
+
+body:not(.login) .samping nav {
+  padding: 0 1px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .25) transparent;
+}
+body:not(.login) .samping nav a,
+body:not(.login) .samping nav .parent {
+  min-height: 34px;
+  margin-bottom: 2px;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: rgba(239, 249, 255, .82);
+  font-size: 11px;
+}
+
+body:not(.login) .samping nav a svg,
+body:not(.login) .samping nav .parent > svg { width: 17px; height: 17px; color: rgba(218, 244, 255, .82); }
+body:not(.login) .samping nav a:hover,
+body:not(.login) .samping nav .parent:hover { background: rgba(255, 255, 255, .1); color: #fff; transform: translateX(2px); }
+body:not(.login) .samping nav a.aktif,
+body:not(.login) .samping nav .parent.aktif {
+  background: linear-gradient(90deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .07));
+  border-color: rgba(255, 255, 255, .13);
+  box-shadow: inset 3px 0 0 #64e0d5, 0 5px 12px rgba(0, 0, 0, .08);
+  color: #fff;
+}
+
+body:not(.login) .samping nav .grup { margin: 12px 9px 5px; }
+body:not(.login) .samping nav .anak {
+  margin: 0 0 5px 17px;
+  padding-left: 8px;
+  border-left-color: rgba(220, 246, 255, .22);
+}
+body:not(.login) .samping nav .anak a { min-height: 29px; padding: 5px 8px; color: rgba(239, 249, 255, .72); font-size: 10.5px; }
+body:not(.login) .samping nav .anak a.aktif { color: #fff; }
+body:not(.login) .samping nav a .hitung { background: #64e0d5; color: #073a55; }
+
+body:not(.login) .samping .profil {
+  padding: 10px 6px 1px;
+  border-top-color: rgba(255, 255, 255, .16);
+}
+body:not(.login) .samping .profil .siapa { color: #fff; }
+body:not(.login) .samping .profil .siapa small { color: rgba(231, 247, 255, .68); }

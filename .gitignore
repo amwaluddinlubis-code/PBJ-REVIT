@@ -2,6 +2,8 @@ vendor/
 .env
 /.vscode/
 /backup_terbaru.sql
+build/
+writable/backup/
 app/ThirdParty/
 writable/cache/*
 !writable/cache/.gitkeep
