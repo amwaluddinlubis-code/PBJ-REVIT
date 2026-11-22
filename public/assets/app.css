@@ -3857,3 +3857,8 @@ html:not(.gelap) body:not(.login) .isi .kecil-teks { color: #5b6b82; }
 /* Koreksi audit: hero memiliki min-height 150px dari aturan dasar,
    jadi pemadatan padding saja tidak menurunkannya. */
 body:not(.login) .dashboard-hero { min-height: 118px; }
+
+/* Tabel Acuan AHSP: lebar pas wadah/layar, teks membungkus (tidak melebar) */
+.tabel-acuan { table-layout: fixed; width: 100%; }
+.tabel-acuan th, .tabel-acuan td { white-space: normal; overflow-wrap: break-word; }
+.tabel-acuan th.angka, .tabel-acuan td.angka { white-space: nowrap; }

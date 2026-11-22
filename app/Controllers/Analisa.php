@@ -138,6 +138,29 @@ class Analisa extends BaseController
              ORDER BY FIELD(ak.jenis, 'bahan', 'upah', 'alat'), ak.id",
             [$a['id']]
         )->getResultArray();
+        // Pembanding AHSP Nasional (bila analisa ini punya padanan acuan):
+        // koefisien acuan per komponen + nilainya dengan tarif komponen ini.
+        $acuanInfo = null;
+        $acuanPerKomp = [];
+        $ac = \App\Libraries\BandingAcuan::acuanUntukKode($db, (string) $a['kode']);
+        if ($ac) {
+            $acuanInfo = $ac;
+            $kompAcuan = \App\Libraries\BandingAcuan::komponenAcuan($db, (int) $ac['id']);
+            $hitungGrup = [];
+            foreach ($komponen as $k) {
+                $g = \App\Libraries\BandingAcuan::grupKanon((string) $k['nama'], (string) $k['jenis']);
+                $hitungGrup[$g] = ($hitungGrup[$g] ?? 0) + 1;
+            }
+            foreach ($komponen as $k) {
+                $g = \App\Libraries\BandingAcuan::grupKanon((string) $k['nama'], (string) $k['jenis']);
+                $ko = \App\Libraries\BandingAcuan::koefGrup($kompAcuan, $g, (string) ($k['satuan'] ?? ''));
+                $acuanPerKomp[(int) $k['id']] = [
+                    'koef'   => $ko,
+                    'nilai'  => $ko === null ? null : $ko * (float) ($k['tarif'] ?? 0),
+                    'banyak' => ($hitungGrup[$g] ?? 0) > 1,
+                ];
+            }
+        }
         $bahan = $db->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray();
         $upah = $db->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray();
         $pemakai = $db->query(
@@ -151,6 +174,7 @@ class Analisa extends BaseController
         )->getResultArray();
         return $this->tampil('analisa/detail', [
             'a' => $a, 'komponen' => $komponen, 'bahan' => $bahan, 'upah' => $upah, 'pemakai' => $pemakai,
+            'acuanInfo' => $acuanInfo, 'acuanPerKomp' => $acuanPerKomp,
         ], 'Analisa ' . $a['kode'] . ' — Aplikasi PBJ Sekolah');
     }
 

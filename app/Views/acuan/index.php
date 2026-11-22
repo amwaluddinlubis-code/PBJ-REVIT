@@ -13,7 +13,8 @@ foreach ($daftar as $d) { if ($d['acuan']['tanpa_padanan']) { $tanpa++; } elseif
 <div class="panel">
   <p class="kecil-teks"><?= count($daftar) ?> item acuan · <?= $terpadan ?> terpadankan ke analisa sekolah aktif · <?= $tanpa ?> tanpa padanan nasional</p>
   <div class="bungkus-tabel">
-    <table class="satu-baris" data-cari data-paginasi="25">
+    <table class="satu-baris tabel-acuan" data-cari data-paginasi="25">
+      <colgroup><col style="width:7%"><col style="width:23%"><col style="width:23%"><col style="width:12%"><col style="width:12%"><col style="width:8%"><col style="width:8%"><col style="width:7%"></colgroup>
       <thead><tr>
         <th>Kode Kita</th><th>Analisa Kita (Sekolah Aktif)</th><th>Padanan Nasional</th>
         <th class="angka">Harga Kita</th><th class="angka">Harga Acuan</th><th class="angka">Selisih %</th>
