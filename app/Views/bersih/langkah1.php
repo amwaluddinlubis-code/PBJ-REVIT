@@ -16,29 +16,40 @@
 </div>
 
 <?php if ($totalKecil === 0): ?>
-<div class="panel"><p>Tidak ada pekerjaan bervolume &lt; 1 — data pekerjaan sudah bersih.</p></div>
+<div class="panel kosong"><p>Tidak ada pekerjaan bervolume &lt; 1 — data pekerjaan sudah bersih.</p><a class="tombol abu" href="<?= base_url('impor') ?>">Kembali ke Impor</a></div>
 <?php else: ?>
 <form method="post" action="<?= base_url('bersih/langkah2') ?>">
   <?= csrf_field() ?>
-  <?php foreach ($perGedung as $namaGedung => $rows): ?>
-  <details class="panel panel-lipat">
-    <summary><?= esc($namaGedung) ?> <span class="kecil-teks">(<?= count($rows) ?> pekerjaan volume &lt; 1 · <?= $rp(array_sum(array_column($rows, 'jumlah'))) ?>)</span></summary>
-    <table data-cari="Cari pekerjaan…">
-      <tr><th style="width:36px">Buang</th><th>Pekerjaan</th><th>Kode Analisa</th><th class="angka">Volume</th><th>Satuan</th><th class="angka">Jumlah</th><th></th></tr>
-      <?php foreach ($rows as $p): $nol = (float) $p['volume'] <= 0; $adaReal = (int) $p['punya_realisasi'] > 0; ?>
-      <tr>
-        <td><input type="checkbox" name="pekerjaan[]" value="<?= (int) $p['id'] ?>" <?= $nol && ! $adaReal ? 'checked' : '' ?>></td>
-        <td><?= esc($p['nama']) ?></td>
-        <td><?= esc($p['kode_analisa'] ?? '') ?></td>
-        <td class="angka"><?= $angka($p['volume']) ?></td>
-        <td><?= esc($p['satuan'] ?? '') ?></td>
-        <td class="angka"><?= $rp($p['jumlah']) ?></td>
-        <td><?php if ($adaReal): ?><span class="lencana kuning">sudah ada realisasi</span><?php elseif (! $nol): ?><span class="lencana abu">volume pecahan — periksa</span><?php endif; ?></td>
-      </tr>
-      <?php endforeach; ?>
-    </table>
+  <?php foreach ($grupGedung as $g): $gid = (int) $g['gedung_id']; $terbuka = $buka === $gid; ?>
+  <details class="panel panel-lipat" data-grup="<?= $gid ?>" <?= $terbuka ? 'open' : '' ?>>
+    <summary><?= esc($g['gedung_nama']) ?> <span class="kecil-teks">(<?= (int) $g['jumlah'] ?> pekerjaan volume &lt; 1 · <?= $rp($g['total']) ?>)</span></summary>
+    <div class="isi-grup">
+      <?php if ($terbuka): ?>
+      <?= view('bersih/_grup_tabel', ['rows' => $barisBuka]) ?>
+      <?php else: ?>
+      <p class="kecil-teks" style="margin:0">Daftar pekerjaan dimuat saat panel dibuka. <a href="<?= base_url('bersih?buka=' . $gid) ?>">Muat langsung sebagai halaman biasa</a></p>
+      <?php endif; ?>
+    </div>
   </details>
   <?php endforeach; ?>
+  <script>
+  document.querySelectorAll('details[data-grup]').forEach(function (d) {
+    d.addEventListener('toggle', function () {
+      if (!d.open || d.dataset.termuat) return;
+      d.dataset.termuat = '1';
+      const wadah = d.querySelector('.isi-grup');
+      fetch('<?= base_url('bersih/grup') ?>/' + d.dataset.grup, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.text(); })
+        .then(function (html) {
+          wadah.innerHTML = html;
+          if (window.inisiasiPaginasi) window.inisiasiPaginasi(wadah);
+        })
+        .catch(function () {
+          wadah.innerHTML = '<p class="kecil-teks">Gagal memuat daftar. <a href="<?= base_url('bersih') ?>?buka=' + d.dataset.grup + '">Coba muat sebagai halaman biasa</a>.</p>';
+        });
+    });
+  });
+  </script>
   <div class="aksi" style="justify-content:flex-start;gap:8px">
     <button type="submit">Lanjut ke Langkah 2: Analisa</button>
     <a class="tombol abu" href="<?= base_url('impor') ?>">Kembali ke Impor</a>

@@ -191,6 +191,7 @@ $routes->post('buku-kas/hapus-massal', 'BukuKas::hapusMassal', ['filter' => 'aut
 $routes->post('buku-kas/kosongkan', 'BukuKas::kosongkan', ['filter' => 'auth']);
 $routes->get('buku-kas/cetak', 'BukuKas::cetak', ['filter' => 'auth']);
 $routes->get('bersih', 'Bersih::index', ['filter' => 'auth']);
+$routes->get('bersih/grup/(:num)', 'Bersih::grup/$1', ['filter' => 'auth']);
 $routes->post('bersih/langkah2', 'Bersih::langkah2', ['filter' => 'auth']);
 $routes->get('bersih/analisa', 'Bersih::analisa', ['filter' => 'auth']);
 $routes->post('bersih/langkah3', 'Bersih::langkah3', ['filter' => 'auth']);

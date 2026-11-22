@@ -21,26 +21,48 @@ class Bersih extends BaseController
     public function index()
     {
         $db = $this->db();
-        $rows = $db->query(
-            'SELECT p.id, p.nama, COALESCE(p.volume, 0) AS volume, p.satuan, p.jumlah, p.kode_analisa,
-                    g.id AS gedung_id, g.nama AS gedung_nama,
-                    (SELECT COUNT(*) FROM realisasi r WHERE r.pekerjaan_id = p.id AND r.is_deleted = 0) AS punya_realisasi
+        // Langkah 1 hanya memuat ringkasan per gedung; baris pekerjaan satu
+        // grup dimuat saat panelnya dibuka (endpoint grup) agar halaman awal
+        // tetap ringan walau baris volume < 1 berjumlah ribuan.
+        $grupGedung = $db->query(
+            'SELECT g.id AS gedung_id, g.nama AS gedung_nama, COUNT(*) AS jumlah, COALESCE(SUM(p.jumlah), 0) AS total
              FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
              WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND COALESCE(p.volume, 0) < 1
-             ORDER BY g.urutan, g.id, p.urutan, p.id',
+             GROUP BY g.id ORDER BY g.urutan, g.id',
             [$this->sid()]
         )->getResultArray();
-        $perGedung = [];
-        foreach ($rows as $r) {
-            $perGedung[$r['gedung_nama']][] = $r;
+        $totalKecil = 0;
+        foreach ($grupGedung as $g) {
+            $totalKecil += (int) $g['jumlah'];
         }
         $totalAktif = (int) $db->query(
             'SELECT COUNT(*) c FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id WHERE g.sekolah_id = ? AND p.is_deleted = 0',
             [$this->sid()]
         )->getRow()->c;
+        $buka = (int) ($this->request->getGet('buka') ?? 0);
         return $this->tampil('bersih/langkah1', [
-            'perGedung' => $perGedung, 'totalKecil' => count($rows), 'totalAktif' => $totalAktif,
-        ], 'Pembersihan Hasil Impor — Langkah 1: Pekerjaan Volume Kecil');
+            'grupGedung' => $grupGedung, 'totalKecil' => $totalKecil, 'totalAktif' => $totalAktif,
+            'buka' => $buka, 'barisBuka' => $buka > 0 ? $this->barisGrup($buka) : [],
+        ], 'Pembersihan Hasil Impor — Aplikasi PBJ Sekolah');
+    }
+
+    /** Baris pekerjaan volume < 1 pada satu gedung (terisolasi sekolah aktif). */
+    private function barisGrup(int $gedungId): array
+    {
+        return $this->db()->query(
+            'SELECT p.id, p.nama, COALESCE(p.volume, 0) AS volume, p.satuan, p.jumlah, p.kode_analisa,
+                    (SELECT COUNT(*) FROM realisasi r WHERE r.pekerjaan_id = p.id AND r.is_deleted = 0) AS punya_realisasi
+             FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
+             WHERE g.sekolah_id = ? AND p.gedung_id = ? AND p.is_deleted = 0 AND COALESCE(p.volume, 0) < 1
+             ORDER BY p.urutan, p.id',
+            [$this->sid(), $gedungId]
+        )->getResultArray();
+    }
+
+    /** Fragmen tabel satu grup gedung untuk Langkah 1 (dimuat saat panel dibuka). */
+    public function grup($gedungId = 0)
+    {
+        return view('bersih/_grup_tabel', ['rows' => $this->barisGrup((int) $gedungId)]);
     }
 
     public function langkah2()
