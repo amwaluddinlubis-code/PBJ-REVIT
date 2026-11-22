@@ -82,6 +82,9 @@ $tabAktif = $tab ?? 'boq';
               <?php endif; ?>
               <tr class="total"><td colspan="5">Total komponen per satuan pekerjaan</td><td class="angka"><?= number_format($grand, 0, ',', '.') ?></td><td class="angka">&times; volume = <?= number_format($grand * $vol, 0, ',', '.') ?></td></tr>
             </table>
+            <?php if (! empty($a['tersembunyi'])): ?>
+            <div class="detail-kaki"><?= (int) $a['tersembunyi'] ?> komponen disembunyikan karena bahan/upah masternya sudah dihapus dari master.</div>
+            <?php endif; ?>
             <?php if (abs($grand - (float) $p['harga_satuan']) > 1): ?>
             <div class="detail-kaki">Catatan: total komponen per satuan (Rp <?= number_format($grand, 0, ',', '.') ?>) berbeda dari harga satuan BOQ (Rp <?= number_format((float) $p['harga_satuan'], 0, ',', '.') ?>) &mdash; harga BOQ mengikuti Harsat dokumen perencana.</div>
             <?php endif; ?>

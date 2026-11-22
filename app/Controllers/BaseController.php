@@ -241,6 +241,7 @@ abstract class BaseController extends Controller
              JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'upah'
              LEFT JOIN upah_master um ON um.sekolah_id = a.sekolah_id AND um.jenis = ak.nama AND um.is_deleted = 0
              WHERE p.gedung_id = ? AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0
+               AND NOT EXISTS (SELECT 1 FROM upah_master umh WHERE umh.sekolah_id = a.sekolah_id AND umh.jenis = ak.nama AND umh.is_deleted = 1)
              GROUP BY ak.nama ORDER BY orang_hari DESC",
             [$this->sid(), $gedungId]
         )->getResultArray();

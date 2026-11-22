@@ -131,22 +131,35 @@ class Gedung extends BaseController
                     $peta[$a['kode']] = $a + ['komponen' => []];
                 }
                 if ($peta !== []) {
+                    $jenisUpahHapus = array_column($db->table('upah_master')->select('jenis')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 1])->get()->getResultArray(), 'jenis');
                     $komp = $db->query(
-                        "SELECT ak.*, a.kode AS kode_analisa, b.nama AS nama_master, b.kode AS kode_master, b.satuan AS satuan_master
+                        "SELECT ak.*, a.kode AS kode_analisa, b.nama AS nama_master, b.kode AS kode_master, b.satuan AS satuan_master, b.is_deleted AS master_terhapus
                          FROM analisa_komponen ak
                          JOIN analisa a ON a.id = ak.analisa_id
-                         LEFT JOIN bahan b ON b.id = ak.bahan_id AND b.is_deleted = 0
+                         LEFT JOIN bahan b ON b.id = ak.bahan_id
                          WHERE a.sekolah_id = ? AND ak.is_deleted = 0 AND a.kode IN (" . implode(',', array_map(static fn ($k) => $db->escape($k), array_keys($peta))) . ")
                          ORDER BY FIELD(ak.jenis, 'bahan', 'upah', 'alat'), ak.id",
                         [$this->sid()]
                     )->getResultArray();
                     foreach ($komp as $k) {
+                        // Komponen yang masternya sudah dihapus tidak ditampilkan lagi.
+                        $masterHapus = ($k['jenis'] === 'bahan' && $k['bahan_id'] !== null && (int) ($k['master_terhapus'] ?? 0) === 1)
+                            || ($k['jenis'] === 'upah' && in_array($k['nama'], $jenisUpahHapus, true));
+                        if ($masterHapus) {
+                            $peta[$k['kode_analisa']]['tersembunyi'] = ($peta[$k['kode_analisa']]['tersembunyi'] ?? 0) + 1;
+                            continue;
+                        }
                         if ($k['jenis'] === 'bahan' && $k['bahan_id'] !== null) {
                             $k['faktor'] = $this->faktorSatuan($k['satuan'] ?? null, ['satuan' => $k['satuan_master'] ?? '', 'nama' => $k['nama_master'] ?? $k['nama']]);
                         } else {
                             $k['faktor'] = 1.0;
                         }
                         $peta[$k['kode_analisa']]['komponen'][] = $k;
+                    }
+                }
+                foreach ($peta as $kodeA => $isiA) {
+                    if ($isiA['komponen'] === []) {
+                        unset($peta[$kodeA]);
                     }
                 }
                 $data['petaAnalisa'] = $peta;
