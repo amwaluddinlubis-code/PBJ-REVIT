@@ -354,7 +354,10 @@ a:hover {
   border-radius: 12px;
   padding: 16px 18px;
   margin-bottom: 16px;
-  overflow-x: auto;
+  /* clip, BUKAN auto: overflow auto/hidden pada leluhur mematikan
+     position: sticky kepala tabel (kepala-tempel). Konten lebar di dalam
+     panel digulir oleh .bungkus-tabel masing-masing. */
+  overflow-x: clip;
 }
 
 .panel h2 {
@@ -2477,7 +2480,9 @@ body {
 table {
   border: 1px solid var(--ina-neutral-100, #f2f2f2);
   border-radius: 10px;
-  overflow: hidden;
+  /* clip, BUKAN hidden: overflow hidden pada tabel mematikan
+     position: sticky pada th (kepala-tempel tidak pernah menempel). */
+  overflow: clip;
 }
 
 th {

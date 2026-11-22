@@ -25,16 +25,112 @@ class Bahan extends BaseController
         return $set;
     }
 
+    /** Id bahan yang dipakai gedung aktif yang didanai: tertaut komponen
+        analisa yang analisanya dipakai pekerjaan gedung tersebut. */
+    private function idBahanDipakaiGedung(): array
+    {
+        $set = [];
+        foreach ($this->db()->query(
+            'SELECT DISTINCT ak.bahan_id FROM analisa_komponen ak
+             JOIN analisa a ON a.id = ak.analisa_id AND a.is_deleted = 0
+             JOIN pekerjaan pk ON pk.kode_analisa = a.kode AND pk.is_deleted = 0
+             JOIN gedung g ON g.id = pk.gedung_id AND g.is_deleted = 0 AND g.didanai = 1
+             WHERE a.sekolah_id = ? AND g.sekolah_id = ? AND ak.jenis = ? AND ak.bahan_id IS NOT NULL AND ak.is_deleted = 0',
+            [$this->sid(), $this->sid(), 'bahan']
+        )->getResultArray() as $r) {
+            $set[(int) $r['bahan_id']] = true;
+        }
+        return $set;
+    }
+
+    /**
+     * Daftar perubahan sinkron harga bahan -> tarif komponen analisa.
+     * Hanya komponen yang tarifnya BERBEDA dari harga acuan bahannya dan
+     * bahannya punya harga acuan > 0 yang masuk daftar.
+     */
+    private function daftarSinkron(): array
+    {
+        $berubah = [];
+        $tetap = 0;
+        $tanpaHarga = 0;
+        foreach ($this->db()->query(
+            'SELECT ak.id, ak.tarif, ak.nama AS komponen, ak.satuan, ak.bahan_id, a.id AS analisa_id, a.kode AS kode_analisa,
+                    b.kode AS kode_bahan, b.nama AS nama_bahan
+             FROM analisa_komponen ak
+             JOIN analisa a ON a.id = ak.analisa_id AND a.is_deleted = 0
+             JOIN bahan b ON b.id = ak.bahan_id AND b.is_deleted = 0
+             WHERE a.sekolah_id = ? AND ak.jenis = ? AND ak.bahan_id IS NOT NULL AND ak.is_deleted = 0
+             ORDER BY a.kode, ak.id',
+            [$this->sid(), 'bahan']
+        )->getResultArray() as $k) {
+            $acuan = $this->hargaAcuan((int) $k['bahan_id']);
+            if ($acuan <= 0) {
+                $tanpaHarga++;
+                continue;
+            }
+            if (abs((float) $k['tarif'] - $acuan) < 0.005) {
+                $tetap++;
+                continue;
+            }
+            $berubah[] = [
+                'komponen_id' => (int) $k['id'], 'analisa_id' => (int) $k['analisa_id'],
+                'kode_analisa' => $k['kode_analisa'], 'komponen' => $k['komponen'], 'satuan' => $k['satuan'],
+                'kode_bahan' => $k['kode_bahan'], 'nama_bahan' => $k['nama_bahan'],
+                'tarif_lama' => (float) $k['tarif'], 'tarif_baru' => (float) $acuan,
+            ];
+        }
+        return ['berubah' => $berubah, 'tetap' => $tetap, 'tanpa_harga' => $tanpaHarga];
+    }
+
+    /** Pratinjau sinkron (AJAX): hanya tarif yang berubah yang dikirim. */
+    public function sinkronPratinjau()
+    {
+        $d = $this->daftarSinkron();
+        return $this->response->setJSON([
+            'berubah' => $d['berubah'], 'tetap' => $d['tetap'], 'tanpa_harga' => $d['tanpa_harga'],
+            'analisa_terdampak' => count(array_unique(array_column($d['berubah'], 'analisa_id'))),
+        ]);
+    }
+
+    /** Terapkan sinkron: tarif komponen analisa := harga acuan bahannya. */
+    public function sinkronAnalisa()
+    {
+        if ($d = $this->penjagaPeran(['operator'])) {
+            return $d;
+        }
+        $d = $this->daftarSinkron();
+        if ($d['berubah'] === []) {
+            return redirect()->to('/bahan')->with('sukses', 'Tidak ada tarif yang berubah — semua tarif komponen analisa sudah sama dengan harga bahan.');
+        }
+        $db = $this->db();
+        $db->transStart();
+        $analisaIds = [];
+        foreach ($d['berubah'] as $b) {
+            $db->table('analisa_komponen')->where('id', $b['komponen_id'])->update(['tarif' => $b['tarif_baru']]);
+            $analisaIds[$b['analisa_id']] = true;
+        }
+        foreach (array_keys($analisaIds) as $aid) {
+            $total = (float) ($db->query(
+                'SELECT COALESCE(SUM(koefisien * COALESCE(tarif, 0)), 0) AS t FROM analisa_komponen WHERE analisa_id = ? AND is_deleted = 0',
+                [$aid]
+            )->getRow()->t ?? 0);
+            $db->table('analisa')->where('id', $aid)->update(['harga_satuan' => $total]);
+        }
+        $db->transComplete();
+        $this->catatAudit('analisa_komponen', null, 'sinkron_harga_bahan', count($d['berubah']) . ' komponen di ' . count($analisaIds) . ' analisa disinkronkan dari harga bahan');
+        return redirect()->to('/bahan')->with('sukses', 'Sinkron selesai: ' . count($d['berubah']) . ' tarif komponen di ' . count($analisaIds) . ' analisa kini mengikuti harga bahan. Nilai BOQ dashboard sudah berubah mengikuti hasil AHSP baru.');
+    }
+
     public function index()
     {
         $q = trim((string) ($this->request->getGet('q') ?? ''));
-        $semua = (string) ($this->request->getGet('semua') ?? '') === '1';
-        $bahan = $this->ambilBahan($q, ! $semua);
-        $setTerpakai = $this->idBahanTerpakai();
+        $tab = (string) ($this->request->getGet('tab') ?? 'gedung') === 'luar' ? 'luar' : 'gedung';
+        $bahan = $this->ambilBahan($q, $tab);
+        $setTerpakai = $this->idBahanDipakaiGedung();
         $upah = $this->db()->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray();
         return $this->tampil('bahan/index', [
             'bahan' => $bahan, 'q' => $q, 'upah' => $upah,
-            'semua' => $semua, 'jmlTerpakai' => count($setTerpakai),
+            'tab' => $tab, 'jmlTerpakai' => count($setTerpakai),
             'totalBahan' => $this->db()->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults(),
             'totalUpah' => count($upah),
             'bahanTanpaHarga' => array_values(array_filter($this->db()->query(
@@ -54,7 +150,7 @@ class Bahan extends BaseController
     }
 
     /** Daftar bahan aktif sekolah ini (dengan total RAB & pemakaian SPK). */
-    private function ambilBahan(string $q = '', bool $hanyaTerpakai = false): array
+    private function ambilBahan(string $q = '', string $tab = 'gedung'): array
     {
         $sql = 'SELECT b.*, (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_total,
                     (b.qty_rkb+b.qty_adm+b.qty_toilet)*b.harga_rab AS anggaran,
@@ -78,9 +174,9 @@ class Bahan extends BaseController
         foreach ($this->kebutuhanBahanSekolah()['tertaut'] as $b) {
             $petaButuh[(int) $b['bahan_id']] = (float) $b['qty_butuh'];
         }
-        if ($hanyaTerpakai) {
-            $set = $this->idBahanTerpakai();
-            $baris = array_values(array_filter($baris, static fn ($r) => isset($set[(int) $r['id']])));
+        if ($tab === 'gedung' || $tab === 'luar') {
+            $set = $this->idBahanDipakaiGedung();
+            $baris = array_values(array_filter($baris, static fn ($r) => $tab === 'gedung' ? isset($set[(int) $r['id']]) : ! isset($set[(int) $r['id']])));
         }
         foreach ($baris as &$r) {
             $langsung = $petaButuh[(int) $r['id']] ?? null;
@@ -97,8 +193,8 @@ class Bahan extends BaseController
     public function tabel()
     {
         $q = trim((string) ($this->request->getGet('q') ?? ''));
-        $semua = (string) ($this->request->getGet('semua') ?? '') === '1';
-        return view('bahan/_tabel', ['bahan' => $this->ambilBahan($q, ! $semua)]);
+        $tab = (string) ($this->request->getGet('tab') ?? 'gedung') === 'luar' ? 'luar' : 'gedung';
+        return view('bahan/_tabel', ['bahan' => $this->ambilBahan($q, $tab)]);
     }
 
     /** Hapus massal bahan tercentang; yang sudah dipakai SPK dilewati. */

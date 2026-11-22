@@ -21,6 +21,8 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('analisa/simpan-konversi', 'Analisa::simpanKonversi');
     $routes->post('analisa/hapus-konversi', 'Analisa::hapusKonversi');
     $routes->get('bahan', 'Bahan::index');
+    $routes->get('bahan/sinkron-pratinjau', 'Bahan::sinkronPratinjau');
+    $routes->post('bahan/sinkron-analisa', 'Bahan::sinkronAnalisa');
     $routes->get('bahan/baru', 'Bahan::baru');
     $routes->post('bahan/simpan', 'Bahan::simpan');
     $routes->post('bahan/kelengkapan', 'Bahan::kelengkapanSimpan');

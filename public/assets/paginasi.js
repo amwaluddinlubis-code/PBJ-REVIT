@@ -21,9 +21,17 @@ window.inisiasiPaginasi = function (akar) {
     }
     var wadahBaris = semua[1].parentNode; // tbody — baris dipindah di sini, bukan ke <table>
     // Header tempel (sticky) HANYA untuk tabel yang memang tinggi dan tidak
-    // dibungkus wadah scroll: pada tabel pendek/panel, header tempel terasa
-    // menutupi isi. Offset mengikuti tinggi topbar yang sebenarnya.
-    if (!tabel.closest('.bungkus-tabel') && tabel.offsetHeight > window.innerHeight) {
+    // berada di dalam wadah bergulir mana pun: overflow auto/hidden/scroll
+    // pada tabel atau leluhurnya menjadikannya wadah gulir sendiri sehingga
+    // sticky tidak pernah menempel dan kepala tabel justru menutupi baris
+    // (mis. .bungkus-tabel, .tabel-envelop, div overflow-x pada Survei/
+    // Negosiasi). Offset mengikuti tinggi topbar yang sebenarnya.
+    var dalamWadahGulir = false;
+    for (var el = tabel; el && el !== document.body; el = el.parentElement) {
+      var ov = getComputedStyle(el);
+      if ([ov.overflowX, ov.overflowY].some(function (v) { return v === 'auto' || v === 'scroll' || v === 'hidden'; })) { dalamWadahGulir = true; break; }
+    }
+    if (!dalamWadahGulir && tabel.offsetHeight > window.innerHeight) {
       tabel.classList.add('kepala-tempel');
       var topbarEl = document.querySelector('.topbar');
       if (topbarEl) tabel.style.setProperty('--top-tempel', topbarEl.offsetHeight + 'px');

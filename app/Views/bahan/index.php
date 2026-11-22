@@ -40,18 +40,35 @@
 
 <div x-data="{
   kata: '<?= esc($q, 'js') ?>',
-  semua: <?= ! empty($semua) ? 'true' : 'false' ?>,
+  tab: '<?= esc($tab ?? 'gedung', 'js') ?>',
   terpilih: [],
   memuat: false,
+  sinkron: null,
   async cari() {
     this.memuat = true;
     try {
-      const r = await fetch('<?= base_url('bahan/tabel') ?>?q=' + encodeURIComponent(this.kata) + (this.semua ? '&semua=1' : ''), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const r = await fetch('<?= base_url('bahan/tabel') ?>?q=' + encodeURIComponent(this.kata) + '&tab=' + this.tab, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const wadah = document.getElementById('wadah-tabel-bahan');
       wadah.innerHTML = await r.text();
       if (window.inisiasiPaginasi) window.inisiasiPaginasi(wadah);
-      history.replaceState(null, '', this.kata ? '?q=' + encodeURIComponent(this.kata) : location.pathname);
+      history.replaceState(null, '', '?tab=' + this.tab + (this.kata ? '&q=' + encodeURIComponent(this.kata) : ''));
     } finally { this.memuat = false; }
+  },
+  async pratinjauSinkron() {
+    this.memuat = true;
+    try {
+      const r = await fetch('<?= base_url('bahan/sinkron-pratinjau') ?>', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const d = await r.json();
+      if (!d.berubah || d.berubah.length === 0) {
+        window.tampilToast('Semua tarif komponen analisa sudah sama dengan harga bahan — tidak ada tarif yang berubah.', 'sukses');
+        return;
+      }
+      this.sinkron = d;
+      document.getElementById('modal-sinkron').hidden = false;
+    } finally { this.memuat = false; }
+  },
+  tutupSinkron() {
+    document.getElementById('modal-sinkron').hidden = true;
   },
   pilihSemua(ev) {
     const ids = [...document.querySelectorAll('#wadah-tabel-bahan [data-pilih-bahan]')].map((el) => el.value);
@@ -74,7 +91,7 @@
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px">
     <a class="tombol" href="<?= base_url('bahan/baru') ?>">+ Tambah Bahan</a>
     <input type="search" placeholder="Cari bahan — ketik, daftar menyaring langsung…" x-model="kata" @input.debounce.300ms="cari()" style="flex:1;min-width:220px">
-    <label class="kecil-teks" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" x-model="semua" @change="cari()" style="width:auto;margin:0"> Tampilkan semua bahan</label>
+    <button type="button" @click="pratinjauSinkron()">Sinkronkan Harga ke Analisa</button>
     <span x-show="memuat" class="kecil-teks">Memuat…</span>
     <form id="form-bulk-bahan" method="post" action="<?= base_url('bahan/hapus-massal') ?>" data-konfirmasi-judul="Hapus Bahan Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
       <?= csrf_field() ?>
@@ -86,8 +103,38 @@
       <button type="submit" class="bahaya">Kosongkan Master Bahan</button>
     </form>
   </div>
+  <div class="tab" style="margin-bottom:0">
+    <a href="#" @click.prevent="tab = 'gedung'; terpilih = []; cari()" :class="tab === 'gedung' ? 'aktif' : ''">Dipakai Gedung (<?= (int) ($jmlTerpakai ?? 0) ?>)</a>
+    <a href="#" @click.prevent="tab = 'luar'; terpilih = []; cari()" :class="tab === 'luar' ? 'aktif' : ''">Tidak Dipakai Gedung (<?= (int) (($totalBahan ?? 0) - ($jmlTerpakai ?? 0)) ?>)</a>
+  </div>
   <div class="panel" id="wadah-tabel-bahan">
     <?= view('bahan/_tabel', ['bahan' => $bahan]) ?>
+  </div>
+
+  <div id="modal-sinkron" class="mk-lapik" hidden>
+    <div class="mk-kartu" role="dialog" aria-modal="true" aria-labelledby="ms-judul" style="max-width:760px;width:94vw">
+      <h3 id="ms-judul" style="margin-top:0">Sinkronkan Harga Bahan ke Analisa?</h3>
+      <p class="kecil-teks" style="margin-top:0">Tarif komponen bahan di analisa akan diganti dengan harga acuan bahannya (negosiasi → penawaran → harga RAB). Nilai BOQ dashboard berubah mengikuti hasil AHSP baru. <strong>Hanya tarif yang berubah yang ditampilkan</strong> — <span x-text="sinkron ? sinkron.tetap : 0"></span> komponen yang sudah sama disembunyikan<span x-show="sinkron && sinkron.tanpa_harga > 0">, dan <span x-text="sinkron ? sinkron.tanpa_harga : 0"></span> komponen dilewati karena bahannya belum punya harga</span>.</p>
+      <div style="max-height:46vh;overflow:auto;border:1px solid var(--ta-garis);border-radius:8px">
+        <table class="satu-baris" style="margin:0">
+          <tr><th>Analisa</th><th>Komponen / Bahan</th><th>Satuan</th><th class="angka">Tarif Lama</th><th class="angka">Tarif Baru</th></tr>
+          <template x-for="b in (sinkron ? sinkron.berubah : [])" :key="b.komponen_id">
+            <tr>
+              <td x-text="b.kode_analisa"></td>
+              <td><span x-text="b.komponen"></span><br><span class="kecil-teks" x-text="b.kode_bahan + ' · ' + b.nama_bahan"></span></td>
+              <td x-text="b.satuan"></td>
+              <td class="angka" x-text="'Rp ' + Math.round(b.tarif_lama).toLocaleString('id-ID')"></td>
+              <td class="angka"><strong x-text="'Rp ' + Math.round(b.tarif_baru).toLocaleString('id-ID')"></strong></td>
+            </tr>
+          </template>
+        </table>
+      </div>
+      <form method="post" action="<?= base_url('bahan/sinkron-analisa') ?>" style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+        <?= csrf_field() ?>
+        <button type="button" @click="tutupSinkron()">Batal</button>
+        <button type="submit" class="tombol">Ya, Sinkronkan <span x-text="sinkron ? sinkron.berubah.length : 0"></span> Komponen</button>
+      </form>
+    </div>
   </div>
 </div>
 
