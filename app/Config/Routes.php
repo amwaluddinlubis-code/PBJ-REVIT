@@ -23,6 +23,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('bahan', 'Bahan::index');
     $routes->get('bahan/sinkron-pratinjau', 'Bahan::sinkronPratinjau');
     $routes->post('bahan/sinkron-analisa', 'Bahan::sinkronAnalisa');
+    $routes->get('bahan/kode-baru', 'Bahan::kodeBaru');
     $routes->get('bahan/baru', 'Bahan::baru');
     $routes->post('bahan/simpan', 'Bahan::simpan');
     $routes->post('bahan/kelengkapan', 'Bahan::kelengkapanSimpan');

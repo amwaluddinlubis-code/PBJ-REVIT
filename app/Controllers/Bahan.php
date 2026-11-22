@@ -424,19 +424,41 @@ class Bahan extends BaseController
 
     public function baru()
     {
+        return $this->tampil('bahan/form', ['b' => ['kode' => $this->kodeBerikutnya()], 'aksi' => 'bahan/simpan'], 'Tambah Bahan');
+    }
+
+    /** Kode bahan berikutnya (B + nomor terbesar + 1) untuk sekolah aktif. */
+    private function kodeBerikutnya(): string
+    {
         $row = $this->db()->query('SELECT MAX(CAST(SUBSTRING(kode,2) AS UNSIGNED)) m FROM bahan WHERE sekolah_id = ? AND is_deleted = 0', [$this->sid()])->getRow();
-        $kode = 'B' . str_pad((string) (((int) $row->m) + 1), 3, '0', STR_PAD_LEFT);
-        return $this->tampil('bahan/form', ['b' => ['kode' => $kode], 'aksi' => 'bahan/simpan'], 'Tambah Bahan');
+        return 'B' . str_pad((string) (((int) $row->m) + 1), 3, '0', STR_PAD_LEFT);
+    }
+
+    /** JSON kode berikutnya — dipakai modal Tambah Bahan. */
+    public function kodeBaru()
+    {
+        return $this->response->setJSON(['kode' => $this->kodeBerikutnya()]);
+    }
+
+    /** Balasan simpan bahan: JSON untuk modal (AJAX), redirect untuk form halaman. */
+    private function balasForm(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return $ok
+            ? redirect()->to('bahan')->with('sukses', $pesan)
+            : redirect()->back()->withInput()->with('galat', $pesan);
     }
 
     public function simpan()
     {
         $data = $this->ambilForm();
         if ($this->db()->table('bahan')->where(['kode' => $data['kode'], 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults() > 0) {
-            return redirect()->back()->withInput()->with('galat', 'Kode ' . $data['kode'] . ' sudah dipakai.');
+            return $this->balasForm(false, 'Kode ' . $data['kode'] . ' sudah dipakai.');
         }
         if ($sama = $this->namaBahanDipakai($data['nama'])) {
-            return redirect()->back()->withInput()->with('galat', 'Bahan "' . $data['nama'] . '" sudah ada di master sebagai ' . $sama['kode'] . ' (' . $sama['satuan'] . ', ' . $this->rp($sama['harga_rab']) . '). Satu bahan hanya boleh punya satu satuan dan satu harga — ubah bahan yang sudah ada, atau gabungkan bila terlanjur ganda.');
+            return $this->balasForm(false, 'Bahan "' . $data['nama'] . '" sudah ada di master sebagai ' . $sama['kode'] . ' (' . $sama['satuan'] . ', ' . $this->rp($sama['harga_rab']) . '). Satu bahan hanya boleh punya satu satuan dan satu harga — ubah bahan yang sudah ada, atau gabungkan bila terlanjur ganda.');
         }
         // Baris terhapus-lunak berkode sama dihidupkan kembali (kunci unik
         // (sekolah, kode) dipegang baris lunak itu, jadi insert akan gagal).
@@ -446,12 +468,12 @@ class Bahan extends BaseController
             $data['is_deleted'] = 0;
             $data['deleted_at'] = null;
             $this->db()->table('bahan')->where('id', (int) $lama['id'])->update($data);
-            return redirect()->to('bahan')->with('sukses', 'Bahan ' . $data['kode'] . ' dihidupkan kembali dari data yang pernah dihapus.');
+            return $this->balasForm(true, 'Bahan ' . $data['kode'] . ' dihidupkan kembali dari data yang pernah dihapus.');
         }
         $data['sekolah_id'] = $this->sid();
         $data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('bahan')->insert($data);
-        return redirect()->to('bahan')->with('sukses', 'Bahan ' . $data['kode'] . ' ditambahkan.');
+        return $this->balasForm(true, 'Bahan ' . $data['kode'] . ' ditambahkan.');
     }
 
     public function ubah($id)
@@ -465,13 +487,17 @@ class Bahan extends BaseController
 
     public function perbarui($id)
     {
+        $ada = $this->db()->table('bahan')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults();
+        if ($ada === 0) {
+            return $this->balasForm(false, 'Bahan tidak ditemukan.');
+        }
         $data = $this->ambilForm();
         if ($sama = $this->namaBahanDipakai($data['nama'], (int) $id)) {
-            return redirect()->back()->withInput()->with('galat', 'Nama itu sudah dipakai bahan ' . $sama['kode'] . '. Satu bahan hanya boleh punya satu satuan dan satu harga — gunakan fitur Gabungkan Duplikat di halaman Master Bahan.');
+            return $this->balasForm(false, 'Nama itu sudah dipakai bahan ' . $sama['kode'] . '. Satu bahan hanya boleh punya satu satuan dan satu harga — gunakan fitur Gabungkan Duplikat di halaman Master Bahan.');
         }
         $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('bahan')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->update($data);
-        return redirect()->to('bahan')->with('sukses', 'Bahan ' . $data['kode'] . ' diperbarui.');
+        return $this->balasForm(true, 'Bahan ' . $data['kode'] . ' diperbarui.');
     }
 
     public function hapus($id)

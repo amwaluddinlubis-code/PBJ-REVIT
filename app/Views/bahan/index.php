@@ -70,6 +70,62 @@
   tutupSinkron() {
     document.getElementById('modal-sinkron').hidden = true;
   },
+  formBahanId: 0,
+  galatBahan: '',
+  async bukaTambah() {
+    this.galatBahan = '';
+    this.formBahanId = 0;
+    const f = document.getElementById('form-bahan');
+    f.reset();
+    try {
+      const r = await fetch('<?= base_url('bahan/kode-baru') ?>', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const d = await r.json();
+      f.kode.value = d.kode || '';
+    } catch (e) { /* kode bisa diisi manual */ }
+    document.getElementById('modal-bahan').hidden = false;
+    setTimeout(() => f.nama.focus(), 30);
+  },
+  bukaUbah(ds) {
+    this.galatBahan = '';
+    this.formBahanId = parseInt(ds.id || '0', 10);
+    const f = document.getElementById('form-bahan');
+    f.reset();
+    f.kode.value = ds.kode || '';
+    f.nama.value = ds.nama || '';
+    f.satuan.value = ds.satuan || '';
+    f.harga_rab.value = window.formatUang ? window.formatUang(ds.harga || '') : (ds.harga || '');
+    f.qty_rkb.value = ds.qrkb || 0;
+    f.qty_adm.value = ds.qadm || 0;
+    f.qty_toilet.value = ds.qtoilet || 0;
+    document.getElementById('modal-bahan').hidden = false;
+    setTimeout(() => f.nama.focus(), 30);
+  },
+  tutupBahan() {
+    document.getElementById('modal-bahan').hidden = true;
+  },
+  async simpanBahan() {
+    const f = document.getElementById('form-bahan');
+    const fd = new FormData(f);
+    fd.set('harga_rab', String(fd.get('harga_rab') || '').replace(/[^\d]/g, ''));
+    const url = this.formBahanId > 0
+      ? '<?= base_url('bahan/perbarui') ?>/' + this.formBahanId
+      : '<?= base_url('bahan/simpan') ?>';
+    this.memuat = true;
+    try {
+      const r = await fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const d = await r.json();
+      if (d.ok) {
+        this.tutupBahan();
+        window.tampilToast(d.pesan, 'sukses');
+        this.terpilih = [];
+        await this.cari();
+      } else {
+        this.galatBahan = d.pesan || 'Gagal menyimpan bahan.';
+      }
+    } catch (e) {
+      this.galatBahan = 'Koneksi gagal — coba lagi.';
+    } finally { this.memuat = false; }
+  },
   pilihSemua(ev) {
     const ids = [...document.querySelectorAll('#wadah-tabel-bahan [data-pilih-bahan]')].map((el) => el.value);
     if (ev.target.checked) this.terpilih = [...new Set([...this.terpilih, ...ids])];
@@ -89,7 +145,7 @@
   }
 }">
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px">
-    <a class="tombol" href="<?= base_url('bahan/baru') ?>">+ Tambah Bahan</a>
+    <button type="button" class="tombol" @click="bukaTambah()">+ Tambah Bahan</button>
     <input type="search" placeholder="Cari bahan — ketik, daftar menyaring langsung…" x-model="kata" @input.debounce.300ms="cari()" style="flex:1;min-width:220px">
     <button type="button" @click="pratinjauSinkron()">Sinkronkan Harga ke Analisa</button>
     <span x-show="memuat" class="kecil-teks">Memuat…</span>
@@ -133,6 +189,29 @@
         <?= csrf_field() ?>
         <button type="button" @click="tutupSinkron()">Batal</button>
         <button type="submit" class="tombol">Ya, Sinkronkan <span x-text="sinkron ? sinkron.berubah.length : 0"></span> Komponen</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-bahan" class="mk-lapik" hidden @click.self="tutupBahan()" @keydown.escape.window="tutupBahan()">
+    <div class="mk-kartu" role="dialog" aria-modal="true" aria-labelledby="mb-judul" style="max-width:640px;width:94vw">
+      <h3 id="mb-judul" style="margin-top:0" x-text="formBahanId > 0 ? 'Ubah Bahan' : 'Tambah Bahan'">Tambah Bahan</h3>
+      <div class="galat" x-show="galatBahan" x-text="galatBahan" style="margin-bottom:10px"></div>
+      <form id="form-bahan" @submit.prevent="simpanBahan()">
+        <?= csrf_field() ?>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+          <label>Kode <input name="kode" required></label>
+          <label>Nama Bahan <input name="nama" required></label>
+          <label>Satuan <input name="satuan"></label>
+          <label>Harga RAB (Rp) <input type="text" inputmode="numeric" data-uang name="harga_rab" required></label>
+          <label>Qty Gedung RKB <input type="number" name="qty_rkb" step="0.001" value="0"></label>
+          <label>Qty Ruang ADM <input type="number" name="qty_adm" step="0.001" value="0"></label>
+          <label>Qty Toilet <input type="number" name="qty_toilet" step="0.001" value="0"></label>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+          <button type="button" @click="tutupBahan()">Batal</button>
+          <button type="submit" class="tombol" :disabled="memuat">Simpan</button>
+        </div>
       </form>
     </div>
   </div>

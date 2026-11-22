@@ -31,7 +31,10 @@
     <td class="angka"><?= $rp($b['anggaran']) ?></td>
     <td class="angka"><?= number_format((float) $b['terpakai'], 2, ',', '.') ?></td>
     <td class="angka"><?= number_format($sisa, 2, ',', '.') ?></td>
-    <td><a href="<?= base_url('bahan/ubah/' . $b['id']) ?>">Ubah</a></td>
+    <td><button type="button" class="kecil" @click="bukaUbah($event.currentTarget.dataset)"
+      data-id="<?= (int) $b['id'] ?>" data-kode="<?= esc($b['kode'], 'attr') ?>" data-nama="<?= esc($b['nama'], 'attr') ?>"
+      data-satuan="<?= esc($b['satuan'] ?? '', 'attr') ?>" data-harga="<?= (float) $b['harga_rab'] ?>"
+      data-qrkb="<?= (float) ($b['qty_rkb'] ?? 0) ?>" data-qadm="<?= (float) ($b['qty_adm'] ?? 0) ?>" data-qtoilet="<?= (float) ($b['qty_toilet'] ?? 0) ?>">Ubah</button></td>
   </tr>
   <?php endforeach; ?>
   <?php if ($bahan === []): ?>
