@@ -55,7 +55,7 @@ class Bahan extends BaseController
         $tanpaHarga = 0;
         foreach ($this->db()->query(
             'SELECT ak.id, ak.tarif, ak.nama AS komponen, ak.satuan, ak.bahan_id, a.id AS analisa_id, a.kode AS kode_analisa,
-                    b.kode AS kode_bahan, b.nama AS nama_bahan
+                    b.kode AS kode_bahan, b.nama AS nama_bahan, b.satuan AS satuan_bahan
              FROM analisa_komponen ak
              JOIN analisa a ON a.id = ak.analisa_id AND a.is_deleted = 0
              JOIN bahan b ON b.id = ak.bahan_id AND b.is_deleted = 0
@@ -68,7 +68,22 @@ class Bahan extends BaseController
                 $tanpaHarga++;
                 continue;
             }
-            if (abs((float) $k['tarif'] - $acuan) < 0.005) {
+            // Sadar satuan: harga acuan adalah per satuan MASTER, sedangkan
+            // tarif komponen per satuan KOMPONEN. Tarif baru per satuan
+            // komponen = acuan x faktor; perbandingan memakai tarif yang
+            // dinormalkan ke satuan master (tarif / faktor) — selaras
+            // dengan kolom Tarif Analisa per Gedung. Tanpa ini, menyalin
+            // acuan mentah ke komponen bersatuan kg merusak harga AHSP.
+            $faktor = $this->faktorSatuan($k['satuan'] ?? null, [
+                'id' => (int) $k['bahan_id'],
+                'satuan' => $k['satuan_bahan'] ?? '',
+                'nama' => $k['nama_bahan'] ?? '',
+            ]);
+            if ($faktor <= 0) {
+                $faktor = 1.0;
+            }
+            $normal = (float) $k['tarif'] / $faktor;
+            if (abs($normal - $acuan) < 1) {
                 $tetap++;
                 continue;
             }
@@ -76,7 +91,7 @@ class Bahan extends BaseController
                 'komponen_id' => (int) $k['id'], 'analisa_id' => (int) $k['analisa_id'],
                 'kode_analisa' => $k['kode_analisa'], 'komponen' => $k['komponen'], 'satuan' => $k['satuan'],
                 'kode_bahan' => $k['kode_bahan'], 'nama_bahan' => $k['nama_bahan'],
-                'tarif_lama' => (float) $k['tarif'], 'tarif_baru' => (float) $acuan,
+                'tarif_lama' => (float) $k['tarif'], 'tarif_baru' => round($acuan * $faktor, 2),
             ];
         }
         return ['berubah' => $berubah, 'tetap' => $tetap, 'tanpa_harga' => $tanpaHarga];
