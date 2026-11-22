@@ -67,9 +67,11 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       $uriPenuh = uri_string();
       $indukAktif = [
         'perencanaan' => in_array($seg, ['impor', 'analisa', 'bersih', 'rencana-belanja', 'rencana-mingguan', 'biaya-non-gedung'], true),
-        'gedung'      => $seg === 'gedung',
-        'belanja'     => in_array($seg, ['spk', 'belum-bernomor', 'survei', 'negosiasi', 'dokumen', 'invoice', 'upah'], true),
-        'bahan'       => in_array($seg, ['bahan', 'material', 'sisa-bahan', 'lpj', 'laporan'], true),
+        'gedung'      => in_array($seg, ['gedung', 'foto-progres', 'kurva-s', 'laporan-kemajuan', 'revisi-pekerjaan'], true),
+        'belanja'     => in_array($seg, ['spk', 'belum-bernomor', 'survei', 'negosiasi', 'dokumen'], true),
+        'material'    => in_array($seg, ['bahan', 'material', 'sisa-bahan'], true),
+        'keuangan'    => in_array($seg, ['invoice', 'buku-kas', 'penerimaan-dana', 'bukti-setor', 'upah'], true),
+        'laporan'     => in_array($seg, ['lpj', 'laporan'], true),
         'pengaturan'  => in_array($seg, ['pengaturan', 'sekolah', 'pengguna', 'profil', 'pemeliharaan-db', 'audit'], true),
       ];
       $induk = static function (string $kunci, string $ikonNama, string $label) use ($indukAktif, $svg): void {
@@ -93,6 +95,10 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
         <?php foreach ($semuaGedung ?? [] as $g): ?>
           <a href="<?= base_url('gedung/' . $g['id']) ?>"<?= ($seg === 'gedung' && (explode('/', $uriPenuh)[1] ?? '') === (string) $g['id']) ? ' class="aktif"' : '' ?>><?= esc($g['nama']) ?><?php if (isset($g['persen_fisik'])): ?><span class="hitung"><?= (int) round((float) $g['persen_fisik']) ?>%</span><?php endif; ?></a>
         <?php endforeach; ?>
+        <a href="<?= base_url('foto-progres') ?>"<?= $aktif('foto-progres') ?>>Foto Progres</a>
+        <a href="<?= base_url('kurva-s') ?>"<?= $aktif('kurva-s') ?>>Kurva S</a>
+        <a href="<?= base_url('laporan-kemajuan') ?>"<?= $aktif('laporan-kemajuan') ?>>Laporan Kemajuan</a>
+        <a href="<?= base_url('revisi-pekerjaan') ?>"<?= $aktif('revisi-pekerjaan') ?>>BA Revisi Pekerjaan</a>
       <?= $tutupInduk() ?>
       <?php $induk('belanja', 'spk', 'Belanja'); ?>
         <a href="<?= base_url('spk') ?>"<?= $aktif('spk') ?>>Register SPK</a>
@@ -100,23 +106,23 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
         <a href="<?= base_url('survei') ?>"<?= $aktif('survei') ?>>Survei Harga</a>
         <a href="<?= base_url('negosiasi') ?>"<?= $aktif('negosiasi') ?>>Negosiasi</a>
         <a href="<?= base_url('dokumen') ?>"<?= $aktif('dokumen') ?>>BAP &amp; BAST / Cetak</a>
-        <a href="<?= base_url('invoice') ?>"<?= $uriPenuh === 'invoice' ? ' class="aktif"' : '' ?>>Invoice</a>
-        <a href="<?= base_url('invoice/jurnal') ?>"<?= $uriPenuh === 'invoice/jurnal' ? ' class="aktif"' : '' ?>>Jurnal Pembayaran</a>
-        <a href="<?= base_url('buku-kas') ?>"<?= $aktif('buku-kas') ?>>Buku Kas (BKU)</a>
-        <a href="<?= base_url('penerimaan-dana') ?>"<?= $aktif('penerimaan-dana') ?>>Penerimaan Dana</a>
-        <a href="<?= base_url('bukti-setor') ?>"<?= $aktif('bukti-setor') ?>>Bukti Setor &amp; Pajak</a>
-        <a href="<?= base_url('upah') ?>"<?= $aktif('upah') ?>>Pembayaran Upah</a>
       <?= $tutupInduk() ?>
-      <?php $induk('bahan', 'mat', 'Bahan &amp; Laporan'); ?>
+      <?php $induk('material', 'kotak', 'Material'); ?>
         <a href="<?= base_url('bahan') ?>"<?= $aktif('bahan') ?>>Master Bahan &amp; Upah</a>
         <a href="<?= base_url('material') ?>"<?= $aktif('material') ?>>Buku Material</a>
         <a href="<?= base_url('sisa-bahan') ?>"<?= $aktif('sisa-bahan') ?>>Sisa Bahan</a>
+      <?= $tutupInduk() ?>
+      <?php $induk('keuangan', 'jurnal', 'Keuangan'); ?>
+        <a href="<?= base_url('penerimaan-dana') ?>"<?= $aktif('penerimaan-dana') ?>>Penerimaan Dana</a>
+        <a href="<?= base_url('invoice') ?>"<?= $uriPenuh === 'invoice' ? ' class="aktif"' : '' ?>>Invoice</a>
+        <a href="<?= base_url('invoice/jurnal') ?>"<?= $uriPenuh === 'invoice/jurnal' ? ' class="aktif"' : '' ?>>Jurnal Pembayaran</a>
+        <a href="<?= base_url('buku-kas') ?>"<?= $aktif('buku-kas') ?>>Buku Kas (BKU)</a>
+        <a href="<?= base_url('bukti-setor') ?>"<?= $aktif('bukti-setor') ?>>Bukti Setor &amp; Pajak</a>
+        <a href="<?= base_url('upah') ?>"<?= $aktif('upah') ?>>Pembayaran Upah</a>
+      <?= $tutupInduk() ?>
+      <?php $induk('laporan', 'lpj', 'Laporan'); ?>
         <a href="<?= base_url('lpj') ?>"<?= $aktif('lpj') ?>>LPJ &amp; Realisasi</a>
         <a href="<?= base_url('lpj/rab-gabungan') ?>"<?= $aktif('lpj') ?>>RAB Gabungan</a>
-        <a href="<?= base_url('laporan-kemajuan') ?>"<?= $aktif('laporan-kemajuan') ?>>Laporan Kemajuan</a>
-        <a href="<?= base_url('foto-progres') ?>"<?= $aktif('foto-progres') ?>>Foto Progres</a>
-        <a href="<?= base_url('kurva-s') ?>"<?= $aktif('kurva-s') ?>>Kurva S</a>
-        <a href="<?= base_url('revisi-pekerjaan') ?>"<?= $aktif('revisi-pekerjaan') ?>>BA Revisi Pekerjaan</a>
         <a href="<?= base_url('laporan') ?>"<?= $aktif('laporan') ?>>Laporan &amp; Ekspor</a>
       <?= $tutupInduk() ?>
       <?php $induk('pengaturan', 'gear', 'Pengaturan'); ?>
