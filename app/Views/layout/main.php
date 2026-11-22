@@ -66,7 +66,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       <?php
       $uriPenuh = uri_string();
       $indukAktif = [
-        'perencanaan' => in_array($seg, ['impor', 'analisa', 'bersih', 'rencana-belanja', 'rencana-mingguan', 'biaya-non-gedung'], true),
+        'perencanaan' => in_array($seg, ['impor', 'analisa', 'acuan', 'bersih', 'rencana-belanja', 'rencana-mingguan', 'biaya-non-gedung'], true),
         'gedung'      => in_array($seg, ['gedung', 'foto-progres', 'kurva-s', 'laporan-kemajuan', 'revisi-pekerjaan'], true),
         'belanja'     => in_array($seg, ['spk', 'belum-bernomor', 'survei', 'negosiasi', 'dokumen'], true),
         'material'    => in_array($seg, ['bahan', 'material', 'sisa-bahan'], true),
@@ -76,7 +76,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       ];
       $bolehMenu = static fn (string $k): bool => ($aksesMenu[$k] ?? true) !== false;
       $grupAda = [
-        'perencanaan' => $bolehMenu('impor') || $bolehMenu('analisa') || $bolehMenu('bersih') || $bolehMenu('rencana-belanja') || $bolehMenu('rencana-mingguan') || $bolehMenu('biaya-non-gedung'),
+        'perencanaan' => $bolehMenu('impor') || $bolehMenu('analisa') || $bolehMenu('acuan') || $bolehMenu('bersih') || $bolehMenu('rencana-belanja') || $bolehMenu('rencana-mingguan') || $bolehMenu('biaya-non-gedung'),
         'gedung'      => $bolehMenu('gedung') || $bolehMenu('foto-progres') || $bolehMenu('kurva-s') || $bolehMenu('laporan-kemajuan') || $bolehMenu('revisi-pekerjaan'),
         'belanja'     => $bolehMenu('spk') || $bolehMenu('belum-bernomor') || $bolehMenu('survei') || $bolehMenu('negosiasi') || $bolehMenu('dokumen'),
         'material'    => $bolehMenu('bahan') || $bolehMenu('material') || $bolehMenu('sisa-bahan'),
@@ -96,6 +96,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       <?php $induk('perencanaan', 'rencana', 'Perencanaan'); ?>
         <?php if ($bolehMenu('impor')): ?><a href="<?= base_url('impor') ?>"<?= $aktif('impor') ?>>Impor Dokumen Perencana</a><?php endif; ?>
         <?php if ($bolehMenu('analisa')): ?><a href="<?= base_url('analisa') ?>"<?= $aktif('analisa') ?>>Analisa Pekerjaan</a><?php endif; ?>
+        <?php if ($bolehMenu('acuan')): ?><a href="<?= base_url('acuan') ?>"<?= $aktif('acuan') ?>>Acuan AHSP Nasional</a><?php endif; ?>
         <?php if ($bolehMenu('bersih')): ?><a href="<?= base_url('bersih') ?>"<?= $aktif('bersih') ?>>Pembersihan Hasil Impor</a><?php endif; ?>
         <?php if ($bolehMenu('rencana-belanja')): ?><a href="<?= base_url('rencana-belanja') ?>"<?= $aktif('rencana-belanja') ?>>Rencana Belanja</a><?php endif; ?>
         <?php if ($bolehMenu('rencana-mingguan')): ?><a href="<?= base_url('rencana-mingguan') ?>"<?= $aktif('rencana-mingguan') ?>>Rencana Mingguan</a><?php endif; ?>

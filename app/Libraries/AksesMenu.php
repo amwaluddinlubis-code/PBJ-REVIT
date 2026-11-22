@@ -26,6 +26,7 @@ class AksesMenu
             'Perencanaan' => [
                 'impor'           => 'Impor Dokumen Perencana',
                 'analisa'         => 'Analisa Pekerjaan',
+                'acuan'           => 'Acuan AHSP Nasional',
                 'bersih'          => 'Pembersihan Hasil Impor',
                 'rencana-belanja' => 'Rencana Belanja',
                 'rencana-mingguan' => 'Rencana Mingguan',

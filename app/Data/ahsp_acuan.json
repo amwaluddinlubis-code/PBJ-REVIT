@@ -1,0 +1,2164 @@
+{
+ "sumber": "SE Dirjen Bina Konstruksi No. 68/SE/Dk/2024, Lampiran VI — AHSP Bidang Cipta Karya dan Perumahan (dasar: Permen PUPR No. 8 Tahun 2023)",
+ "item": [
+  {
+   "kode_kita": "A.01",
+   "kode_nasional": "1.1.4.2",
+   "nama": "Pasangan 1 m’ bouwplank",
+   "satuan": "m'",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.012
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.006
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.0006
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0012
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kaso 5/7 cm",
+     "satuan": "m3",
+     "koefisien": 0.013
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kayu papan 3/20 cm",
+     "satuan": "m3",
+     "koefisien": 0.007
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Paku campuran 2 cm dan 5 cm",
+     "satuan": "kg",
+     "koefisien": 0.02
+    },
+    {
+     "jenis": "alat",
+     "nama": "Waterpass",
+     "satuan": "hari",
+     "koefisien": 0.006
+    }
+   ]
+  },
+  {
+   "kode_kita": "B.01",
+   "kode_nasional": "1.2.1.1.1",
+   "nama": "Penggalian 1 m3 tanah biasa sedalam 0 s.d. 1 m, volume s.d. 200 m3, manual",
+   "satuan": "m3",
+   "catatan": "Nasional membedakan kelas volume: s.d. 200 m3 (dipakai di sini), 200-2.000 m3 (Pekerja 0,563), >2.000 m3 (Pekerja 0,400).",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.75
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.038
+    }
+   ]
+  },
+  {
+   "kode_kita": "B.02",
+   "kode_nasional": "1.3.1.1",
+   "nama": "1 m3 Urukan Kembali Galian Tanah tanpa pemadatan, manual",
+   "satuan": "m3",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.5
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.025
+    }
+   ]
+  },
+  {
+   "kode_kita": "B.03",
+   "kode_nasional": "1.3.1.4 + 1.3.2.1",
+   "nama": "Urukan tanah biasa tanpa pemadatan + Pemadatan tanah per 20 cm (timbris)",
+   "satuan": "m3",
+   "catatan": "Nasional memisahkan urugan dan pemadatan; angka di sini gabungan kedua item nasional.",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja (urugan 0,100 + padat 0,500)",
+     "satuan": "OH",
+     "koefisien": 0.6
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor (0,010 + 0,025)",
+     "satuan": "OH",
+     "koefisien": 0.035
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Tanah biasa/liat berpasir",
+     "satuan": "m3",
+     "koefisien": 1.4
+    }
+   ]
+  },
+  {
+   "kode_kita": "B.04",
+   "kode_nasional": "1.3.1.2",
+   "nama": "1 m3 Urukan dengan Pasir Uruk, volume s.d. 200 m3, tanpa pemadatan, manual",
+   "satuan": "m3",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.3
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.015
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Pasir uruk",
+     "satuan": "m3",
+     "koefisien": 1.2
+    }
+   ]
+  },
+  {
+   "kode_kita": "C.04",
+   "kode_nasional": "2.2.1.4.1",
+   "nama": "1 m3 beton mutu rendah f'c 7,5 MPa, manual",
+   "satuan": "m3",
+   "catatan": "Padanan mutu untuk beton tumbuk 1:3:5 (setara K-100 / lantai kerja).",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 1.65
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang batu/tembok",
+     "satuan": "OH",
+     "koefisien": 0.275
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.028
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.009
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Semen Portland",
+     "satuan": "kg",
+     "koefisien": 250
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Pasir beton",
+     "satuan": "kg",
+     "koefisien": 888
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kerikil",
+     "satuan": "kg",
+     "koefisien": 1009
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Air",
+     "satuan": "liter",
+     "koefisien": 202
+    }
+   ]
+  },
+  {
+   "kode_kita": "C.05",
+   "kode_nasional": "2.2.1.4.3",
+   "nama": "1 m3 beton mutu rendah f'c 15 MPa, manual",
+   "satuan": "m3",
+   "catatan": "Padanan mutu untuk campuran 1:2:3 (setara K-175).",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 1.65
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang batu/tembok",
+     "satuan": "OH",
+     "koefisien": 0.275
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.028
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.009
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Semen Portland",
+     "satuan": "kg",
+     "koefisien": 306
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Pasir beton",
+     "satuan": "kg",
+     "koefisien": 832
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kerikil",
+     "satuan": "kg",
+     "koefisien": 1009
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Air",
+     "satuan": "liter",
+     "koefisien": 202
+    }
+   ]
+  },
+  {
+   "kode_kita": "C.07",
+   "kode_nasional": "2.2.1.1.3",
+   "nama": "1 kg Penulangan kolom, balok, ring balk, dan sloof, BjTP diameter < 12 mm, manual",
+   "satuan": "kg",
+   "catatan": "Nasional membedakan per elemen dan diameter besi; ini padanan yang paling umum dipakai. Analisa kita satu angka umum untuk semua elemen.",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.0016
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang besi/beton",
+     "satuan": "OH",
+     "koefisien": 0.0016
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.00016
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.00016
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Baja Tulangan Polos (BjTP)",
+     "satuan": "kg",
+     "koefisien": 1.02
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kawat tali beton",
+     "satuan": "kg",
+     "koefisien": 0.028
+    }
+   ]
+  },
+  {
+   "kode_kita": "C.08",
+   "kode_nasional": "2.2.2.1.1",
+   "nama": "Pemasangan 1 m3 Batu Kosong (Aanstamping) untuk Fondasi Gedung",
+   "satuan": "m3",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.78
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang batu/tembok",
+     "satuan": "OH",
+     "koefisien": 0.39
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.039
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.013
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Batu belah",
+     "satuan": "m3",
+     "koefisien": 1.2
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Pasir urug",
+     "satuan": "m3",
+     "koefisien": 0.432
+    }
+   ]
+  },
+  {
+   "kode_kita": "C.09",
+   "kode_nasional": "2.2.2.1.6",
+   "nama": "Pemasangan 1 m3 Fondasi Batu Belah Mortar Tipe N, setara 1SP : 4PP, manual",
+   "satuan": "m3",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 1.5
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang batu/tembok",
+     "satuan": "OH",
+     "koefisien": 0.5
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.15
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Batu belah",
+     "satuan": "m3",
+     "koefisien": 1.2
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Semen Portland",
+     "satuan": "kg",
+     "koefisien": 163
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Pasir Pasang",
+     "satuan": "m3",
+     "koefisien": 0.52
+    }
+   ]
+  },
+  {
+   "kode_kita": "C.12",
+   "kode_nasional": "",
+   "nama": "",
+   "satuan": "",
+   "catatan": "Tidak ada item angkur per batang pada AHSP Cipta Karya; angkur termasuk pekerjaan pembesian/pemasangan khusus.",
+   "tanpa_padanan": true,
+   "komponen": []
+  },
+  {
+   "kode_kita": "D.01",
+   "kode_nasional": "2.2.1.3.3",
+   "nama": "Pemasangan 1 m2 bekisting untuk kolom (3 kali pakai)",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.66
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.33
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.033
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.011
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Paku 5-12 cm",
+     "satuan": "kg",
+     "koefisien": 0.4
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Minyak bekisting",
+     "satuan": "liter",
+     "koefisien": 0.2
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Balok kayu kelas II",
+     "satuan": "m3",
+     "koefisien": 0.00465
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Plywood tebal 12 mm",
+     "satuan": "lembar",
+     "koefisien": 0.12705
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Dolken kayu 8-10 cm panjang 4 m",
+     "satuan": "batang",
+     "koefisien": 0.65
+    }
+   ]
+  },
+  {
+   "kode_kita": "D.02",
+   "kode_nasional": "2.2.1.3.2",
+   "nama": "Pemasangan 1 m2 bekisting untuk sloof (3 kali pakai)",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.52
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.26
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.026
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.009
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Papan Kayu kelas III",
+     "satuan": "m3",
+     "koefisien": 0.018
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Paku 5-10 cm",
+     "satuan": "kg",
+     "koefisien": 0.3
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Minyak bekisting",
+     "satuan": "liter",
+     "koefisien": 0.1
+    }
+   ]
+  },
+  {
+   "kode_kita": "D.03",
+   "kode_nasional": "2.2.1.3.4",
+   "nama": "Pemasangan 1 m2 bekisting untuk balok (3 kali pakai)",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.66
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.33
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.033
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.011
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Paku 5-12 cm",
+     "satuan": "kg",
+     "koefisien": 0.4
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Minyak bekisting",
+     "satuan": "liter",
+     "koefisien": 0.2
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Balok kayu kelas II",
+     "satuan": "m3",
+     "koefisien": 0.00558
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Plywood tebal 12 mm",
+     "satuan": "lembar",
+     "koefisien": 0.12705
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Dolken kayu dia. 8-10 cm panjang 4 m",
+     "satuan": "batang",
+     "koefisien": 0.65
+    }
+   ]
+  },
+  {
+   "kode_kita": "E.01",
+   "kode_nasional": "3.6.1.10",
+   "nama": "Pemasangan 1 m2 Dinding Bata Merah Tebal 1/2 Batu Campuran 1SP : 6PP",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.2
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang",
+     "satuan": "OH",
+     "koefisien": 0.1
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.01
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0033
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Bata Merah",
+     "satuan": "buah",
+     "koefisien": 71.91
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Semen Portland",
+     "satuan": "kg",
+     "koefisien": 8.32
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Pasir Pasang",
+     "satuan": "m3",
+     "koefisien": 0.049
+    }
+   ]
+  },
+  {
+   "kode_kita": "E.07",
+   "kode_nasional": "3.7.4",
+   "nama": "Pemasangan 1 m2 Plesteran 1SP : 4PP Tebal 15 mm",
+   "satuan": "m2",
+   "catatan": "Perhatian: analisa kita tebal 25 mm, nasional 15 mm — koefisien bahan nasional wajar lebih kecil.",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.2
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang",
+     "satuan": "OH",
+     "koefisien": 0.1
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.01
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0033
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Semen Portland",
+     "satuan": "kg",
+     "koefisien": 6.24
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Pasir Pasang",
+     "satuan": "m3",
+     "koefisien": 0.024
+    }
+   ]
+  },
+  {
+   "kode_kita": "E.09",
+   "kode_nasional": "3.7.8",
+   "nama": "Pemasangan 1 m2 Acian",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.2
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang",
+     "satuan": "OH",
+     "koefisien": 0.1
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.01
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0033
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Semen Portland",
+     "satuan": "kg",
+     "koefisien": 3.25
+    }
+   ]
+  },
+  {
+   "kode_kita": "F.01",
+   "kode_nasional": "3.11.3.5",
+   "nama": "Pembuatan dan Pemasangan 1 m' Kusen Pintu dan Kusen Jendela, Kayu Kelas II atau III, 6 x 15 cm",
+   "satuan": "m'",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.2857
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.1429
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.0143
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0048
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Balok Kayu 6/15 Kelas II atau III",
+     "satuan": "m3",
+     "koefisien": 0.0108
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Paku 10 cm",
+     "satuan": "kg",
+     "koefisien": 0.1276
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Lem Kayu",
+     "satuan": "kg",
+     "koefisien": 1.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "F.02",
+   "kode_nasional": "3.11.3.6",
+   "nama": "Pembuatan dan Pemasangan 1 m2 Jalusi Kusen, Kayu Kelas I atau II",
+   "satuan": "m2",
+   "catatan": "Padanan terdekat: analisa kita mencakup kusen angin-angin + jaluzi, nasional khusus jalusi kusen.",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.67
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 2.0
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.2
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0667
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Papan Kayu Kelas I atau II",
+     "satuan": "m3",
+     "koefisien": 0.06
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Paku 1 cm - 2,5 cm",
+     "satuan": "kg",
+     "koefisien": 0.15
+    }
+   ]
+  },
+  {
+   "kode_kita": "F.03",
+   "kode_nasional": "3.11.1.11",
+   "nama": "Pembuatan 1 m2 Daun Pintu Panel, Kayu Kelas I atau II",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 1.0
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 3.0
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.3
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.1
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Papan Kayu Kelas I atau II",
+     "satuan": "m3",
+     "koefisien": 0.04
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Lem Kayu",
+     "satuan": "kg",
+     "koefisien": 0.5
+    }
+   ]
+  },
+  {
+   "kode_kita": "F.04",
+   "kode_nasional": "3.11.1.9",
+   "nama": "Pembuatan 1 m2 Pintu dan Jendela Kaca, Kayu Kelas I atau II",
+   "satuan": "m2",
+   "catatan": "Koefisien nasional belum termasuk kaca (kaca dihitung pada analisa kaca tersendiri, bandingkan F.14).",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.5952
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.2976
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.0298
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0099
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Papan Kayu Kelas I atau II",
+     "satuan": "m3",
+     "koefisien": 0.024
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Lem Kayu",
+     "satuan": "kg",
+     "koefisien": 0.3
+    }
+   ]
+  },
+  {
+   "kode_kita": "F.14",
+   "kode_nasional": "3.12.3",
+   "nama": "Pemasangan 1 m2 Kaca Polos Tebal 5 mm",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.015
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang",
+     "satuan": "OH",
+     "koefisien": 0.15
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.015
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.005
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kaca tebal 5 mm",
+     "satuan": "m2",
+     "koefisien": 1.1
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Silicone Sealant 300 ml",
+     "satuan": "tube",
+     "koefisien": 0.05
+    }
+   ]
+  },
+  {
+   "kode_kita": "G.10",
+   "kode_nasional": "3.3.5",
+   "nama": "Pemasangan 1 m' Lisplank Non kayu (GRC, Serat Semen) Lebar 30 cm",
+   "satuan": "m'",
+   "catatan": "Analisa kita lebar 25 cm; padanan nasional lebar 30 cm (ada juga lebar 20 cm, item 3.3.6).",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.1
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang",
+     "satuan": "OH",
+     "koefisien": 0.2
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.02
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0067
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Lisplank GRC/Serat Semen Lebar 30 cm",
+     "satuan": "m'",
+     "koefisien": 1.05
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Paku 5 cm dan 7 cm",
+     "satuan": "kg",
+     "koefisien": 0.05
+    }
+   ]
+  },
+  {
+   "kode_kita": "G.18",
+   "kode_nasional": "3.1.3.8",
+   "nama": "Pemasangan 1 m2 Atap Metal Menerus Tebal 0,4 mm",
+   "satuan": "m2",
+   "catatan": "Analisa kita tebal 0,3 mm; nasional yang tersedia 0,4 mm — koefisien pemasangan sebanding.",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.08
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang",
+     "satuan": "OH",
+     "koefisien": 0.04
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.004
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0013
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Atap Metal Menerus Tebal 0,4 mm",
+     "satuan": "m2",
+     "koefisien": 1.3
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Paku Sekrup 2\"",
+     "satuan": "kg",
+     "koefisien": 0.15
+    }
+   ]
+  },
+  {
+   "kode_kita": "G.19",
+   "kode_nasional": "3.1.3.13",
+   "nama": "Pemasangan 1 m' Nok/Bubung Genteng Aspal/Bitumen",
+   "satuan": "m'",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.125
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.25
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.025
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0083
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Nok Genteng Aspal",
+     "satuan": "buah",
+     "koefisien": 2.0
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Paku Biasa 1/2\"-1\"",
+     "satuan": "kg",
+     "koefisien": 0.05
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kayu Balok Borneo",
+     "satuan": "m3",
+     "koefisien": 0.0035
+    }
+   ]
+  },
+  {
+   "kode_kita": "G.23",
+   "kode_nasional": "",
+   "nama": "",
+   "satuan": "",
+   "catatan": "Tidak ada item nok tepi zincalum tersendiri; yang ada nok/bubung genteng metal dan seng gelombang.",
+   "tanpa_padanan": true,
+   "komponen": []
+  },
+  {
+   "kode_kita": "G.29",
+   "kode_nasional": "2.1.1.4",
+   "nama": "Pemasangan 1 m Reng Baja Ringan R.32 tebal 0,45 mm",
+   "satuan": "m",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.0111
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang besi/beton",
+     "satuan": "OH",
+     "koefisien": 0.0111
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.0011
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0004
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Reng Baja Ringan R.32 tebal 0,45 mm",
+     "satuan": "m",
+     "koefisien": 1.05
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Paku Keling (Rivet)",
+     "satuan": "buah",
+     "koefisien": 4.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "G.30",
+   "kode_nasional": "2.1.1.1",
+   "nama": "Pemasangan 1 m2 Atap Pelana Rangka Atap Baja Ringan (Canai Dingin) Profil C75",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.734
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang besi/beton",
+     "satuan": "OH",
+     "koefisien": 0.734
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.073
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.024
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Baja ringan canai dingin C75",
+     "satuan": "batang",
+     "koefisien": 0.9603
+    }
+   ]
+  },
+  {
+   "kode_kita": "H.02",
+   "kode_nasional": "3.5.3.1",
+   "nama": "Pemasangan 1 m2 Rangka Besi Hollow Galvanis 40.40 mm, Modul 60 x 60 cm, untuk Plafon",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.35
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Besi/Besi Beton",
+     "satuan": "OH",
+     "koefisien": 0.35
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.035
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0117
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Rangka Metal Hollow 40.40",
+     "satuan": "m'",
+     "koefisien": 4.0
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kawat Las",
+     "satuan": "kg",
+     "koefisien": 0.05
+    }
+   ]
+  },
+  {
+   "kode_kita": "H.05",
+   "kode_nasional": "",
+   "nama": "",
+   "satuan": "",
+   "catatan": "Plafon PVC tidak tercantum pada Lampiran VI ini (yang ada akustik, gypsum, GRC/serat semen, kayu lapis, lambrisering, aluminium).",
+   "tanpa_padanan": true,
+   "komponen": []
+  },
+  {
+   "kode_kita": "H.07",
+   "kode_nasional": "",
+   "nama": "",
+   "satuan": "",
+   "catatan": "List plafon PVC tidak tercantum; yang ada list plafon kayu profil dan gypsum (bahan berbeda).",
+   "tanpa_padanan": true,
+   "komponen": []
+  },
+  {
+   "kode_kita": "I.03",
+   "kode_nasional": "3.9.8.3",
+   "nama": "Pemasangan 1 m2 Lantai Keramik Ukuran 40 cm x 40 cm (1SP : 2PP)",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.1538
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang",
+     "satuan": "OH",
+     "koefisien": 0.0769
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.0077
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0026
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Keramik Lantai uk. 40 x 40 cm",
+     "satuan": "buah",
+     "koefisien": 6.563
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Semen Portland",
+     "satuan": "kg",
+     "koefisien": 13.632
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Semen Warna",
+     "satuan": "kg",
+     "koefisien": 1.5
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Pasir Pasang",
+     "satuan": "m3",
+     "koefisien": 0.027
+    }
+   ]
+  },
+  {
+   "kode_kita": "J.01",
+   "kode_nasional": "3.8.10.1",
+   "nama": "Pengecatan 1 m2 Tembok Baru Interior (1 Lapis Cat Dasar, 2 Lapis Cat Penutup)",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.0667
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Cat/Pelitur",
+     "satuan": "OH",
+     "koefisien": 0.0667
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.0067
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0022
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Cat Dasar Tembok",
+     "satuan": "kg",
+     "koefisien": 0.1
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Cat Tembok Interior",
+     "satuan": "kg",
+     "koefisien": 0.26
+    }
+   ]
+  },
+  {
+   "kode_kita": "J.02",
+   "kode_nasional": "3.8.10.2",
+   "nama": "Pengecatan 1 m2 Tembok Baru Eksterior (1 Lapis Cat Dasar, 2 Lapis Cat Penutup)",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.0769
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Cat/Pelitur",
+     "satuan": "OH",
+     "koefisien": 0.0769
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.0077
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0026
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Cat Dasar Tembok",
+     "satuan": "kg",
+     "koefisien": 0.1
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Cat Tembok Eksterior",
+     "satuan": "kg",
+     "koefisien": 0.26
+    }
+   ]
+  },
+  {
+   "kode_kita": "J.08",
+   "kode_nasional": "3.8.20.1",
+   "nama": "Pengecatan 1 m2 Plafond Interior (1 Lapis Cat Dasar dan 2 Lapis Cat Penutup)",
+   "satuan": "m2",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.0625
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Cat/Pelitur",
+     "satuan": "OH",
+     "koefisien": 0.0625
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.0063
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0021
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Cat Dasar Plafond",
+     "satuan": "kg",
+     "koefisien": 0.12
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Cat Plafond Interior",
+     "satuan": "kg",
+     "koefisien": 0.18
+    }
+   ]
+  },
+  {
+   "kode_kita": "J.09",
+   "kode_nasional": "3.8.5",
+   "nama": "Pengecatan 1 m2 Bidang Kayu Baru (1 Lapis Plamuur, 1 Lapis Cat Dasar, 3 Lapis Cat Penutup)",
+   "satuan": "m2",
+   "catatan": "Sudah termasuk Meni Kayu — sesuai analisa kita \"berikut meni\".",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.07
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Cat/Pelitur",
+     "satuan": "OH",
+     "koefisien": 0.105
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.0105
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0035
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Meni Kayu",
+     "satuan": "kg",
+     "koefisien": 0.2
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Plamur Kayu",
+     "satuan": "kg",
+     "koefisien": 0.15
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Cat Dasar Kayu",
+     "satuan": "kg",
+     "koefisien": 0.17
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Cat Penutup Kayu",
+     "satuan": "kg",
+     "koefisien": 0.35
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kuas",
+     "satuan": "buah",
+     "koefisien": 0.01
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Pengencer",
+     "satuan": "kg",
+     "koefisien": 0.03
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Ampelas",
+     "satuan": "lembar",
+     "koefisien": 0.2
+    }
+   ]
+  },
+  {
+   "kode_kita": "K.01",
+   "kode_nasional": "",
+   "nama": "",
+   "satuan": "",
+   "catatan": "Nasional menghitung pemasangan kabel per inti (mis. NYY 1 x 4 mm2 per m), bukan per meter kabel 3 inti seperti analisa kita.",
+   "tanpa_padanan": true,
+   "komponen": []
+  },
+  {
+   "kode_kita": "K.02",
+   "kode_nasional": "5.3.1.1",
+   "nama": "Pemasangan 1 titik Instalasi Lampu",
+   "satuan": "titik",
+   "catatan": "Nasional memakai kabel NYM 3 x 2,5 mm2; analisa kita 2 x 2,5 mm2.",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.19
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Listrik/Elektronik",
+     "satuan": "OH",
+     "koefisien": 0.318
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.032
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.011
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kabel NYM 3 x 2,5 mm2",
+     "satuan": "m",
+     "koefisien": 8.8
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Conduit HI 20 mm",
+     "satuan": "m",
+     "koefisien": 8.8
+    },
+    {
+     "jenis": "bahan",
+     "nama": "T Dus",
+     "satuan": "buah",
+     "koefisien": 1.0
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Socket Conduit 20 mm",
+     "satuan": "buah",
+     "koefisien": 5.0
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Klem 20 mm",
+     "satuan": "buah",
+     "koefisien": 10.0
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Fischer S6 + sekrup",
+     "satuan": "buah",
+     "koefisien": 15.0
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Flexible Conduit 20 mm",
+     "satuan": "m",
+     "koefisien": 1.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "K.03",
+   "kode_nasional": "5.1.5.1",
+   "nama": "Pemasangan 1 Unit Saklar Tunggal",
+   "satuan": "unit",
+   "catatan": "Perhatian: item nasional hanya memasang perangkat saklar, TANPA tarikan kabel seperti analisa kita per titik.",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.031
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Listrik/Elektronik",
+     "satuan": "OH",
+     "koefisien": 0.052
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.005
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.002
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Saklar Tunggal dan aksesoris",
+     "satuan": "buah",
+     "koefisien": 1.1
+    }
+   ]
+  },
+  {
+   "kode_kita": "K.04",
+   "kode_nasional": "5.1.5.2",
+   "nama": "Pemasangan 1 Unit Saklar Ganda",
+   "satuan": "unit",
+   "catatan": "Perhatian: item nasional hanya memasang perangkat saklar, TANPA tarikan kabel seperti analisa kita per titik.",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.031
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Listrik/Elektronik",
+     "satuan": "OH",
+     "koefisien": 0.052
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.005
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.002
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Saklar Ganda dan aksesoris",
+     "satuan": "buah",
+     "koefisien": 1.1
+    }
+   ]
+  },
+  {
+   "kode_kita": "K.05",
+   "kode_nasional": "5.1.5.13",
+   "nama": "Pemasangan 1 titik Instalasi Stop Kontak",
+   "satuan": "titik",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.205
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Listrik/Elektronik",
+     "satuan": "OH",
+     "koefisien": 0.342
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.034
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.011
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kabel NYM 3 x 2,5 mm2",
+     "satuan": "m",
+     "koefisien": 14.3
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Conduit HI 20 mm",
+     "satuan": "m",
+     "koefisien": 14.3
+    },
+    {
+     "jenis": "bahan",
+     "nama": "T Dus",
+     "satuan": "buah",
+     "koefisien": 1.0
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Socket Conduit 20 mm",
+     "satuan": "buah",
+     "koefisien": 8.0
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Klem 20 mm",
+     "satuan": "buah",
+     "koefisien": 8.0
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Fischer S6 + sekrup",
+     "satuan": "buah",
+     "koefisien": 12.0
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Elbow",
+     "satuan": "buah",
+     "koefisien": 4.0
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Isolasi",
+     "satuan": "m",
+     "koefisien": 0.5
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Lasdop",
+     "satuan": "buah",
+     "koefisien": 4.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "K.06",
+   "kode_nasional": "",
+   "nama": "",
+   "satuan": "",
+   "catatan": "Tidak ada item pasang lampu pijar/fitting tersendiri pada bagian yang diperiksa.",
+   "tanpa_padanan": true,
+   "komponen": []
+  },
+  {
+   "kode_kita": "K.08",
+   "kode_nasional": "",
+   "nama": "",
+   "satuan": "",
+   "catatan": "Tidak ada item MCB + box sekring per titik yang sebanding; panel/MCB dihitung pada pekerjaan panel distribusi.",
+   "tanpa_padanan": true,
+   "komponen": []
+  },
+  {
+   "kode_kita": "K.09",
+   "kode_nasional": "",
+   "nama": "",
+   "satuan": "",
+   "catatan": "Sama seperti K.01: nasional per inti kabel, analisa kita per meter kabel 3 x 4 mm.",
+   "tanpa_padanan": true,
+   "komponen": []
+  },
+  {
+   "kode_kita": "L.01",
+   "kode_nasional": "3.11.4.5",
+   "nama": "Pemasangan 1 Buah Engsel Pintu",
+   "satuan": "buah",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.015
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.15
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.015
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.005
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Engsel Pintu",
+     "satuan": "buah",
+     "koefisien": 1.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "L.02",
+   "kode_nasional": "3.11.4.15",
+   "nama": "Pemasangan 1 Buah Engsel Jendela Kupu-Kupu",
+   "satuan": "buah",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.01
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.1
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.01
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0033
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Engsel Jendela Kupu-Kupu",
+     "satuan": "buah",
+     "koefisien": 1.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "L.03",
+   "kode_nasional": "3.11.4.18",
+   "nama": "Pemasangan 1 Buah Kait Angin",
+   "satuan": "buah",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.015
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.15
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.015
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.005
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kait Angin",
+     "satuan": "buah",
+     "koefisien": 1.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "L.04",
+   "kode_nasional": "3.11.4.20",
+   "nama": "Pemasangan 1 Buah Grendel",
+   "satuan": "buah",
+   "catatan": "Padanan terdekat untuk sloot tanam (grendel tanam pintu).",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.015
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang",
+     "satuan": "OH",
+     "koefisien": 0.15
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.015
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.005
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Grendel Besar",
+     "satuan": "buah",
+     "koefisien": 1.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "L.05",
+   "kode_nasional": "3.11.4.14",
+   "nama": "Pemasangan 1 Buah Kunci Slot (Grendel) untuk Jendela",
+   "satuan": "buah",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.02
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.2
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.02
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.0067
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kunci Slot Jendela",
+     "satuan": "buah",
+     "koefisien": 1.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "L.06",
+   "kode_nasional": "3.11.4.4",
+   "nama": "Pemasangan 1 Buah Kunci Tanam Silinder",
+   "satuan": "buah",
+   "catatan": "Padanan terdekat untuk kunci pintu 2x putar (lever handle).",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.005
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.5
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.05
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.017
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kunci Silinder",
+     "satuan": "buah",
+     "koefisien": 1.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "L.08",
+   "kode_nasional": "3.11.4.3",
+   "nama": "Pemasangan 1 Buah Kunci Tanam Kamar Mandi",
+   "satuan": "buah",
+   "catatan": "",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.005
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.5
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.05
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.017
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Kunci Tanam Kamar Mandi",
+     "satuan": "buah",
+     "koefisien": 1.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "L.09",
+   "kode_nasional": "3.11.4.17",
+   "nama": "Pemasangan 1 Buah Spring Knip untuk Jendela",
+   "satuan": "buah",
+   "catatan": "Padanan terdekat untuk handle jendela.",
+   "tanpa_padanan": false,
+   "komponen": [
+    {
+     "jenis": "upah",
+     "nama": "Pekerja",
+     "satuan": "OH",
+     "koefisien": 0.015
+    },
+    {
+     "jenis": "upah",
+     "nama": "Tukang Kayu",
+     "satuan": "OH",
+     "koefisien": 0.15
+    },
+    {
+     "jenis": "upah",
+     "nama": "Kepala Tukang",
+     "satuan": "OH",
+     "koefisien": 0.015
+    },
+    {
+     "jenis": "upah",
+     "nama": "Mandor",
+     "satuan": "OH",
+     "koefisien": 0.005
+    },
+    {
+     "jenis": "bahan",
+     "nama": "Spring Knip Jendela",
+     "satuan": "buah",
+     "koefisien": 1.0
+    }
+   ]
+  },
+  {
+   "kode_kita": "P.16",
+   "kode_nasional": "",
+   "nama": "",
+   "satuan": "",
+   "catatan": "Septictank + rembesan per unit tidak tercantum pada Lampiran VI Bangunan Gedung ini.",
+   "tanpa_padanan": true,
+   "komponen": []
+  }
+ ]
+}
