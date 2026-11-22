@@ -13,13 +13,13 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <label>Tanggal<input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required></label>
       <label>Gedung
-        <select name="gedung_id" id="pilih-gedung">
+        <select data-select-cari name="gedung_id" id="pilih-gedung">
           <option value="">— umum —</option>
           <?php foreach ($semuaGedung ?? [] as $gd): ?><option value="<?= (int) $gd['id'] ?>"><?= esc($gd['nama']) ?></option><?php endforeach; ?>
         </select>
       </label>
       <label>Pekerjaan (opsional)
-        <select name="pekerjaan_id" id="pilih-pekerjaan"><option value="">— tidak tertaut pekerjaan —</option></select>
+        <select data-select-cari name="pekerjaan_id" id="pilih-pekerjaan"><option value="">— tidak tertaut pekerjaan —</option></select>
       </label>
       <label>Jenis tenaga
         <input type="text" name="jenis_tenaga" list="daftar-jenis" required placeholder="mis. Tukang Kayu">

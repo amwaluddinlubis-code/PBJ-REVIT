@@ -4,7 +4,7 @@
   <p style="margin-top:0;color:var(--ta-teks-2)">Jadwal pelaksanaan dalam bentuk kurva S (format dokumen Juknis): garis rencana kumulatif dibandingkan realisasi kumulatif mingguan dari data realisasi BOQ. Jendela waktu mengikuti tanggal mulai–selesai SPK yang tertaut ke gedung.</p>
   <form method="get" action="<?= base_url('kurva-s') ?>" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
     <label>Gedung
-      <select name="gedung">
+      <select data-select-cari name="gedung">
         <?php foreach ($semua as $row): ?><option value="<?= (int) $row['id'] ?>" <?= $g && (int) $g['id'] === (int) $row['id'] ? 'selected' : '' ?>><?= esc($row['nama']) ?></option><?php endforeach; ?>
       </select>
     </label>

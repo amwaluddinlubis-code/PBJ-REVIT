@@ -88,7 +88,7 @@
     <label>Qty <input type="number" name="qty" step="0.001" min="0" required></label>
     <label>Harga Satuan (kosongkan = harga acuan) <input type="number" name="harga" step="1" id="hargaIsi" placeholder="otomatis"></label>
     <label>Kena PPN
-      <select name="pajak"><option value="0">Tidak</option><option value="1">Ya</option></select>
+      <select data-select-cari name="pajak"><option value="0">Tidak</option><option value="1">Ya</option></select>
     </label>
     <div class="aksi md:col-span-2"><button type="submit">Tambah Baris</button></div>
   </form>

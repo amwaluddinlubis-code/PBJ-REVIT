@@ -5,13 +5,13 @@
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
       <label>Gedung
-        <select name="gedung_id">
+        <select data-select-cari name="gedung_id">
           <option value="">— Umum / semua paket —</option>
           <?php foreach ($gedung as $g): ?><option value="<?= (int) $g['id'] ?>"><?= esc($g['nama']) ?></option><?php endforeach; ?>
         </select>
       </label>
       <label>Tahap
-        <select name="tahap"><option value="sebelum">Sebelum pekerjaan</option><option value="proses" selected>Selama pekerjaan (proses)</option><option value="akhir">Akhir pekerjaan</option></select>
+        <select data-select-cari name="tahap"><option value="sebelum">Sebelum pekerjaan</option><option value="proses" selected>Selama pekerjaan (proses)</option><option value="akhir">Akhir pekerjaan</option></select>
       </label>
       <label>Tanggal Foto <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required></label>
       <label class="md:col-span-2">Keterangan <input type="text" name="keterangan" placeholder="cth. Pemasangan rangka atap minggu ke-6"></label>

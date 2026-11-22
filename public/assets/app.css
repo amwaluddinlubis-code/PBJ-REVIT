@@ -796,7 +796,7 @@ html.gelap table tr:hover td {
 .sc-label.sc-kosong-teks { color: var(--ta-teks-2, #64748b); }
 .sc-panah { flex: none; color: var(--ta-teks-2, #64748b); transition: transform .15s ease; }
 .sc-terbuka .sc-panah { transform: rotate(180deg); }
-.sc-panel { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 70; background: #fff; border: 1px solid var(--ta-garis-2); border-radius: 10px; box-shadow: 0 12px 28px rgba(15, 23, 42, .16); overflow: hidden; }
+.sc-panel { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 70; min-width: min(230px, 80vw); background: #fff; border: 1px solid var(--ta-garis-2); border-radius: 10px; box-shadow: 0 12px 28px rgba(15, 23, 42, .16); overflow: hidden; }
 .sc-panel.sc-naik { top: auto; bottom: calc(100% + 4px); }
 .sc-cari { display: flex; align-items: center; gap: 7px; padding: 8px 10px; border-bottom: 1px solid var(--ta-garis-2); color: var(--ta-teks-2, #64748b); }
 .sc-cari input { border: 0 !important; box-shadow: none !important; padding: 2px 0 !important; margin: 0 !important; background: transparent !important; }

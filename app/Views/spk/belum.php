@@ -14,7 +14,7 @@
       <td>
         <form class="inline" method="post" action="<?= base_url('belum-bernomor/pasang/' . $d['id']) ?>">
           <?= csrf_field() ?>
-          <select name="spk_id" style="width:110px">
+          <select data-select-cari name="spk_id" style="width:110px">
             <option value="">— pilih —</option>
             <?php foreach ($spk as $s): ?><option value="<?= (int) $s['id'] ?>">SPK <?= (int) $s['nomor'] ?></option><?php endforeach; ?>
           </select>

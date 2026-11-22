@@ -53,7 +53,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
     <form method="post" action="<?= base_url('sekolah/pilih') ?>">
       <?= csrf_field() ?>
       <label class="label-samping" for="pilihan-sekolah">Sekolah aktif</label>
-      <select id="pilihan-sekolah" name="sekolah_id" onchange="this.form.submit()">
+      <select data-select-cari id="pilihan-sekolah" name="sekolah_id" onchange="this.form.submit()">
         <?php foreach ($semuaSekolah ?? [] as $sk): ?>
           <option value="<?= (int) $sk['id'] ?>"<?= ((int) ($sekolahAktif['id'] ?? 0) === (int) $sk['id']) ? ' selected' : '' ?>><?= esc($sk['nama_sekolah'] ?? ('Sekolah #' . $sk['id'])) ?></option>
         <?php endforeach; ?>

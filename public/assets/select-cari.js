@@ -46,25 +46,34 @@ window.inisiasiSelectCari = function (akar) {
     var label = tombol.querySelector('.sc-label');
     var placeholder = sel.getAttribute('data-placeholder') || '— pilih —';
 
-    // Bangun daftar opsi dari select asli.
+    // Bangun daftar opsi dari select asli. Dibangun ulang otomatis bila
+    // opsi berubah dari luar (MutationObserver) — mis. select pekerjaan
+    // yang isinya bergantung pada select gedung.
     var item = [];
-    Array.prototype.forEach.call(sel.options, function (op) {
-      var li = document.createElement('div');
-      li.className = 'sc-opsi';
-      li.setAttribute('role', 'option');
-      li.dataset.value = op.value;
-      li.innerHTML = '<span class="sc-opsi-teks"></span>'
-        + '<svg class="sc-centang" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
-      li.querySelector('.sc-opsi-teks').textContent = op.textContent;
-      li.addEventListener('mousedown', function (e) { e.preventDefault(); pilih(li); });
-      daftar.appendChild(li);
-      item.push(li);
-    });
+    function bangunItem() {
+      daftar.innerHTML = '';
+      item = [];
+      Array.prototype.forEach.call(sel.options, function (op) {
+        var li = document.createElement('div');
+        li.className = 'sc-opsi';
+        li.setAttribute('role', 'option');
+        li.dataset.value = op.value;
+        li.innerHTML = '<span class="sc-opsi-teks"></span>'
+          + '<svg class="sc-centang" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+        li.querySelector('.sc-opsi-teks').textContent = op.textContent;
+        li.addEventListener('mousedown', function (e) { e.preventDefault(); pilih(li); });
+        daftar.appendChild(li);
+        item.push(li);
+      });
+    }
+    bangunItem();
+    new MutationObserver(function () { bangunItem(); segarkan(); }).observe(sel, { childList: true });
 
     function segarkan() {
       var op = sel.options[sel.selectedIndex];
       var ada = op && op.value !== '';
-      label.textContent = ada ? op.textContent : placeholder;
+      // Tanpa data-placeholder, label opsi kosong milik select dipakai apa adanya.
+      label.textContent = ada || !sel.hasAttribute('data-placeholder') ? (op ? op.textContent : placeholder) : placeholder;
       label.classList.toggle('sc-kosong-teks', !ada);
       item.forEach(function (li) { li.classList.toggle('terpilih', li.dataset.value === sel.value && sel.value !== ''); });
     }

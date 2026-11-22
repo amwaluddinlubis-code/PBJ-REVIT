@@ -47,10 +47,11 @@ window.inisiasiPaginasi = function (akar) {
       wadah.innerHTML =
         '<span class="info"></span>' +
         '<span class="tombol-halaman"></span>' +
-        '<label>Per halaman <select>' +
+        '<label>Per halaman <select data-select-cari>' +
         [10, 25, 50, 100].map(function (n) { return '<option value="' + n + '"' + (n === ukuran ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
         '</select></label>';
       tabel.parentNode.insertBefore(wadah, tabel.nextSibling);
+      if (window.inisiasiSelectCari) window.inisiasiSelectCari(wadah);
       info = wadah.querySelector('.info');
       tombol = wadah.querySelector('.tombol-halaman');
       pemilih = wadah.querySelector('select');

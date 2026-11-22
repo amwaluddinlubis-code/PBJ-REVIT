@@ -25,7 +25,7 @@
         <td><?= esc($l['jenis']) ?></td>
         <td class="angka"><?php if ($l['baris'] > 0): ?><?= number_format($l['baris'], 0, ',', '.') ?> baris<?php endif; ?><?php if ($l['total'] > 0): ?><br><?= $rp($l['total']) ?><?php endif; ?></td>
         <td>
-          <select name="tujuan[<?= $i ?>]" data-baris="<?= $i ?>">
+          <select data-select-cari name="tujuan[<?= $i ?>]" data-baris="<?= $i ?>">
             <?php foreach ($opsi as $nilai => $label): ?>
             <option value="<?= $nilai ?>" <?= $l['saran'] === $nilai ? 'selected' : '' ?>><?= $label ?></option>
             <?php endforeach; ?>
@@ -72,6 +72,7 @@ document.querySelectorAll('select[data-baris]').forEach(function (sel) {
       if (sel) {
         tr.dataset.tujuanAsal = sel.value;
         sel.value = 'lewati';
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
       }
       tr.querySelectorAll('input, select').forEach(function (el) { el.disabled = true; });
       tr.style.display = 'none';
@@ -100,7 +101,7 @@ document.querySelectorAll('select[data-baris]').forEach(function (sel) {
       if (baris) {
         baris.style.display = '';
         var sel2 = baris.querySelector('select[name^="tujuan"]');
-        if (sel2 && baris.dataset.tujuanAsal) sel2.value = baris.dataset.tujuanAsal;
+        if (sel2 && baris.dataset.tujuanAsal) { sel2.value = baris.dataset.tujuanAsal; sel2.dispatchEvent(new Event('change', { bubbles: true })); }
         baris.querySelectorAll('input, select').forEach(function (el) { el.disabled = false; });
         var inp = baris.querySelector('input[data-nama]');
         if (inp && sel2) inp.disabled = sel2.value !== 'gedung';

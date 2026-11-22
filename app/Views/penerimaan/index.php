@@ -25,11 +25,11 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
       <label>Tanggal Terima <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required></label>
       <label>Tahap
-        <select name="tahap"><option value="1">Tahap 1 (70%)</option><option value="2">Tahap 2 (30%)</option></select>
+        <select data-select-cari name="tahap"><option value="1">Tahap 1 (70%)</option><option value="2">Tahap 2 (30%)</option></select>
       </label>
       <label>Jumlah Diterima (Rp) <input type="text" name="jumlah" inputmode="numeric" required placeholder="437500000"></label>
       <label>Kanal
-        <select name="kanal"><option value="bank">Bank (rekening sekolah)</option><option value="tunai">Tunai</option></select>
+        <select data-select-cari name="kanal"><option value="bank">Bank (rekening sekolah)</option><option value="tunai">Tunai</option></select>
       </label>
       <label class="md:col-span-2">Keterangan <input type="text" name="keterangan" placeholder="cth. Transfer dari KPPN, SP2D No. ..."></label>
     </div>

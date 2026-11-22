@@ -5,13 +5,13 @@
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <label>Gedung
-        <select name="gedung_id" required>
+        <select data-select-cari name="gedung_id" required>
           <option value="">— pilih gedung —</option>
           <?php foreach ($gedung as $g): ?><option value="<?= (int) $g['id'] ?>"><?= esc($g['nama']) ?></option><?php endforeach; ?>
         </select>
       </label>
       <label>Pekerjaan (opsional)
-        <select name="pekerjaan_id">
+        <select data-select-cari name="pekerjaan_id">
           <option value="">— umum / beberapa pekerjaan —</option>
           <?php foreach ($pekerjaan as $p): ?><option value="<?= (int) $p['id'] ?>"><?= esc($p['nama']) ?></option><?php endforeach; ?>
         </select>

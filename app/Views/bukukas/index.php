@@ -43,7 +43,7 @@
       <label>Tanggal <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required></label>
       <label class="md:col-span-2">Uraian <input type="text" name="uraian" required placeholder="cth. Penerimaan dana bantuan tahap 1"></label>
       <label>Kategori
-        <select name="kategori">
+        <select data-select-cari name="kategori">
           <option value="penerimaan">Penerimaan dana bantuan</option>
           <option value="lainnya">Lainnya</option>
           <option value="pajak">Pajak (di luar bukti setor)</option>
@@ -51,13 +51,13 @@
         </select>
       </label>
       <label>Tahap (untuk penerimaan)
-        <select name="tahap"><option value="">—</option><option value="1">Tahap 1 (70%)</option><option value="2">Tahap 2 (30%)</option></select>
+        <select data-select-cari name="tahap"><option value="">—</option><option value="1">Tahap 1 (70%)</option><option value="2">Tahap 2 (30%)</option></select>
       </label>
       <label>Jenis
-        <select name="jenis"><option value="masuk">Uang masuk</option><option value="keluar">Uang keluar</option></select>
+        <select data-select-cari name="jenis"><option value="masuk">Uang masuk</option><option value="keluar">Uang keluar</option></select>
       </label>
       <label>Kanal
-        <select name="kanal"><option value="bank">Bank</option><option value="tunai">Tunai</option></select>
+        <select data-select-cari name="kanal"><option value="bank">Bank</option><option value="tunai">Tunai</option></select>
       </label>
       <label>Jumlah (Rp) <input type="text" name="jumlah" inputmode="numeric" required placeholder="750000000"></label>
       <label>Keterangan <input type="text" name="keterangan" placeholder="opsional"></label>

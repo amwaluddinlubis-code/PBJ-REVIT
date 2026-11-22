@@ -14,7 +14,7 @@
   <label>Penyedia Baru (bila belum ada) <input name="penyedia_baru" value=""></label>
   <label>Nama Penandatangan Penyedia <input name="ttd_penyedia" value="<?= esc(old('ttd_penyedia', $s['ttd_penyedia'] ?? '')) ?>"></label>
   <label>Gedung Tujuan
-    <select name="gedung_id">
+    <select data-select-cari name="gedung_id">
       <option value="">— umum / belum ditentukan —</option>
       <?php foreach ($semuaGedung ?? [] as $gd): ?>
         <option value="<?= (int) $gd['id'] ?>"<?= (old('gedung_id', $s['gedung_id'] ?? '') == $gd['id']) ? ' selected' : '' ?>><?= esc($gd['nama']) ?></option>
@@ -25,7 +25,7 @@
   <label>Tanggal Mulai <input type="date" name="tgl_mulai" value="<?= esc(old('tgl_mulai', $s['tgl_mulai'] ?? '')) ?>"></label>
   <label>Tanggal Selesai <input type="date" name="tgl_selesai" value="<?= esc(old('tgl_selesai', $s['tgl_selesai'] ?? '')) ?>"></label>
   <label>Status
-    <select name="status">
+    <select data-select-cari name="status">
       <?php foreach (['Aktif', 'Selesai', 'Batal'] as $st): ?>
         <option<?= (old('status', $s['status'] ?? 'Aktif') === $st) ? ' selected' : '' ?>><?= $st ?></option>
       <?php endforeach; ?>

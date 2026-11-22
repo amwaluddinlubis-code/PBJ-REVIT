@@ -13,7 +13,7 @@
       <td class="angka"><?= number_format((float) $it['qty'], 2, ',', '.') ?></td>
       <td><?= esc($it['satuan'] ?? '') ?></td>
       <td>
-        <select name="kondisi[<?= (int) $it['bd_id'] ?>]" style="width:140px">
+        <select data-select-cari name="kondisi[<?= (int) $it['bd_id'] ?>]" style="width:140px">
           <?php foreach (['Baik', 'Cukup', 'Kurang', 'Tidak Sesuai'] as $k): ?>
             <option<?= $it['kondisi'] === $k ? ' selected' : '' ?>><?= $k ?></option>
           <?php endforeach; ?>

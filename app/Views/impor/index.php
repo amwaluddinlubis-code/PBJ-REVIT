@@ -1,7 +1,7 @@
 <?php
 $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.');
 $pilihSekolah = static function () use ($semuaSekolah, $sekolahAktif) {
-    $html = '<label>Sekolah tujuan impor<select name="sekolah_id">';
+    $html = '<label>Sekolah tujuan impor<select data-select-cari name="sekolah_id">';
     foreach ($semuaSekolah ?? [] as $sk) {
         $sel = (int) ($sekolahAktif['id'] ?? 0) === (int) $sk['id'] ? ' selected' : '';
         $html .= '<option value="' . (int) $sk['id'] . '"' . $sel . '>' . esc($sk['nama_sekolah']) . '</option>';
@@ -47,7 +47,7 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <?= $pilihSekolah() ?>
       <label>Berkas di folder impor
-        <select name="berkas">
+        <select data-select-cari name="berkas">
           <?php foreach ($berkas_folder as $bf): ?><option value="<?= esc($bf['nama']) ?>"><?= esc($bf['nama']) ?> — <?= number_format($bf['ukuran'] / 1048576, 1, ',', '.') ?> MB · <?= esc($bf['tanggal']) ?></option><?php endforeach; ?>
         </select>
       </label>

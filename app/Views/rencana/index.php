@@ -15,7 +15,7 @@
 
 <form method="get" action="<?= base_url('rencana-belanja') ?>" style="margin-bottom:14px">
   <label style="display:inline-block">Tampilkan kebutuhan:
-    <select name="gedung" onchange="this.form.submit()" style="width:auto;display:inline-block;margin-left:6px">
+    <select data-select-cari name="gedung" onchange="this.form.submit()" style="width:auto;display:inline-block;margin-left:6px">
       <option value="0">Seluruh sekolah (gabungan gedung)</option>
       <?php foreach ($semuaGedung ?? [] as $gd): ?>
         <option value="<?= (int) $gd['id'] ?>"<?= $gedung_filter === (int) $gd['id'] ? ' selected' : '' ?>><?= esc($gd['nama']) ?></option>
@@ -46,7 +46,7 @@
     </table>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" style="margin-top:14px">
       <label>Gedung tujuan SPK
-        <select name="gedung_id">
+        <select data-select-cari name="gedung_id">
           <option value="">— umum —</option>
           <?php foreach ($semuaGedung ?? [] as $gd): ?>
             <option value="<?= (int) $gd['id'] ?>"<?= $gedung_filter === (int) $gd['id'] ? ' selected' : '' ?>><?= esc($gd['nama']) ?></option>

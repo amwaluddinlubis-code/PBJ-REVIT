@@ -12,7 +12,7 @@
     </select>
   </label>
   <label>BAP
-    <select name="bap_id">
+    <select data-select-cari name="bap_id">
       <option value="">— belum ada —</option>
       <?php foreach ($spk['bap'] as $sid => $daftar): foreach ($daftar as $b): ?>
         <option value="<?= (int) $b['id'] ?>" data-spk="<?= (int) $sid ?>"<?= (old('bap_id', $i['bap_id'] ?? '') == $b['id']) ? ' selected' : '' ?>>BAP urut <?= (int) $b['nomor_urut'] ?> (SPK id <?= (int) $sid ?>)</option>
@@ -20,7 +20,7 @@
     </select>
   </label>
   <label>BAST
-    <select name="bast_id">
+    <select data-select-cari name="bast_id">
       <option value="">— belum ada —</option>
       <?php foreach ($spk['bast'] as $sid => $daftar): foreach ($daftar as $b): ?>
         <option value="<?= (int) $b['id'] ?>" data-spk="<?= (int) $sid ?>"<?= (old('bast_id', $i['bast_id'] ?? '') == $b['id']) ? ' selected' : '' ?>>BAST urut <?= (int) $b['nomor_urut'] ?> (SPK id <?= (int) $sid ?>)</option>
@@ -29,7 +29,7 @@
   </label>
   <label>Nilai Invoice (kosongkan = total SPK) <input type="number" name="nilai" step="1" value="<?= esc(old('nilai', $i['nilai'] ?? '')) ?>"></label>
   <label>Status
-    <select name="status">
+    <select data-select-cari name="status">
       <?php foreach (['Belum Bayar', 'Sudah Bayar'] as $st): ?>
         <option<?= (old('status', $i['status'] ?? 'Belum Bayar') === $st) ? ' selected' : '' ?>><?= $st ?></option>
       <?php endforeach; ?>

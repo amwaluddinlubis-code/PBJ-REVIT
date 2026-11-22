@@ -57,7 +57,7 @@
         <input type="text" name="keterangan" id="f-keterangan" placeholder="cth. 1,65% dari nilai konstruksi">
       </label>
       <label>Pajak Dipotong Saat Pembayaran
-        <select name="pajak" id="f-pajak">
+        <select data-select-cari name="pajak" id="f-pajak">
           <?php foreach ($opsi_pajak as $kunci => $label): ?><option value="<?= esc($kunci) ?>"><?= esc($label) ?></option><?php endforeach; ?>
         </select>
       </label>

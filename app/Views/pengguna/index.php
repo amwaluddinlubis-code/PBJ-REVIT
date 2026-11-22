@@ -6,7 +6,7 @@
       <label>Username<input type="text" name="username" required placeholder="mis. sarmin"></label>
       <label>Nama lengkap<input type="text" name="nama" required placeholder="mis. Sarmin"></label>
       <label>Peran
-        <select name="peran">
+        <select data-select-cari name="peran">
           <?php foreach ($pilihan_peran as $p): ?><option value="<?= esc($p) ?>"<?= $p === 'operator' ? ' selected' : '' ?>><?= esc(ucfirst($p)) ?></option><?php endforeach; ?>
         </select>
       </label>
@@ -53,7 +53,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <label>Nama lengkap<input type="text" name="nama" id="ubah-nama" required></label>
       <label>Peran
-        <select name="peran" id="ubah-peran">
+        <select data-select-cari name="peran" id="ubah-peran">
           <?php foreach ($pilihan_peran as $p): ?><option value="<?= esc($p) ?>"><?= esc(ucfirst($p)) ?></option><?php endforeach; ?>
         </select>
       </label>

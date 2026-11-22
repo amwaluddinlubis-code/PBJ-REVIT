@@ -35,7 +35,7 @@
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
       <label>Jenis Setoran
-        <select name="jenis">
+        <select data-select-cari name="jenis">
           <?php foreach ($label as $k => $v): ?><option value="<?= $k ?>"><?= esc($v) ?></option><?php endforeach; ?>
         </select>
       </label>

@@ -4,7 +4,7 @@
   <form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('invoice/jurnal-tambah') ?>">
     <?= csrf_field() ?>
     <label>Invoice Belum Bayar
-      <select name="invoice_id" required>
+      <select data-select-cari name="invoice_id" required>
         <option value="">— pilih invoice —</option>
         <?php foreach ($belum as $b): ?>
           <option value="<?= (int) $b['id'] ?>">Invoice <?= (int) $b['nomor_urut'] ?> (SPK <?= (int) $b['spk_nomor'] ?>) — <?= $rp($b['nilai']) ?></option>
