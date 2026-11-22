@@ -5,7 +5,7 @@
   <label>No. Invoice Toko <input name="no_toko" value="<?= esc(old('no_toko', $i['no_toko'] ?? '')) ?>"></label>
   <label>Tanggal <input type="date" name="tanggal" value="<?= esc(old('tanggal', $i['tanggal'] ?? '')) ?>"></label>
   <label>SPK
-    <select name="spk_id" id="pilihSpk" required>
+    <select name="spk_id" id="pilihSpk" required data-select-cari data-placeholder="— pilih SPK —">
       <?php foreach ($spk['list'] as $s): ?>
         <option value="<?= (int) $s['id'] ?>" data-total="<?= (int) $s['total'] ?>"<?= (old('spk_id', $i['spk_id'] ?? '') == $s['id']) ? ' selected' : '' ?>>SPK <?= (int) $s['nomor'] ?> — <?= esc($s['paket'] ?? '') ?> (total Rp <?= number_format((float) $s['total'], 0, ',', '.') ?>)</option>
       <?php endforeach; ?>

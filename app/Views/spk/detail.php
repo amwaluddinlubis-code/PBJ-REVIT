@@ -78,7 +78,7 @@
   <form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('spk/detail-tambah/' . $s['id']) ?>">
     <?= csrf_field() ?>
     <label>Bahan
-      <select name="bahan_id" id="pilihBahan" required>
+      <select name="bahan_id" id="pilihBahan" required data-select-cari data-placeholder="— pilih bahan —">
         <option value="">— pilih bahan —</option>
         <?php foreach ($bahan as $b): ?>
           <option value="<?= (int) $b['id'] ?>" data-harga="<?= (int) $b['harga_acuan'] ?>"><?= esc($b['kode']) ?> — <?= esc($b['nama']) ?> (<?= esc($b['satuan'] ?? '') ?>)</option>

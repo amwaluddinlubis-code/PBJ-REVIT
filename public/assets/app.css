@@ -784,3 +784,30 @@ html.gelap table tr:hover td {
   .panel { padding: 14px 12px; }
   .login-brand-side { border-radius: 0; margin: 0; min-height: 210px; }
 }
+
+/* ===== Select dapat dicari (select-cari.js, ala Preline Advanced Select) ===== */
+.sc { position: relative; width: 100%; }
+.sc-asli { position: absolute !important; opacity: 0; pointer-events: none; width: 1px !important; height: 1px; margin: 0 !important; }
+.sc-tombol { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 8px 11px; border: 1px solid var(--ta-garis-2); border-radius: 8px; background: #fff; color: var(--ta-teks); font: inherit; font-size: 11.2px; cursor: pointer; text-align: left; margin: 0; }
+.sc-tombol:hover { border-color: var(--ta-biru-500); background: #fff; }
+.sc-tombol:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ta-biru-500); }
+.sc-tombol[disabled] { opacity: .55; cursor: not-allowed; }
+.sc-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-label.sc-kosong-teks { color: var(--ta-teks-2, #64748b); }
+.sc-panah { flex: none; color: var(--ta-teks-2, #64748b); transition: transform .15s ease; }
+.sc-terbuka .sc-panah { transform: rotate(180deg); }
+.sc-panel { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 70; background: #fff; border: 1px solid var(--ta-garis-2); border-radius: 10px; box-shadow: 0 12px 28px rgba(15, 23, 42, .16); overflow: hidden; }
+.sc-panel.sc-naik { top: auto; bottom: calc(100% + 4px); }
+.sc-cari { display: flex; align-items: center; gap: 7px; padding: 8px 10px; border-bottom: 1px solid var(--ta-garis-2); color: var(--ta-teks-2, #64748b); }
+.sc-cari input { border: 0 !important; box-shadow: none !important; padding: 2px 0 !important; margin: 0 !important; background: transparent !important; }
+.sc-daftar { max-height: 248px; overflow-y: auto; padding: 4px; }
+.sc-opsi { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 9px; border-radius: 7px; cursor: pointer; font-size: 11.2px; }
+.sc-opsi .sc-centang { flex: none; visibility: hidden; color: var(--ta-biru-500); }
+.sc-opsi.terpilih { font-weight: 600; }
+.sc-opsi.terpilih .sc-centang { visibility: visible; }
+.sc-opsi.aktif { background: var(--ina-blue-100, #dbeafe); }
+.sc-kosong { padding: 10px; text-align: center; color: var(--ta-teks-2, #64748b); font-size: 11.2px; }
+html.gelap .sc-tombol { background: #0c1526; }
+html.gelap .sc-tombol:hover { background: #0c1526; }
+html.gelap .sc-panel { background: #0c1526; }
+html.gelap .sc-opsi.aktif { background: #1e293b; }

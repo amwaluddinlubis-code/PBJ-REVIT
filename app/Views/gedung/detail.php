@@ -125,7 +125,7 @@ $tabAktif = $tab ?? 'boq';
           <?= csrf_field() ?>
           <input type="hidden" name="nama_komponen" value="<?= esc($t['nama']) ?>">
           <input type="hidden" name="gedung_id" value="<?= (int) $g['id'] ?>">
-          <select name="bahan_id" required style="margin:0">
+          <select name="bahan_id" required style="margin:0" data-select-cari data-placeholder="— pilih bahan —">
             <option value="">— pilih bahan —</option>
             <?php foreach ($semuaBahan as $sb): ?><option value="<?= (int) $sb['id'] ?>"><?= esc($sb['kode']) ?> — <?= esc($sb['nama']) ?></option><?php endforeach; ?>
           </select>

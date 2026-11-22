@@ -6,10 +6,7 @@
     <label>Tanggal <input type="date" name="tanggal"></label>
     <label>No. BPB <input name="no_bpb"></label>
     <label>Bahan
-      <select name="bahan_id" required>
-        <option value="">— pilih bahan —</option>
-        <?php foreach ($bahan as $b): ?><option value="<?= (int) $b['id'] ?>"><?= esc($b['kode']) ?> — <?= esc($b['nama']) ?></option><?php endforeach; ?>
-      </select>
+      <?= select_cari('bahan_id', array_map(static fn ($b) => ['value' => (int) $b['id'], 'label' => $b['kode'] . ' — ' . $b['nama']], $bahan), null, ['required' => true, 'placeholder' => '— pilih bahan —']) ?>
     </label>
     <label>Masuk <input type="number" name="masuk" step="0.001" value="0"></label>
     <label>Keluar <input type="number" name="keluar" step="0.001" value="0"></label>

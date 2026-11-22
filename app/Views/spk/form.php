@@ -4,7 +4,7 @@
   <label>Nomor SPK <input type="number" name="nomor" min="1" value="<?= esc(old('nomor', $s['nomor'] ?? '')) ?>" required></label>
   <label>Tanggal <input type="date" name="tanggal" value="<?= esc(old('tanggal', $s['tanggal'] ?? '')) ?>"></label>
   <label>Penyedia
-    <select name="penyedia_id">
+    <select name="penyedia_id" data-select-cari data-placeholder="— pilih / isi baru di kanan —">
       <option value="">— pilih / isi baru di kanan —</option>
       <?php foreach ($penyedia as $p): ?>
         <option value="<?= (int) $p['id'] ?>"<?= (old('penyedia_id', $s['penyedia_id'] ?? '') == $p['id']) ? ' selected' : '' ?>><?= esc($p['nama']) ?></option>
