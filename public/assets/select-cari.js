@@ -100,14 +100,29 @@ window.inisiasiSelectCari = function (akar) {
       if (li) li.scrollIntoView({ block: 'nearest' });
     }
 
+    // Panel dirender sebagai lapisan fixed di <body> (portal): selalu
+    // melayang di atas panel/kartu lain dan tidak pernah membuat wadah
+    // apa pun menambah scroll atau memotong dropdown.
+    function posisikan() {
+      var r = tombol.getBoundingClientRect();
+      panel.style.left = r.left + 'px';
+      panel.style.width = r.width + 'px';
+      if (window.innerHeight - r.bottom < 290 && r.top > 290) {
+        panel.style.top = 'auto';
+        panel.style.bottom = (window.innerHeight - r.top + 4) + 'px';
+      } else {
+        panel.style.bottom = 'auto';
+        panel.style.top = (r.bottom + 4) + 'px';
+      }
+    }
+
     function buka() {
       document.querySelectorAll('.sc-panel:not([hidden])').forEach(function (p) { if (p !== panel) p.hidden = true; });
+      document.body.appendChild(panel);
+      posisikan();
       panel.hidden = false;
       tombol.setAttribute('aria-expanded', 'true');
       bungkus.classList.add('sc-terbuka');
-      // Naik ke atas bila ruang di bawah tidak cukup.
-      var r = bungkus.getBoundingClientRect();
-      panel.classList.toggle('sc-naik', window.innerHeight - r.bottom < 290 && r.top > 290);
       masukan.value = '';
       saring();
       segarkan();
@@ -120,7 +135,15 @@ window.inisiasiSelectCari = function (akar) {
       panel.hidden = true;
       tombol.setAttribute('aria-expanded', 'false');
       bungkus.classList.remove('sc-terbuka');
+      if (panel.parentNode === document.body) bungkus.appendChild(panel);
     }
+
+    window.addEventListener('scroll', function (e) {
+      if (!panel.hidden && !panel.contains(e.target)) posisikan();
+    }, true);
+    window.addEventListener('resize', function () {
+      if (!panel.hidden) posisikan();
+    });
 
     function pilih(li) {
       if (!li) return;
@@ -145,7 +168,7 @@ window.inisiasiSelectCari = function (akar) {
       else if (e.key === 'Escape') { tutup(); tombol.focus(); }
     });
     document.addEventListener('mousedown', function (e) {
-      if (!panel.hidden && !bungkus.contains(e.target)) tutup();
+      if (!panel.hidden && !bungkus.contains(e.target) && !panel.contains(e.target)) tutup();
     });
     sel.addEventListener('change', segarkan);
     segarkan();

@@ -2880,22 +2880,16 @@ html.gelap table tr:hover td {
 }
 
 .sc-panel {
-  position: absolute;
+  position: fixed;
   left: 0;
-  right: 0;
-  top: calc(100% + 4px);
-  z-index: 70;
+  top: 0;
+  z-index: 500;
   min-width: min(230px, 80vw);
   background: #fff;
   border: 1px solid var(--ta-garis-2);
   border-radius: 10px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
   overflow: hidden;
-}
-
-.sc-panel.sc-naik {
-  top: auto;
-  bottom: calc(100% + 4px);
 }
 
 .sc-cari {
