@@ -27,6 +27,7 @@ class AksesMenu
                 'impor'           => 'Impor Dokumen Perencana',
                 'analisa'         => 'Analisa Pekerjaan',
                 'acuan'           => 'Acuan AHSP Nasional',
+                'validasi-harga'  => 'Validasi Harga Satuan',
                 'bersih'          => 'Pembersihan Hasil Impor',
                 'rencana-belanja' => 'Rencana Belanja',
                 'rencana-mingguan' => 'Rencana Mingguan',
