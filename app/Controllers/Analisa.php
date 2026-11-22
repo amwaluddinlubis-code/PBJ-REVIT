@@ -12,13 +12,27 @@ class Analisa extends BaseController
     public function index()
     {
         $db = $this->db();
-        $daftar = $db->query(
+        $semua = $db->query(
             'SELECT a.*, (SELECT COUNT(*) FROM analisa_komponen k WHERE k.analisa_id = a.id AND k.is_deleted = 0) AS jml_komponen,
-                    (SELECT COUNT(*) FROM pekerjaan p WHERE p.kode_analisa = a.kode AND p.is_deleted = 0 AND p.gedung_id IN (SELECT id FROM gedung WHERE sekolah_id = a.sekolah_id)) AS dipakai
+                    (SELECT COUNT(*) FROM pekerjaan p WHERE p.kode_analisa = a.kode AND p.is_deleted = 0 AND p.gedung_id IN (SELECT id FROM gedung WHERE sekolah_id = a.sekolah_id)) AS dipakai,
+                    (SELECT COUNT(*) FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id WHERE p.kode_analisa = a.kode AND p.is_deleted = 0 AND g.sekolah_id = a.sekolah_id AND g.is_deleted = 0 AND g.didanai = 1) AS dipakai_didanai,
+                    (SELECT COUNT(*) FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id WHERE p.kode_analisa = a.kode AND p.is_deleted = 0 AND g.sekolah_id = a.sekolah_id AND g.is_deleted = 0 AND g.didanai = 0) AS dipakai_lain
              FROM analisa a WHERE a.sekolah_id = ? AND a.is_deleted = 0 ORDER BY a.kode',
             [$this->sid()]
         )->getResultArray();
-        return $this->tampil('analisa/index', ['daftar' => $daftar], 'Analisa Pekerjaan — Aplikasi PBJ Sekolah');
+        // Dua tab: analisa yang dipakai gedung didanai vs sisanya
+        // (hanya dipakai gedung tidak didanai, atau belum dipakai sama sekali).
+        $tab = (string) $this->request->getGet('tab') === 'lainnya' ? 'lainnya' : 'didanai';
+        $diDidanai = array_values(array_filter($semua, static fn ($a) => (int) $a['dipakai_didanai'] > 0));
+        $lainnya = array_values(array_filter($semua, static fn ($a) => (int) $a['dipakai_didanai'] === 0));
+        $belum = count(array_filter($semua, static fn ($a) => (float) ($a['harga_satuan'] ?? 0) <= 0));
+        return $this->tampil('analisa/index', [
+            'daftar' => $tab === 'didanai' ? $diDidanai : $lainnya,
+            'tab' => $tab,
+            'jml_didanai' => count($diDidanai),
+            'jml_lainnya' => count($lainnya),
+            'belum' => $belum,
+        ], 'Analisa Pekerjaan — Aplikasi PBJ Sekolah');
     }
 
     public function detail($id)
