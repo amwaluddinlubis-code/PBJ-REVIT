@@ -20,6 +20,26 @@ class Analisa extends BaseController
              FROM analisa a WHERE a.sekolah_id = ? AND a.is_deleted = 0 ORDER BY a.kode',
             [$this->sid()]
         )->getResultArray();
+        // Indeks cari backend untuk tabel daftar analisa: nama komponen
+        // dan nama bahan tertaut tiap analisa, agar kotak pencarian yang
+        // sudah ada di halaman (data-cari) bisa menemukan analisa dari
+        // nama bahan/komponennya — bukan hanya dari kode/nama analisa.
+        $petaCari = [];
+        foreach ($db->query(
+            'SELECT ak.analisa_id, ak.nama AS komponen, b.nama AS bahan_nama
+             FROM analisa_komponen ak
+             LEFT JOIN bahan b ON b.id = ak.bahan_id AND b.is_deleted = 0
+             WHERE ak.is_deleted = 0',
+        )->getResultArray() as $k) {
+            $petaCari[(int) $k['analisa_id']][(string) $k['komponen']] = true;
+            if (! empty($k['bahan_nama'])) {
+                $petaCari[(int) $k['analisa_id']][(string) $k['bahan_nama']] = true;
+            }
+        }
+        foreach ($semua as &$a) {
+            $a['cari_teks'] = isset($petaCari[(int) $a['id']]) ? implode(' ', array_keys($petaCari[(int) $a['id']])) : '';
+        }
+        unset($a);
         // Panel perbaikan (tarif 0 & beda satuan) mengikuti tab aktif:
         // tab didanai hanya memuat analisa yang dipakai gedung didanai.
         $tabPanel = (string) $this->request->getGet('tab') === 'lainnya' ? 'lainnya' : 'didanai';

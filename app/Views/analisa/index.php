@@ -63,7 +63,7 @@
   <div class="bungkus-tabel"><table class="satu-baris" data-cari data-paginasi="25">
     <tr><th>Kode</th><th>Nama Analisa</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Komponen</th><th class="angka">Dipakai di Pekerjaan</th><th>Aksi</th></tr>
     <?php foreach ($daftar as $a): ?>
-    <tr>
+    <tr<?= ! empty($a['cari_teks']) ? ' data-cari-teks="' . esc($a['cari_teks'], 'attr') . '"' : '' ?>>
       <td><strong><?= esc($a['kode']) ?></strong></td>
       <td class="potong" title="<?= esc($a['nama'] ?? '') ?>"><?= esc($a['nama'] ?? '') ?></td>
       <td><?= esc($a['satuan'] ?? '') ?></td>

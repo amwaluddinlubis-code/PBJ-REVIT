@@ -102,7 +102,15 @@ window.inisiasiPaginasi = function (akar) {
     wadahBaris.appendChild(barisKosong);
 
     function cocok(tr) {
-      return kata === '' || tr.textContent.toLowerCase().includes(kata);
+      if (kata === '') return true;
+      if (tr.textContent.toLowerCase().includes(kata)) return true;
+      // Indeks cari tambahan dari backend (atribut data-cari-teks pada
+      // baris): teks yang tidak tampil di sel — mis. nama komponen/bahan
+      // di balik satu baris analisa — tetap bisa ditemukan pencarian,
+      // tanpa mencemari pengurutan kolom dan ekspor CSV yang membaca
+      // textContent sel.
+      var ekstra = tr.getAttribute('data-cari-teks');
+      return ekstra !== null && ekstra.toLowerCase().includes(kata);
     }
 
     // Kotak pencarian langsung (bila tabel bertanda data-cari).
