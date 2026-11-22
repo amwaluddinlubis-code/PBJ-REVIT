@@ -37,7 +37,7 @@
       <?php endforeach; ?>
     </table>
     <div id="penanda-lewati"></div>
-    <p class="kecil-teks" style="margin:10px 0 0">Tombol <b>Hapus</b> membuang baris dari daftar — sheet-nya dianggap <b>Dilewati</b> (tidak diimpor, data lama yang sudah ada tidak berubah). Baris yang terhapus masih bisa dikembalikan sebelum impor dijalankan.</p>
+    <p class="kecil-teks" style="margin:10px 0 0">Tombol <b>Hapus</b> membuang baris dari daftar — sheet-nya dianggap <b>Dilewati</b> (tidak diimpor, data lama yang sudah ada tidak berubah). Baris yang terhapus berpindah ke <b>bagian bawah daftar</b> dan masih bisa dikembalikan sebelum impor dijalankan.</p>
     <div class="aksi" style="justify-content:flex-start;gap:10px;margin-top:14px">
       <button type="submit">Impor Sekarang</button>
       <button type="submit" class="tombol abu" formaction="<?= base_url('impor/batal') ?>">Batal — Jangan Impor</button>
@@ -69,7 +69,10 @@ document.querySelectorAll('select[data-baris]').forEach(function (sel) {
       var tr = btnHapus.closest('tr');
       var nama = tr.querySelector('input[type="hidden"]').value;
       var sel = tr.querySelector('select[name^="tujuan"]');
-      if (sel) sel.value = 'lewati';
+      if (sel) {
+        tr.dataset.tujuanAsal = sel.value;
+        sel.value = 'lewati';
+      }
       tr.querySelectorAll('input, select').forEach(function (el) { el.disabled = true; });
       tr.style.display = 'none';
       var ph = document.createElement('tr');
@@ -77,7 +80,7 @@ document.querySelectorAll('select[data-baris]').forEach(function (sel) {
       ph.dataset.placeholder = i;
       ph.innerHTML = '<td colspan="6">Sheet <b></b> dihapus dari daftar — akan dilewati. <button type="button" class="btn-kembalikan" data-kembalikan="' + i + '">Kembalikan</button></td>';
       ph.querySelector('b').textContent = nama;
-      tr.after(ph);
+      tr.parentNode.appendChild(ph); // baris terhapus berkumpul di bagian bawah tabel
       var mk = document.createElement('span');
       mk.dataset.penanda = i;
       mk.innerHTML = '<input type="hidden" name="sheet[' + i + ']" value="">' +
@@ -91,14 +94,20 @@ document.querySelectorAll('select[data-baris]').forEach(function (sel) {
       var penanda = wadah.querySelector('[data-penanda="' + j + '"]');
       if (penanda) penanda.remove();
       var placeholder = form.querySelector('tr[data-placeholder="' + j + '"]');
-      var baris = placeholder ? placeholder.previousElementSibling : null;
       if (placeholder) placeholder.remove();
+      var tombolHapus = form.querySelector('[data-hapus="' + j + '"]');
+      var baris = tombolHapus ? tombolHapus.closest('tr') : null;
       if (baris) {
         baris.style.display = '';
         var sel2 = baris.querySelector('select[name^="tujuan"]');
+        if (sel2 && baris.dataset.tujuanAsal) sel2.value = baris.dataset.tujuanAsal;
         baris.querySelectorAll('input, select').forEach(function (el) { el.disabled = false; });
         var inp = baris.querySelector('input[data-nama]');
         if (inp && sel2) inp.disabled = sel2.value !== 'gedung';
+        // kembalikan ke akhir daftar aktif, sebelum baris-baris terhapus
+        var phLain = form.querySelector('tr.baris-terhapus');
+        if (phLain) phLain.before(baris);
+        else baris.parentNode.appendChild(baris);
       }
     }
   });
