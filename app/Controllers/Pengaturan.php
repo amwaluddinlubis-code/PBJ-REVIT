@@ -50,6 +50,56 @@ class Pengaturan extends BaseController
         return 'v1';
     }
 
+    /** Matriks akses menu per peran (khusus admin). */
+    public function aksesMenu()
+    {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $peranList = array_values(array_filter(\App\Libraries\AksesMenu::PERAN, static fn ($p) => $p !== 'admin'));
+        $peta = [];
+        foreach ($peranList as $peran) {
+            $peta[$peran] = \App\Libraries\AksesMenu::petaUntukPeran($this->db(), $peran);
+        }
+        return $this->tampil('pengaturan/akses_menu', [
+            'katalog'   => \App\Libraries\AksesMenu::katalog(),
+            'peranList' => $peranList,
+            'peta'      => $peta,
+        ], 'Akses Menu — Aplikasi PBJ Sekolah');
+    }
+
+    /** Simpan matriks akses menu, atau kembalikan ke bawaan (semua boleh). */
+    public function aksesMenuSimpan()
+    {
+        if ($d = $this->penjagaPeran([])) {
+            return $d;
+        }
+        $db = $this->db();
+        $peranList = array_values(array_filter(\App\Libraries\AksesMenu::PERAN, static fn ($p) => $p !== 'admin'));
+        $db->transStart();
+        if ($this->request->getPost('atur_ulang') !== null) {
+            $db->table('akses_menu')->whereIn('peran', $peranList)->delete();
+            $db->transComplete();
+            $this->catatAudit('akses_menu', null, 'atur-ulang', 'Akses menu dikembalikan ke bawaan (semua peran boleh semua menu katalog).');
+            return redirect()->to('pengaturan/akses-menu')->with('sukses', 'Akses menu dikembalikan ke bawaan.');
+        }
+        $isian = (array) $this->request->getPost('akses');
+        $sekarang = date('Y-m-d H:i:s');
+        foreach ($peranList as $peran) {
+            $db->table('akses_menu')->where('peran', $peran)->delete();
+            foreach (\App\Libraries\AksesMenu::semuaKunci() as $menu) {
+                $db->table('akses_menu')->insert([
+                    'peran' => $peran, 'menu' => $menu,
+                    'boleh' => isset($isian[$peran][$menu]) ? 1 : 0,
+                    'created_at' => $sekarang, 'updated_at' => $sekarang,
+                ]);
+            }
+        }
+        $db->transComplete();
+        $this->catatAudit('akses_menu', null, 'ubah', 'Matriks akses menu per peran diperbarui.');
+        return redirect()->to('pengaturan/akses-menu')->with('sukses', 'Pengaturan akses menu disimpan.');
+    }
+
     public function simpan()
     {
         $kolom = ['nama_sekolah', 'npsn', 'alamat', 'desa', 'kecamatan', 'kabupaten', 'provinsi', 'email', 'kode_pos',

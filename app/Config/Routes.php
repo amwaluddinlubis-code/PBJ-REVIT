@@ -126,6 +126,8 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('pengaturan', 'Pengaturan::index');
     $routes->post('pengaturan/simpan', 'Pengaturan::simpan');
     $routes->post('pengaturan/login-tampilan', 'Pengaturan::loginTampilan');
+    $routes->get('pengaturan/akses-menu', 'Pengaturan::aksesMenu');
+    $routes->post('pengaturan/akses-menu', 'Pengaturan::aksesMenuSimpan');
     $routes->post('pengaturan/penyedia-tambah', 'Pengaturan::penyediaTambah');
     $routes->post('pengaturan/penyedia-ubah/(:num)', 'Pengaturan::penyediaUbah/$1');
     $routes->post('pengaturan/penyedia-hapus/(:num)', 'Pengaturan::penyediaHapus/$1');

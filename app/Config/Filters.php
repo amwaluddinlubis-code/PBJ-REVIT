@@ -35,6 +35,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'auth'          => \App\Filters\AuthFilter::class,
+        'aksesmenu'     => \App\Filters\AksesMenuFilter::class,
     ];
 
     /**
@@ -75,6 +76,7 @@ class Filters extends BaseFilters
         'before' => [
             // 'honeypot',
             'csrf', // Fase 5: lindungi semua POST (token per sesi, lihat Security::regenerate)
+            'aksesmenu', // Penegak akses menu per peran (lolos untuk tamu & admin)
             // 'invalidchars',
         ],
         'after' => [

@@ -109,6 +109,7 @@ abstract class BaseController extends Controller
         $data['q']            = $data['q'] ?? (string) ($this->request->getGet('q') ?? '');
         $data['judul']        = $judul;
         $data['pengguna']     = $this->pengguna;
+        $data['aksesMenu']    = $this->pengguna ? \App\Libraries\AksesMenu::petaUntukPeran($this->db(), (string) ($this->pengguna['peran'] ?? '')) : [];
         $data['sekolahAktif'] = $this->sekolahAktif();
         $data['semuaSekolah'] = $this->semuaSekolah();
         $data['semuaGedung']  = $this->semuaGedung();
