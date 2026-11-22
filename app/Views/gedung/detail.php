@@ -17,15 +17,28 @@ $tabAktif = $tab ?? 'boq';
 </div>
 
 <?php if ($tabAktif === 'boq'): ?>
-<div class="panel">
+<div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-pekerjaan','ids-pekerjaan')">
   <h2>BOQ — Daftar Pekerjaan</h2>
-  <table data-paginasi="25">
-    <tr><th>Pekerjaan</th><th>Kode</th><th class="angka">Volume</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah</th><th style="width:210px">Ubah Volume / Hapus</th></tr>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <form id="form-bulk-pekerjaan" method="post" action="<?= base_url('gedung/pekerjaan/hapus-massal') ?>" data-konfirmasi-judul="Hapus Pekerjaan Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <input type="hidden" name="gedung_id" value="<?= (int) $g['id'] ?>">
+      <span id="ids-pekerjaan"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} pekerjaan terpilih dari BOQ gedung ini? Realisasi pekerjaan itu ikut terhapus dan nilai BOQ dihitung ulang.')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <form method="post" action="<?= base_url('gedung/' . $g['id'] . '/kosongkan-boq') ?>" data-konfirmasi="Kosongkan BOQ gedung ini? Semua <?= count($pekerjaan) ?> pekerjaan beserta realisasinya akan dihapus (hapus lunak) dan nilai BOQ menjadi nol." data-konfirmasi-judul="Kosongkan BOQ Gedung" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit" class="bahaya">Kosongkan BOQ</button>
+    </form>
+  </div>
+  <table data-paginasi="25" data-cari="Cari pekerjaan…">
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua pekerjaan" @change="pilihSemua($event)"></th><th>Pekerjaan</th><th>Kode</th><th class="angka">Volume</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah</th><th style="width:210px">Ubah Volume / Hapus</th></tr>
     <?php $babLalu = null; $total = 0; foreach ($pekerjaan as $p): $total += (float) $p['jumlah']; ?>
       <?php if ($p['bab'] !== $babLalu): $babLalu = $p['bab']; ?>
-      <tr><td colspan="7" style="font-weight:600;background:#fcfcfd"><?= esc($babLalu ?: '—') ?></td></tr>
+      <tr><td colspan="8" style="font-weight:600;background:#fcfcfd"><?= esc($babLalu ?: '—') ?></td></tr>
       <?php endif; ?>
       <tr>
+        <td><input type="checkbox" data-pilih value="<?= (int) $p['id'] ?>" x-model="terpilih"></td>
         <td><?= esc($p['nama']) ?></td>
         <td><?= $p['kode_analisa'] ? '<span class="lencana abu">' . esc($p['kode_analisa']) . '</span>' : '—' ?></td>
         <td class="angka"><?= rtrim(rtrim(number_format((float) $p['volume'], 3, ',', '.'), '0'), ',') ?></td>
@@ -44,7 +57,7 @@ $tabAktif = $tab ?? 'boq';
         </td>
       </tr>
     <?php endforeach; ?>
-    <tr class="total"><td colspan="5">Grand Total BOQ</td><td class="angka"><?= number_format($total, 0, ',', '.') ?></td><td></td></tr>
+    <tr class="total"><td colspan="6">Grand Total BOQ</td><td class="angka"><?= number_format($total, 0, ',', '.') ?></td><td></td></tr>
   </table>
   <p class="kecil-teks">Mengubah volume pekerjaan menghitung ulang kebutuhan bahan &amp; upah gedung ini secara otomatis.</p>
 </div>

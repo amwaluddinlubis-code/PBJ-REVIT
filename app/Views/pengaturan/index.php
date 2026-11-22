@@ -80,12 +80,23 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
   </div>
 </form>
 
-<div class="panel">
+<div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-penyedia','ids-penyedia')">
   <h2>Master Penyedia</h2>
-  <table>
-    <tr><th>Nama</th><th>Alamat</th><th>Penandatangan</th><th></th></tr>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <form id="form-bulk-penyedia" method="post" action="<?= base_url('pengaturan/penyedia-hapus-massal') ?>" data-konfirmasi-judul="Hapus Penyedia Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <span id="ids-penyedia"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} penyedia terpilih? Penyedia yang dipakai SPK akan dilewati.')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <form method="post" action="<?= base_url('pengaturan/penyedia-kosongkan') ?>" data-konfirmasi="Kosongkan master penyedia sekolah ini? Semua penyedia aktif akan dihapus (hapus lunak), kecuali yang dipakai SPK." data-konfirmasi-judul="Kosongkan Master Penyedia" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit" class="bahaya">Kosongkan Master Penyedia</button>
+    </form>
+  </div>
+  <table data-cari="Cari penyedia…">
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua penyedia" @change="pilihSemua($event)"></th><th>Nama</th><th>Alamat</th><th>Penandatangan</th><th></th></tr>
     <?php foreach ($penyedia as $p): ?>
-    <tr><td><?= esc($p['nama']) ?></td><td><?= esc($p['alamat'] ?? '') ?></td><td><?= esc($p['ttd_nama'] ?? '') ?></td>
+    <tr><td><input type="checkbox" data-pilih value="<?= (int) $p['id'] ?>" x-model="terpilih"></td><td><?= esc($p['nama']) ?></td><td><?= esc($p['alamat'] ?? '') ?></td><td><?= esc($p['ttd_nama'] ?? '') ?></td>
       <td style="white-space:nowrap">
         <button class="kecil" type="button" data-ubah-penyedia data-id="<?= (int) $p['id'] ?>" data-nama="<?= esc($p['nama'], 'attr') ?>" data-alamat="<?= esc($p['alamat'] ?? '', 'attr') ?>" data-ttd="<?= esc($p['ttd_nama'] ?? '', 'attr') ?>">Ubah</button>
         <form class="inline" method="post" action="<?= base_url('pengaturan/penyedia-hapus/' . $p['id']) ?>" data-konfirmasi="Hapus penyedia ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>

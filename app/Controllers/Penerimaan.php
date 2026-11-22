@@ -61,6 +61,36 @@ class Penerimaan extends BaseController
         return redirect()->to('/penerimaan-dana')->with('sukses', 'Penerimaan tahap ' . $tahap . ' dicatat dan masuk Buku Kas.');
     }
 
+    /** Syarat baris penerimaan pada tabel kas bersama. */
+    private function syaratPenerimaan(): array
+    {
+        return ['sekolah_id' => $this->sid(), 'kategori' => 'penerimaan', 'jenis' => 'masuk', 'is_deleted' => 0];
+    }
+
+    public function hapusMassal()
+    {
+        $n = 0;
+        foreach ($this->idsTerpilih() as $id) {
+            $ada = $this->db()->table('kas_transaksi')->where(['id' => $id] + $this->syaratPenerimaan())->countAllResults();
+            if ($ada > 0) {
+                $this->hapusLunak('kas_transaksi', ['id' => $id, 'sekolah_id' => $this->sid()]);
+                $n++;
+            }
+        }
+        return redirect()->to('/penerimaan-dana')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? $n . ' catatan penerimaan terpilih dihapus (ikut hilang dari Buku Kas).' : 'Tidak ada catatan yang diproses.');
+    }
+
+    public function kosongkan()
+    {
+        $ids = array_column($this->db()->table('kas_transaksi')->select('id')
+            ->where($this->syaratPenerimaan())->get()->getResultArray(), 'id');
+        foreach ($ids as $id) {
+            $this->hapusLunak('kas_transaksi', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        }
+        return redirect()->to('/penerimaan-dana')->with('sukses', 'Catatan penerimaan dikosongkan: ' . count($ids) . ' catatan dihapus (ikut hilang dari Buku Kas).');
+    }
+
     /** Cetak kuitansi bukti penerimaan uang (format dokumen Juknis). */
     public function cetakKuitansi($id)
     {

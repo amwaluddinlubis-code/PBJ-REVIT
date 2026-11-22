@@ -36,6 +36,8 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('spk/ubah/(:num)', 'Spk::ubah/$1');
     $routes->post('spk/perbarui/(:num)', 'Spk::perbarui/$1');
     $routes->post('spk/hapus/(:num)', 'Spk::hapus/$1');
+    $routes->post('spk/hapus-massal', 'Spk::hapusMassal');
+    $routes->post('spk/kosongkan', 'Spk::kosongkan');
     $routes->get('spk/detail/(:num)', 'Spk::detail/$1');
     $routes->post('spk/ceklis/(:num)', 'Spk::ceklis/$1');
     $routes->post('spk/detail-tambah/(:num)', 'Spk::detailTambah/$1');
@@ -48,8 +50,12 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     // Survei & Negosiasi
     $routes->get('survei', 'Survei::index');
     $routes->post('survei/simpan', 'Survei::simpan');
+    $routes->post('survei/hapus-massal', 'Survei::hapusMassal');
+    $routes->post('survei/kosongkan', 'Survei::kosongkan');
     $routes->get('negosiasi', 'Negosiasi::index');
     $routes->post('negosiasi/simpan', 'Negosiasi::simpan');
+    $routes->post('negosiasi/hapus-massal', 'Negosiasi::hapusMassal');
+    $routes->post('negosiasi/kosongkan', 'Negosiasi::kosongkan');
 
     // BAP / BAST / cetak
     $routes->get('dokumen', 'Dokumen::index');
@@ -72,6 +78,8 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('invoice/ubah/(:num)', 'Invoice::ubah/$1');
     $routes->post('invoice/perbarui/(:num)', 'Invoice::perbarui/$1');
     $routes->post('invoice/hapus/(:num)', 'Invoice::hapus/$1');
+    $routes->post('invoice/hapus-massal', 'Invoice::hapusMassal');
+    $routes->post('invoice/kosongkan', 'Invoice::kosongkan');
     $routes->get('invoice/cetak/(:num)', 'Invoice::cetak/$1');
     $routes->get('invoice/jurnal', 'Invoice::jurnal');
     $routes->post('invoice/jurnal-tambah', 'Invoice::jurnalTambah');
@@ -81,6 +89,8 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('material', 'Material::index');
     $routes->post('material/simpan', 'Material::simpan');
     $routes->post('material/hapus/(:num)', 'Material::hapus/$1');
+    $routes->post('material/hapus-massal', 'Material::hapusMassal');
+    $routes->post('material/kosongkan', 'Material::kosongkan');
     $routes->get('sisa-bahan', 'Material::sisa');
 
     // Laporan & ekspor (Fase 3)
@@ -104,6 +114,8 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('pengaturan/penyedia-tambah', 'Pengaturan::penyediaTambah');
     $routes->post('pengaturan/penyedia-ubah/(:num)', 'Pengaturan::penyediaUbah/$1');
     $routes->post('pengaturan/penyedia-hapus/(:num)', 'Pengaturan::penyediaHapus/$1');
+$routes->post('pengaturan/penyedia-hapus-massal', 'Pengaturan::penyediaHapusMassal');
+$routes->post('pengaturan/penyedia-kosongkan', 'Pengaturan::penyediaKosongkan');
 });
 
 // Modul Analisa Perencana
@@ -113,6 +125,10 @@ $routes->get('impor/petakan', 'Impor::petakan', ['filter' => 'auth']);
 $routes->post('impor/eksekusi', 'Impor::eksekusi', ['filter' => 'auth']);
 $routes->post('impor/batal', 'Impor::batal', ['filter' => 'auth']);
 $routes->get('gedung', 'Gedung::index', ['filter' => 'auth']);
+$routes->post('gedung/hapus-massal', 'Gedung::hapusMassal', ['filter' => 'auth']);
+$routes->post('gedung/kosongkan', 'Gedung::kosongkan', ['filter' => 'auth']);
+$routes->post('gedung/pekerjaan/hapus-massal', 'Gedung::hapusPekerjaanMassal', ['filter' => 'auth']);
+$routes->post('gedung/(:num)/kosongkan-boq', 'Gedung::kosongkanPekerjaan/$1', ['filter' => 'auth']);
 $routes->post('gedung/simpan', 'Gedung::simpan', ['filter' => 'auth']);
 $routes->post('gedung/(:num)/perbarui', 'Gedung::perbarui/$1', ['filter' => 'auth']);
 $routes->post('gedung/(:num)/hapus', 'Gedung::hapus/$1', ['filter' => 'auth']);
@@ -128,6 +144,8 @@ $routes->get('rencana-belanja', 'Rencana::index', ['filter' => 'auth']);
 $routes->get('biaya-non-gedung', 'BiayaLain::index', ['filter' => 'auth']);
 $routes->post('biaya-non-gedung/simpan', 'BiayaLain::simpan', ['filter' => 'auth']);
 $routes->post('biaya-non-gedung/hapus/(:num)', 'BiayaLain::hapus/$1', ['filter' => 'auth']);
+$routes->post('biaya-non-gedung/hapus-massal', 'BiayaLain::hapusMassal', ['filter' => 'auth']);
+$routes->post('biaya-non-gedung/kosongkan', 'BiayaLain::kosongkan', ['filter' => 'auth']);
 $routes->post('rencana-belanja/buat-spk', 'Rencana::buatSpk', ['filter' => 'auth']);
 $routes->get('upah', 'Upah::index', ['filter' => 'auth']);
 $routes->get('upah/cetak-daftar', 'Upah::cetakDaftar', ['filter' => 'auth']);
@@ -135,12 +153,18 @@ $routes->post('upah/simpan', 'Upah::simpan', ['filter' => 'auth']);
 $routes->post('upah/master', 'Upah::masterSimpan', ['filter' => 'auth']);
 $routes->post('upah/tarif/(:num)', 'Upah::tarif/$1', ['filter' => 'auth']);
 $routes->post('upah/(:num)/hapus', 'Upah::hapus/$1', ['filter' => 'auth']);
+$routes->post('upah/hapus-massal', 'Upah::hapusMassal', ['filter' => 'auth']);
+$routes->post('upah/kosongkan', 'Upah::kosongkan', ['filter' => 'auth']);
 $routes->get('penerimaan-dana', 'Penerimaan::index', ['filter' => 'auth']);
 $routes->post('penerimaan-dana/simpan', 'Penerimaan::simpan', ['filter' => 'auth']);
+$routes->post('penerimaan-dana/hapus-massal', 'Penerimaan::hapusMassal', ['filter' => 'auth']);
+$routes->post('penerimaan-dana/kosongkan', 'Penerimaan::kosongkan', ['filter' => 'auth']);
 $routes->get('penerimaan-dana/kuitansi/(:num)', 'Penerimaan::cetakKuitansi/$1', ['filter' => 'auth']);
 $routes->get('buku-kas', 'BukuKas::index', ['filter' => 'auth']);
 $routes->post('buku-kas/simpan', 'BukuKas::simpan', ['filter' => 'auth']);
 $routes->post('buku-kas/hapus/(:num)', 'BukuKas::hapus/$1', ['filter' => 'auth']);
+$routes->post('buku-kas/hapus-massal', 'BukuKas::hapusMassal', ['filter' => 'auth']);
+$routes->post('buku-kas/kosongkan', 'BukuKas::kosongkan', ['filter' => 'auth']);
 $routes->get('buku-kas/cetak', 'BukuKas::cetak', ['filter' => 'auth']);
 $routes->get('bersih', 'Bersih::index', ['filter' => 'auth']);
 $routes->post('bersih/langkah2', 'Bersih::langkah2', ['filter' => 'auth']);
@@ -153,13 +177,19 @@ $routes->get('kurva-s', 'Kurva::index', ['filter' => 'auth']);
 $routes->get('revisi-pekerjaan', 'Revisi::index', ['filter' => 'auth']);
 $routes->post('revisi-pekerjaan/simpan', 'Revisi::simpan', ['filter' => 'auth']);
 $routes->post('revisi-pekerjaan/hapus/(:num)', 'Revisi::hapus/$1', ['filter' => 'auth']);
+$routes->post('revisi-pekerjaan/hapus-massal', 'Revisi::hapusMassal', ['filter' => 'auth']);
+$routes->post('revisi-pekerjaan/kosongkan', 'Revisi::kosongkan', ['filter' => 'auth']);
 $routes->get('revisi-pekerjaan/cetak/(:num)', 'Revisi::cetak/$1', ['filter' => 'auth']);
 $routes->get('bukti-setor', 'Setor::index', ['filter' => 'auth']);
 $routes->post('bukti-setor/simpan', 'Setor::simpan', ['filter' => 'auth']);
 $routes->post('bukti-setor/hapus/(:num)', 'Setor::hapus/$1', ['filter' => 'auth']);
+$routes->post('bukti-setor/hapus-massal', 'Setor::hapusMassal', ['filter' => 'auth']);
+$routes->post('bukti-setor/kosongkan', 'Setor::kosongkan', ['filter' => 'auth']);
 $routes->get('foto-progres', 'Foto::index', ['filter' => 'auth']);
 $routes->post('foto-progres/unggah', 'Foto::unggah', ['filter' => 'auth']);
 $routes->post('foto-progres/hapus/(:num)', 'Foto::hapus/$1', ['filter' => 'auth']);
+$routes->post('foto-progres/hapus-massal', 'Foto::hapusMassal', ['filter' => 'auth']);
+$routes->post('foto-progres/kosongkan', 'Foto::kosongkan', ['filter' => 'auth']);
 $routes->get('laporan-kemajuan', 'Kemajuan::index', ['filter' => 'auth']);
 $routes->get('laporan-kemajuan/cetak-kemajuan', 'Kemajuan::cetakKemajuan', ['filter' => 'auth']);
 $routes->get('laporan-kemajuan/cetak-akhir', 'Kemajuan::cetakAkhir', ['filter' => 'auth']);
@@ -173,6 +203,7 @@ $routes->get('pengguna', 'Pengguna::index', ['filter' => 'auth']);
 $routes->post('pengguna/simpan', 'Pengguna::simpan', ['filter' => 'auth']);
 $routes->post('pengguna/(:num)/ubah', 'Pengguna::ubah/$1', ['filter' => 'auth']);
 $routes->post('pengguna/(:num)/hapus', 'Pengguna::hapus/$1', ['filter' => 'auth']);
+$routes->post('pengguna/hapus-massal', 'Pengguna::hapusMassal', ['filter' => 'auth']);
 $routes->get('profil', 'Pengguna::profil', ['filter' => 'auth']);
 $routes->post('profil/simpan', 'Pengguna::profilSimpan', ['filter' => 'auth']);
 $routes->post('profil/sandi', 'Pengguna::sandiSimpan', ['filter' => 'auth']);

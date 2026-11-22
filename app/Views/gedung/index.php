@@ -1,9 +1,21 @@
-<div class="panel">
+<div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-gedung','ids-gedung')">
   <h2>Daftar Gedung — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></h2>
-  <table data-paginasi="25">
-    <tr><th>Gedung</th><th class="angka">Pekerjaan</th><th class="angka">Nilai BOQ</th><th class="angka">Realisasi</th><th>Fisik</th><th>Sumber Sheet</th><th>Aksi</th></tr>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <form id="form-bulk-gedung" method="post" action="<?= base_url('gedung/hapus-massal') ?>" data-konfirmasi-judul="Hapus Gedung Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <span id="ids-gedung"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} gedung terpilih beserta seluruh BOQ dan realisasinya?')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <form method="post" action="<?= base_url('gedung/kosongkan') ?>" data-konfirmasi="Kosongkan daftar gedung sekolah ini? Semua <?= count($gedung) ?> gedung aktif beserta BOQ dan realisasinya akan dihapus (hapus lunak)." data-konfirmasi-judul="Kosongkan Daftar Gedung" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit" class="bahaya">Kosongkan Daftar Gedung</button>
+    </form>
+  </div>
+  <table data-paginasi="25" data-cari="Cari gedung…">
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua gedung" @change="pilihSemua($event)"></th><th>Gedung</th><th class="angka">Pekerjaan</th><th class="angka">Nilai BOQ</th><th class="angka">Realisasi</th><th>Fisik</th><th>Sumber Sheet</th><th>Aksi</th></tr>
     <?php foreach ($gedung as $g): ?>
     <tr>
+      <td><input type="checkbox" data-pilih value="<?= (int) $g['id'] ?>" x-model="terpilih"></td>
       <td><b><?= esc($g['nama']) ?></b><?= $g['keterangan'] ? '<br><span class="kecil-teks">' . esc($g['keterangan']) . '</span>' : '' ?></td>
       <td class="angka"><?= (int) $g['jml_pekerjaan'] ?></td>
       <td class="angka">Rp <?= number_format((float) $g['nilai_boq'], 0, ',', '.') ?></td>
@@ -18,7 +30,7 @@
       </td>
     </tr>
     <?php endforeach; ?>
-    <?php if ($gedung === []): ?><tr><td colspan="7">Belum ada gedung. Impor dokumen perencana atau tambah manual di bawah.</td></tr><?php endif; ?>
+    <?php if ($gedung === []): ?><tr><td colspan="8">Belum ada gedung. Impor dokumen perencana atau tambah manual di bawah.</td></tr><?php endif; ?>
   </table>
 </div>
 <div class="panel">

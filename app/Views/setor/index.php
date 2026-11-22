@@ -51,12 +51,24 @@
 </div>
 
 <?php if ($setor !== []): ?>
-<div class="panel">
+<div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-setor','ids-setor')">
   <h2>Riwayat Bukti Setor</h2>
-  <table data-paginasi="10">
-    <tr><th>Tanggal</th><th>Jenis</th><th>Masa</th><th class="angka">Jumlah</th><th>Kode Billing</th><th>NTPN</th><th></th></tr>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <form id="form-bulk-setor" method="post" action="<?= base_url('bukti-setor/hapus-massal') ?>" data-konfirmasi-judul="Hapus Bukti Setor Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <span id="ids-setor"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} bukti setor terpilih?')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <form method="post" action="<?= base_url('bukti-setor/kosongkan') ?>" data-konfirmasi="Kosongkan riwayat bukti setor sekolah ini? Semua <?= count($setor) ?> catatan akan dihapus (hapus lunak)." data-konfirmasi-judul="Kosongkan Bukti Setor" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit" class="bahaya">Kosongkan Bukti Setor</button>
+    </form>
+  </div>
+  <table data-paginasi="10" data-cari="Cari bukti setor…">
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua bukti setor" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Jenis</th><th>Masa</th><th class="angka">Jumlah</th><th>Kode Billing</th><th>NTPN</th><th></th></tr>
     <?php foreach ($setor as $s): ?>
     <tr>
+      <td><input type="checkbox" data-pilih value="<?= (int) $s['id'] ?>" x-model="terpilih"></td>
       <td><?= esc($s['tanggal_setor']) ?></td>
       <td><?= esc($label[$s['jenis']] ?? $s['jenis']) ?></td>
       <td><?= esc($s['masa'] ?? '—') ?></td>

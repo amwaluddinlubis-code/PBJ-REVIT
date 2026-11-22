@@ -184,6 +184,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
 </div>
 <script defer src="<?= base_url('assets/alpine.min.js') ?>"></script>
 <script src="<?= base_url('assets/paginasi.js') ?>"></script>
+<script src="<?= base_url('assets/bulk.js') ?>"></script>
 <script>
 // Toggle menu samping gaya TailAdmin — pilihan tersimpan di peramban.
 // Desktop: tombol sembunyikan/tunjukkan sidebar (sebagaimana awalnya).

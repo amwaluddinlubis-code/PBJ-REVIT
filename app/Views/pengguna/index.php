@@ -16,12 +16,21 @@
   </form>
 </div>
 
-<div class="panel">
+<div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-pengguna','ids-pengguna')">
   <h2>Daftar Pengguna</h2>
-  <table data-paginasi="25">
-    <tr><th>Username</th><th>Nama</th><th>Peran</th><th>Terdaftar</th><th>Aksi</th></tr>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <form id="form-bulk-pengguna" method="post" action="<?= base_url('pengguna/hapus-massal') ?>" data-konfirmasi-judul="Hapus Pengguna Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <span id="ids-pengguna"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} pengguna terpilih? Akun Anda sendiri dan admin terakhir tidak dapat dihapus dan akan dilewati.')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <span class="kecil-teks">Tidak ada tombol Kosongkan di modul ini — daftar pengguna tidak boleh dikosongkan.</span>
+  </div>
+  <table data-paginasi="25" data-cari="Cari pengguna…">
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua pengguna" @change="pilihSemua($event)"></th><th>Username</th><th>Nama</th><th>Peran</th><th>Terdaftar</th><th>Aksi</th></tr>
     <?php foreach ($daftar as $u): ?>
     <tr>
+      <td><input type="checkbox" data-pilih value="<?= (int) $u['id'] ?>" x-model="terpilih"></td>
       <td><b><?= esc($u['username']) ?></b><?= (int) $u['id'] === $saya ? ' <span class="lencana biru">Anda</span>' : '' ?></td>
       <td><?= esc($u['nama']) ?></td>
       <td><span class="lencana <?= $u['peran'] === 'admin' ? 'biru' : 'abu' ?>"><?= esc(ucfirst($u['peran'])) ?></span></td>

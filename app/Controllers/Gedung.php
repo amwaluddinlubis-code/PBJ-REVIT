@@ -66,6 +66,44 @@ class Gedung extends BaseController
         return redirect()->to('/gedung')->with('sukses', 'Gedung "' . $g['nama'] . '" dihapus beserta BOQ-nya.');
     }
 
+    /** Inti penghapusan satu gedung (bertingkat) untuk dipakai massal. */
+    private function hapusSatuGedung(int $id): bool
+    {
+        if ($this->ambilGedung($id) === null) {
+            return false;
+        }
+        $db = $this->db();
+        $this->hapusLunak('realisasi', static fn ($b) => $b->whereIn('pekerjaan_id', $db->table('pekerjaan')->select('id')->where('gedung_id', $id)));
+        $this->hapusLunak('pekerjaan', ['gedung_id' => $id]);
+        $this->hapusLunak('gedung', ['id' => $id]);
+        return true;
+    }
+
+    public function hapusMassal()
+    {
+        $n = 0;
+        foreach ($this->idsTerpilih() as $id) {
+            if ($this->hapusSatuGedung($id)) {
+                $n++;
+            }
+        }
+        return redirect()->to('/gedung')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? $n . ' gedung terpilih dihapus beserta BOQ dan realisasinya.' : 'Tidak ada gedung yang diproses.');
+    }
+
+    public function kosongkan()
+    {
+        $ids = array_column($this->db()->table('gedung')->select('id')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
+        $n = 0;
+        foreach ($ids as $id) {
+            if ($this->hapusSatuGedung((int) $id)) {
+                $n++;
+            }
+        }
+        return redirect()->to('/gedung')->with('sukses', 'Daftar gedung dikosongkan: ' . $n . ' gedung dihapus beserta BOQ dan realisasinya.');
+    }
+
     public function detail($id, $tab = 'boq')
     {
         $g = $this->ambilGedung((int) $id);
@@ -169,6 +207,45 @@ class Gedung extends BaseController
         $this->hapusLunak('pekerjaan', ['id' => (int) $pekerjaanId]);
         $this->segarkanNilaiBoq((int) $p['gedung_id']);
         return redirect()->to('/gedung/' . (int) $p['gedung_id'] . '/boq')->with('sukses', 'Pekerjaan dihapus.');
+    }
+
+    /** Hapus massal pekerjaan tercentang pada satu gedung. */
+    public function hapusPekerjaanMassal()
+    {
+        $gid = (int) $this->request->getPost('gedung_id');
+        if ($this->ambilGedung($gid) === null) {
+            return redirect()->to('/gedung')->with('galat', 'Gedung tidak ditemukan.');
+        }
+        $n = 0;
+        foreach ($this->idsTerpilih() as $pid) {
+            $p = $this->db()->table('pekerjaan')->where(['id' => $pid, 'gedung_id' => $gid, 'is_deleted' => 0])->get()->getRowArray();
+            if ($p === null) {
+                continue;
+            }
+            $this->hapusLunak('realisasi', ['pekerjaan_id' => $pid]);
+            $this->hapusLunak('pekerjaan', ['id' => $pid]);
+            $n++;
+        }
+        $this->segarkanNilaiBoq($gid);
+        return redirect()->to('/gedung/' . $gid . '/boq')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? $n . ' pekerjaan terpilih dihapus; nilai BOQ dihitung ulang.' : 'Tidak ada pekerjaan yang diproses.');
+    }
+
+    /** Kosongkan BOQ satu gedung (semua pekerjaan + realisasinya). */
+    public function kosongkanPekerjaan($gedungId)
+    {
+        $gid = (int) $gedungId;
+        if ($this->ambilGedung($gid) === null) {
+            return redirect()->to('/gedung')->with('galat', 'Gedung tidak ditemukan.');
+        }
+        $ids = array_column($this->db()->table('pekerjaan')->select('id')
+            ->where(['gedung_id' => $gid, 'is_deleted' => 0])->get()->getResultArray(), 'id');
+        foreach ($ids as $pid) {
+            $this->hapusLunak('realisasi', ['pekerjaan_id' => (int) $pid]);
+            $this->hapusLunak('pekerjaan', ['id' => (int) $pid]);
+        }
+        $this->segarkanNilaiBoq($gid);
+        return redirect()->to('/gedung/' . $gid . '/boq')->with('sukses', 'BOQ dikosongkan: ' . count($ids) . ' pekerjaan dihapus; nilai BOQ kini nol.');
     }
 
     /** Tautkan semua komponen bahan bernama sama (di sekolah ini) ke satu bahan master. */

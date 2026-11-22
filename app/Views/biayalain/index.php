@@ -7,6 +7,21 @@
   <p class="kecil-teks" style="margin-bottom:0">Total biaya non-gedung: <b><?= $rp($total) ?></b> · Total keseluruhan (BOQ + non-gedung): <b><?= $rp($verifikasi['total_semua']) ?></b> · Pagu: <b><?= $rp($verifikasi['pagu']) ?></b> · Selisih: <b><?= $rp($verifikasi['selisih']) ?></b></p>
 </div>
 
+<div data-bulk-akar x-data="komponenBulk('form-bulk-biaya','ids-biaya')">
+<div class="panel">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <form id="form-bulk-biaya" method="post" action="<?= base_url('biaya-non-gedung/hapus-massal') ?>" data-konfirmasi-judul="Hapus Baris Biaya Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <span id="ids-biaya"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} baris biaya terpilih?')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <form method="post" action="<?= base_url('biaya-non-gedung/kosongkan') ?>" data-konfirmasi="Kosongkan Biaya Non-Gedung sekolah ini? Semua baris aktif — termasuk baris manual — akan dihapus (hapus lunak). Baris sumber impor dapat diisi kembali lewat impor ulang dokumen perencana." data-konfirmasi-judul="Kosongkan Biaya Non-Gedung" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit" class="bahaya">Kosongkan Biaya Non-Gedung</button>
+    </form>
+  </div>
+</div>
+
 <div class="panel">
   <h2 id="judul-form">Tambah Baris Biaya</h2>
   <form method="post" action="<?= base_url('biaya-non-gedung/simpan') ?>" id="form-biaya">
@@ -64,10 +79,11 @@
 <?php foreach ($kelompok as $namaKelompok => $barisList): ?>
 <div class="panel">
   <h2><?= esc($namaKelompok) ?></h2>
-  <table>
-    <tr><th>Uraian</th><th class="angka">Volume</th><th class="angka">Periode</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah</th><th class="angka">Potongan Pajak</th><th class="angka">Bersih Diterima</th><th>Sumber</th><th>Aksi</th></tr>
+  <table data-cari="Cari baris biaya…">
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua baris biaya" @change="pilihSemua($event)"></th><th>Uraian</th><th class="angka">Volume</th><th class="angka">Periode</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah</th><th class="angka">Potongan Pajak</th><th class="angka">Bersih Diterima</th><th>Sumber</th><th>Aksi</th></tr>
     <?php $sub = 0; $subPot = 0; foreach ($barisList as $r): $sub += (float) $r['jumlah']; $subPot += (float) $r['potongan']; ?>
     <tr>
+      <td><input type="checkbox" data-pilih value="<?= (int) $r['id'] ?>" x-model="terpilih"></td>
       <td><b><?= esc($r['uraian']) ?></b><?php if (! empty($r['keterangan'])): ?><br><span class="kecil-teks"><?= esc($r['keterangan']) ?></span><?php endif; ?></td>
       <td class="angka"><?= $angka($r['volume']) ?> <?= esc($r['satuan'] ?? '') ?></td>
       <td class="angka"><?php if ($r['periode'] !== null): ?><?= $angka($r['periode']) ?> <?= esc($r['satuan_periode'] ?? '') ?><?php else: ?>—<?php endif; ?></td>
@@ -91,10 +107,11 @@
       </td>
     </tr>
     <?php endforeach; ?>
-    <tr><td colspan="4"><b>Subtotal <?= esc($namaKelompok) ?></b></td><td class="angka"><b><?= $rp($sub) ?></b></td><td class="angka"><b><?= $rp($subPot) ?></b></td><td class="angka"><b><?= $rp($sub - $subPot) ?></b></td><td colspan="2"></td></tr>
+    <tr><td colspan="5"><b>Subtotal <?= esc($namaKelompok) ?></b></td><td class="angka"><b><?= $rp($sub) ?></b></td><td class="angka"><b><?= $rp($subPot) ?></b></td><td class="angka"><b><?= $rp($sub - $subPot) ?></b></td><td colspan="2"></td></tr>
   </table>
 </div>
 <?php endforeach; ?>
+</div>
 
 <script>
 function isiForm(d) {

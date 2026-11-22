@@ -82,6 +82,38 @@ class Invoice extends BaseController
         return redirect()->to('invoice')->with('sukses', 'Invoice dihapus (jurnal pembayaran terkait ikut terhapus).');
     }
 
+    /** Id invoice milik sekolah aktif (invoice tertaut sekolah lewat SPK). */
+    private function idInvoiceSekolah(): array
+    {
+        return array_map('intval', array_column($this->db()->query(
+            'SELECT i.id FROM invoice i JOIN spk s ON s.id = i.spk_id WHERE s.sekolah_id = ? AND i.is_deleted = 0',
+            [$this->sid()]
+        )->getResultArray(), 'id'));
+    }
+
+    public function hapusMassal()
+    {
+        $milik = $this->idInvoiceSekolah();
+        $n = 0;
+        foreach ($this->idsTerpilih() as $id) {
+            if (in_array($id, $milik, true)) {
+                $this->hapusLunak('invoice', ['id' => $id]);
+                $n++;
+            }
+        }
+        return redirect()->to('invoice')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? $n . ' invoice terpilih dihapus.' : 'Tidak ada invoice yang diproses.');
+    }
+
+    public function kosongkan()
+    {
+        $ids = $this->idInvoiceSekolah();
+        foreach ($ids as $id) {
+            $this->hapusLunak('invoice', ['id' => $id]);
+        }
+        return redirect()->to('invoice')->with('sukses', 'Daftar invoice dikosongkan: ' . count($ids) . ' invoice dihapus.');
+    }
+
     private function daftarSpk(): array
     {
         $spk = $this->db()->query(

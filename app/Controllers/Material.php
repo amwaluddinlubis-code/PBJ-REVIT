@@ -42,6 +42,34 @@ class Material extends BaseController
         return redirect()->to('material')->with('sukses', 'Baris dihapus.');
     }
 
+    public function hapusMassal()
+    {
+        $n = 0;
+        foreach ($this->idsTerpilih() as $id) {
+            $milik = (int) $this->db()->query(
+                'SELECT COUNT(*) j FROM buku_material m JOIN bahan b ON b.id = m.bahan_id WHERE m.id = ? AND b.sekolah_id = ? AND m.is_deleted = 0',
+                [$id, $this->sid()]
+            )->getRow()->j;
+            if ($milik > 0) {
+                $this->hapusLunak('buku_material', ['id' => $id]);
+                $n++;
+            }
+        }
+        return redirect()->to('material')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? $n . ' baris buku material terpilih dihapus.' : 'Tidak ada baris yang diproses.');
+    }
+
+    public function kosongkan()
+    {
+        $n = (int) $this->db()->query(
+            'SELECT COUNT(*) j FROM buku_material m JOIN bahan b ON b.id = m.bahan_id WHERE b.sekolah_id = ? AND m.is_deleted = 0',
+            [$this->sid()]
+        )->getRow()->j;
+        $this->hapusLunak('buku_material', fn ($b) => $b->whereIn('bahan_id',
+            $this->db()->table('bahan')->select('id')->where('sekolah_id', $this->sid())));
+        return redirect()->to('material')->with('sukses', 'Buku material dikosongkan: ' . $n . ' baris dihapus.');
+    }
+
     public function sisa()
     {
         $bahan = $this->db()->query(

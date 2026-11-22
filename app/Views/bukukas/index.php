@@ -68,12 +68,24 @@
 </div>
 
 <?php if ($manual !== []): ?>
-<div class="panel">
+<div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-kas','ids-kas')">
   <h2>Transaksi Manual Tercatat</h2>
-  <table data-paginasi="10">
-    <tr><th>Tanggal</th><th>Uraian</th><th>Kategori</th><th>Kanal</th><th class="angka">Jumlah</th><th></th></tr>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <form id="form-bulk-kas" method="post" action="<?= base_url('buku-kas/hapus-massal') ?>" data-konfirmasi-judul="Hapus Transaksi Kas Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <span id="ids-kas"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} transaksi kas terpilih dari buku?')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <form method="post" action="<?= base_url('buku-kas/kosongkan') ?>" data-konfirmasi="Kosongkan transaksi kas manual sekolah ini? Semua <?= count($manual) ?> transaksi kas yang dicatat manual (termasuk penerimaan dana) akan dihapus (hapus lunak). Baris buku dari jurnal pembayaran, upah, dan bukti setor tidak ikut terhapus." data-konfirmasi-judul="Kosongkan Transaksi Kas Manual" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit" class="bahaya">Kosongkan Transaksi Manual</button>
+    </form>
+  </div>
+  <table data-paginasi="10" data-cari="Cari transaksi…">
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua transaksi" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Uraian</th><th>Kategori</th><th>Kanal</th><th class="angka">Jumlah</th><th></th></tr>
     <?php foreach ($manual as $m): ?>
     <tr>
+      <td><input type="checkbox" data-pilih value="<?= (int) $m['id'] ?>" x-model="terpilih"></td>
       <td><?= esc($m['tanggal']) ?></td>
       <td><?= esc($m['uraian']) ?></td>
       <td><?= esc($m['kategori']) ?><?= $m['tahap'] ? ' · tahap ' . (int) $m['tahap'] : '' ?></td>

@@ -93,4 +93,28 @@ class BiayaLain extends BaseController
         $this->hapusLunak('biaya_lain', ['id' => $id]);
         return redirect()->to('/biaya-non-gedung')->with('sukses', 'Baris biaya "' . $baris['uraian'] . '" dihapus.');
     }
+
+    public function hapusMassal()
+    {
+        $n = 0;
+        foreach ($this->idsTerpilih() as $id) {
+            $ada = $this->db()->table('biaya_lain')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults();
+            if ($ada > 0) {
+                $this->hapusLunak('biaya_lain', ['id' => $id, 'sekolah_id' => $this->sid()]);
+                $n++;
+            }
+        }
+        return redirect()->to('/biaya-non-gedung')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? $n . ' baris biaya terpilih dihapus.' : 'Tidak ada baris yang diproses.');
+    }
+
+    public function kosongkan()
+    {
+        $ids = array_column($this->db()->table('biaya_lain')->select('id')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
+        foreach ($ids as $id) {
+            $this->hapusLunak('biaya_lain', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        }
+        return redirect()->to('/biaya-non-gedung')->with('sukses', 'Biaya Non-Gedung dikosongkan: ' . count($ids) . ' baris dihapus (termasuk baris manual). Impor ulang dokumen perencana untuk mengisi kembali baris sumber impor.');
+    }
 }

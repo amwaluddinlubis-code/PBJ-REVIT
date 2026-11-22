@@ -83,4 +83,44 @@ class Foto extends BaseController
         }
         return redirect()->to('/foto-progres')->with('sukses', 'Foto dihapus.');
     }
+
+    /** Inti penghapusan satu foto (catatan + berkas) untuk dipakai massal. */
+    private function hapusSatuFoto(int $id): bool
+    {
+        $row = $this->db()->table('foto_progres')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        if (! $row) {
+            return false;
+        }
+        $this->hapusLunak('foto_progres', ['id' => $id, 'sekolah_id' => $this->sid()]);
+        $path = FCPATH . $row['berkas'];
+        if (is_file($path)) {
+            unlink($path);
+        }
+        return true;
+    }
+
+    public function hapusMassal()
+    {
+        $n = 0;
+        foreach ($this->idsTerpilih() as $id) {
+            if ($this->hapusSatuFoto($id)) {
+                $n++;
+            }
+        }
+        return redirect()->to('/foto-progres')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? $n . ' foto terpilih dihapus beserta berkasnya.' : 'Tidak ada foto yang diproses.');
+    }
+
+    public function kosongkan()
+    {
+        $ids = array_column($this->db()->table('foto_progres')->select('id')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
+        $n = 0;
+        foreach ($ids as $id) {
+            if ($this->hapusSatuFoto((int) $id)) {
+                $n++;
+            }
+        }
+        return redirect()->to('/foto-progres')->with('sukses', 'Foto progres dikosongkan: ' . $n . ' foto dihapus beserta berkasnya.');
+    }
 }

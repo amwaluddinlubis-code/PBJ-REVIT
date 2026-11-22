@@ -37,12 +37,24 @@
   <p class="kecil-teks">Jumlah bayar = orang-hari × tarif, dihitung otomatis. Pembayaran upah ikut terhitung dalam kontrol pagu total anggaran. PPh 21 mengikuti Juknis Revitalisasi: upah harian sampai dengan Rp450.000 per hari tidak dipotong; di atasnya dipotong 5% dari kelebihan per hari (batas kumulatif Rp4.500.000 dalam 22 hari kerja per bulan untuk penerima yang sama perlu dicek manual).</p>
 </div>
 
-<div class="panel">
+<div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-upah','ids-upahbayar')">
   <h2>Riwayat Pembayaran Upah — Total <?= $rp($total) ?> · PPh 21 <?= $rp($total_pph21) ?> · Bersih <?= $rp($total - $total_pph21) ?></h2>
-  <table data-paginasi="25">
-    <tr><th>Tanggal</th><th>Gedung</th><th>Jenis Tenaga</th><th>Penerima</th><th class="angka">OH</th><th class="angka">Tarif</th><th class="angka">Jumlah</th><th class="angka">PPh 21</th><th class="angka">Bersih</th><th>Aksi</th></tr>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <form id="form-bulk-upah" method="post" action="<?= base_url('upah/hapus-massal') ?>" data-konfirmasi-judul="Hapus Catatan Upah Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <span id="ids-upahbayar"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} catatan pembayaran upah terpilih? Total bayar dan kontrol pagu akan berubah.')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <form method="post" action="<?= base_url('upah/kosongkan') ?>" data-konfirmasi="Kosongkan riwayat pembayaran upah sekolah ini? Semua <?= count($daftar) ?> catatan akan dihapus (hapus lunak)." data-konfirmasi-judul="Kosongkan Riwayat Upah" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit" class="bahaya">Kosongkan Riwayat Upah</button>
+    </form>
+  </div>
+  <table data-paginasi="25" data-cari="Cari pembayaran upah…">
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Gedung</th><th>Jenis Tenaga</th><th>Penerima</th><th class="angka">OH</th><th class="angka">Tarif</th><th class="angka">Jumlah</th><th class="angka">PPh 21</th><th class="angka">Bersih</th><th>Aksi</th></tr>
     <?php foreach ($daftar as $u): ?>
     <tr>
+      <td><input type="checkbox" data-pilih value="<?= (int) $u['id'] ?>" x-model="terpilih"></td>
       <td><?= esc($u['tanggal']) ?></td>
       <td><?= esc($u['nama_gedung'] ?? '—') ?><?= $u['nama_pekerjaan'] ? '<br><span class="kecil-teks">' . esc($u['nama_pekerjaan']) . '</span>' : '' ?></td>
       <td><?= esc($u['jenis_tenaga']) ?></td>
@@ -55,7 +67,7 @@
       <td><form class="inline" method="post" action="<?= base_url('upah/' . $u['id'] . '/hapus') ?>" data-konfirmasi="Hapus catatan ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
     </tr>
     <?php endforeach; ?>
-    <?php if ($daftar === []): ?><tr><td colspan="10">Belum ada pembayaran upah tercatat.</td></tr><?php endif; ?>
+    <?php if ($daftar === []): ?><tr><td colspan="11">Belum ada pembayaran upah tercatat.</td></tr><?php endif; ?>
   </table>
 </div>
 

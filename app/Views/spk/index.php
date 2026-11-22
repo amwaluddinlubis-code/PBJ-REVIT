@@ -1,10 +1,22 @@
 <?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <div class="aksi md:col-span-2" style="margin:0 0 12px"><a class="tombol" href="<?= base_url('spk/baru') ?>">+ SPK Baru</a></div>
-<div class="panel">
-<table data-paginasi="10">
-  <tr><th>No.</th><th>Tanggal</th><th>Penyedia</th><th>Paket</th><th>Periode</th><th class="angka">Jml Bahan</th><th class="angka">Nilai SPK</th><th>Status</th><th></th></tr>
+<div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-spk','ids-spk')">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <form id="form-bulk-spk" method="post" action="<?= base_url('spk/hapus-massal') ?>" data-konfirmasi-judul="Hapus SPK Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <span id="ids-spk"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} SPK terpilih? Rincian barangnya menjadi belum bernomor.')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <form method="post" action="<?= base_url('spk/kosongkan') ?>" data-konfirmasi="Kosongkan register SPK sekolah ini? Semua <?= count($spk) ?> SPK aktif akan dihapus (hapus lunak) dan rincian barangnya menjadi belum bernomor." data-konfirmasi-judul="Kosongkan Register SPK" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit" class="bahaya">Kosongkan Register SPK</button>
+    </form>
+  </div>
+<table data-paginasi="10" data-cari="Cari SPK (nomor, penyedia, paket)…">
+  <tr><th style="width:34px"><input type="checkbox" title="Pilih semua SPK" @change="pilihSemua($event)"></th><th>No.</th><th>Tanggal</th><th>Penyedia</th><th>Paket</th><th>Periode</th><th class="angka">Jml Bahan</th><th class="angka">Nilai SPK</th><th>Status</th><th></th></tr>
   <?php foreach ($spk as $s): ?>
   <tr>
+    <td><input type="checkbox" data-pilih value="<?= (int) $s['id'] ?>" x-model="terpilih"></td>
     <td><a href="<?= base_url('spk/detail/' . $s['id']) ?>"><?= (int) $s['nomor'] ?></a></td>
     <td><?= esc($s['tanggal'] ?? '—') ?></td>
     <td><?= esc($s['penyedia'] ?? '—') ?></td>

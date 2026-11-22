@@ -61,6 +61,30 @@ class Revisi extends BaseController
         return redirect()->to('/revisi-pekerjaan')->with('sukses', 'Catatan revisi dihapus.');
     }
 
+    public function hapusMassal()
+    {
+        $n = 0;
+        foreach ($this->idsTerpilih() as $id) {
+            $ada = $this->db()->table('revisi_pekerjaan')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults();
+            if ($ada > 0) {
+                $this->hapusLunak('revisi_pekerjaan', ['id' => $id, 'sekolah_id' => $this->sid()]);
+                $n++;
+            }
+        }
+        return redirect()->to('/revisi-pekerjaan')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? $n . ' catatan revisi terpilih dihapus.' : 'Tidak ada catatan yang diproses.');
+    }
+
+    public function kosongkan()
+    {
+        $ids = array_column($this->db()->table('revisi_pekerjaan')->select('id')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
+        foreach ($ids as $id) {
+            $this->hapusLunak('revisi_pekerjaan', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        }
+        return redirect()->to('/revisi-pekerjaan')->with('sukses', 'Catatan revisi dikosongkan: ' . count($ids) . ' catatan dihapus.');
+    }
+
     public function cetak($id)
     {
         $r = $this->db()->query(

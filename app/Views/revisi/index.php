@@ -24,12 +24,24 @@
   </form>
 </div>
 
-<div class="panel">
+<div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-revisi','ids-revisi')">
   <h2>Riwayat Revisi</h2>
-  <table>
-    <tr><th>Tanggal</th><th>Gedung / Pekerjaan</th><th>Perubahan</th><th>Uraian</th><th></th></tr>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <form id="form-bulk-revisi" method="post" action="<?= base_url('revisi-pekerjaan/hapus-massal') ?>" data-konfirmasi-judul="Hapus Catatan Revisi Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <span id="ids-revisi"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} catatan revisi terpilih?')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <form method="post" action="<?= base_url('revisi-pekerjaan/kosongkan') ?>" data-konfirmasi="Kosongkan riwayat revisi sekolah ini? Semua <?= count($revisi) ?> catatan akan dihapus (hapus lunak)." data-konfirmasi-judul="Kosongkan Riwayat Revisi" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit" class="bahaya">Kosongkan Riwayat Revisi</button>
+    </form>
+  </div>
+  <table data-cari="Cari revisi…">
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Gedung / Pekerjaan</th><th>Perubahan</th><th>Uraian</th><th></th></tr>
     <?php foreach ($revisi as $r): ?>
     <tr>
+      <td><input type="checkbox" data-pilih value="<?= (int) $r['id'] ?>" x-model="terpilih"></td>
       <td><?= esc($r['tanggal']) ?></td>
       <td><?= esc($r['gedung_nama']) ?><?= $r['pekerjaan_nama'] ? '<br><span class="kecil-teks">' . esc($r['pekerjaan_nama']) . '</span>' : '' ?></td>
       <td><?= esc($r['perubahan'] ?? '—') ?></td>
@@ -40,6 +52,6 @@
       </td>
     </tr>
     <?php endforeach; ?>
-    <?php if ($revisi === []): ?><tr><td colspan="5">Belum ada revisi pekerjaan yang dicatat.</td></tr><?php endif; ?>
+    <?php if ($revisi === []): ?><tr><td colspan="6">Belum ada revisi pekerjaan yang dicatat.</td></tr><?php endif; ?>
   </table>
 </div>

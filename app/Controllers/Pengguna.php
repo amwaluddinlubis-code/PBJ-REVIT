@@ -103,6 +103,39 @@ class Pengguna extends BaseController
         return redirect()->to('/pengguna')->with('sukses', 'Pengguna dihapus.');
     }
 
+    /**
+     * Hapus massal pengguna tercentang dengan penjaga yang sama seperti
+     * hapus satuan: akun sendiri dan admin terakhir tidak dapat dihapus.
+     * (Tidak ada "kosongkan" untuk modul ini.)
+     */
+    public function hapusMassal()
+    {
+        if (! $this->admin()) {
+            return redirect()->to('/');
+        }
+        $saya = (int) ($this->pengguna['id'] ?? 0);
+        $n = 0;
+        $dilewati = [];
+        foreach ($this->idsTerpilih() as $id) {
+            $target = $this->db()->table('users')->where(['id' => $id, 'is_deleted' => 0])->get()->getRowArray();
+            if ($target === null) {
+                continue;
+            }
+            if ($id === $saya) {
+                $dilewati[] = $target['username'] . ' (akun Anda sendiri)';
+                continue;
+            }
+            if ($target['peran'] === 'admin' && $this->jumlahAdminSelain($id) === 0) {
+                $dilewati[] = $target['username'] . ' (admin terakhir)';
+                continue;
+            }
+            $this->hapusLunak('users', ['id' => $id]);
+            $n++;
+        }
+        return redirect()->to('/pengguna')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 || $dilewati !== [] ? $this->ringkasHapus($n, $dilewati, 'pengguna') : 'Tidak ada pengguna yang diproses.');
+    }
+
     private function jumlahAdminSelain(int $id): int
     {
         return $this->db()->table('users')->where(['peran' => 'admin', 'is_deleted' => 0])->where('id !=', $id)->countAllResults();

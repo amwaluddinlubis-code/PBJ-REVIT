@@ -72,6 +72,44 @@ class Spk extends BaseController
         return redirect()->to('spk')->with('sukses', 'SPK dihapus; rincian barangnya kini berstatus belum bernomor.');
     }
 
+    /** Inti penghapusan satu SPK untuk dipakai massal. */
+    private function hapusSatuSpk(int $id): bool
+    {
+        $ada = $this->db()->table('spk')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults();
+        if ($ada === 0) {
+            return false;
+        }
+        $this->db()->table('spk_detail')->where(['spk_id' => $id, 'is_deleted' => 0])
+            ->update(['spk_id' => null, 'updated_at' => date('Y-m-d H:i:s')]);
+        $this->hapusLunak('spk', ['id' => $id, 'sekolah_id' => $this->sid()]);
+        return true;
+    }
+
+    public function hapusMassal()
+    {
+        $n = 0;
+        foreach ($this->idsTerpilih() as $id) {
+            if ($this->hapusSatuSpk($id)) {
+                $n++;
+            }
+        }
+        return redirect()->to('spk')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? $n . ' SPK terpilih dihapus; rincian barangnya kini berstatus belum bernomor.' : 'Tidak ada SPK yang diproses.');
+    }
+
+    public function kosongkan()
+    {
+        $ids = array_column($this->db()->table('spk')->select('id')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
+        $n = 0;
+        foreach ($ids as $id) {
+            if ($this->hapusSatuSpk((int) $id)) {
+                $n++;
+            }
+        }
+        return redirect()->to('spk')->with('sukses', 'Register SPK dikosongkan: ' . $n . ' SPK dihapus; semua rincian barangnya kini berstatus belum bernomor.');
+    }
+
     public function detail($id)
     {
         $db = $this->db();

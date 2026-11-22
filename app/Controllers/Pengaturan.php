@@ -72,4 +72,43 @@ class Pengaturan extends BaseController
         $this->hapusLunak('penyedia', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
         return redirect()->to('pengaturan')->with('sukses', 'Penyedia dihapus.');
     }
+
+    /** Hapus massal penyedia tercentang; yang dipakai SPK dilewati. */
+    public function penyediaHapusMassal()
+    {
+        [$n, $dilewati] = $this->hapusPenyediaBanyak($this->idsTerpilih());
+        return redirect()->to('pengaturan')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 || $dilewati !== [] ? $this->ringkasHapus($n, $dilewati, 'penyedia') . ($dilewati !== [] ? ' Penyedia yang dilewati dipakai SPK.' : '') : 'Tidak ada penyedia yang diproses.');
+    }
+
+    /** Kosongkan master penyedia sekolah aktif (yang dipakai SPK dipertahankan). */
+    public function penyediaKosongkan()
+    {
+        $ids = array_map('intval', array_column($this->db()->table('penyedia')->select('id')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id'));
+        [$n, $dilewati] = $this->hapusPenyediaBanyak($ids);
+        return redirect()->to('pengaturan')->with('sukses',
+            'Master penyedia dikosongkan: ' . $this->ringkasHapus($n, $dilewati, 'penyedia') . ($dilewati !== [] ? ' Penyedia yang dilewati dipakai SPK.' : ''));
+    }
+
+    /** @return array{0:int,1:array<int,string>} */
+    private function hapusPenyediaBanyak(array $ids): array
+    {
+        $n = 0;
+        $dilewati = [];
+        foreach ($ids as $id) {
+            $p = $this->db()->table('penyedia')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+            if ($p === null) {
+                continue;
+            }
+            $dipakai = $this->db()->table('spk')->where(['penyedia_id' => $id, 'is_deleted' => 0])->countAllResults();
+            if ($dipakai > 0) {
+                $dilewati[] = $p['nama'];
+                continue;
+            }
+            $this->hapusLunak('penyedia', ['id' => $id, 'sekolah_id' => $this->sid()]);
+            $n++;
+        }
+        return [$n, $dilewati];
+    }
 }

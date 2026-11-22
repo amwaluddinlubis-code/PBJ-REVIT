@@ -1,39 +1,83 @@
-// Paginasi tabel sisi klien — untuk tabel bertanda data-paginasi="ukuran awal".
+// Paginasi + pencarian langsung tabel sisi klien.
+// - Tabel bertanda data-paginasi="ukuran awal" mendapat pengalih halaman.
+// - Tabel bertanda data-cari mendapat kotak pencarian langsung di atasnya:
+//   ketik untuk menyaring baris seketika (teks seluruh baris dicocokkan).
 // Baris pertama dianggap header; baris .baris-total selalu tampil dan tidak dihitung.
 // window.inisiasiPaginasi(akar) dapat dipanggil ulang untuk tabel yang baru
 // dimuat lewat AJAX (pencarian langsung gaya Livewire).
 window.inisiasiPaginasi = function (akar) {
-  (akar || document).querySelectorAll('table[data-paginasi]').forEach(function (tabel) {
+  (akar || document).querySelectorAll('table[data-paginasi], table[data-cari]').forEach(function (tabel) {
     if (tabel.dataset.sudahPaginasi) return;
     tabel.dataset.sudahPaginasi = '1';
     var semua = Array.prototype.slice.call(tabel.querySelectorAll('tr'));
     if (semua.length < 2) return;
     var data = semua.slice(1).filter(function (tr) { return !tr.classList.contains('baris-total'); });
-    var ukuran = parseInt(tabel.getAttribute('data-paginasi'), 10) || 10;
-    if (data.length <= 10) return;
+    var adaPaginasi = tabel.hasAttribute('data-paginasi');
+    var ukuran = adaPaginasi ? (parseInt(tabel.getAttribute('data-paginasi'), 10) || 10) : 0;
     var halaman = 1;
+    var kata = '';
 
-    var wadah = document.createElement('div');
-    wadah.className = 'paginasi';
-    wadah.innerHTML =
-      '<span class="info"></span>' +
-      '<span class="tombol-halaman"></span>' +
-      '<label>Per halaman <select>' +
-      [10, 25, 50, 100].map(function (n) { return '<option value="' + n + '"' + (n === ukuran ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
-      '</select></label>';
-    tabel.parentNode.insertBefore(wadah, tabel.nextSibling);
-    var info = wadah.querySelector('.info');
-    var tombol = wadah.querySelector('.tombol-halaman');
-    var pemilih = wadah.querySelector('select');
+    function cocok(tr) {
+      return kata === '' || tr.textContent.toLowerCase().includes(kata);
+    }
 
-    function jumlahHalaman() { return Math.max(1, Math.ceil(data.length / ukuran)); }
+    // Kotak pencarian langsung (bila tabel bertanda data-cari).
+    if (tabel.hasAttribute('data-cari')) {
+      var kotak = document.createElement('div');
+      kotak.className = 'paginasi cari-tabel';
+      var petunjuk = tabel.getAttribute('data-cari');
+      var masukan = document.createElement('input');
+      masukan.type = 'search';
+      masukan.placeholder = petunjuk && petunjuk !== '1' ? petunjuk : 'Cari pada tabel ini…';
+      masukan.style.cssText = 'flex:1;min-width:200px';
+      kotak.appendChild(masukan);
+      tabel.parentNode.insertBefore(kotak, tabel);
+      masukan.addEventListener('input', function () {
+        kata = masukan.value.trim().toLowerCase();
+        halaman = 1;
+        gambar();
+      });
+    }
+
+    // Pengalih halaman hanya untuk tabel besar bertanda data-paginasi.
+    var wadah = null, info = null, tombol = null, pemilih = null;
+    if (adaPaginasi && data.length > 10) {
+      wadah = document.createElement('div');
+      wadah.className = 'paginasi';
+      wadah.innerHTML =
+        '<span class="info"></span>' +
+        '<span class="tombol-halaman"></span>' +
+        '<label>Per halaman <select>' +
+        [10, 25, 50, 100].map(function (n) { return '<option value="' + n + '"' + (n === ukuran ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+        '</select></label>';
+      tabel.parentNode.insertBefore(wadah, tabel.nextSibling);
+      info = wadah.querySelector('.info');
+      tombol = wadah.querySelector('.tombol-halaman');
+      pemilih = wadah.querySelector('select');
+      tombol.addEventListener('click', function (e) {
+        var b = e.target.closest('button');
+        if (!b || b.disabled) return;
+        var h = b.getAttribute('data-h');
+        if (h === 'prev') halaman--;
+        else if (h === 'next') halaman++;
+        else halaman = parseInt(h, 10);
+        gambar();
+      });
+      pemilih.addEventListener('change', function () { ukuran = parseInt(pemilih.value, 10); halaman = 1; gambar(); });
+    }
 
     function gambar() {
-      var total = jumlahHalaman();
+      var tampil = data.filter(cocok);
+      if (!wadah) {
+        data.forEach(function (tr) { tr.style.display = cocok(tr) ? '' : 'none'; });
+        return;
+      }
+      var total = Math.max(1, Math.ceil(tampil.length / ukuran));
       if (halaman > total) halaman = total;
       var awal = (halaman - 1) * ukuran;
-      data.forEach(function (tr, i) { tr.style.display = (i >= awal && i < awal + ukuran) ? '' : 'none'; });
-      info.textContent = 'Menampilkan ' + (data.length ? awal + 1 : 0) + '–' + Math.min(awal + ukuran, data.length) + ' dari ' + data.length + ' baris';
+      var terlihat = new Set(tampil.slice(awal, awal + ukuran));
+      data.forEach(function (tr) { tr.style.display = terlihat.has(tr) ? '' : 'none'; });
+      info.textContent = 'Menampilkan ' + (tampil.length ? awal + 1 : 0) + '–' + Math.min(awal + ukuran, tampil.length) + ' dari ' + tampil.length + ' baris' + (kata ? ' (tersaring)' : '');
       var html = '<button type="button" data-h="prev"' + (halaman === 1 ? ' disabled' : '') + '>&lsaquo;</button>';
       var daftar = [];
       for (var p = 1; p <= total; p++) {
@@ -48,16 +92,6 @@ window.inisiasiPaginasi = function (akar) {
       tombol.innerHTML = html;
     }
 
-    tombol.addEventListener('click', function (e) {
-      var b = e.target.closest('button');
-      if (!b || b.disabled) return;
-      var h = b.getAttribute('data-h');
-      if (h === 'prev') halaman--;
-      else if (h === 'next') halaman++;
-      else halaman = parseInt(h, 10);
-      gambar();
-    });
-    pemilih.addEventListener('change', function () { ukuran = parseInt(pemilih.value, 10); halaman = 1; gambar(); });
     gambar();
   });
 };

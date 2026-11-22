@@ -46,6 +46,22 @@ abstract class BaseController extends Controller
         $b->update(['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
     }
 
+    /** Id tercentang dari formulir hapus massal (POST ids[]). */
+    protected function idsTerpilih(): array
+    {
+        return array_values(array_unique(array_map('intval', (array) $this->request->getPost('ids'))));
+    }
+
+    /** Ringkasan hasil hapus banyak untuk pesan kilat. */
+    protected function ringkasHapus(int $dihapus, array $dilewati, string $satuan): string
+    {
+        $pesan = $dihapus . ' ' . $satuan . ' dihapus.';
+        if ($dilewati !== []) {
+            $pesan .= ' ' . count($dilewati) . ' dilewati: ' . implode(', ', array_slice($dilewati, 0, 8)) . (count($dilewati) > 8 ? ', …' : '') . '.';
+        }
+        return $pesan;
+    }
+
     protected function tampil(string $view, array $data = [], string $judul = 'Aplikasi PBJ Sekolah')
     {
         $data['judul']        = $judul;

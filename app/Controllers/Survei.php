@@ -42,4 +42,35 @@ class Survei extends BaseController
         $db->transComplete();
         return redirect()->to('survei')->with('sukses', 'Harga survei disimpan. Kolom Termurah & Terpilih terhitung otomatis.');
     }
+
+    /** Hapus harga survei bahan tercentang (semua toko). */
+    public function hapusMassal()
+    {
+        $n = 0;
+        foreach ($this->idsTerpilih() as $bahanId) {
+            $milik = $this->db()->table('bahan')->where(['id' => $bahanId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults();
+            if ($milik === 0) {
+                continue;
+            }
+            $ada = $this->db()->table('survei_harga')->where(['bahan_id' => $bahanId, 'is_deleted' => 0])->countAllResults();
+            if ($ada > 0) {
+                $this->hapusLunak('survei_harga', ['bahan_id' => $bahanId]);
+                $n++;
+            }
+        }
+        return redirect()->to('survei')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? 'Harga survei ' . $n . ' bahan terpilih dihapus (semua toko).' : 'Tidak ada harga survei yang diproses.');
+    }
+
+    /** Kosongkan seluruh harga survei sekolah aktif. */
+    public function kosongkan()
+    {
+        $n = (int) $this->db()->query(
+            'SELECT COUNT(*) j FROM survei_harga s JOIN bahan b ON b.id = s.bahan_id WHERE b.sekolah_id = ? AND s.is_deleted = 0',
+            [$this->sid()]
+        )->getRow()->j;
+        $this->hapusLunak('survei_harga', fn ($b) => $b->whereIn('bahan_id',
+            $this->db()->table('bahan')->select('id')->where('sekolah_id', $this->sid())));
+        return redirect()->to('survei')->with('sukses', 'Harga survei dikosongkan: ' . $n . ' harga toko dihapus.');
+    }
 }

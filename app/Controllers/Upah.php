@@ -92,6 +92,30 @@ class Upah extends BaseController
         return redirect()->to('/upah')->with('sukses', 'Catatan pembayaran upah dihapus.');
     }
 
+    public function hapusMassal()
+    {
+        $n = 0;
+        foreach ($this->idsTerpilih() as $id) {
+            $ada = $this->db()->table('upah_bayar')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults();
+            if ($ada > 0) {
+                $this->hapusLunak('upah_bayar', ['id' => $id, 'sekolah_id' => $this->sid()]);
+                $n++;
+            }
+        }
+        return redirect()->to('/upah')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? $n . ' catatan pembayaran upah terpilih dihapus.' : 'Tidak ada catatan yang diproses.');
+    }
+
+    public function kosongkan()
+    {
+        $ids = array_column($this->db()->table('upah_bayar')->select('id')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
+        foreach ($ids as $id) {
+            $this->hapusLunak('upah_bayar', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        }
+        return redirect()->to('/upah')->with('sukses', 'Catatan pembayaran upah dikosongkan: ' . count($ids) . ' catatan dihapus.');
+    }
+
     /**
      * Cetak daftar pembayaran upah satu bulan mengikuti format dokumen
      * pembayaran upah Juknis: daftar penerima dengan jumlah bruto, PPh 21,

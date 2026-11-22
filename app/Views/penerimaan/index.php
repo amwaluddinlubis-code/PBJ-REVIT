@@ -38,12 +38,24 @@
 </div>
 
 <?php if ($daftar !== []): ?>
-<div class="panel">
+<div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-terima','ids-terima')">
   <h2>Riwayat Penerimaan</h2>
-  <table>
-    <tr><th>Tanggal</th><th>Tahap</th><th class="angka">Jumlah</th><th>Keterangan</th><th></th></tr>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <form id="form-bulk-terima" method="post" action="<?= base_url('penerimaan-dana/hapus-massal') ?>" data-konfirmasi-judul="Hapus Catatan Penerimaan Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <span id="ids-terima"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} catatan penerimaan terpilih? Catatan itu ikut hilang dari Buku Kas.')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <form method="post" action="<?= base_url('penerimaan-dana/kosongkan') ?>" data-konfirmasi="Kosongkan catatan penerimaan sekolah ini? Semua <?= count($daftar) ?> catatan penerimaan akan dihapus (hapus lunak) dan ikut hilang dari Buku Kas." data-konfirmasi-judul="Kosongkan Catatan Penerimaan" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit" class="bahaya">Kosongkan Catatan Penerimaan</button>
+    </form>
+  </div>
+  <table data-cari="Cari penerimaan…">
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Tahap</th><th class="angka">Jumlah</th><th>Keterangan</th><th></th></tr>
     <?php foreach ($daftar as $d): ?>
     <tr>
+      <td><input type="checkbox" data-pilih value="<?= (int) $d['id'] ?>" x-model="terpilih"></td>
       <td><?= esc($d['tanggal']) ?></td>
       <td><?= $d['tahap'] ? 'Tahap ' . (int) $d['tahap'] : '—' ?></td>
       <td class="angka"><?= $rp($d['jumlah']) ?></td>
