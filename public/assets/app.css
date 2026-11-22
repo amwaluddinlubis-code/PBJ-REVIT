@@ -3772,3 +3772,52 @@ html.gelap .tulang span {
 @media (prefers-reduced-motion: reduce) {
   .tulang span { animation: none; }
 }
+
+/* === Audit visual (2026-11-22): pemadatan compact-elegan ===
+   Berdasarkan ukur computed style semua komponen (terang + gelap):
+   ritme spasi dinormalkan, komponen paling lega diketatkan,
+   keterbacaan teks kecil diperbaiki. */
+
+/* Hero dashboard adalah komponen paling lega (tinggi 150px): diketatkan. */
+body:not(.login) .dashboard-hero { padding: 20px 24px; }
+
+/* Kartu KPI: ikon 44 -> 38px dan jarak bawahnya lebih ramping. */
+.kpi::before {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 8px;
+  background-size: 20px;
+}
+
+/* Panel: padding sisi 22 -> 18px, selaras dengan radius 18px;
+   judul panel lipat ikut sejajar karena berada di dalam panel. */
+body:not(.login) .panel {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+/* Isi halaman: bantalan sisi 28 -> 24px. */
+body:not(.login) .isi {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* Modal sedikit lebih ramping; bantalan bawah sheet ponsel dipertahankan. */
+.mk-kartu { padding: 20px; }
+@media (max-width: 760px) {
+  .mk-kartu { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+}
+
+/* Baris aksi: jarak antar tombol 4 -> 8px agar tidak berdempetan. */
+body:not(.login) .aksi { gap: 8px; }
+
+/* Paginasi desktop: tinggi tombol 28 -> 32px, selaras tombol kecil. */
+body:not(.login) .paginasi button { min-height: 32px; }
+
+/* Teks kecil di area isi: warna lama #a3a3a3 terlalu pudar di latar
+   terang (kontras sekitar 2,5:1); digelapkan khusus mode terang. */
+html:not(.gelap) body:not(.login) .isi .kecil-teks { color: #5b6b82; }
+
+/* Koreksi audit: hero memiliki min-height 150px dari aturan dasar,
+   jadi pemadatan padding saja tidak menurunkannya. */
+body:not(.login) .dashboard-hero { min-height: 118px; }
