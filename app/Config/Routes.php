@@ -15,6 +15,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('analisa', 'Analisa::index');
     $routes->get('analisa/(:num)', 'Analisa::detail/$1');
     $routes->post('analisa/(:num)/komponen-simpan', 'Analisa::komponenSimpan/$1');
+    $routes->post('analisa/(:num)/komponen-ubah', 'Analisa::komponenUbah/$1');
     $routes->post('analisa/(:num)/komponen-tambah', 'Analisa::komponenTambah/$1');
     $routes->post('analisa/(:num)/komponen-hapus/(:num)', 'Analisa::komponenHapus/$1/$2');
     $routes->post('analisa/simpan-konversi', 'Analisa::simpanKonversi');

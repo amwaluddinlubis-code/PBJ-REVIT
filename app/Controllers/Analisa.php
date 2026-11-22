@@ -124,6 +124,38 @@ class Analisa extends BaseController
         return redirect()->to('analisa/' . $a['id'])->with('sukses', $n . ' komponen diperbarui. Harga satuan analisa kini ' . $this->rp($harga) . ' (dihitung dari komponen).');
     }
 
+    /** Balasan aksi komponen: JSON untuk permintaan AJAX (modal), redirect untuk alur biasa. */
+    private function balasKomponen(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return redirect()->back()->with($ok ? 'sukses' : 'galat', $pesan);
+    }
+
+    /** Ubah satu komponen dari modal editor: koefisien, tarif, satuan. */
+    public function komponenUbah($id)
+    {
+        $a = $this->ambilAnalisa((int) $id);
+        if (! $a) {
+            return $this->balasKomponen(false, 'Analisa tidak ditemukan.');
+        }
+        $kid = (int) $this->request->getPost('komponen_id');
+        $k = $this->db()->table('analisa_komponen')
+            ->where(['id' => $kid, 'analisa_id' => $a['id'], 'is_deleted' => 0])->get()->getRowArray();
+        if (! $k) {
+            return $this->balasKomponen(false, 'Komponen tidak ditemukan.');
+        }
+        $satuan = trim((string) $this->request->getPost('satuan'));
+        $this->db()->table('analisa_komponen')->where('id', $kid)->update([
+            'koefisien' => (float) str_replace(',', '.', (string) $this->request->getPost('koefisien')),
+            'tarif'     => (float) str_replace(['.', ','], ['', '.'], (string) $this->request->getPost('tarif')),
+            'satuan'    => $satuan !== '' ? $satuan : $k['satuan'],
+        ]);
+        $total = $this->hitungUlangHargaSatuan((int) $a['id']);
+        return $this->balasKomponen(true, 'Komponen diperbarui. Harga satuan analisa kini ' . $this->rp($total) . '.');
+    }
+
     public function komponenTambah($id)
     {
         $a = $this->ambilAnalisa((int) $id);
@@ -168,7 +200,7 @@ class Analisa extends BaseController
             'bahan_id' => $bahanId, 'tarif' => $tarif,
         ]);
         $this->hitungUlangHargaSatuan((int) $a['id']);
-        return redirect()->to('analisa/' . $a['id'])->with('sukses', 'Komponen "' . $nama . '" ditambahkan.');
+        return $this->balasKomponen(true, 'Komponen "' . $nama . '" ditambahkan.');
     }
 
     /** Simpan faktor konversi manual untuk pasangan bahan + satuan komponen. */
@@ -184,6 +216,9 @@ class Analisa extends BaseController
             : (float) $mentah;
         $bahan = $db->table('bahan')->where(['id' => $bahanId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         if ($bahan === null || $satuan === '' || $faktor <= 0) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['ok' => false, 'pesan' => 'Konversi tidak disimpan: bahan/satuan tidak valid atau faktor harus lebih dari 0.']);
+            }
             return redirect()->to(base_url('analisa'))->with('galat', 'Konversi tidak disimpan: bahan/satuan tidak valid atau faktor harus lebih dari 0.');
         }
         $ada = $db->table('bahan_konversi')->where([
@@ -199,7 +234,11 @@ class Analisa extends BaseController
                 'faktor' => $faktor, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
             ]);
         }
-        return redirect()->to(base_url('analisa'))->with('sukses', 'Konversi satuan ' . $bahan['nama'] . ' (' . $satuan . ' ke ' . ($bahan['satuan'] ?? '') . ') diatur ke faktor ' . rtrim(rtrim(number_format($faktor, 8, ',', '.'), '0'), ',') . '. Kebutuhan bahan dihitung ulang dengan faktor ini.');
+        $pesanKonversi = 'Konversi satuan ' . $bahan['nama'] . ' (' . $satuan . ' ke ' . ($bahan['satuan'] ?? '') . ') diatur ke faktor ' . rtrim(rtrim(number_format($faktor, 8, ',', '.'), '0'), ',') . '. Kebutuhan bahan dihitung ulang dengan faktor ini.';
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => true, 'pesan' => $pesanKonversi]);
+        }
+        return redirect()->to(base_url('analisa'))->with('sukses', $pesanKonversi);
     }
 
     /** Hapus faktor konversi manual (kembali ke aturan bawaan). */
