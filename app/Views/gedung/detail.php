@@ -32,19 +32,20 @@ $tabAktif = $tab ?? 'boq';
     </form>
   </div>
   <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25" data-cari="Cari pekerjaan…">
-    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua pekerjaan" @change="pilihSemua($event)"></th><th>Pekerjaan</th><th>Kode</th><th class="angka">Volume</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah</th><th style="width:210px">Ubah Volume / Hapus</th></tr>
-    <?php $babLalu = null; $total = 0; foreach ($pekerjaan as $p): $total += (float) $p['jumlah']; ?>
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua pekerjaan" @change="pilihSemua($event)"></th><th>Pekerjaan</th><th>Kode</th><th class="angka">Volume Awal</th><th class="angka">Vol. Berjalan</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah Berjalan</th><th style="width:210px">Ubah Volume / Hapus</th></tr>
+    <?php $babLalu = null; $total = 0; foreach ($pekerjaan as $p): $total += (float) ($p['volume_revisi'] ?? $p['volume']) * (float) ($p['harga_revisi'] ?? $p['harga_satuan']); ?>
       <?php if ($p['bab'] !== $babLalu): $babLalu = $p['bab']; ?>
-      <tr><td colspan="8" style="font-weight:600;background:#fcfcfd"><?= esc($babLalu ?: '—') ?></td></tr>
+      <tr><td colspan="9" style="font-weight:600;background:#fcfcfd"><?= esc($babLalu ?: '—') ?></td></tr>
       <?php endif; ?>
       <tr>
         <td><input type="checkbox" data-pilih value="<?= (int) $p['id'] ?>" x-model="terpilih"></td>
         <td class="potong" title="<?= esc($p['nama']) ?>"><?php if (! empty($p['kode_analisa']) && isset($petaAnalisa[$p['kode_analisa']])): ?><button type="button" class="tautan-pekerjaan" data-buka-detail="<?= (int) $p['id'] ?>" title="Klik untuk melihat rincian bahan &amp; upah"><span class="panah">&#9656;</span> <?= esc($p['nama']) ?></button><?php else: ?><?= esc($p['nama']) ?><?php endif; ?></td>
         <td><?= $p['kode_analisa'] ? '<span class="lencana abu">' . esc($p['kode_analisa']) . '</span>' : '—' ?></td>
         <td class="angka"><?= rtrim(rtrim(number_format((float) $p['volume'], 3, ',', '.'), '0'), ',') ?></td>
+        <td class="angka"><?php $vb = (float) ($p['volume_revisi'] ?? $p['volume']); ?><?= rtrim(rtrim(number_format($vb, 3, ',', '.'), '0'), ',') ?><?php if (isset($p['volume_revisi']) && $p['volume_revisi'] !== null): ?> <span class="lencana abu" title="Diubah oleh BA Revisi yang disahkan">Revisi</span><?php endif; ?><?php if (! empty($p['dari_revisi_id'])): ?> <span class="lencana abu" title="Pekerjaan dari BA Revisi">Pengganti/Baru</span><?php endif; ?></td>
         <td><?= esc($p['satuan'] ?? '') ?></td>
-        <td class="angka"><?= number_format((float) $p['harga_satuan'], 0, ',', '.') ?></td>
-        <td class="angka"><?= number_format((float) $p['jumlah'], 0, ',', '.') ?></td>
+        <td class="angka"><?= number_format((float) ($p['harga_revisi'] ?? $p['harga_satuan']), 0, ',', '.') ?></td>
+        <td class="angka"><?= number_format($vb * (float) ($p['harga_revisi'] ?? $p['harga_satuan']), 0, ',', '.') ?></td>
         <td>
           <form class="inline" method="post" action="<?= base_url('gedung/pekerjaan/' . $p['id'] . '/volume') ?>">
             <?= csrf_field() ?>
@@ -56,9 +57,9 @@ $tabAktif = $tab ?? 'boq';
           </form>
         </td>
       </tr>
-      <?php if (! empty($p['kode_analisa']) && isset($petaAnalisa[$p['kode_analisa']])): $a = $petaAnalisa[$p['kode_analisa']]; $vol = (float) $p['volume']; ?>
+      <?php if (! empty($p['kode_analisa']) && isset($petaAnalisa[$p['kode_analisa']])): $a = $petaAnalisa[$p['kode_analisa']]; $vol = (float) ($p['volume_revisi'] ?? $p['volume']); ?>
       <tr class="baris-detail" data-detail="<?= (int) $p['id'] ?>">
-        <td colspan="8">
+        <td colspan="9">
           <div class="detail-pekerjaan">
             <div class="detail-kepala">Analisa <strong><?= esc($a['kode']) ?></strong> &mdash; <?= esc($a['nama']) ?> &middot; satuan pekerjaan: <?= esc($a['satuan'] ?? '') ?> &middot; volume: <?= rtrim(rtrim(number_format($vol, 3, ',', '.'), '0'), ',') ?> &middot; harga satuan BOQ: Rp <?= number_format((float) $p['harga_satuan'], 0, ',', '.') ?></div>
             <table class="mini">
@@ -96,7 +97,7 @@ $tabAktif = $tab ?? 'boq';
       </tr>
       <?php endif; ?>
     <?php endforeach; ?>
-    <tr class="total"><td colspan="6">Grand Total BOQ</td><td class="angka"><?= number_format($total, 0, ',', '.') ?></td><td></td></tr>
+    <tr class="total"><td colspan="7">Grand Total BOQ Berjalan</td><td class="angka"><?= number_format($total, 0, ',', '.') ?></td><td></td></tr>
   </table></div>
   <p class="kecil-teks">Mengubah volume pekerjaan menghitung ulang kebutuhan bahan &amp; upah gedung ini secara otomatis.</p>
 </div>

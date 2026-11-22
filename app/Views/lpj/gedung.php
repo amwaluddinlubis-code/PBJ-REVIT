@@ -13,13 +13,13 @@
   <h2>Kemajuan Pekerjaan</h2>
   <table data-paginasi="25" data-cari="Cari…">
     <tr><th>Pekerjaan</th><th class="angka">Volume BOQ</th><th class="angka">Terealisasi</th><th>% </th><th class="angka">Nilai BOQ</th><th class="angka">Nilai Realisasi</th></tr>
-    <?php $babLalu = null; foreach ($pekerjaan as $p): $persen = (float) $p['volume'] > 0 ? min(100, (float) $p['volume_terealisasi'] / (float) $p['volume'] * 100) : 0; $nilaiReal = (float) $p['volume_terealisasi'] * (float) $p['harga_satuan']; ?>
+    <?php $babLalu = null; foreach ($pekerjaan as $p): $volB = (float) ($p['volume_revisi'] ?? $p['volume']); $persen = $volB > 0 ? min(100, (float) $p['volume_terealisasi'] / $volB * 100) : 0; $nilaiReal = (float) $p['volume_terealisasi'] * (float) ($p['harga_revisi'] ?? $p['harga_satuan']); ?>
       <?php if ($p['bab'] !== $babLalu): $babLalu = $p['bab']; ?>
       <tr><td colspan="6" style="font-weight:600;background:#fcfcfd"><?= esc($babLalu ?: '—') ?></td></tr>
       <?php endif; ?>
       <tr>
         <td><?= esc($p['nama']) ?></td>
-        <td class="angka"><?= rtrim(rtrim(number_format((float) $p['volume'], 3, ',', '.'), '0'), ',') ?> <?= esc($p['satuan'] ?? '') ?></td>
+        <td class="angka"><?= rtrim(rtrim(number_format($volB, 3, ',', '.'), '0'), ',') ?> <?= esc($p['satuan'] ?? '') ?></td>
         <td class="angka"><?= rtrim(rtrim(number_format((float) $p['volume_terealisasi'], 3, ',', '.'), '0'), ',') ?></td>
         <td><div class="bar<?= $persen >= 99.5 ? ' hijau' : '' ?>"><div style="width:<?= $persen ?>%"></div></div></td>
         <td class="angka"><?= number_format((float) $p['jumlah'], 0, ',', '.') ?></td>

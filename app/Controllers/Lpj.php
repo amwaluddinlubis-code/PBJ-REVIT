@@ -14,7 +14,7 @@ class Lpj extends BaseController
         $db = $this->db();
         $gid = (int) $g['id'];
         $real = $db->query(
-            'SELECT COALESCE(SUM(r.volume * p.harga_satuan), 0) t FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
+            'SELECT COALESCE(SUM(r.volume * COALESCE(p.harga_revisi, p.harga_satuan)), 0) t FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
             [$gid]
         )->getRowArray();
         $nilaiRealisasi = (float) ($real['t'] ?? 0);
@@ -127,12 +127,12 @@ class Lpj extends BaseController
         if ($ids !== []) {
             $in = implode(',', $ids);
             $gabungan = $this->db()->query(
-                "SELECT MAX(p.nama) AS nama, p.satuan, p.harga_satuan,
-                        SUM(p.volume) AS volume, SUM(p.jumlah) AS jumlah,
+                "SELECT MAX(p.nama) AS nama, p.satuan, COALESCE(p.harga_revisi, p.harga_satuan) AS harga_satuan,
+                        SUM(COALESCE(p.volume_revisi, p.volume)) AS volume, SUM(COALESCE(p.volume_revisi, p.volume) * COALESCE(p.harga_revisi, p.harga_satuan)) AS jumlah,
                         COUNT(DISTINCT p.gedung_id) AS jumlah_gedung
                  FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
                  WHERE p.gedung_id IN ($in) AND p.is_deleted = 0 AND g.is_deleted = 0
-                 GROUP BY LOWER(TRIM(p.nama)), p.satuan, p.harga_satuan
+                 GROUP BY LOWER(TRIM(p.nama)), p.satuan, COALESCE(p.harga_revisi, p.harga_satuan)
                  ORDER BY jumlah DESC"
             )->getResultArray();
             $total = array_sum(array_column($gabungan, 'jumlah'));

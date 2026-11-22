@@ -8,6 +8,9 @@
   <tr><td style="width:180px">Gedung / Paket</td><td><?= esc($r['gedung_nama']) ?></td></tr>
   <?php if (! empty($r['pekerjaan_nama'])): ?><tr><td>Pekerjaan</td><td><?= esc($r['pekerjaan_nama']) ?></td></tr><?php endif; ?>
   <?php if (! empty($r['perubahan'])): ?><tr><td>Ringkasan Perubahan</td><td><?= esc($r['perubahan']) ?></td></tr><?php endif; ?>
+  <?php if (($r['jenis'] ?? 'catatan') === 'volume'): ?><tr><td>Perubahan Volume</td><td>Menjadi <?= rtrim(rtrim(number_format((float) $r['volume_baru'], 3, ',', '.'), '0'), ',') ?><?= $r['harga_baru'] !== null ? ' dengan harga satuan Rp ' . number_format((float) $r['harga_baru'], 0, ',', '.') : '' ?></td></tr><?php endif; ?>
+  <?php if (($r['jenis'] ?? 'catatan') === 'hapus'): ?><tr><td>Perubahan</td><td>Pekerjaan di atas dihapus dari RAB berjalan</td></tr><?php endif; ?>
+  <?php if (in_array($r['jenis'] ?? 'catatan', ['baru', 'ganti'], true)): ?><tr><td><?= ($r['jenis'] === 'ganti' ? 'Pekerjaan Pengganti' : 'Pekerjaan Baru') ?></td><td><?= esc($r['nama_baru'] ?? '') ?> — volume <?= rtrim(rtrim(number_format((float) $r['volume_baru'], 3, ',', '.'), '0'), ',') ?> <?= esc($r['satuan_baru'] ?? '') ?> @ Rp <?= number_format((float) $r['harga_baru'], 0, ',', '.') ?></td></tr><?php endif; ?>
   <tr><td>Uraian Revisi</td><td><?= nl2br(esc($r['uraian'])) ?></td></tr>
 </table>
 <p>Revisi pekerjaan ini telah dikonsultasikan kepada Pejabat Pembuat Komitmen (PPK) melalui fasilitator, dan menjadi dasar penyesuaian dokumen perencanaan beserta pelaksanaannya.</p>

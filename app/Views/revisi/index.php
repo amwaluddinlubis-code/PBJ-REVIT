@@ -19,7 +19,27 @@
       <label>Tanggal Revisi <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required></label>
       <label>Ringkasan Perubahan <input type="text" name="perubahan" placeholder="cth. Volume plesteran +12 m2, biaya +Rp1.850.000"></label>
       <label class="md:col-span-2">Uraian Revisi <textarea name="uraian" rows="3" required placeholder="Alasan perubahan, rincian pekerjaan sebelum dan sesudah revisi, serta dampaknya pada biaya dan jadwal"></textarea></label>
+      <label>Jenis Revisi
+        <select data-select-cari name="jenis">
+          <option value="catatan">Catatan saja (tidak mengubah RAB)</option>
+          <option value="volume">Ubah volume pekerjaan terpilih</option>
+          <option value="ganti">Ganti pekerjaan (mis. jendela aluminium → kayu)</option>
+          <option value="baru">Tambah pekerjaan baru</option>
+          <option value="hapus">Hapus pekerjaan dari RAB berjalan</option>
+        </select>
+      </label>
+      <label>Volume Baru <input type="text" name="volume_baru" inputmode="decimal" placeholder="volume sesudah revisi / volume pengganti"></label>
+      <label>Nama Pekerjaan Baru / Pengganti <input type="text" name="nama_baru" placeholder="cth. Pek. Jendela Kayu Kelas II"></label>
+      <label>Satuan Pengganti <input type="text" name="satuan_baru" placeholder="cth. unit, m2, ls"></label>
+      <label>Harga Satuan Baru / Pengganti <input type="text" name="harga_baru" inputmode="numeric" placeholder="Rp per satuan"></label>
+      <label>Analisa Pengganti
+        <select data-select-cari name="kode_analisa_baru">
+          <option value="">— tanpa analisa —</option>
+          <?php foreach ($analisa as $a): ?><option value="<?= esc($a['kode']) ?>"><?= esc($a['kode']) ?> — <?= esc($a['nama']) ?></option><?php endforeach; ?>
+        </select>
+      </label>
     </div>
+    <p class="kecil-teks" style="margin:8px 0 0">Revisi terstruktur tersimpan sebagai <b>draft</b> dan baru mengubah RAB berjalan setelah disahkan dari daftar di bawah. RAB awal tidak pernah berubah.</p>
     <div class="aksi" style="justify-content:flex-start"><button type="submit">Catat Revisi</button></div>
   </form>
 </div>
@@ -38,15 +58,24 @@
     </form>
   </div>
   <table data-cari="Cari revisi…">
-    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Gedung / Pekerjaan</th><th>Perubahan</th><th>Uraian</th><th></th></tr>
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Gedung / Pekerjaan</th><th>Jenis &amp; Status</th><th>Perubahan</th><th>Uraian</th><th></th></tr>
+    <?php $labelJenis = ['catatan' => 'Catatan', 'volume' => 'Ubah volume', 'baru' => 'Pekerjaan baru', 'ganti' => 'Ganti pekerjaan', 'hapus' => 'Hapus pekerjaan']; ?>
     <?php foreach ($revisi as $r): ?>
     <tr>
       <td><input type="checkbox" data-pilih value="<?= (int) $r['id'] ?>" x-model="terpilih"></td>
       <td><?= esc($r['tanggal']) ?></td>
-      <td><?= esc($r['gedung_nama']) ?><?= $r['pekerjaan_nama'] ? '<br><span class="kecil-teks">' . esc($r['pekerjaan_nama']) . '</span>' : '' ?></td>
+      <td><?= esc($r['gedung_nama']) ?><?= $r['pekerjaan_nama'] ? '<br><span class="kecil-teks">' . esc($r['pekerjaan_nama']) . '</span>' : '' ?><?= ! empty($r['nama_baru']) ? '<br><span class="kecil-teks">→ ' . esc($r['nama_baru']) . '</span>' : '' ?></td>
+      <td><?= esc($labelJenis[$r['jenis'] ?? 'catatan'] ?? 'Catatan') ?><br>
+        <?php if (($r['status'] ?? 'draft') === 'disahkan'): ?><span class="lencana" style="background:var(--ina-green-100);color:var(--ina-green-700)">Disahkan</span><?php else: ?><span class="lencana" style="background:var(--ina-yellow-100, #fef9c3);color:var(--ina-yellow-700, #854d0e)">Draft</span><?php endif; ?>
+      </td>
       <td><?= esc($r['perubahan'] ?? '—') ?></td>
       <td><?= esc($r['uraian']) ?></td>
       <td style="white-space:nowrap">
+        <?php if (($r['status'] ?? 'draft') !== 'disahkan' && ($r['jenis'] ?? 'catatan') !== 'catatan'): ?>
+        <form class="inline" method="post" action="<?= base_url('revisi-pekerjaan/sahkan/' . $r['id']) ?>" data-konfirmasi="Sahkan revisi ini? RAB berjalan akan diperbarui dan totalnya diperiksa terhadap pagu."><?= csrf_field() ?><button class="kecil" type="submit">Sahkan</button></form>
+        <?php elseif (($r['status'] ?? 'draft') === 'disahkan'): ?>
+        <form class="inline" method="post" action="<?= base_url('revisi-pekerjaan/batal-sah/' . $r['id']) ?>" data-konfirmasi="Batalkan pengesahan? RAB berjalan kembali seperti sebelum revisi ini."><?= csrf_field() ?><button class="kecil abu" type="submit">Batalkan Sah</button></form>
+        <?php endif; ?>
         <a class="tombol kecil abu" href="<?= base_url('revisi-pekerjaan/cetak/' . $r['id']) ?>" target="_blank">Cetak BA</a>
         <form class="inline" method="post" action="<?= base_url('revisi-pekerjaan/hapus/' . $r['id']) ?>" data-konfirmasi="Hapus catatan revisi ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>
       </td>

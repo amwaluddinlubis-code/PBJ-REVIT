@@ -111,7 +111,7 @@ abstract class BaseController extends Controller
                 'SELECT g.*, COALESCE(r.nilai, 0) AS nilai_realisasi
                  FROM gedung g
                  LEFT JOIN (
-                     SELECT p.gedung_id AS gid, SUM(rl.volume * p.harga_satuan) AS nilai
+                     SELECT p.gedung_id AS gid, SUM(rl.volume * COALESCE(p.harga_revisi, p.harga_satuan)) AS nilai
                      FROM realisasi rl JOIN pekerjaan p ON p.id = rl.pekerjaan_id
                      WHERE rl.is_deleted = 0 AND p.is_deleted = 0
                      GROUP BY p.gedung_id
@@ -193,7 +193,7 @@ abstract class BaseController extends Controller
         $db = $this->db();
         $mentah = $db->query(
             "SELECT b.id AS bahan_id, b.kode, b.nama, b.satuan, ak.satuan AS satuan_komponen,
-                    SUM(p.volume * ak.koefisien) AS qty_mentah
+                    SUM(COALESCE(p.volume_revisi, p.volume) * ak.koefisien) AS qty_mentah
              FROM pekerjaan p
              JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
              JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'bahan' AND ak.bahan_id IS NOT NULL
@@ -220,7 +220,7 @@ abstract class BaseController extends Controller
         $tertaut = array_values($gabung);
         usort($tertaut, static fn ($a, $b) => $b['qty_butuh'] <=> $a['qty_butuh']);
         $takTertaut = $db->query(
-            "SELECT ak.nama, SUM(p.volume * ak.koefisien) AS qty_butuh, COUNT(DISTINCT p.id) AS dipakai_pekerjaan
+            "SELECT ak.nama, SUM(COALESCE(p.volume_revisi, p.volume) * ak.koefisien) AS qty_butuh, COUNT(DISTINCT p.id) AS dipakai_pekerjaan
              FROM pekerjaan p
              JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
              JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'bahan' AND ak.bahan_id IS NULL
@@ -235,7 +235,7 @@ abstract class BaseController extends Controller
     protected function kebutuhanUpah(int $gedungId): array
     {
         return $this->db()->query(
-            "SELECT ak.nama AS jenis, SUM(p.volume * ak.koefisien) AS orang_hari,
+            "SELECT ak.nama AS jenis, SUM(COALESCE(p.volume_revisi, p.volume) * ak.koefisien) AS orang_hari,
                     COALESCE(MAX(um.tarif), MAX(ak.tarif), 0) AS tarif
              FROM pekerjaan p
              JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
@@ -317,7 +317,7 @@ abstract class BaseController extends Controller
     {
         $sid = $sid ?? $this->sid();
         $row = $this->db()->query(
-            'SELECT COALESCE(SUM(p.volume * p.harga_satuan), 0) AS t
+            'SELECT COALESCE(SUM(COALESCE(p.volume_revisi, p.volume) * COALESCE(p.harga_revisi, p.harga_satuan)), 0) AS t
              FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
              WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 AND g.didanai = 1',
             [$sid]
@@ -359,6 +359,51 @@ abstract class BaseController extends Controller
             'gedung' => (int) ($n['n'] ?? 0),
             'gedung_semua' => (int) ($nSemua['n'] ?? 0),
         ];
+    }
+
+    /** Total RAB awal (volume & harga dokumen perencana, sebelum revisi). */
+    protected function totalRabAwal(?int $sid = null): float
+    {
+        $sid = $sid ?? $this->sid();
+        $row = $this->db()->query(
+            'SELECT COALESCE(SUM(p.volume * p.harga_satuan), 0) AS t
+             FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
+             WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 AND g.didanai = 1',
+            [$sid]
+        )->getRowArray();
+        return (float) ($row['t'] ?? 0);
+    }
+
+    /** Volume berjalan sebuah pekerjaan: hasil revisi disahkan, atau awal. */
+    protected function volBerjalan(array $p): float
+    {
+        return (float) ($p['volume_revisi'] ?? $p['volume'] ?? 0);
+    }
+
+    /** Harga satuan berjalan sebuah pekerjaan. */
+    protected function hargaBerjalan(array $p): float
+    {
+        return (float) ($p['harga_revisi'] ?? $p['harga_satuan'] ?? 0);
+    }
+
+    /**
+     * Hitung ulang volume/harga berjalan satu pekerjaan dari revisi
+     * disahkan TERAKHIR yang menyentuhnya (jenis volume/hapus/ganti).
+     * Tanpa revisi disahkan, berjalan kembali ke RAB awal (NULL).
+     */
+    protected function segarkanBerjalan(int $pekerjaanId): void
+    {
+        $r = $this->db()->table('revisi_pekerjaan')
+            ->where(['pekerjaan_id' => $pekerjaanId, 'status' => 'disahkan', 'is_deleted' => 0])
+            ->whereIn('jenis', ['volume', 'hapus', 'ganti'])
+            ->orderBy('disahkan_at', 'DESC')->orderBy('id', 'DESC')
+            ->get()->getRowArray();
+        $ubah = ['volume_revisi' => null, 'harga_revisi' => null];
+        if ($r) {
+            $ubah['volume_revisi'] = $r['jenis'] === 'volume' ? $r['volume_baru'] : 0;
+            $ubah['harga_revisi'] = $r['harga_baru'] !== null ? (float) $r['harga_baru'] : null;
+        }
+        $this->db()->table('pekerjaan')->where('id', $pekerjaanId)->update($ubah);
     }
 
     /**

@@ -14,7 +14,7 @@ class Gedung extends BaseController
         )->getResultArray();
         foreach ($gedung as &$g) {
             $real = $db->query(
-                'SELECT COALESCE(SUM(r.volume * p.harga_satuan), 0) t FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
+                'SELECT COALESCE(SUM(r.volume * COALESCE(p.harga_revisi, p.harga_satuan)), 0) t FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
                 [$g['id']]
             )->getRowArray();
             $g['nilai_realisasi'] = (float) ($real['t'] ?? 0);
@@ -121,7 +121,7 @@ class Gedung extends BaseController
         $db = $this->db();
         $data = ['g' => $g, 'tab' => $tab];
         $real = $db->query(
-            'SELECT COALESCE(SUM(r.volume * p.harga_satuan), 0) t FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
+            'SELECT COALESCE(SUM(r.volume * COALESCE(p.harga_revisi, p.harga_satuan)), 0) t FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
             [$g['id']]
         )->getRowArray();
         $data['nilai_realisasi'] = (float) ($real['t'] ?? 0);
@@ -328,6 +328,19 @@ class Gedung extends BaseController
         $volume = (float) str_replace(',', '.', (string) $this->request->getPost('volume'));
         if ($volume <= 0) {
             return redirect()->to('/gedung/' . (int) $p['gedung_id'] . '/realisasi')->with('galat', 'Volume realisasi harus lebih dari 0.');
+        }
+        // Batas RAB berjalan: realisasi kumulatif tidak boleh melewati
+        // volume berjalan — kelebihan harus lewat revisi yang disahkan.
+        $berjalan = $this->volBerjalan($p);
+        $sudah = (float) ($db->query(
+            'SELECT COALESCE(SUM(volume), 0) AS t FROM realisasi WHERE pekerjaan_id = ? AND is_deleted = 0',
+            [(int) $pekerjaanId]
+        )->getRowArray()['t'] ?? 0);
+        if ($sudah + $volume > $berjalan + 0.0001) {
+            return redirect()->to('/gedung/' . (int) $p['gedung_id'] . '/realisasi')->with('galat',
+                'Realisasi ditolak: total menjadi ' . number_format($sudah + $volume, 2, ',', '.') . ' ' . $p['satuan']
+                . ', melebihi volume RAB berjalan ' . number_format($berjalan, 2, ',', '.') . ' ' . $p['satuan']
+                . '. Buat BA Revisi dan sahkan terlebih dahulu bila volume memang bertambah.');
         }
         $db->table('realisasi')->insert([
             'pekerjaan_id' => (int) $pekerjaanId,

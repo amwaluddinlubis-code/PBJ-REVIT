@@ -44,7 +44,7 @@ class Kurva extends BaseController
             [(int) $g['id']]
         )->getRowArray();
         $real = $db->query(
-            'SELECT rl.tanggal, SUM(rl.volume * p.harga_satuan) AS nilai
+            'SELECT rl.tanggal, SUM(rl.volume * COALESCE(p.harga_revisi, p.harga_satuan)) AS nilai
              FROM realisasi rl JOIN pekerjaan p ON p.id = rl.pekerjaan_id
              WHERE p.gedung_id = ? AND rl.is_deleted = 0 AND p.is_deleted = 0
              GROUP BY rl.tanggal ORDER BY rl.tanggal',
