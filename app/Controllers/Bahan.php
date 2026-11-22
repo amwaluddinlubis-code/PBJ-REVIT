@@ -4,16 +4,40 @@ namespace App\Controllers;
 
 class Bahan extends BaseController
 {
+    /** Id bahan yang benar-benar digunakan: tertaut komponen analisa aktif atau tercantum di SPK Detail aktif. */
+    private function idBahanTerpakai(): array
+    {
+        $set = [];
+        foreach ($this->db()->query(
+            'SELECT DISTINCT ak.bahan_id FROM analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             WHERE a.sekolah_id = ? AND ak.jenis = ? AND ak.bahan_id IS NOT NULL AND ak.is_deleted = 0 AND a.is_deleted = 0',
+            [$this->sid(), 'bahan']
+        )->getResultArray() as $r) {
+            $set[(int) $r['bahan_id']] = true;
+        }
+        foreach ($this->db()->query(
+            'SELECT DISTINCT d.bahan_id FROM spk_detail d JOIN spk s ON s.id = d.spk_id
+             WHERE s.sekolah_id = ? AND d.bahan_id IS NOT NULL AND d.is_deleted = 0 AND s.is_deleted = 0',
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $set[(int) $r['bahan_id']] = true;
+        }
+        return $set;
+    }
+
     public function index()
     {
         $q = trim((string) ($this->request->getGet('q') ?? ''));
-        $bahan = $this->ambilBahan($q);
+        $semua = (string) ($this->request->getGet('semua') ?? '') === '1';
+        $bahan = $this->ambilBahan($q, ! $semua);
+        $setTerpakai = $this->idBahanTerpakai();
         $upah = $this->db()->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray();
         return $this->tampil('bahan/index', [
             'bahan' => $bahan, 'q' => $q, 'upah' => $upah,
+            'semua' => $semua, 'jmlTerpakai' => count($setTerpakai),
             'totalBahan' => $this->db()->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults(),
             'totalUpah' => count($upah),
-            'bahanTanpaHarga' => $this->db()->query(
+            'bahanTanpaHarga' => array_values(array_filter($this->db()->query(
                 'SELECT b.id, b.kode, b.nama, b.satuan FROM bahan b
                  LEFT JOIN negosiasi n ON n.bahan_id = b.id AND n.is_deleted = 0
                  WHERE b.sekolah_id = ? AND b.is_deleted = 0
@@ -22,7 +46,7 @@ class Bahan extends BaseController
                    AND (n.harga_penawaran IS NULL OR n.harga_penawaran = 0)
                  ORDER BY b.kode',
                 [$this->sid()]
-            )->getResultArray(),
+            )->getResultArray(), fn ($b) => isset($setTerpakai[(int) $b['id']]))),
             'upahTanpaTarif' => array_values(array_filter($upah, static fn ($u) => (float) $u['tarif'] <= 0)),
             'duplikatBahan' => $this->grupDuplikat($bahan),
             'duplikatUpah' => $this->grupDuplikat($upah, 'jenis'),
@@ -30,7 +54,7 @@ class Bahan extends BaseController
     }
 
     /** Daftar bahan aktif sekolah ini (dengan total RAB & pemakaian SPK). */
-    private function ambilBahan(string $q = ''): array
+    private function ambilBahan(string $q = '', bool $hanyaTerpakai = false): array
     {
         $sql = 'SELECT b.*, (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_total,
                     (b.qty_rkb+b.qty_adm+b.qty_toilet)*b.harga_rab AS anggaran,
@@ -54,6 +78,10 @@ class Bahan extends BaseController
         foreach ($this->kebutuhanBahanSekolah()['tertaut'] as $b) {
             $petaButuh[(int) $b['bahan_id']] = (float) $b['qty_butuh'];
         }
+        if ($hanyaTerpakai) {
+            $set = $this->idBahanTerpakai();
+            $baris = array_values(array_filter($baris, static fn ($r) => isset($set[(int) $r['id']])));
+        }
         foreach ($baris as &$r) {
             $langsung = $petaButuh[(int) $r['id']] ?? null;
             if ($langsung !== null) {
@@ -69,7 +97,8 @@ class Bahan extends BaseController
     public function tabel()
     {
         $q = trim((string) ($this->request->getGet('q') ?? ''));
-        return view('bahan/_tabel', ['bahan' => $this->ambilBahan($q)]);
+        $semua = (string) ($this->request->getGet('semua') ?? '') === '1';
+        return view('bahan/_tabel', ['bahan' => $this->ambilBahan($q, ! $semua)]);
     }
 
     /** Hapus massal bahan tercentang; yang sudah dipakai SPK dilewati. */

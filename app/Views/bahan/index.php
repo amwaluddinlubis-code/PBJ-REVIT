@@ -40,12 +40,13 @@
 
 <div x-data="{
   kata: '<?= esc($q, 'js') ?>',
+  semua: <?= ! empty($semua) ? 'true' : 'false' ?>,
   terpilih: [],
   memuat: false,
   async cari() {
     this.memuat = true;
     try {
-      const r = await fetch('<?= base_url('bahan/tabel') ?>?q=' + encodeURIComponent(this.kata), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const r = await fetch('<?= base_url('bahan/tabel') ?>?q=' + encodeURIComponent(this.kata) + (this.semua ? '&semua=1' : ''), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const wadah = document.getElementById('wadah-tabel-bahan');
       wadah.innerHTML = await r.text();
       if (window.inisiasiPaginasi) window.inisiasiPaginasi(wadah);
@@ -73,6 +74,7 @@
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px">
     <a class="tombol" href="<?= base_url('bahan/baru') ?>">+ Tambah Bahan</a>
     <input type="search" placeholder="Cari bahan — ketik, daftar menyaring langsung…" x-model="kata" @input.debounce.300ms="cari()" style="flex:1;min-width:220px">
+    <label class="kecil-teks" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" x-model="semua" @change="cari()" style="width:auto;margin:0"> Tampilkan semua bahan</label>
     <span x-show="memuat" class="kecil-teks">Memuat…</span>
     <form id="form-bulk-bahan" method="post" action="<?= base_url('bahan/hapus-massal') ?>" data-konfirmasi-judul="Hapus Bahan Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
       <?= csrf_field() ?>
