@@ -173,7 +173,8 @@ class Bahan extends BaseController
             // Duplikat dihitung dari SELURUH bahan aktif sekolah — bukan dari
             // daftar tab aktif, agar pasangan yang terpisah tab (satu dipakai
             // gedung, satu tidak) tetap tertangkap panel ALERT-nya.
-            'duplikatBahan' => $this->grupDuplikat($this->db()->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('kode')->get()->getResultArray()),
+            'duplikatBahan' => $this->grupDuplikat($semuaBahan = $this->db()->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('kode')->get()->getResultArray()),
+            'semuaBahan' => $semuaBahan,
             'duplikatUpah' => $this->grupDuplikat($upah, 'jenis'),
         ], 'Master Bahan & Upah — Aplikasi PBJ Sekolah');
     }
@@ -671,10 +672,10 @@ class Bahan extends BaseController
     public function gabung()
     {
         $utamaId = (int) $this->request->getPost('utama');
-        $anggota = array_map('intval', (array) $this->request->getPost('anggota'));
+        $anggota = array_values(array_unique(array_map('intval', (array) $this->request->getPost('anggota'))));
         $utama = $this->db()->table('bahan')->where(['id' => $utamaId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         if (! $utama || ! in_array($utamaId, $anggota, true) || count($anggota) < 2) {
-            return redirect()->to('bahan')->with('galat', 'Pilih bahan utama dari kelompok duplikatnya.');
+            return redirect()->to('bahan')->with('galat', 'Pilih bahan utama dan minimal satu bahan lain yang berbeda untuk digabungkan.');
         }
         $db = $this->db();
         $db->transStart();
