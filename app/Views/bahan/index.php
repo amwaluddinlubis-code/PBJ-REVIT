@@ -46,13 +46,19 @@
   sinkron: null,
   async cari() {
     this.memuat = true;
+    const wadah = document.getElementById('wadah-tabel-bahan');
+    wadah.setAttribute('aria-busy', 'true');
+    const tulang = document.createElement('div');
+    tulang.className = 'tulang';
+    tulang.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 8; i++) tulang.appendChild(document.createElement('span'));
+    wadah.replaceChildren(tulang);
     try {
       const r = await fetch('<?= base_url('bahan/tabel') ?>?q=' + encodeURIComponent(this.kata) + '&tab=' + this.tab, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      const wadah = document.getElementById('wadah-tabel-bahan');
       wadah.innerHTML = await r.text();
       if (window.inisiasiPaginasi) window.inisiasiPaginasi(wadah);
       history.replaceState(null, '', '?tab=' + this.tab + (this.kata ? '&q=' + encodeURIComponent(this.kata) : ''));
-    } finally { this.memuat = false; }
+    } finally { this.memuat = false; wadah.removeAttribute('aria-busy'); }
   },
   async pratinjauSinkron() {
     this.memuat = true;

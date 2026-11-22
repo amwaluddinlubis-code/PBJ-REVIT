@@ -3719,3 +3719,56 @@ body:not(.login) .dashboard-hero .tombol,
 body:not(.login) .dashboard-hero .tombol.abu {
   border-radius: 999px;
 }
+
+/* === Fase 4 (2026-11-22): breadcrumb, empty state, skeleton === */
+
+/* Jejak halaman (breadcrumb) di halaman detail. */
+.remah {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--ta-teks-3);
+  margin-bottom: 12px;
+}
+.remah a { color: var(--ta-teks-2); font-weight: 550; }
+.remah a:hover { color: var(--ta-biru); text-decoration: none; }
+.remah span[aria-hidden] { opacity: .55; }
+
+/* Keadaan kosong yang konsisten untuk panel tanpa data. */
+.kosong {
+  text-align: center;
+  padding: 34px 22px;
+  color: var(--ta-teks-2);
+}
+.kosong p { margin: 0 0 12px; }
+
+/* Kerangka berkilau (skeleton) saat tabel Bahan dimuat ulang via AJAX. */
+.tulang {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 6px 0;
+}
+.tulang span {
+  display: block;
+  height: 16px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(15, 35, 70, .06), rgba(15, 35, 70, .13), rgba(15, 35, 70, .06));
+  background-size: 200% 100%;
+  animation: tulang-geser 1.2s ease-in-out infinite;
+}
+.tulang span:nth-child(2n) { width: 82%; }
+.tulang span:nth-child(3n) { width: 64%; }
+@keyframes tulang-geser {
+  0% { background-position: 120% 0; }
+  100% { background-position: -80% 0; }
+}
+html.gelap .tulang span {
+  background: linear-gradient(90deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .12), rgba(255, 255, 255, .05));
+  background-size: 200% 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tulang span { animation: none; }
+}

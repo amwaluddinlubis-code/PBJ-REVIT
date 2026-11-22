@@ -147,7 +147,7 @@ class Pengguna extends BaseController
     public function profil()
     {
         $saya = $this->db()->table('users')->where('id', (int) ($this->pengguna['id'] ?? 0))->get()->getRowArray();
-        return $this->tampil('pengguna/profil', ['saya' => $saya], 'Profil Saya');
+        return $this->tampil('pengguna/profil', ['saya' => $saya], 'Profil Saya — Aplikasi PBJ Sekolah');
     }
 
     public function profilSimpan()

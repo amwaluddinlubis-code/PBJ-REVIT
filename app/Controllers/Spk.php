@@ -248,7 +248,7 @@ class Spk extends BaseController
             [$this->sid()]
         )->getResultArray();
         $spk = $this->db()->table('spk')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nomor')->get()->getResultArray();
-        return $this->tampil('spk/belum', ['detail' => $detail, 'spk' => $spk], 'Detail Belum Bernomor SPK');
+        return $this->tampil('spk/belum', ['detail' => $detail, 'spk' => $spk], 'Detail Belum Bernomor SPK — Aplikasi PBJ Sekolah');
     }
 
     public function pasangNomor($detailId)

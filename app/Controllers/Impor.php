@@ -63,7 +63,7 @@ class Impor extends BaseController
             'semua_bahan' => $semuaBahan,
             'jumlah_massal' => $jumlahMassal,
             'verifikasi' => $verifikasi,
-        ], 'Impor Dokumen Perencana');
+        ], 'Impor Dokumen Perencana — Aplikasi PBJ Sekolah');
     }
 
     /** Daftar nama komponen bahan yang belum tertaut + saran padanan terbaiknya. */

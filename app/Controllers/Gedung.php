@@ -30,7 +30,7 @@ class Gedung extends BaseController
             $g['nilai_realisasi'] = $this->nilaiRealisasiGedung((int) $g['id']);
             $g['persen_fisik'] = $g['nilai_boq'] > 0 ? min(100, $g['nilai_realisasi'] / $g['nilai_boq'] * 100) : 0;
         }
-        return $this->tampil('gedung/index', ['gedung' => $gedung], 'Kelola Gedung');
+        return $this->tampil('gedung/index', ['gedung' => $gedung], 'Kelola Gedung — Aplikasi PBJ Sekolah');
     }
 
     public function simpan()

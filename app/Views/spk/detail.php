@@ -1,4 +1,5 @@
 <?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
+<nav class="remah" aria-label="Jejak halaman"><a href="<?= base_url() ?>">Dashboard</a> <span aria-hidden="true">/</span> <a href="<?= base_url('spk') ?>">Register SPK</a> <span aria-hidden="true">/</span> <span>SPK Nomor <?= (int) $s['nomor'] ?></span></nav>
 <div class="panel">
   <h2>SPK Nomor <?= (int) $s['nomor'] ?> — <?= esc($s['paket'] ?? '') ?></h2>
   <div class="kecil-teks">

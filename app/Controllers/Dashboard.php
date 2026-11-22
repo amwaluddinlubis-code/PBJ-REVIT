@@ -182,6 +182,6 @@ class Dashboard extends BaseController
             'fisikRata' => $fisikRata,
             'pecahCek' => $pecahCek,
             'masterKonflik' => $masterKonflik,
-        ], 'Dashboard — Analisa Perencana');
+        ], 'Dashboard — Aplikasi PBJ Sekolah');
     }
 }

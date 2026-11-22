@@ -15,6 +15,6 @@ class Audit extends BaseController
             'SELECT * FROM audit_events WHERE sekolah_id = ? OR sekolah_id IS NULL ORDER BY id DESC LIMIT 500',
             [$this->sid()]
         )->getResultArray() : [];
-        return $this->tampil('audit/index', ['daftar' => $daftar], 'Jejak Audit');
+        return $this->tampil('audit/index', ['daftar' => $daftar], 'Jejak Audit — Aplikasi PBJ Sekolah');
     }
 }

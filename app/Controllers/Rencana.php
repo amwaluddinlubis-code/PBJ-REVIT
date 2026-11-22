@@ -65,7 +65,7 @@ class Rencana extends BaseController
             'gedung_filter' => $gedungFilter,
             'anggaran' => $anggaran, 'terbayar' => $terbayar,
             'sisa_pagu' => $anggaran > 0 ? $anggaran - $terbayar : null,
-        ], 'Rencana Belanja — Dari Kebutuhan Pekerjaan');
+        ], 'Rencana Belanja — Aplikasi PBJ Sekolah');
     }
 
     /**

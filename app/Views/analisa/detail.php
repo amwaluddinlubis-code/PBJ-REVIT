@@ -6,7 +6,7 @@ foreach ($komponen as $k) {
     $total += (float) $k['koefisien'] * (float) ($k['tarif'] ?? 0);
 }
 ?>
-<p style="margin:0 0 10px"><a href="<?= base_url('analisa') ?>">← Semua Analisa</a></p>
+<nav class="remah" aria-label="Jejak halaman"><a href="<?= base_url() ?>">Dashboard</a> <span aria-hidden="true">/</span> <a href="<?= base_url('analisa') ?>">Analisa Pekerjaan</a> <span aria-hidden="true">/</span> <span><?= esc($a['kode']) ?></span></nav>
 <div class="panel">
   <h2 style="margin-top:0"><?= esc($a['kode']) ?> — <?= esc($a['nama'] ?? '') ?><?php if ((float) ($a['harga_satuan'] ?? 0) <= 0): ?> <span style="background:#fef3c7;color:#92400e;padding:2px 9px;border-radius:99px;font-size:12px;vertical-align:middle">harga satuan belum terverifikasi</span><?php endif; ?></h2>
   <?php if ((float) ($a['harga_satuan'] ?? 0) <= 0): ?>
