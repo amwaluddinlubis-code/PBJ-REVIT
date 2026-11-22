@@ -3067,13 +3067,306 @@ th.bisa-urut { cursor: pointer; }
 th.bisa-urut:hover { text-decoration: underline; }
 th .panah-urut { font-size: 10px; opacity: .75; }
 tr.baris-kosong td { text-align: center; color: var(--ta-teks-2); padding: 18px 10px; font-style: italic; }
+
+/* Login v2 dan pemilih versi login administrator. */
+.login-v2{background:var(--ta-latar,#f3f6fb);color:var(--ta-teks,#172033)}
+.login-v2-shell{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,480px);max-width:1320px;margin:auto;padding:30px;gap:30px;align-items:stretch}
+.login-v2-intro{position:relative;overflow:hidden;border-radius:28px;padding:clamp(34px,6vw,92px);display:flex;flex-direction:column;justify-content:center;background:linear-gradient(145deg,#092b55 0%,#075b83 52%,#16a19a 100%);color:#fff;box-shadow:0 24px 70px rgba(17,53,91,.18)}
+.login-v2-intro:after{content:"";position:absolute;width:480px;height:480px;border:1px solid rgba(255,255,255,.18);border-radius:50%;right:-180px;bottom:-180px;box-shadow:0 0 0 48px rgba(255,255,255,.05),0 0 0 96px rgba(255,255,255,.035)}
+.login-v2-mark{display:flex;align-items:center;gap:10px;margin-bottom:34px;font-weight:800}.login-v2-mark span{display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(255,255,255,.5);border-radius:14px;font-size:14px;letter-spacing:.08em}.login-v2-mark i{display:block;width:42px;height:1px;background:rgba(255,255,255,.4)}
+.login-v2-eyebrow,.login-v2-kicker{margin:0 0 14px;color:#8de4d4;text-transform:uppercase;font-size:11px;letter-spacing:.16em;font-weight:800}.login-v2-intro h1{max-width:690px;margin:0;font-size:clamp(36px,5vw,70px);line-height:1.03;letter-spacing:-.055em}.login-v2-intro h1 em{color:#9ee9d3;font-style:normal}.login-v2-lead{max-width:580px;margin:25px 0 40px;color:rgba(255,255,255,.78);font-size:16px;line-height:1.7}.login-v2-proof{position:relative;z-index:1;display:flex;gap:16px;max-width:550px;padding:16px 0;border-top:1px solid rgba(255,255,255,.16)}.login-v2-proof span{color:#8de4d4;font-size:11px;font-weight:800;letter-spacing:.1em}.login-v2-proof b,.login-v2-proof small{display:block}.login-v2-proof b{font-size:14px}.login-v2-proof small{margin-top:5px;color:rgba(255,255,255,.65);line-height:1.5}.login-v2-footer{position:absolute;bottom:30px;margin:0;color:rgba(255,255,255,.55);font-size:11px}
+.login-v2-card{align-self:center;width:100%;padding:34px;border:1px solid rgba(24,53,85,.1);border-radius:24px;background:var(--ta-panel,#fff);box-shadow:0 20px 55px rgba(24,53,85,.1)}.login-v2-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:58px;color:var(--ta-teks-2,#667085);font-size:11px}.login-v2-status{display:flex;align-items:center;gap:7px}.login-v2-status i{width:7px;height:7px;border-radius:50%;background:#20a47b;box-shadow:0 0 0 4px rgba(32,164,123,.12)}.login-v2-year{text-transform:uppercase;letter-spacing:.12em}.login-v2-heading h2{margin:0;font-size:30px;letter-spacing:-.04em}.login-v2-heading>p:last-child{margin:10px 0 0;color:var(--ta-teks-2,#667085);font-size:13px}.login-v2-form{margin-top:35px}.login-v2-form label{display:block;margin:0 0 8px;font-size:12px;font-weight:700}.login-v2-input{display:flex;align-items:center;gap:10px;min-height:50px;margin-bottom:20px;border:1px solid var(--ta-garis,#d9e0ea);border-radius:12px;background:var(--ta-input,#fff);transition:border-color .2s,box-shadow .2s}.login-v2-input:focus-within{border-color:#087b8b;box-shadow:0 0 0 4px rgba(8,123,139,.11)}.login-v2-input>span{width:20px;margin-left:15px;color:#087b8b;font-weight:800}.login-v2-input input{min-width:0;flex:1;border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;padding:13px 0!important}.login-v2-input button{margin-right:8px;padding:7px 8px;border:0;background:transparent;color:#087b8b;font-size:11px;font-weight:800;cursor:pointer}.login-v2-submit{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:8px;padding:15px 17px;border:0;border-radius:12px;background:#087b8b;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(8,123,139,.2)}.login-v2-submit:hover{background:#076875}.login-v2-submit b{font-size:21px;font-weight:500}.login-v2-note{margin:25px 0 0;color:var(--ta-teks-2,#667085);font-size:11px;line-height:1.5;text-align:center}.login-version-settings{margin-top:18px}.login-version-heading{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.login-version-heading h2{margin:4px 0}.login-version-heading p{margin:0}.login-version-active{white-space:nowrap;padding:7px 10px;border-radius:999px;background:var(--ta-latar-2,#eef5f7);color:#087b8b;font-size:11px;font-weight:800}.login-version-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}.login-version-option{display:flex;gap:10px;align-items:flex-start;padding:14px;border:1px solid var(--ta-garis,#d9e0ea);border-radius:12px;cursor:pointer}.login-version-option input{margin-top:3px}.login-version-option b,.login-version-option small{display:block}.login-version-option small{margin-top:5px;color:var(--ta-teks-2,#667085);line-height:1.45}.login-version-option:has(input:checked){border-color:#087b8b;background:rgba(8,123,139,.05)}
+html.gelap .login-v2{background:#101923;color:#edf4fa}.gelap .login-v2-card{background:#172331;border-color:rgba(255,255,255,.1)}.gelap .login-v2-input{background:#101923;border-color:#344455}.gelap .login-v2-heading>p:last-child,.gelap .login-v2-note,.gelap .login-v2-card-top{color:#aab8c5}
+@media(max-width:860px){.login-v2-shell{grid-template-columns:1fr;max-width:620px;padding:16px}.login-v2-intro{min-height:420px;padding:32px}.login-v2-intro h1{font-size:42px}.login-v2-footer{position:static;margin-top:28px}.login-v2-card{align-self:auto}.login-v2-card-top{margin-bottom:40px}.login-version-options{grid-template-columns:1fr}}
+@media(max-width:520px){.login-v2-intro{min-height:390px;border-radius:20px;padding:25px}.login-v2-intro h1{font-size:35px}.login-v2-lead{font-size:14px;margin:18px 0 24px}.login-v2-proof{padding:11px 0}.login-v2-card{padding:24px;border-radius:20px}.login-v2-heading h2{font-size:26px}}
+
+/* === Kulit bersama v2: penyegaran seluruh modul === */
+:root {
+  --ui-surface: #fff;
+  --ui-surface-soft: #f7f9fc;
+  --ui-border: #e6ebf2;
+  --ui-border-strong: #d3dce8;
+  --ui-shadow-soft: 0 8px 24px rgba(16, 34, 62, .045);
+  --ui-shadow-hover: 0 14px 32px rgba(16, 34, 62, .09);
+  --ui-radius: 16px;
+  --ui-radius-sm: 11px;
+}
+
+body:not(.login) {
+  background:
+    radial-gradient(circle at 100% 0, rgba(9, 104, 246, .035), transparent 28rem),
+    linear-gradient(180deg, #f8fafd 0%, var(--ta-latar) 52%);
+}
+
+body:not(.login) .samping {
+  background: rgba(255, 255, 255, .9);
+  border-right-color: rgba(214, 223, 235, .8);
+  box-shadow: 10px 0 32px rgba(18, 44, 77, .035);
+  backdrop-filter: blur(18px);
+}
+
+body:not(.login) .samping .logo {
+  padding: 8px 8px 18px;
+  margin-bottom: 18px;
+  border-bottom-color: #edf1f6;
+}
+
+body:not(.login) .samping nav a,
+body:not(.login) .samping nav .parent {
+  min-height: 44px;
+  border-radius: 11px;
+}
+
+body:not(.login) .samping nav a:hover,
+body:not(.login) .samping nav .parent:hover {
+  background: #f3f7fc;
+  transform: translateX(3px);
+}
+
+body:not(.login) .samping nav a.aktif,
+body:not(.login) .samping nav .parent.aktif {
+  background: linear-gradient(90deg, #eef5ff, #f8fbff);
+  border-color: #dceaff;
+  box-shadow: inset 3px 0 0 var(--ta-biru), 0 4px 12px rgba(9, 104, 246, .05);
+}
+
+body:not(.login) .topbar {
+  border-bottom-color: rgba(218, 226, 237, .8);
+  background: rgba(255, 255, 255, .82);
+  box-shadow: 0 4px 18px rgba(16, 34, 62, .025);
+}
+
+body:not(.login) .isi {
+  padding-top: 30px;
+}
+
+body:not(.login) .atas {
+  min-height: 36px;
+  margin-bottom: 22px;
+  font-size: 19px;
+  letter-spacing: -.035em;
+}
+
+body:not(.login) .panel,
+body:not(.login) .peringatan,
+body:not(.login) .kpi {
+  border-color: var(--ui-border);
+  border-radius: var(--ui-radius);
+  box-shadow: var(--ui-shadow-soft);
+}
+
+body:not(.login) .panel {
+  background: rgba(255, 255, 255, .92);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+body:not(.login) .panel h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  margin-bottom: 16px;
+  font-size: 13.5px;
+  letter-spacing: -.02em;
+}
+
+body:not(.login) .panel h2::before {
+  content: "";
+  width: 4px;
+  height: 17px;
+  flex: 0 0 4px;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #0968f6, #18a5a1);
+}
+
+body:not(.login) .kartu-kpi {
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+body:not(.login) .kpi {
+  background: rgba(255, 255, 255, .95);
+  min-height: 158px;
+  padding: 18px;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+body:not(.login) .kpi:hover {
+  transform: translateY(-3px);
+  border-color: #cfe0f8;
+  box-shadow: var(--ui-shadow-hover);
+}
+
+body:not(.login) table {
+  border-color: var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
+}
+
+body:not(.login) th {
+  height: 44px;
+  padding: 10px 12px;
+  background: #f7f9fc;
+  border-bottom-color: var(--ui-border);
+  color: #66758a;
+  letter-spacing: .06em;
+}
+
+body:not(.login) td {
+  height: 50px;
+  padding: 10px 12px;
+  border-bottom-color: #edf1f5;
+}
+
+body:not(.login) tbody tr:last-child td { border-bottom: 0; }
+body:not(.login) tbody tr:hover td,
+body:not(.login) table tr:hover td { background: #f8fbff; }
+body:not(.login) tr.total td,
+body:not(.login) tr.baris-total td { background: #f3f7fc; border-top: 1px solid #dfe8f2; }
+
+body:not(.login) label { color: #526175; font-weight: 600; }
+
+body:not(.login) input,
+body:not(.login) select,
+body:not(.login) textarea {
+  min-height: 42px;
+  border-color: var(--ui-border-strong);
+  border-radius: var(--ui-radius-sm);
+  background: #fbfcfe;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+body:not(.login) input:hover,
+body:not(.login) select:hover,
+body:not(.login) textarea:hover { border-color: #b9c8da; }
+body:not(.login) input:focus,
+body:not(.login) select:focus,
+body:not(.login) textarea:focus { background: #fff; border-color: #77a5ed; box-shadow: 0 0 0 4px rgba(9, 104, 246, .09); }
+
+body:not(.login) input[type="checkbox"],
+body:not(.login) input[type="radio"] {
+  min-height: 0;
+  width: auto;
+  height: auto;
+  border-radius: initial;
+  background: initial;
+  box-shadow: none;
+}
+
+body:not(.login) button,
+body:not(.login) .tombol,
+body:not(.login) .tombol-buka-form {
+  min-height: 40px;
+  border-radius: var(--ui-radius-sm);
+  font-weight: 650;
+  box-shadow: 0 5px 12px rgba(9, 104, 246, .08);
+}
+
+body:not(.login) button:hover,
+body:not(.login) .tombol:hover,
+body:not(.login) .tombol-buka-form:hover { box-shadow: 0 9px 18px rgba(9, 104, 246, .14); }
+body:not(.login) button.abu,
+body:not(.login) .tombol.abu { background: #fff; border-color: var(--ui-border-strong); box-shadow: none; }
+body:not(.login) button.bahaya { box-shadow: 0 5px 12px rgba(240, 45, 45, .12); }
+
+body:not(.login) .aksi {
+  align-items: center;
+  padding-top: 4px;
+}
+
+body:not(.login) .pesan,
+body:not(.login) .toast {
+  border-radius: var(--ui-radius-sm);
+  box-shadow: 0 6px 16px rgba(16, 34, 62, .05);
+}
+
+body:not(.login) .lencana { min-height: 23px; align-items: center; }
+body:not(.login) .paginasi { padding-top: 4px; }
+body:not(.login) .paginasi button { min-height: 34px; }
+
+html.gelap body:not(.login) {
+  background: radial-gradient(circle at 100% 0, rgba(40, 126, 255, .08), transparent 28rem), #0c1524;
+}
+
+html.gelap body:not(.login) .samping,
+html.gelap body:not(.login) .topbar,
+html.gelap body:not(.login) .panel,
+html.gelap body:not(.login) .kpi,
+html.gelap body:not(.login) table { background: rgba(15, 26, 46, .94); border-color: #243653; }
+html.gelap body:not(.login) .topbar { background: rgba(15, 26, 46, .84); }
+html.gelap body:not(.login) .samping .logo { border-bottom-color: #243653; }
+html.gelap body:not(.login) .samping nav a:hover,
+html.gelap body:not(.login) .samping nav .parent:hover { background: #16263f; }
+html.gelap body:not(.login) .samping nav a.aktif,
+html.gelap body:not(.login) .samping nav .parent.aktif { background: #142744; border-color: #24466f; }
+html.gelap body:not(.login) th { background: #14233b; border-bottom-color: #263b5b; color: #a7b6c9; }
+html.gelap body:not(.login) td { border-bottom-color: #243653; }
+html.gelap body:not(.login) tbody tr:hover td,
+html.gelap body:not(.login) table tr:hover td { background: #142844; }
+html.gelap body:not(.login) tr.total td,
+html.gelap body:not(.login) tr.baris-total td { background: #14233b; border-top-color: #2a4264; }
+html.gelap body:not(.login) input,
+html.gelap body:not(.login) select,
+html.gelap body:not(.login) textarea { background: #101c30; border-color: #344a68; color: #edf4fa; }
+html.gelap body:not(.login) input:focus,
+html.gelap body:not(.login) select:focus,
+html.gelap body:not(.login) textarea:focus { background: #14243c; }
+html.gelap body:not(.login) button.abu,
+html.gelap body:not(.login) .tombol.abu { background: #15243a; border-color: #344a68; color: #edf4fa; }
+
+@media (max-width: 760px) {
+  body:not(.login) .isi { padding: 22px 16px 36px; }
+  body:not(.login) .atas { font-size: 17px; margin-bottom: 17px; }
+  body:not(.login) .panel { padding: 16px 14px; border-radius: 14px; }
+  body:not(.login) .kartu-kpi { gap: 10px; }
+  body:not(.login) .kpi { min-height: 132px; padding: 14px; }
+  body:not(.login) .kpi .nilai { font-size: 15px; }
+  body:not(.login) .aksi { flex-wrap: wrap; }
+}
 /* v2: header sticky + sorotan baris untuk tabel standar */
 table.kepala-tempel thead th { position: sticky; top: var(--top-tempel, 56px); z-index: 5; }
 table[data-cari] tbody tr, table[data-paginasi] tbody tr { scroll-margin-top: 128px; }
 table[data-cari] tbody tr:hover td, table[data-paginasi] tbody tr:hover td { background-color: rgba(100, 116, 139, .07); }
+
+/* Kepadatan kerja: jarak vertikal ringkas untuk modul aplikasi */
+body:not(.login) .samping nav a,
+body:not(.login) .samping nav .parent { min-height: 34px; }
+body:not(.login) .isi { padding-top: 16px; }
+body:not(.login) .atas { min-height: 26px; margin-bottom: 10px; }
+body:not(.login) .panel,
+body:not(.login) .peringatan { padding-top: 10px; padding-bottom: 10px; margin-bottom: 10px; }
+body:not(.login) .panel h2 { min-height: 18px; margin-top: 0; margin-bottom: 7px; }
+body:not(.login) .kartu-kpi { gap: 10px; margin-bottom: 10px; }
+body:not(.login) .kpi { min-height: 100px; padding: 11px; }
+body:not(.login) th { height: 32px; padding-top: 5px; padding-bottom: 5px; }
+body:not(.login) td { height: 36px; padding-top: 5px; padding-bottom: 5px; }
+body:not(.login) input:not([type="checkbox"]):not([type="radio"]),
+body:not(.login) select { min-height: 32px; padding-top: 5px; padding-bottom: 5px; }
+body:not(.login) textarea { min-height: 60px; padding-top: 6px; padding-bottom: 6px; }
+body:not(.login) button,
+body:not(.login) .tombol,
+body:not(.login) .tombol-buka-form { min-height: 30px; padding-top: 5px; padding-bottom: 5px; }
+body:not(.login) .aksi { padding-top: 0; gap: 4px; }
+body:not(.login) .pesan,
+body:not(.login) .toast { padding-top: 7px; padding-bottom: 7px; }
+body:not(.login) .lencana { min-height: 19px; }
+body:not(.login) .paginasi { padding-top: 0; padding-bottom: 0; }
+body:not(.login) .paginasi button { min-height: 28px; padding-top: 4px; padding-bottom: 4px; }
+
 @media print {
   .paginasi { display: none !important; }
   table[data-paginasi] tr, table[data-cari] tr { display: table-row !important; }
   table[data-paginasi] tr.baris-detail:not(.terbuka), table[data-cari] tr.baris-detail:not(.terbuka) { display: none !important; }
   table[data-paginasi] tr.baris-kosong, table[data-cari] tr.baris-kosong { display: none !important; }
+}
+
+@media (max-width: 760px) {
+  body:not(.login) .samping nav a,
+  body:not(.login) .samping nav .parent { min-height: 38px; }
+  body:not(.login) input:not([type="checkbox"]):not([type="radio"]),
+  body:not(.login) select,
+  body:not(.login) button,
+  body:not(.login) .tombol,
+  body:not(.login) .tombol-buka-form { min-height: 38px; }
 }

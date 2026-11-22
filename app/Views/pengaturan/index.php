@@ -80,6 +80,25 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
   </div>
 </form>
 
+<?php if (($pengguna['peran'] ?? '') === 'admin'): ?>
+<div class="panel login-version-settings">
+  <div class="login-version-heading">
+    <div>
+      <span class="kecil-teks">Khusus administrator</span>
+      <h2>Halaman Login</h2>
+      <p class="kecil-teks">Pilih tampilan yang digunakan semua pengguna saat masuk. Alur login tetap sama.</p>
+    </div>
+    <span class="login-version-active">Aktif: <?= strtoupper(esc($loginVersion ?? 'v1')) ?></span>
+  </div>
+  <form method="post" action="<?= base_url('pengaturan/login-tampilan') ?>" class="login-version-options">
+    <?= csrf_field() ?>
+    <label class="login-version-option"><input type="radio" name="login_version" value="v1" <?= ($loginVersion ?? 'v1') === 'v1' ? 'checked' : '' ?>><span><b>Versi 1 — Portal lengkap</b><small>Tampilan login yang saat ini digunakan dengan panel informasi fitur di sisi kanan.</small></span></label>
+    <label class="login-version-option"><input type="radio" name="login_version" value="v2" <?= ($loginVersion ?? 'v1') === 'v2' ? 'checked' : '' ?>><span><b>Versi 2 — Fokus kerja</b><small>Tampilan lebih ringkas dengan fokus pada identitas sekolah, keamanan, dan akses masuk.</small></span></label>
+    <div class="aksi"><button type="submit">Simpan Tampilan Login</button></div>
+  </form>
+</div>
+<?php endif; ?>
+
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-penyedia','ids-penyedia')">
   <h2>Master Penyedia</h2>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">

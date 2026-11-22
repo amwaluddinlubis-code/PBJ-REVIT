@@ -9,7 +9,20 @@ class Auth extends BaseController
         if (session()->get('pengguna_id')) {
             return redirect()->to('/');
         }
-        return view('auth/login', ['judul' => 'Masuk — Analisa Perencana']);
+        return view($this->loginVersion() === 'v2' ? 'auth/login_v2' : 'auth/login', ['judul' => 'Masuk — Analisa Perencana']);
+    }
+
+    private function loginVersion(): string
+    {
+        try {
+            if ($this->db()->tableExists('aplikasi_pengaturan')) {
+                $nilai = $this->db()->table('aplikasi_pengaturan')->where('kunci', 'login_version')->get()->getRowArray()['nilai'] ?? 'v1';
+                return in_array($nilai, ['v1', 'v2'], true) ? $nilai : 'v1';
+            }
+        } catch (\Throwable $e) {
+            // Instalasi lama tetap memakai login v1 sampai migrasi dijalankan.
+        }
+        return 'v1';
     }
 
     public function proses()

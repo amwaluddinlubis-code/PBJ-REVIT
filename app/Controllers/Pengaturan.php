@@ -9,8 +9,45 @@ class Pengaturan extends BaseController
         return $this->tampil('pengaturan/index', [
             'idn' => $this->sekolahAktif(),
             'terbayar' => $this->totalBelanja(),
+            'loginVersion' => $this->ambilLoginVersion(),
             'penyedia' => $this->db()->table('penyedia')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray(),
         ], 'Identitas & Pengaturan');
+    }
+
+    public function loginTampilan()
+    {
+        if (($this->pengguna['peran'] ?? '') !== 'admin') {
+            return redirect()->to('pengaturan')->with('galat', 'Hanya administrator yang dapat mengubah halaman login.');
+        }
+        if (! $this->db()->tableExists('aplikasi_pengaturan')) {
+            return redirect()->to('pengaturan')->with('galat', 'Jalankan migrasi aplikasi terlebih dahulu.');
+        }
+        $versi = (string) $this->request->getPost('login_version');
+        if (! in_array($versi, ['v1', 'v2'], true)) {
+            return redirect()->to('pengaturan')->with('galat', 'Versi halaman login tidak dikenal.');
+        }
+        $db = $this->db();
+        $ada = $db->table('aplikasi_pengaturan')->where('kunci', 'login_version')->get()->getRowArray();
+        $data = ['nilai' => $versi, 'updated_at' => date('Y-m-d H:i:s')];
+        if ($ada) {
+            $db->table('aplikasi_pengaturan')->where('id', (int) $ada['id'])->update($data);
+        } else {
+            $db->table('aplikasi_pengaturan')->insert($data + ['kunci' => 'login_version', 'created_at' => date('Y-m-d H:i:s')]);
+        }
+        return redirect()->to('pengaturan')->with('sukses', 'Halaman login aktif diubah ke ' . strtoupper($versi) . '.');
+    }
+
+    private function ambilLoginVersion(): string
+    {
+        try {
+            if ($this->db()->tableExists('aplikasi_pengaturan')) {
+                $nilai = $this->db()->table('aplikasi_pengaturan')->where('kunci', 'login_version')->get()->getRowArray()['nilai'] ?? 'v1';
+                return in_array($nilai, ['v1', 'v2'], true) ? $nilai : 'v1';
+            }
+        } catch (\Throwable $e) {
+            // Fallback untuk instalasi yang belum menjalankan migrasi terbaru.
+        }
+        return 'v1';
     }
 
     public function simpan()
