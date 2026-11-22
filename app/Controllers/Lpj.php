@@ -13,11 +13,7 @@ class Lpj extends BaseController
     {
         $db = $this->db();
         $gid = (int) $g['id'];
-        $real = $db->query(
-            'SELECT COALESCE(SUM(r.volume * COALESCE(p.harga_revisi, p.harga_satuan)), 0) t FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
-            [$gid]
-        )->getRowArray();
-        $nilaiRealisasi = (float) ($real['t'] ?? 0);
+        $nilaiRealisasi = $this->nilaiRealisasiGedung($gid);
 
         $kb = $this->kebutuhanBahan($gid);
         $nilaiKebutuhan = 0.0;
@@ -126,15 +122,29 @@ class Lpj extends BaseController
         $total = 0.0;
         if ($ids !== []) {
             $in = implode(',', $ids);
-            $gabungan = $this->db()->query(
-                "SELECT MAX(p.nama) AS nama, p.satuan, COALESCE(p.harga_revisi, p.harga_satuan) AS harga_satuan,
-                        SUM(COALESCE(p.volume_revisi, p.volume)) AS volume, SUM(COALESCE(p.volume_revisi, p.volume) * COALESCE(p.harga_revisi, p.harga_satuan)) AS jumlah,
-                        COUNT(DISTINCT p.gedung_id) AS jumlah_gedung
+            $grup = [];
+            foreach ($this->db()->query(
+                "SELECT p.nama, p.satuan, p.volume, p.volume_revisi, p.harga_satuan, p.harga_revisi, p.kode_analisa, p.gedung_id
                  FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
-                 WHERE p.gedung_id IN ($in) AND p.is_deleted = 0 AND g.is_deleted = 0
-                 GROUP BY LOWER(TRIM(p.nama)), p.satuan, COALESCE(p.harga_revisi, p.harga_satuan)
-                 ORDER BY jumlah DESC"
-            )->getResultArray();
+                 WHERE p.gedung_id IN ($in) AND p.is_deleted = 0 AND g.is_deleted = 0"
+            )->getResultArray() as $p) {
+                $harga = $this->hargaBerjalan($p);
+                $vol = $this->volBerjalan($p);
+                $kunci = mb_strtolower(trim((string) $p['nama'])) . '|' . ($p['satuan'] ?? '') . '|' . $harga;
+                if (! isset($grup[$kunci])) {
+                    $grup[$kunci] = ['nama' => $p['nama'], 'satuan' => $p['satuan'], 'harga_satuan' => $harga, 'volume' => 0.0, 'jumlah' => 0.0, 'gedung' => []];
+                }
+                $grup[$kunci]['volume'] += $vol;
+                $grup[$kunci]['jumlah'] += $vol * $harga;
+                $grup[$kunci]['gedung'][(int) $p['gedung_id']] = true;
+            }
+            $gabungan = [];
+            foreach ($grup as $gr) {
+                $gr['jumlah_gedung'] = count($gr['gedung']);
+                unset($gr['gedung']);
+                $gabungan[] = $gr;
+            }
+            usort($gabungan, static fn ($a, $b) => $b['jumlah'] <=> $a['jumlah']);
             $total = array_sum(array_column($gabungan, 'jumlah'));
         }
         return ['semua' => $semua, 'ids' => $ids, 'perGedung' => $perGedung, 'gabungan' => $gabungan, 'total' => $total];

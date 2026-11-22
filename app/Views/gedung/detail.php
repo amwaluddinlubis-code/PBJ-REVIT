@@ -33,7 +33,7 @@ $tabAktif = $tab ?? 'boq';
   </div>
   <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25" data-cari="Cari pekerjaan…">
     <tr><th style="width:34px"><input type="checkbox" title="Pilih semua pekerjaan" @change="pilihSemua($event)"></th><th>Pekerjaan</th><th>Kode</th><th class="angka">Volume Awal</th><th class="angka">Vol. Berjalan</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah Berjalan</th><th style="width:210px">Ubah Volume / Hapus</th></tr>
-    <?php $babLalu = null; $total = 0; foreach ($pekerjaan as $p): $total += (float) ($p['volume_revisi'] ?? $p['volume']) * (float) ($p['harga_revisi'] ?? $p['harga_satuan']); ?>
+    <?php $babLalu = null; $total = 0; foreach ($pekerjaan as $p): $total += (float) ($p['volume_revisi'] ?? $p['volume']) * (float) ($p['harga_berjalan'] ?? $p['harga_satuan']); ?>
       <?php if ($p['bab'] !== $babLalu): $babLalu = $p['bab']; ?>
       <tr><td colspan="9" style="font-weight:600;background:#fcfcfd"><?= esc($babLalu ?: '—') ?></td></tr>
       <?php endif; ?>
@@ -44,8 +44,8 @@ $tabAktif = $tab ?? 'boq';
         <td class="angka"><?= rtrim(rtrim(number_format((float) $p['volume'], 3, ',', '.'), '0'), ',') ?></td>
         <td class="angka"><?php $vb = (float) ($p['volume_revisi'] ?? $p['volume']); ?><?= rtrim(rtrim(number_format($vb, 3, ',', '.'), '0'), ',') ?><?php if (isset($p['volume_revisi']) && $p['volume_revisi'] !== null): ?> <span class="lencana abu" title="Diubah oleh BA Revisi yang disahkan">Revisi</span><?php endif; ?><?php if (! empty($p['dari_revisi_id'])): ?> <span class="lencana abu" title="Pekerjaan dari BA Revisi">Pengganti/Baru</span><?php endif; ?></td>
         <td><?= esc($p['satuan'] ?? '') ?></td>
-        <td class="angka"><?= number_format((float) ($p['harga_revisi'] ?? $p['harga_satuan']), 0, ',', '.') ?></td>
-        <td class="angka"><?= number_format($vb * (float) ($p['harga_revisi'] ?? $p['harga_satuan']), 0, ',', '.') ?></td>
+        <td class="angka"><?= number_format((float) ($p['harga_berjalan'] ?? $p['harga_satuan']), 0, ',', '.') ?></td>
+        <td class="angka"><?= number_format($vb * (float) ($p['harga_berjalan'] ?? $p['harga_satuan']), 0, ',', '.') ?></td>
         <td>
           <form class="inline" method="post" action="<?= base_url('gedung/pekerjaan/' . $p['id'] . '/volume') ?>">
             <?= csrf_field() ?>
@@ -90,7 +90,7 @@ $tabAktif = $tab ?? 'boq';
             <div class="detail-kaki"><?= (int) $a['tersembunyi'] ?> komponen disembunyikan karena bahan/upah masternya sudah dihapus dari master.</div>
             <?php endif; ?>
             <?php if (abs($grand - (float) $p['harga_satuan']) > 1): ?>
-            <div class="detail-kaki">Catatan: total komponen per satuan (Rp <?= number_format($grand, 0, ',', '.') ?>) berbeda dari harga satuan BOQ (Rp <?= number_format((float) $p['harga_satuan'], 0, ',', '.') ?>) &mdash; harga BOQ mengikuti Harsat dokumen perencana.</div>
+            <div class="detail-kaki">Catatan: total komponen per satuan di rincian ini (Rp <?= number_format($grand, 0, ',', '.') ?>) dapat berbeda tipis dari harga berjalan (Rp <?= number_format((float) ($p['harga_berjalan'] ?? $p['harga_satuan']), 0, ',', '.') ?>) karena harga berjalan memakai tarif terbesar antara komponen dan Master Upah. Harga satuan dokumen BOQ: Rp <?= number_format((float) $p['harga_satuan'], 0, ',', '.') ?>.</div>
             <?php endif; ?>
           </div>
         </td>

@@ -43,13 +43,7 @@ class Kurva extends BaseController
             'SELECT MIN(tgl_mulai) AS mulai, MAX(tgl_selesai) AS selesai FROM spk WHERE gedung_id = ? AND is_deleted = 0',
             [(int) $g['id']]
         )->getRowArray();
-        $real = $db->query(
-            'SELECT rl.tanggal, SUM(rl.volume * COALESCE(p.harga_revisi, p.harga_satuan)) AS nilai
-             FROM realisasi rl JOIN pekerjaan p ON p.id = rl.pekerjaan_id
-             WHERE p.gedung_id = ? AND rl.is_deleted = 0 AND p.is_deleted = 0
-             GROUP BY rl.tanggal ORDER BY rl.tanggal',
-            [(int) $g['id']]
-        )->getResultArray();
+        $real = $this->nilaiRealisasiPerTanggal((int) $g['id']);
 
         $mulai = $spk['mulai'] ?? null;
         $selesai = $spk['selesai'] ?? null;

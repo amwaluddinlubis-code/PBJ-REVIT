@@ -379,16 +379,105 @@ abstract class BaseController extends Controller
     }
 
     /** Total nilai BOQ semua gedung AKTIF sebuah sekolah (volume x harga satuan pekerjaan aktif). */
+    /** @var array<int, array<string, float>> cache peta harga AHSP per sekolah */
+    private array $petaAhsp = [];
+
+    /**
+     * Harga satuan hasil AHSP per kode analisa: jumlah koefisien x tarif
+     * komponen aktif saat ini. Tarif komponen upah memakai yang terbesar
+     * antara tarif komponen dan tarif Master Upah (sama seperti
+     * kebutuhanUpah()). Inilah dasar penilaian BOQ berjalan.
+     */
+    protected function petaHargaAhsp(?int $sid = null): array
+    {
+        $sid = $sid ?? $this->sid();
+        if (isset($this->petaAhsp[$sid])) {
+            return $this->petaAhsp[$sid];
+        }
+        $this->petaAhsp[$sid] = [];
+        foreach ($this->db()->query(
+            "SELECT a.kode, SUM(ak.koefisien * CASE WHEN ak.jenis = 'upah'
+                        THEN GREATEST(COALESCE(ak.tarif, 0), COALESCE((SELECT MAX(um.tarif) FROM upah_master um WHERE um.sekolah_id = a.sekolah_id AND um.jenis = ak.nama AND um.is_deleted = 0), 0))
+                        ELSE COALESCE(ak.tarif, 0) END) AS harga
+             FROM analisa a JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.is_deleted = 0
+             WHERE a.sekolah_id = ? AND a.is_deleted = 0 GROUP BY a.kode",
+            [$sid]
+        )->getResultArray() as $r) {
+            $this->petaAhsp[$sid][(string) $r['kode']] = (float) $r['harga'];
+        }
+        return $this->petaAhsp[$sid];
+    }
+
+    /** Harga AHSP satu kode analisa; null bila analisa/komponennya tidak ada. */
+    protected function hargaAhspKode(?string $kode, ?int $sid = null): ?float
+    {
+        if ($kode === null || $kode === '') {
+            return null;
+        }
+        $peta = $this->petaHargaAhsp($sid);
+        return $peta[$kode] ?? null;
+    }
+
+    /** Total BOQ berjalan satu gedung dengan dasar harga berjalan (AHSP). */
+    protected function totalBoqGedung(int $gedungId): float
+    {
+        $total = 0.0;
+        foreach ($this->db()->table('pekerjaan')
+            ->select('volume, volume_revisi, harga_satuan, harga_revisi, kode_analisa')
+            ->where(['gedung_id' => $gedungId, 'is_deleted' => 0])->get()->getResultArray() as $p) {
+            $total += $this->volBerjalan($p) * $this->hargaBerjalan($p);
+        }
+        return $total;
+    }
+
+    /** Nilai realisasi satu gedung: volume realisasi x harga berjalan pekerjaannya. */
+    protected function nilaiRealisasiGedung(int $gedungId): float
+    {
+        $total = 0.0;
+        foreach ($this->db()->query(
+            'SELECT r.volume, p.harga_satuan, p.harga_revisi, p.kode_analisa
+             FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id
+             WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
+            [$gedungId]
+        )->getResultArray() as $r) {
+            $total += (float) $r['volume'] * $this->hargaBerjalan($r);
+        }
+        return $total;
+    }
+
+    /** Nilai realisasi per tanggal satu gedung (untuk Kurva S). */
+    protected function nilaiRealisasiPerTanggal(int $gedungId): array
+    {
+        $per = [];
+        foreach ($this->db()->query(
+            'SELECT r.tanggal, r.volume, p.harga_satuan, p.harga_revisi, p.kode_analisa
+             FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id
+             WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0
+             ORDER BY r.tanggal',
+            [$gedungId]
+        )->getResultArray() as $r) {
+            $per[$r['tanggal']] = ($per[$r['tanggal']] ?? 0.0) + (float) $r['volume'] * $this->hargaBerjalan($r);
+        }
+        $hasil = [];
+        foreach ($per as $tgl => $nilai) {
+            $hasil[] = ['tanggal' => $tgl, 'nilai' => $nilai];
+        }
+        return $hasil;
+    }
+
     protected function totalBoqAktif(?int $sid = null): float
     {
         $sid = $sid ?? $this->sid();
-        $row = $this->db()->query(
-            'SELECT COALESCE(SUM(COALESCE(p.volume_revisi, p.volume) * COALESCE(p.harga_revisi, p.harga_satuan)), 0) AS t
+        $total = 0.0;
+        foreach ($this->db()->query(
+            'SELECT p.volume, p.volume_revisi, p.harga_satuan, p.harga_revisi, p.kode_analisa
              FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
              WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 AND g.didanai = 1',
             [$sid]
-        )->getRowArray();
-        return (float) ($row['t'] ?? 0);
+        )->getResultArray() as $p) {
+            $total += $this->volBerjalan($p) * $this->hargaBerjalan($p, $sid);
+        }
+        return $total;
     }
 
     /**
@@ -431,13 +520,16 @@ abstract class BaseController extends Controller
     protected function totalRabAwal(?int $sid = null): float
     {
         $sid = $sid ?? $this->sid();
-        $row = $this->db()->query(
-            'SELECT COALESCE(SUM(p.volume * p.harga_satuan), 0) AS t
+        $total = 0.0;
+        foreach ($this->db()->query(
+            'SELECT p.volume, p.harga_satuan, p.kode_analisa
              FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
              WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 AND g.didanai = 1',
             [$sid]
-        )->getRowArray();
-        return (float) ($row['t'] ?? 0);
+        )->getResultArray() as $p) {
+            $total += (float) $p['volume'] * ($this->hargaAhspKode($p['kode_analisa'] ?? null, $sid) ?? (float) $p['harga_satuan']);
+        }
+        return $total;
     }
 
     /** Volume berjalan sebuah pekerjaan: hasil revisi disahkan, atau awal. */
@@ -446,10 +538,18 @@ abstract class BaseController extends Controller
         return (float) ($p['volume_revisi'] ?? $p['volume'] ?? 0);
     }
 
-    /** Harga satuan berjalan sebuah pekerjaan. */
-    protected function hargaBerjalan(array $p): float
+    /**
+     * Harga satuan berjalan sebuah pekerjaan. Urutan dasarnya:
+     * harga revisi yang disahkan (BA Revisi) > harga hasil AHSP
+     * (jumlah komponen analisa terkini) > harga satuan dokumen BOQ
+     * (untuk pekerjaan tanpa analisa/komponen).
+     */
+    protected function hargaBerjalan(array $p, ?int $sid = null): float
     {
-        return (float) ($p['harga_revisi'] ?? $p['harga_satuan'] ?? 0);
+        if (($p['harga_revisi'] ?? null) !== null) {
+            return (float) $p['harga_revisi'];
+        }
+        return $this->hargaAhspKode($p['kode_analisa'] ?? null, $sid) ?? (float) ($p['harga_satuan'] ?? 0);
     }
 
     /**

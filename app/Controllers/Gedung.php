@@ -13,12 +13,9 @@ class Gedung extends BaseController
             [$this->sid()]
         )->getResultArray();
         foreach ($gedung as &$g) {
-            $real = $db->query(
-                'SELECT COALESCE(SUM(r.volume * COALESCE(p.harga_revisi, p.harga_satuan)), 0) t FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
-                [$g['id']]
-            )->getRowArray();
-            $g['nilai_realisasi'] = (float) ($real['t'] ?? 0);
-            $g['persen_fisik'] = (float) $g['nilai_boq'] > 0 ? min(100, $g['nilai_realisasi'] / (float) $g['nilai_boq'] * 100) : 0;
+            $g['nilai_boq'] = $this->totalBoqGedung((int) $g['id']);
+            $g['nilai_realisasi'] = $this->nilaiRealisasiGedung((int) $g['id']);
+            $g['persen_fisik'] = $g['nilai_boq'] > 0 ? min(100, $g['nilai_realisasi'] / $g['nilai_boq'] * 100) : 0;
         }
         return $this->tampil('gedung/index', ['gedung' => $gedung], 'Kelola Gedung');
     }
@@ -124,15 +121,17 @@ class Gedung extends BaseController
         }
         $db = $this->db();
         $data = ['g' => $g, 'tab' => $tab];
-        $real = $db->query(
-            'SELECT COALESCE(SUM(r.volume * COALESCE(p.harga_revisi, p.harga_satuan)), 0) t FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0',
-            [$g['id']]
-        )->getRowArray();
-        $data['nilai_realisasi'] = (float) ($real['t'] ?? 0);
-        $data['persen_fisik'] = (float) $g['nilai_boq'] > 0 ? min(100, $data['nilai_realisasi'] / (float) $g['nilai_boq'] * 100) : 0;
+        $data['nilai_realisasi'] = $this->nilaiRealisasiGedung((int) $g['id']);
+        $g['nilai_boq'] = $this->totalBoqGedung((int) $g['id']);
+        $data['g'] = $g;
+        $data['persen_fisik'] = $g['nilai_boq'] > 0 ? min(100, $data['nilai_realisasi'] / $g['nilai_boq'] * 100) : 0;
 
         if ($tab === 'boq') {
             $data['pekerjaan'] = $db->table('pekerjaan')->where(['gedung_id' => $g['id'], 'is_deleted' => 0])->orderBy('urutan')->get()->getResultArray();
+            foreach ($data['pekerjaan'] as &$pk) {
+                $pk['harga_berjalan'] = $this->hargaBerjalan($pk);
+            }
+            unset($pk);
             // Peta analisa untuk rincian klik pekerjaan: komponen bahan/upah/alat
             // per kode analisa, lengkap dengan faktor konversi satuan bahan.
             $data['petaAnalisa'] = [];
@@ -374,9 +373,8 @@ class Gedung extends BaseController
 
     private function segarkanNilaiBoq(int $gedungId): void
     {
-        $row = $this->db()->query('SELECT COALESCE(SUM(jumlah),0) t FROM pekerjaan WHERE gedung_id = ? AND is_deleted = 0', [$gedungId])->getRowArray();
         $this->db()->table('gedung')->where('id', $gedungId)->update([
-            'nilai_boq' => (float) ($row['t'] ?? 0), 'updated_at' => date('Y-m-d H:i:s'),
+            'nilai_boq' => $this->totalBoqGedung($gedungId), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
     }
 }
