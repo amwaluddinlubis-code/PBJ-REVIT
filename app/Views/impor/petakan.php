@@ -139,9 +139,9 @@ document.querySelectorAll('select[data-baris]').forEach(function (sel) {
       }
       if (grup[sel.value]) grup[sel.value].push({ nama: nama, isi: isi });
     });
-    var label = { gedung: 'Gedung', non_gedung: 'Biaya Non-Gedung', referensi: 'Data Referensi', lewati: 'Dilewati (tidak diimpor)' };
+    var label = { gedung: 'Gedung', non_gedung: 'Biaya Non-Gedung', referensi: 'Data Referensi' };
     var html = '<div class="mk-rinci"><p>Berkas <b>' + escHtml(form.dataset.berkas) + '</b> akan diimpor ke sekolah <b>' + escHtml(form.dataset.sekolah) + '</b> dengan pemetaan berikut:</p>';
-    ['gedung', 'non_gedung', 'referensi', 'lewati'].forEach(function (k) {
+    ['gedung', 'non_gedung', 'referensi'].forEach(function (k) {
       if (!grup[k].length) return;
       html += '<p><b>' + label[k] + ' — ' + grup[k].length + ' sheet</b></p><ul>';
       grup[k].forEach(function (it) {
@@ -153,6 +153,9 @@ document.querySelectorAll('select[data-baris]').forEach(function (sel) {
       html += '<p><b>Tidak ada sheet yang akan diimpor</b> — semua ditandai Lewati.</p>';
     } else {
       html += '<p>Total nilai sheet Gedung + Biaya Non-Gedung: <b>Rp ' + totalNilai.toLocaleString('id-ID') + '</b></p>';
+    }
+    if (grup.lewati.length) {
+      html += '<p>' + grup.lewati.length + ' sheet dilewati (tidak diimpor).</p>';
     }
     html += '<p>Sheet Gedung dan Biaya Non-Gedung menggantikan data impor sebelumnya; baris manual Anda tidak ikut terhapus.</p></div>';
     form.dataset.konfirmasi = 'impor';
