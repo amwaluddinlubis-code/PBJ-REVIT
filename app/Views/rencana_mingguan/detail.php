@@ -8,6 +8,14 @@ $polos = static fn ($n) => rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0
   <h2 style="margin-top:0">Rencana Mingguan — <?= esc($gedung['nama'] ?? '') ?></h2>
   <p class="kecil-teks" style="margin-top:0">Minggu <?= esc(date('d/m/Y', strtotime($r['minggu_mulai']))) ?> – <?= esc(date('d/m/Y', strtotime($r['minggu_mulai'] . ' +6 days'))) ?><?= ! empty($r['keterangan']) ? ' · ' . esc($r['keterangan']) : '' ?>. Isi volume yang ditargetkan selesai minggu ini, lalu daftar belanja bersih terhitung di bawah.</p>
 
+  <?php if (! empty($adaKurva)): ?>
+  <form method="post" action="<?= base_url('rencana-mingguan/' . $r['id'] . '/target-kurva') ?>" data-konfirmasi="Isi target otomatis dari rencana Kurva S resmi? Target per bab dihitung dari rencana kumulatif dokumen s.d. minggu kalender tanggal mulai rencana ini, dikurangi realisasi yang sudah tercatat (mengejar ketertinggalan), lalu dibagi ke pekerjaan menurut sisa nilainya. Target yang sudah terisi pada pekerjaan di bab terpetakan akan diganti; pekerjaan lain tidak diubah." data-konfirmasi-judul="Ambil Target dari Kurva S" data-konfirmasi-tombol="Ya, Isi Target" style="margin:0 0 12px">
+    <?= csrf_field() ?>
+    <button type="submit" class="tombol">Ambil Target dari Kurva S</button>
+    <span class="kecil-teks">Mengisi target dari jadwal resmi perencana untuk minggu kalender yang memuat tanggal mulai di atas.</span>
+  </form>
+  <?php endif; ?>
+
   <form method="post" action="<?= base_url('rencana-mingguan/' . $r['id'] . '/target') ?>">
     <?= csrf_field() ?>
     <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari pekerjaan…">

@@ -69,20 +69,32 @@ class RencanaMingguan extends BaseController
         if ($r === null) {
             return redirect()->to('rencana-mingguan')->with('galat', 'Rencana tidak ditemukan.');
         }
-        $db = $this->db();
         $target = (array) $this->request->getPost('target');
+        $map = [];
+        foreach ($target as $pid => $nilai) {
+            $map[(int) $pid] = max(0, (float) str_replace(',', '.', (string) $nilai));
+        }
+        $this->db()->transStart();
+        $this->terapkanTarget((int) $id, (int) $r['gedung_id'], $map);
+        $this->db()->transComplete();
+        return redirect()->to('rencana-mingguan/' . $id)->with('sukses', 'Target minggu ini disimpan. Daftar belanja bersih di bawah sudah dihitung ulang.');
+    }
+
+    /** Terapkan peta target volume per pekerjaan (tambah/ubah/hidupkan/hapus lunak). */
+    private function terapkanTarget(int $rencanaId, int $gedungId, array $map): void
+    {
+        $db = $this->db();
         $sah = [];
-        foreach ($db->table('pekerjaan')->select('id')->where(['gedung_id' => $r['gedung_id'], 'is_deleted' => 0])->get()->getResultArray() as $p) {
+        foreach ($db->table('pekerjaan')->select('id')->where(['gedung_id' => $gedungId, 'is_deleted' => 0])->get()->getResultArray() as $p) {
             $sah[(int) $p['id']] = true;
         }
-        $db->transStart();
-        foreach ($target as $pid => $nilai) {
+        foreach ($map as $pid => $vol) {
             $pid = (int) $pid;
             if (! isset($sah[$pid])) {
                 continue;
             }
-            $vol = max(0, (float) str_replace(',', '.', (string) $nilai));
-            $ada = $db->table('rencana_mingguan_detail')->where(['rencana_id' => (int) $id, 'pekerjaan_id' => $pid])->get()->getRowArray();
+            $vol = max(0, (float) $vol);
+            $ada = $db->table('rencana_mingguan_detail')->where(['rencana_id' => $rencanaId, 'pekerjaan_id' => $pid])->get()->getRowArray();
             if ($vol <= 0) {
                 if ($ada !== null && (int) $ada['is_deleted'] === 0) {
                     $this->hapusLunak('rencana_mingguan_detail', ['id' => (int) $ada['id']]);
@@ -95,13 +107,133 @@ class RencanaMingguan extends BaseController
                 ]);
             } else {
                 $db->table('rencana_mingguan_detail')->insert([
-                    'rencana_id' => (int) $id, 'pekerjaan_id' => $pid, 'volume_target' => $vol,
+                    'rencana_id' => $rencanaId, 'pekerjaan_id' => $pid, 'volume_target' => $vol,
                     'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
                 ]);
             }
         }
+    }
+
+    /** Normalisasi nama bab untuk pemetaan dokumen Kurva S ↔ BOQ aplikasi. */
+    private function normalBab(?string $bab): string
+    {
+        $s = strtoupper((string) $bab);
+        $s = preg_replace('/[^A-Z0-9]+/', ' ', $s) ?? '';
+        $s = trim(preg_replace('/\s+/', ' ', $s) ?? '');
+        // Buang angka romawi bab di awal (I, II, III, IV, V, VI, ... XV).
+        $s = preg_replace('/^(XV|IV|V?I{0,3}|IX|X) /', '', $s) ?? $s;
+        return trim($s);
+    }
+
+    /**
+     * Isi target otomatis dari rencana Kurva S resmi: untuk minggu kalender
+     * yang memuat tanggal rencana ini, target per bab = rencana kumulatif
+     * dokumen s.d. minggu itu dikurangi realisasi tercatat (kejar
+     * ketertinggalan), lalu dibagi ke pekerjaan dalam bab menurut porsi
+     * sisa nilainya. Target lama pada pekerjaan di luar bab terpetakan
+     * tidak diubah.
+     */
+    public function targetKurva($id)
+    {
+        $r = $this->ambilRencana((int) $id);
+        if ($r === null) {
+            return redirect()->to('rencana-mingguan')->with('galat', 'Rencana tidak ditemukan.');
+        }
+        $db = $this->db();
+        if (! $db->tableExists('kurva_rencana')) {
+            return redirect()->to('rencana-mingguan/' . $id)->with('galat', 'Rencana Kurva S belum tersedia (migrasi belum dijalankan).');
+        }
+        $barisKurva = $db->table('kurva_rencana')
+            ->where(['sekolah_id' => $this->sid(), 'gedung_id' => (int) $r['gedung_id'], 'is_deleted' => 0])
+            ->get()->getResultArray();
+        if ($barisKurva === []) {
+            return redirect()->to('rencana-mingguan/' . $id)->with('galat', 'Gedung ini belum punya rencana Kurva S. Impor dulu rencana resmi di halaman Kurva S.');
+        }
+        // Minggu kalender yang memuat tanggal mulai rencana; bila di luar
+        // rentang, pakai minggu terdekat.
+        $kalender = $db->table('kurva_minggu')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])
+            ->orderBy('minggu_ke')->get()->getResultArray();
+        $ke = null;
+        foreach ($kalender as $km) {
+            if ($r['minggu_mulai'] >= $km['tanggal_mulai'] && $r['minggu_mulai'] <= $km['tanggal_selesai']) {
+                $ke = (int) $km['minggu_ke'];
+                break;
+            }
+        }
+        if ($ke === null && $kalender !== []) {
+            $ke = $r['minggu_mulai'] < $kalender[0]['tanggal_mulai']
+                ? (int) $kalender[0]['minggu_ke']
+                : (int) $kalender[count($kalender) - 1]['minggu_ke'];
+        }
+        if ($ke === null) {
+            return redirect()->to('rencana-mingguan/' . $id)->with('galat', 'Kalender minggu Kurva S belum terimpor.');
+        }
+        // Total proyek dokumen = jumlah seluruh baris (grup, bab) sekolah.
+        $totalProyek = 0.0;
+        foreach ($db->query(
+            'SELECT MAX(jumlah) AS j FROM kurva_rencana WHERE sekolah_id = ? AND is_deleted = 0 GROUP BY grup, bab',
+            [$this->sid()]
+        )->getResultArray() as $row) {
+            $totalProyek += (float) $row['j'];
+        }
+        // Rencana kumulatif per bab ternormalisasi s.d. minggu ke-$ke.
+        $rencanaBab = [];
+        foreach ($barisKurva as $b) {
+            if ((int) $b['minggu_ke'] <= $ke) {
+                $k = $this->normalBab($b['bab']);
+                $rencanaBab[$k] = ($rencanaBab[$k] ?? 0.0) + (float) $b['bobot_minggu'];
+            }
+        }
+        // Pekerjaan gedung + realisasi + harga berjalan.
+        $pekerjaan = $db->query(
+            'SELECT p.*, COALESCE(p.volume_revisi, p.volume) AS vol_berjalan,
+                    (SELECT COALESCE(SUM(x.volume), 0) FROM realisasi x WHERE x.pekerjaan_id = p.id AND x.is_deleted = 0) AS terealisasi
+             FROM pekerjaan p WHERE p.gedung_id = ? AND p.is_deleted = 0 ORDER BY p.urutan, p.id',
+            [(int) $r['gedung_id']]
+        )->getResultArray();
+        $perBab = [];
+        foreach ($pekerjaan as $p) {
+            $p['harga_berjalan'] = $this->hargaBerjalan($p, $this->sid());
+            $perBab[$this->normalBab($p['bab'] ?? '')][] = $p;
+        }
+        $map = [];
+        $totalTarget = 0.0;
+        foreach ($rencanaBab as $babNorm => $bobotKum) {
+            if (empty($perBab[$babNorm])) {
+                continue;
+            }
+            $targetNilai = $bobotKum / 100 * $totalProyek;
+            $sudahNilai = 0.0;
+            $sisaNilai = 0.0;
+            foreach ($perBab[$babNorm] as $p) {
+                $sudahNilai += (float) $p['terealisasi'] * (float) $p['harga_berjalan'];
+                $sisaNilai += max(0.0, (float) $p['vol_berjalan'] - (float) $p['terealisasi']) * (float) $p['harga_berjalan'];
+            }
+            $perlu = max(0.0, $targetNilai - $sudahNilai);
+            if ($perlu <= 0 || $sisaNilai <= 0) {
+                continue;
+            }
+            $fraksi = min(1.0, $perlu / $sisaNilai);
+            foreach ($perBab[$babNorm] as $p) {
+                $sisaVol = max(0.0, (float) $p['vol_berjalan'] - (float) $p['terealisasi']);
+                if ($sisaVol <= 0) {
+                    continue;
+                }
+                $t = round($sisaVol * $fraksi, 4);
+                if ($t > 0) {
+                    $map[(int) $p['id']] = $t;
+                    $totalTarget += $t * (float) $p['harga_berjalan'];
+                }
+            }
+        }
+        if ($map === []) {
+            return redirect()->to('rencana-mingguan/' . $id)->with('galat', 'Tidak ada target yang perlu diisi dari Kurva S minggu ke-' . $ke . ' — realisasi bab terpetakan sudah mencapai rencana kumulatifnya, atau bab dokumen tidak cocok dengan bab BOQ gedung ini.');
+        }
+        $db->transStart();
+        $this->terapkanTarget((int) $id, (int) $r['gedung_id'], $map);
         $db->transComplete();
-        return redirect()->to('rencana-mingguan/' . $id)->with('sukses', 'Target minggu ini disimpan. Daftar belanja bersih di bawah sudah dihitung ulang.');
+        $this->catatAudit('rencana_mingguan', (int) $id, 'target_dari_kurva_s', 'Minggu kalender ke-' . $ke . '; ' . count($map) . ' pekerjaan; nilai target Rp ' . number_format($totalTarget, 0, ',', '.'));
+        return redirect()->to('rencana-mingguan/' . $id)->with('sukses', 'Target terisi dari Kurva S (minggu kalender ke-' . $ke . ', pola kejar ketertinggalan): ' . count($map) . ' pekerjaan senilai Rp ' . number_format($totalTarget, 0, ',', '.') . '. Silakan sesuaikan bila perlu, lalu gunakan daftar belanja bersih di bawah.');
     }
 
     /** Hitungan belanja & upah dari target tersimpan pada satu rencana. */
@@ -208,11 +340,15 @@ class RencanaMingguan extends BaseController
         )->getResultArray();
         $hitung = $this->hitung($r);
         $verif = $this->verifikasiAnggaran($this->sid());
+        $adaKurva = $db->tableExists('kurva_rencana') && $db->table('kurva_rencana')
+            ->where(['sekolah_id' => $this->sid(), 'gedung_id' => (int) $r['gedung_id'], 'is_deleted' => 0])
+            ->countAllResults() > 0;
         return $this->tampil('rencana_mingguan/detail', [
             'r' => $r, 'gedung' => $gedung, 'pekerjaan' => $pekerjaan,
             'bahan' => $hitung['bahan'], 'upah' => $hitung['upah'],
             'total_bersih' => $hitung['total_belanja_bersih'], 'total_upah' => $hitung['total_upah'],
             'sisa_pagu' => max(0.0, (float) ($verif['pagu'] ?? 0) - (float) ($verif['total_semua'] ?? 0)),
+            'adaKurva' => $adaKurva,
         ], 'Rencana Mingguan — Aplikasi PBJ Sekolah');
     }
 
