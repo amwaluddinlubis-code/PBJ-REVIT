@@ -820,3 +820,14 @@ table.satu-baris td.potong { max-width: 360px; overflow: hidden; text-overflow: 
 table.satu-baris form.inline { display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; }
 table.satu-baris .sel-fisik { display: flex; align-items: center; gap: 6px; }
 table.satu-baris .sel-fisik .bar { flex: 1 1 auto; min-width: 64px; }
+
+/* Rincian pekerjaan (klik nama pekerjaan di BOQ): komposisi analisa bahan/upah/alat. */
+.tautan-pekerjaan { background: none; border: none; padding: 0; margin: 0; font: inherit; color: var(--ta-biru); cursor: pointer; text-align: left; white-space: nowrap; }
+.tautan-pekerjaan:hover { text-decoration: underline; }
+.tautan-pekerjaan .panah { font-size: 9px; }
+table.satu-baris tr.baris-detail > td { white-space: normal; background: rgba(120, 140, 170, .07); padding: 10px 12px; }
+.detail-pekerjaan .detail-kepala { font-size: 12.5px; margin-bottom: 6px; }
+.detail-pekerjaan .detail-kaki { font-size: 11.5px; color: var(--ta-teks-2); margin-top: 6px; }
+.detail-pekerjaan table.mini { width: 100%; }
+.detail-pekerjaan table.mini th, .detail-pekerjaan table.mini td { white-space: nowrap; padding: 4px 8px; font-size: 12px; }
+.detail-pekerjaan table.mini tr.subtotal td { font-weight: 600; background: rgba(120, 140, 170, .05); }

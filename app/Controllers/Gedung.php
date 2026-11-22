@@ -121,6 +121,36 @@ class Gedung extends BaseController
 
         if ($tab === 'boq') {
             $data['pekerjaan'] = $db->table('pekerjaan')->where(['gedung_id' => $g['id'], 'is_deleted' => 0])->orderBy('urutan')->get()->getResultArray();
+            // Peta analisa untuk rincian klik pekerjaan: komponen bahan/upah/alat
+            // per kode analisa, lengkap dengan faktor konversi satuan bahan.
+            $data['petaAnalisa'] = [];
+            $kodeUnik = array_values(array_unique(array_filter(array_column($data['pekerjaan'], 'kode_analisa'))));
+            if ($kodeUnik !== []) {
+                $peta = [];
+                foreach ($db->table('analisa')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->whereIn('kode', $kodeUnik)->get()->getResultArray() as $a) {
+                    $peta[$a['kode']] = $a + ['komponen' => []];
+                }
+                if ($peta !== []) {
+                    $komp = $db->query(
+                        "SELECT ak.*, a.kode AS kode_analisa, b.nama AS nama_master, b.kode AS kode_master, b.satuan AS satuan_master
+                         FROM analisa_komponen ak
+                         JOIN analisa a ON a.id = ak.analisa_id
+                         LEFT JOIN bahan b ON b.id = ak.bahan_id AND b.is_deleted = 0
+                         WHERE a.sekolah_id = ? AND ak.is_deleted = 0 AND a.kode IN (" . implode(',', array_map(static fn ($k) => $db->escape($k), array_keys($peta))) . ")
+                         ORDER BY FIELD(ak.jenis, 'bahan', 'upah', 'alat'), ak.id",
+                        [$this->sid()]
+                    )->getResultArray();
+                    foreach ($komp as $k) {
+                        if ($k['jenis'] === 'bahan' && $k['bahan_id'] !== null) {
+                            $k['faktor'] = $this->faktorSatuan($k['satuan'] ?? null, ['satuan' => $k['satuan_master'] ?? '', 'nama' => $k['nama_master'] ?? $k['nama']]);
+                        } else {
+                            $k['faktor'] = 1.0;
+                        }
+                        $peta[$k['kode_analisa']]['komponen'][] = $k;
+                    }
+                }
+                $data['petaAnalisa'] = $peta;
+            }
         } elseif ($tab === 'bahan') {
             $kb = $this->kebutuhanBahan((int) $g['id']);
             $dipesan = [];

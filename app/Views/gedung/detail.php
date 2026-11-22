@@ -39,7 +39,7 @@ $tabAktif = $tab ?? 'boq';
       <?php endif; ?>
       <tr>
         <td><input type="checkbox" data-pilih value="<?= (int) $p['id'] ?>" x-model="terpilih"></td>
-        <td class="potong" title="<?= esc($p['nama']) ?>"><?= esc($p['nama']) ?></td>
+        <td class="potong" title="<?= esc($p['nama']) ?>"><?php if (! empty($p['kode_analisa']) && isset($petaAnalisa[$p['kode_analisa']])): ?><button type="button" class="tautan-pekerjaan" data-buka-detail="<?= (int) $p['id'] ?>" title="Klik untuk melihat rincian bahan &amp; upah"><span class="panah">&#9656;</span> <?= esc($p['nama']) ?></button><?php else: ?><?= esc($p['nama']) ?><?php endif; ?></td>
         <td><?= $p['kode_analisa'] ? '<span class="lencana abu">' . esc($p['kode_analisa']) . '</span>' : '—' ?></td>
         <td class="angka"><?= rtrim(rtrim(number_format((float) $p['volume'], 3, ',', '.'), '0'), ',') ?></td>
         <td><?= esc($p['satuan'] ?? '') ?></td>
@@ -56,6 +56,39 @@ $tabAktif = $tab ?? 'boq';
           </form>
         </td>
       </tr>
+      <?php if (! empty($p['kode_analisa']) && isset($petaAnalisa[$p['kode_analisa']])): $a = $petaAnalisa[$p['kode_analisa']]; $vol = (float) $p['volume']; ?>
+      <tr class="baris-detail" data-detail="<?= (int) $p['id'] ?>">
+        <td colspan="8">
+          <div class="detail-pekerjaan">
+            <div class="detail-kepala">Analisa <strong><?= esc($a['kode']) ?></strong> &mdash; <?= esc($a['nama']) ?> &middot; satuan pekerjaan: <?= esc($a['satuan'] ?? '') ?> &middot; volume: <?= rtrim(rtrim(number_format($vol, 3, ',', '.'), '0'), ',') ?> &middot; harga satuan BOQ: Rp <?= number_format((float) $p['harga_satuan'], 0, ',', '.') ?></div>
+            <table class="mini">
+              <tr><th>Jenis</th><th>Komponen</th><th class="angka">Koefisien</th><th>Satuan</th><th class="angka">Harga</th><th class="angka">Nilai / Satuan</th><th class="angka">Kebutuhan Total</th></tr>
+              <?php $jenisLalu = null; $subTotal = 0.0; $grand = 0.0; foreach ($a['komponen'] as $k): $nilai = (float) $k['koefisien'] * (float) $k['tarif']; ?>
+              <?php if ($jenisLalu !== null && $k['jenis'] !== $jenisLalu): ?>
+              <tr class="subtotal"><td colspan="5">Subtotal <?= esc(ucfirst($jenisLalu)) ?></td><td class="angka"><?= number_format($subTotal, 0, ',', '.') ?></td><td></td></tr>
+              <?php $subTotal = 0.0; endif; $jenisLalu = $k['jenis']; $subTotal += $nilai; $grand += $nilai; $butuh = (float) $k['koefisien'] * $vol; $butuhKonv = $butuh * (float) ($k['faktor'] ?? 1); ?>
+              <tr>
+                <td><span class="lencana <?= $k['jenis'] === 'bahan' ? 'biru' : ($k['jenis'] === 'upah' ? 'hijau' : 'abu') ?>"><?= esc(ucfirst($k['jenis'])) ?></span></td>
+                <td><?= esc($k['nama_master'] ?? $k['nama']) ?><?php if (! empty($k['kode_master'])): ?> <span class="kecil-teks">(<?= esc($k['kode_master']) ?>)</span><?php endif; ?></td>
+                <td class="angka"><?= rtrim(rtrim(number_format((float) $k['koefisien'], 6, ',', '.'), '0'), ',') ?></td>
+                <td><?= esc($k['satuan'] ?? '') ?></td>
+                <td class="angka"><?= number_format((float) $k['tarif'], 0, ',', '.') ?></td>
+                <td class="angka"><?= number_format($nilai, 0, ',', '.') ?></td>
+                <td class="angka"><?= number_format($butuh, 2, ',', '.') ?> <?= esc($k['satuan'] ?? '') ?><?php if (($k['faktor'] ?? 1) != 1 && ! empty($k['satuan_master'])): ?> &asymp; <?= number_format($butuhKonv, 2, ',', '.') ?> <?= esc($k['satuan_master']) ?><?php endif; ?></td>
+              </tr>
+              <?php endforeach; ?>
+              <?php if ($jenisLalu !== null): ?>
+              <tr class="subtotal"><td colspan="5">Subtotal <?= esc(ucfirst($jenisLalu)) ?></td><td class="angka"><?= number_format($subTotal, 0, ',', '.') ?></td><td></td></tr>
+              <?php endif; ?>
+              <tr class="total"><td colspan="5">Total komponen per satuan pekerjaan</td><td class="angka"><?= number_format($grand, 0, ',', '.') ?></td><td class="angka">&times; volume = <?= number_format($grand * $vol, 0, ',', '.') ?></td></tr>
+            </table>
+            <?php if (abs($grand - (float) $p['harga_satuan']) > 1): ?>
+            <div class="detail-kaki">Catatan: total komponen per satuan (Rp <?= number_format($grand, 0, ',', '.') ?>) berbeda dari harga satuan BOQ (Rp <?= number_format((float) $p['harga_satuan'], 0, ',', '.') ?>) &mdash; harga BOQ mengikuti Harsat dokumen perencana.</div>
+            <?php endif; ?>
+          </div>
+        </td>
+      </tr>
+      <?php endif; ?>
     <?php endforeach; ?>
     <tr class="total"><td colspan="6">Grand Total BOQ</td><td class="angka"><?= number_format($total, 0, ',', '.') ?></td><td></td></tr>
   </table></div>
@@ -198,3 +231,16 @@ $tabAktif = $tab ?? 'boq';
   </table></div>
 </div>
 <?php endif; ?>
+
+<script>
+document.querySelectorAll('[data-buka-detail]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var baris = document.querySelector('[data-detail="' + btn.getAttribute('data-buka-detail') + '"]');
+    if (!baris) return;
+    var buka = baris.classList.toggle('terbuka');
+    baris.style.display = buka ? '' : 'none';
+    var panah = btn.querySelector('.panah');
+    if (panah) panah.innerHTML = buka ? '&#9662;' : '&#9656;';
+  });
+});
+</script>

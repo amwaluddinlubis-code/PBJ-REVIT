@@ -9,9 +9,17 @@ window.inisiasiPaginasi = function (akar) {
   (akar || document).querySelectorAll('table[data-paginasi], table[data-cari]').forEach(function (tabel) {
     if (tabel.dataset.sudahPaginasi) return;
     tabel.dataset.sudahPaginasi = '1';
-    var semua = Array.prototype.slice.call(tabel.querySelectorAll('tr'));
+    var semua = Array.prototype.slice.call(tabel.querySelectorAll('tr')).filter(function (tr) { return tr.closest('table') === tabel; });
     if (semua.length < 2) return;
-    var data = semua.slice(1).filter(function (tr) { return !tr.classList.contains('baris-total'); });
+    var data = semua.slice(1).filter(function (tr) { return !tr.classList.contains('baris-total') && !tr.classList.contains('baris-detail'); });
+    var rincian = semua.filter(function (tr) { return tr.classList.contains('baris-detail'); });
+    function sinkronRincian() {
+      rincian.forEach(function (tr) {
+        var pemilik = tr.previousElementSibling;
+        var tampil = !!pemilik && pemilik.style.display !== 'none' && tr.classList.contains('terbuka');
+        tr.style.display = tampil ? '' : 'none';
+      });
+    }
     var adaPaginasi = tabel.hasAttribute('data-paginasi');
     var ukuran = adaPaginasi ? (parseInt(tabel.getAttribute('data-paginasi'), 10) || 10) : 0;
     var halaman = 1;
@@ -71,6 +79,7 @@ window.inisiasiPaginasi = function (akar) {
       var tampil = data.filter(cocok);
       if (!wadah) {
         data.forEach(function (tr) { tr.style.display = cocok(tr) ? '' : 'none'; });
+        sinkronRincian();
         return;
       }
       var total = Math.max(1, Math.ceil(tampil.length / ukuran));
@@ -78,6 +87,7 @@ window.inisiasiPaginasi = function (akar) {
       var awal = (halaman - 1) * ukuran;
       var terlihat = new Set(tampil.slice(awal, awal + ukuran));
       data.forEach(function (tr) { tr.style.display = terlihat.has(tr) ? '' : 'none'; });
+      sinkronRincian();
       info.textContent = 'Menampilkan ' + (tampil.length ? awal + 1 : 0) + '–' + Math.min(awal + ukuran, tampil.length) + ' dari ' + tampil.length + ' baris' + (kata ? ' (tersaring)' : '');
       var html = '<button type="button" data-h="prev"' + (halaman === 1 ? ' disabled' : '') + '>&lsaquo;</button>';
       var daftar = [];

@@ -68,7 +68,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
         'gedung'      => $seg === 'gedung',
         'belanja'     => in_array($seg, ['spk', 'belum-bernomor', 'survei', 'negosiasi', 'dokumen', 'invoice', 'upah'], true),
         'bahan'       => in_array($seg, ['bahan', 'material', 'sisa-bahan', 'lpj', 'laporan'], true),
-        'pengaturan'  => in_array($seg, ['pengaturan', 'sekolah', 'pengguna', 'profil'], true),
+        'pengaturan'  => in_array($seg, ['pengaturan', 'sekolah', 'pengguna', 'profil', 'pemeliharaan-db'], true),
       ];
       $induk = static function (string $kunci, string $ikonNama, string $label) use ($indukAktif, $svg): void {
           $buka = $indukAktif[$kunci] ?? false;
@@ -120,6 +120,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
         <a href="<?= base_url('sekolah') ?>"<?= $aktif('sekolah') ?>>Kelola Sekolah</a>
         <?php if (($pengguna['peran'] ?? '') === 'admin'): ?>
         <a href="<?= base_url('pengguna') ?>"<?= $aktif('pengguna') ?>>Manajemen User</a>
+        <a href="<?= base_url('pemeliharaan-db') ?>"<?= $aktif('pemeliharaan-db') ?>>Pemeliharaan Database</a>
         <?php endif; ?>
       <?= $tutupInduk() ?>
     </nav>
