@@ -7,8 +7,8 @@
   <?php endif; ?>
   <?php if (! empty($komponen_nol)): ?>
   <details style="margin-bottom:12px">
-    <summary style="cursor:pointer;font-weight:600;color:#92400e">Komponen Bertarif 0 — <?= count($komponen_nol) ?> komponen belum punya tarif (klik untuk rincian)</summary>
-    <div class="bungkus-tabel" style="margin-top:8px"><table class="satu-baris" data-cari="Cari komponen…">
+    <summary style="cursor:pointer;font-weight:600;color:#92400e">Komponen Bertarif 0 — <?= count($komponen_nol) ?> komponen belum punya tarif pada analisa <?= $tab === 'didanai' ? 'gedung didanai' : 'lainnya' ?> (klik untuk rincian)</summary>
+    <div class="bungkus-tabel" style="margin-top:8px"><table class="satu-baris" data-cari="Cari komponen…" data-paginasi="25">
       <tr><th>Analisa</th><th>Jenis</th><th>Komponen</th><th class="angka">Koefisien</th><th>Satuan</th><th>Aksi</th></tr>
       <?php foreach ($komponen_nol as $k): ?>
       <tr>
@@ -26,8 +26,8 @@
   <?php endif; ?>
   <?php if (! empty($beda_satuan)): ?>
   <details style="margin-bottom:12px">
-    <summary style="cursor:pointer;font-weight:600;color:#92400e">Satuan Bahan Berbeda — <?= count($beda_satuan) ?> pasangan satuan komponen ≠ satuan master (klik untuk memperbaiki)</summary>
-    <div class="bungkus-tabel" style="margin-top:8px"><table class="satu-baris" data-cari="Cari bahan…">
+    <summary style="cursor:pointer;font-weight:600;color:#92400e">Satuan Bahan Berbeda — <?= count($beda_satuan) ?> pasangan satuan komponen ≠ satuan master pada analisa <?= $tab === 'didanai' ? 'gedung didanai' : 'lainnya' ?> (klik untuk memperbaiki)</summary>
+    <div class="bungkus-tabel" style="margin-top:8px"><table class="satu-baris" data-cari="Cari bahan…" data-paginasi="25">
       <tr><th>Bahan</th><th>Satuan Master</th><th>Satuan Komponen</th><th class="angka">Komponen</th><th class="angka">Faktor Berlaku</th><th style="width:260px">Faktor Manual (perbaikan)</th></tr>
       <?php foreach ($beda_satuan as $r): ?>
       <tr>
@@ -66,7 +66,7 @@
   <?php if ($daftar === []): ?>
   <p class="kecil-teks"><?= ($tab ?? 'didanai') === 'didanai' ? 'Tidak ada analisa yang dipakai oleh gedung yang didanai.' : 'Semua analisa dipakai oleh gedung yang didanai.' ?></p>
   <?php endif; ?>
-  <div class="bungkus-tabel"><table class="satu-baris" data-cari>
+  <div class="bungkus-tabel"><table class="satu-baris" data-cari data-paginasi="25">
     <tr><th>Kode</th><th>Nama Analisa</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Komponen</th><th class="angka">Dipakai di Pekerjaan</th><th>Aksi</th></tr>
     <?php foreach ($daftar as $a): ?>
     <tr>

@@ -20,6 +20,14 @@ window.inisiasiPaginasi = function (akar) {
       theadBaru.appendChild(kepala);
     }
     var wadahBaris = semua[1].parentNode; // tbody — baris dipindah di sini, bukan ke <table>
+    // Header tempel (sticky) HANYA untuk tabel yang memang tinggi dan tidak
+    // dibungkus wadah scroll: pada tabel pendek/panel, header tempel terasa
+    // menutupi isi. Offset mengikuti tinggi topbar yang sebenarnya.
+    if (!tabel.closest('.bungkus-tabel') && tabel.offsetHeight > window.innerHeight) {
+      tabel.classList.add('kepala-tempel');
+      var topbarEl = document.querySelector('.topbar');
+      if (topbarEl) tabel.style.setProperty('--top-tempel', topbarEl.offsetHeight + 'px');
+    }
     var jmlKolom = kepala.cells.length;
 
     function isTotal(tr) { return tr.classList.contains('baris-total') || tr.classList.contains('total'); }

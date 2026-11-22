@@ -20,6 +20,16 @@ class Analisa extends BaseController
              FROM analisa a WHERE a.sekolah_id = ? AND a.is_deleted = 0 ORDER BY a.kode',
             [$this->sid()]
         )->getResultArray();
+        // Panel perbaikan (tarif 0 & beda satuan) mengikuti tab aktif:
+        // tab didanai hanya memuat analisa yang dipakai gedung didanai.
+        $tabPanel = (string) $this->request->getGet('tab') === 'lainnya' ? 'lainnya' : 'didanai';
+        $idsTab = [];
+        foreach ($semua as $a) {
+            $diDidanai = (int) $a['dipakai_didanai'] > 0;
+            if (($tabPanel === 'didanai') === $diDidanai) {
+                $idsTab[] = (int) $a['id'];
+            }
+        }
         $komponenNol = $db->query(
             'SELECT a.kode, a.nama AS analisa_nama, ak.id AS komponen_id, ak.analisa_id, ak.jenis, ak.nama AS komponen, ak.koefisien, ak.satuan
              FROM analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
@@ -27,16 +37,22 @@ class Analisa extends BaseController
              ORDER BY a.kode, ak.jenis, ak.nama',
             [$this->sid()]
         )->getResultArray();
+        $komponenNol = array_values(array_filter(
+            $komponenNol,
+            static fn ($k) => in_array((int) $k['analisa_id'], $idsTab, true)
+        ));
         // Bahan yang satuan komponennya berbeda dari satuan master:
         // tampilkan faktor yang berlaku + faktor manual (bila sudah diatur).
         $norm = static fn ($x) => str_replace(['³', '²'], ['3', '2'], mb_strtolower(trim((string) $x)));
         $bedaSatuan = [];
+        $inTab = $idsTab === [] ? '0' : implode(',', array_map('intval', $idsTab));
         foreach ($db->query(
             'SELECT b.id AS bahan_id, b.kode, b.nama, b.satuan AS satuan_master, ak.satuan AS satuan_komponen, COUNT(*) AS jml
              FROM analisa_komponen ak
              JOIN analisa a ON a.id = ak.analisa_id
              JOIN bahan b ON b.id = ak.bahan_id
              WHERE a.sekolah_id = ? AND ak.jenis = ? AND ak.is_deleted = 0 AND a.is_deleted = 0 AND b.is_deleted = 0
+               AND ak.analisa_id IN (' . $inTab . ')
              GROUP BY b.id, b.kode, b.nama, b.satuan, ak.satuan ORDER BY jml DESC',
             [$this->sid(), 'bahan']
         )->getResultArray() as $r) {
