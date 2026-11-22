@@ -189,6 +189,27 @@ abstract class BaseController extends Controller
     /** Peta konversi manual bahan (bahan_konversi), dimuat sekali per request. */
     private ?array $petaKonversi = null;
 
+    /**
+     * Nama kanonik jenis upah (keputusan AMWAL 22 Nov 2026: master upah
+     * hanya 2 baris): semua varian "Tukang ..." dan Mandor → 'Tukang',
+     * semua varian "Pekerja ..." → 'Pekerja'. Nama lain (mis. Peralatan)
+     * mengembalikan null dan tidak disentuh.
+     */
+    protected function upahKanon(?string $nama): ?string
+    {
+        $n = strtolower(trim((string) $nama));
+        if ($n === '') {
+            return null;
+        }
+        if (str_contains($n, 'pekerja')) {
+            return 'Pekerja';
+        }
+        if (str_contains($n, 'tukang') || str_contains($n, 'mandor')) {
+            return 'Tukang';
+        }
+        return null;
+    }
+
     protected function faktorManual(int $bahanId, string $satuanKomponen): ?float
     {
         if ($this->petaKonversi === null) {

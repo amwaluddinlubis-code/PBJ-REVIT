@@ -41,6 +41,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('bahan/kosongkan', 'Bahan::kosongkan');
     $routes->post('bahan/upah-hapus-massal', 'Bahan::upahHapusMassal');
     $routes->post('bahan/upah-kosongkan', 'Bahan::upahKosongkan');
+    $routes->post('bahan/upah-rapikan', 'Bahan::upahRapikan');
 
     // SPK + detail
     $routes->get('spk', 'Spk::index');

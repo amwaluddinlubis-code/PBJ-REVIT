@@ -385,15 +385,52 @@ class ParserPerencana
     }
 
     /** Tautkan komponen upah ke upah_master lewat id (kecocokan nama persis). */
+    /** Nama kanonik jenis upah: varian Tukang/Mandor → 'Tukang', Pekerja → 'Pekerja'. */
+    private static function kanonUpah(string $nama): ?string
+    {
+        $n = strtolower(trim($nama));
+        if (str_contains($n, 'pekerja')) {
+            return 'Pekerja';
+        }
+        if (str_contains($n, 'tukang') || str_contains($n, 'mandor')) {
+            return 'Tukang';
+        }
+        return null;
+    }
+
     private function tautkanKomponenUpah(): void
     {
+        // Seragamkan dulu ke 2 jenis kanonik (keputusan AMWAL 22 Nov 2026:
+        // master upah hanya Pekerja & Tukang) lalu tautkan berdasar nama.
+        $this->db->query(
+            "UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             SET ak.nama = CASE
+                   WHEN LOWER(ak.nama) LIKE '%pekerja%' THEN 'Pekerja'
+                   WHEN LOWER(ak.nama) LIKE '%tukang%' OR LOWER(ak.nama) LIKE '%mandor%' THEN 'Tukang'
+                   ELSE ak.nama END
+             WHERE a.sekolah_id = ? AND ak.jenis = 'upah' AND ak.is_deleted = 0",
+            [$this->sid]
+        );
+        foreach (['Pekerja', 'Tukang'] as $kanon) {
+            $ada = $this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $kanon, 'is_deleted' => 0])->get()->getRowArray();
+            if (! $ada) {
+                $tarif = (float) ($this->db->query(
+                    "SELECT COALESCE(MAX(ak.tarif), 0) AS t FROM analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+                     WHERE a.sekolah_id = ? AND ak.jenis = 'upah' AND ak.nama = ? AND ak.is_deleted = 0",
+                    [$this->sid, $kanon]
+                )->getRow()->t ?? 0);
+                if ($tarif > 0) {
+                    $this->db->table('upah_master')->insert(['sekolah_id' => $this->sid, 'jenis' => $kanon, 'satuan' => 'Oh', 'tarif' => $tarif]);
+                }
+            }
+        }
         $this->db->query(
             'UPDATE analisa_komponen ak
              JOIN analisa a ON a.id = ak.analisa_id
              JOIN upah_master um ON um.sekolah_id = a.sekolah_id
                AND LOWER(TRIM(um.jenis)) = LOWER(TRIM(ak.nama)) AND um.is_deleted = 0
              SET ak.upah_id = um.id
-             WHERE a.sekolah_id = ? AND ak.jenis = \'upah\' AND ak.upah_id IS NULL AND ak.is_deleted = 0',
+             WHERE a.sekolah_id = ? AND ak.jenis = \'upah\' AND ak.is_deleted = 0',
             [$this->sid]
         );
     }
@@ -475,19 +512,20 @@ class ParserPerencana
         $grupUpah = [];
         foreach ($komp as $k) {
             if ($k['jenis'] === 'upah') {
-                $grupUpah[self::normal($k['nama'])][] = $k;
+                $grupUpah[self::kanonUpah($k['nama']) ?? self::normal($k['nama'])][] = $k;
             }
         }
         foreach ($grupUpah as $kunci => $rows) {
             if (str_contains($kunci, 'peralatan')) {
                 continue; // baris alat yang tercantum di seksi upah dokumen
             }
+            $namaMaster = self::kanonUpah($rows[0]['nama']) ?? $rows[0]['nama'];
             $tarifRef = 0.0;
             $positif = array_filter(array_map(static fn ($k) => (float) ($k['tarif'] ?? 0), $rows), static fn ($v) => $v > 0);
             if ($positif !== []) {
                 $tarifRef = self::modusHarga(array_values($positif));
             }
-            $ada = $db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $rows[0]['nama'], 'is_deleted' => 0])->get()->getRowArray();
+            $ada = $db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $namaMaster, 'is_deleted' => 0])->get()->getRowArray();
             if ($ada) {
                 if ((float) $ada['tarif'] <= 0 && $tarifRef > 0) {
                     $db->table('upah_master')->where('id', $ada['id'])->update(['tarif' => (int) round($tarifRef)]);
@@ -495,7 +533,7 @@ class ParserPerencana
                 }
             } else {
                 $db->table('upah_master')->insert([
-                    'sekolah_id' => $this->sid, 'jenis' => $rows[0]['nama'], 'satuan' => 'OH',
+                    'sekolah_id' => $this->sid, 'jenis' => $namaMaster, 'satuan' => 'OH',
                     'tarif' => (int) round($tarifRef),
                 ]);
                 $stat['upah_diperbarui']++;

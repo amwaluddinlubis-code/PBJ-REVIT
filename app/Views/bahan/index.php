@@ -167,7 +167,7 @@
   <div id="modal-sinkron" class="mk-lapik" hidden>
     <div class="mk-kartu" role="dialog" aria-modal="true" aria-labelledby="ms-judul" style="max-width:760px;width:94vw">
       <h3 id="ms-judul" style="margin-top:0">Sinkronkan Harga Bahan ke Analisa?</h3>
-      <p class="kecil-teks" style="margin-top:0">Tarif komponen bahan di analisa akan diganti dengan harga acuan bahannya (negosiasi → penawaran → harga RAB), disesuaikan ke satuan komponen lewat faktor konversi — mis. harga per zak menjadi per kg — agar nilai AHSP tidak berubah oleh perbedaan satuan. Nilai BOQ dashboard berubah mengikuti hasil AHSP baru. <strong>Hanya tarif yang berubah yang ditampilkan</strong> — <span x-text="sinkron ? sinkron.tetap : 0"></span> komponen yang sudah sama disembunyikan<span x-show="sinkron && sinkron.tanpa_harga > 0">, dan <span x-text="sinkron ? sinkron.tanpa_harga : 0"></span> komponen dilewati karena bahannya belum punya harga</span>.</p>
+      <p class="kecil-teks" style="margin-top:0">Tarif komponen bahan di analisa akan diganti dengan harga acuan bahannya (negosiasi → penawaran → harga RAB), disesuaikan ke satuan komponen lewat faktor konversi — mis. harga per zak menjadi per kg — agar nilai AHSP tidak berubah oleh perbedaan satuan. Nilai BOQ dashboard berubah mengikuti hasil AHSP baru. <strong>Hanya komponen yang analisanya benar-benar dipakai pekerjaan di gedung didanai yang disinkronkan</strong> — komponen pada analisa yang tidak dipakai pekerjaan gedung mana pun tidak diubah. <strong>Hanya tarif yang berubah yang ditampilkan</strong> — <span x-text="sinkron ? sinkron.tetap : 0"></span> komponen yang sudah sama disembunyikan<span x-show="sinkron && sinkron.tanpa_harga > 0">, dan <span x-text="sinkron ? sinkron.tanpa_harga : 0"></span> komponen dilewati karena bahannya belum punya harga</span>.</p>
       <div style="max-height:46vh;overflow:auto;border:1px solid var(--ta-garis);border-radius:8px">
         <table class="satu-baris" style="margin:0">
           <tr><th>Analisa</th><th>Komponen / Bahan</th><th>Satuan</th><th class="angka">Tarif Lama</th><th class="angka">Tarif Baru</th></tr>
@@ -275,6 +275,10 @@
     <form method="post" action="<?= base_url('bahan/upah-kosongkan') ?>" data-konfirmasi="Kosongkan Master Upah sekolah ini? Semua <?= (int) $totalUpah ?> jenis tenaga aktif akan dihapus (hapus lunak). Pembayaran upah yang sudah tercatat tidak berubah." data-konfirmasi-judul="Kosongkan Master Upah" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
       <?= csrf_field() ?>
       <button type="submit" class="bahaya">Kosongkan Master Upah</button>
+    </form>
+    <form method="post" action="<?= base_url('bahan/upah-rapikan') ?>" data-konfirmasi="Rapikan Master Upah menjadi 2 jenis saja? Semua varian Tukang (Batu, Kayu, Cat, Las, Listrik, Besi, Kepala Tukang, Mandor, dst.) digabung menjadi 'Tukang' dan semua Pekerja menjadi 'Pekerja' — nama & tautan komponen upah di semua analisa ikut diseragamkan, master lainnya dihapus lunak. Komponen bernama lain (mis. Peralatan) tidak diubah." data-konfirmasi-judul="Rapikan Master Upah — 2 Jenis" data-konfirmasi-tombol="Ya, Rapikan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit">Rapikan ke 2 Jenis (Pekerja &amp; Tukang)</button>
     </form>
   </div>
   <table data-cari="Cari jenis tenaga…">

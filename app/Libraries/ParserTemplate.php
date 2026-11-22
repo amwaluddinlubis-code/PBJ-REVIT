@@ -122,6 +122,13 @@ class ParserTemplate
                 continue;
             }
             if (str_contains($jenis, 'upah')) {
+                // Kanon 2 jenis (Pekerja & Tukang) — selaras ParserPerencana.
+                $nl = strtolower($nama);
+                if (str_contains($nl, 'pekerja')) {
+                    $nama = 'Pekerja';
+                } elseif (str_contains($nl, 'tukang') || str_contains($nl, 'mandor')) {
+                    $nama = 'Tukang';
+                }
                 $ada = $this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $nama, 'is_deleted' => 0])->get()->getRowArray();
                 if (! $ada) {
                     // Baris terhapus lunak tetap menahan kunci unik — hidupkan lagi.
@@ -384,13 +391,37 @@ class ParserTemplate
     /** Tautkan komponen upah ke upah_master lewat id (kecocokan nama persis). */
     private function tautkanKomponenUpah(): void
     {
+        // Seragamkan dulu ke 2 jenis kanonik (keputusan AMWAL 22 Nov 2026:
+        // master upah hanya Pekerja & Tukang) lalu tautkan berdasar nama.
+        $this->db->query(
+            "UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             SET ak.nama = CASE
+                   WHEN LOWER(ak.nama) LIKE '%pekerja%' THEN 'Pekerja'
+                   WHEN LOWER(ak.nama) LIKE '%tukang%' OR LOWER(ak.nama) LIKE '%mandor%' THEN 'Tukang'
+                   ELSE ak.nama END
+             WHERE a.sekolah_id = ? AND ak.jenis = 'upah' AND ak.is_deleted = 0",
+            [$this->sid]
+        );
+        foreach (['Pekerja', 'Tukang'] as $kanon) {
+            $ada = $this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $kanon, 'is_deleted' => 0])->get()->getRowArray();
+            if (! $ada) {
+                $tarif = (float) ($this->db->query(
+                    "SELECT COALESCE(MAX(ak.tarif), 0) AS t FROM analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+                     WHERE a.sekolah_id = ? AND ak.jenis = 'upah' AND ak.nama = ? AND ak.is_deleted = 0",
+                    [$this->sid, $kanon]
+                )->getRow()->t ?? 0);
+                if ($tarif > 0) {
+                    $this->db->table('upah_master')->insert(['sekolah_id' => $this->sid, 'jenis' => $kanon, 'satuan' => 'Oh', 'tarif' => $tarif]);
+                }
+            }
+        }
         $this->db->query(
             'UPDATE analisa_komponen ak
              JOIN analisa a ON a.id = ak.analisa_id
              JOIN upah_master um ON um.sekolah_id = a.sekolah_id
                AND LOWER(TRIM(um.jenis)) = LOWER(TRIM(ak.nama)) AND um.is_deleted = 0
              SET ak.upah_id = um.id
-             WHERE a.sekolah_id = ? AND ak.jenis = \'upah\' AND ak.upah_id IS NULL AND ak.is_deleted = 0',
+             WHERE a.sekolah_id = ? AND ak.jenis = \'upah\' AND ak.is_deleted = 0',
             [$this->sid]
         );
     }

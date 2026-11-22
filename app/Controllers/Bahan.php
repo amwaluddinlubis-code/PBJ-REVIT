@@ -60,6 +60,11 @@ class Bahan extends BaseController
              JOIN analisa a ON a.id = ak.analisa_id AND a.is_deleted = 0
              JOIN bahan b ON b.id = ak.bahan_id AND b.is_deleted = 0
              WHERE a.sekolah_id = ? AND ak.jenis = ? AND ak.bahan_id IS NOT NULL AND ak.is_deleted = 0
+               AND EXISTS (
+                 SELECT 1 FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
+                 WHERE (p.analisa_id = a.id OR (p.analisa_id IS NULL AND p.kode_analisa = a.kode))
+                   AND p.is_deleted = 0 AND g.is_deleted = 0 AND g.didanai = 1 AND g.sekolah_id = a.sekolah_id
+               )
              ORDER BY a.kode, ak.id',
             [$this->sid(), 'bahan']
         )->getResultArray() as $k) {
@@ -384,6 +389,82 @@ class Bahan extends BaseController
             $this->hapusLunak('upah_master', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
         }
         return redirect()->to('bahan')->with('sukses', 'Master Upah dikosongkan: ' . count($ids) . ' jenis tenaga dihapus. Pembayaran upah yang sudah tercatat tidak berubah.');
+    }
+
+    /**
+     * Rapikan Master Upah menjadi benar-benar 2 baris (Pekerja & Tukang):
+     * semua varian nama upah pada komponen analisa diseragamkan ke nama
+     * kanoniknya dan ditautkan ke master kanonik; master lain dihapus
+     * lunak. Komponen bernama lain (mis. Peralatan) tidak disentuh —
+     * tautannya dilepas agar tarifnya tetap terbaca dari komponen sendiri.
+     */
+    public function upahRapikan()
+    {
+        if ($d = $this->penjagaPeran(['operator'])) {
+            return $d;
+        }
+        $db = $this->db();
+        $sid = $this->sid();
+        $db->transStart();
+
+        // 1) Pastikan master kanonik ada; tarif dari master sejenis terbesar.
+        $masterKanon = [];
+        foreach (['Pekerja', 'Tukang'] as $kanon) {
+            $ada = $db->table('upah_master')->where(['sekolah_id' => $sid, 'jenis' => $kanon, 'is_deleted' => 0])->get()->getRowArray();
+            if (! $ada) {
+                $tarif = 0.0;
+                foreach ($db->table('upah_master')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $m) {
+                    if ($this->upahKanon($m['jenis']) === $kanon) {
+                        $tarif = max($tarif, (float) $m['tarif']);
+                    }
+                }
+                if ($tarif <= 0) {
+                    $tarif = (float) ($db->query(
+                        "SELECT COALESCE(MAX(ak.tarif), 0) AS t FROM analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+                         WHERE a.sekolah_id = ? AND ak.jenis = 'upah' AND ak.is_deleted = 0",
+                        [$sid]
+                    )->getRow()->t ?? 0);
+                }
+                $db->table('upah_master')->insert([
+                    'sekolah_id' => $sid, 'jenis' => $kanon, 'satuan' => 'Oh', 'tarif' => $tarif,
+                    'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+                $ada = ['id' => (int) $db->insertID()];
+            }
+            $masterKanon[$kanon] = (int) $ada['id'];
+        }
+
+        // 2) Seragamkan nama + tautan komponen upah (upah_id dibaca dari
+        //    nama LAMA: penugasan SET MySQL berjalan kiri ke kanan).
+        $db->query(
+            "UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             SET ak.upah_id = CASE
+                   WHEN LOWER(ak.nama) LIKE '%pekerja%' THEN ?
+                   WHEN LOWER(ak.nama) LIKE '%tukang%' OR LOWER(ak.nama) LIKE '%mandor%' THEN ?
+                   ELSE ak.upah_id END,
+                 ak.nama = CASE
+                   WHEN LOWER(ak.nama) LIKE '%pekerja%' THEN 'Pekerja'
+                   WHEN LOWER(ak.nama) LIKE '%tukang%' OR LOWER(ak.nama) LIKE '%mandor%' THEN 'Tukang'
+                   ELSE ak.nama END
+             WHERE a.sekolah_id = ? AND ak.jenis = 'upah' AND ak.is_deleted = 0",
+            [$masterKanon['Pekerja'], $masterKanon['Tukang'], $sid]
+        );
+        $diseragamkan = $db->affectedRows();
+
+        // 3) Lepas tautan komponen tak dikenali dari master yang akan digabung,
+        //    lalu hapus lunak semua master selain dua kanonik.
+        $lainnya = $db->table('upah_master')->where(['sekolah_id' => $sid, 'is_deleted' => 0])
+            ->whereNotIn('id', array_values($masterKanon))->get()->getResultArray();
+        foreach ($lainnya as $m) {
+            $db->query(
+                'UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id SET ak.upah_id = NULL WHERE ak.upah_id = ? AND a.sekolah_id = ?',
+                [(int) $m['id'], $sid]
+            );
+            $this->hapusLunak('upah_master', ['id' => (int) $m['id'], 'sekolah_id' => $sid]);
+        }
+        $db->transComplete();
+        $this->catatAudit('upah_master', null, 'rapikan_upah_2_jenis', $diseragamkan . ' komponen diseragamkan; ' . count($lainnya) . ' master digabung ke Pekerja & Tukang');
+        return redirect()->to('bahan')->with('sukses', 'Master Upah dirapikan menjadi 2 jenis (Pekerja & Tukang): ' . $diseragamkan . ' komponen analisa diseragamkan dan ' . count($lainnya) . ' jenis master digabungkan. Komponen bernama lain (mis. Peralatan) tidak diubah.');
     }
 
     /** Bentuk normal nama untuk pencocokan duplikat (huruf kecil, spasi tunggal). */
