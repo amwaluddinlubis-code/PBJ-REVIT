@@ -170,7 +170,10 @@ class Bahan extends BaseController
                 [$this->sid()]
             )->getResultArray(), fn ($b) => isset($setTerpakai[(int) $b['id']]))),
             'upahTanpaTarif' => array_values(array_filter($upah, static fn ($u) => (float) $u['tarif'] <= 0)),
-            'duplikatBahan' => $this->grupDuplikat($bahan),
+            // Duplikat dihitung dari SELURUH bahan aktif sekolah — bukan dari
+            // daftar tab aktif, agar pasangan yang terpisah tab (satu dipakai
+            // gedung, satu tidak) tetap tertangkap panel ALERT-nya.
+            'duplikatBahan' => $this->grupDuplikat($this->db()->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('kode')->get()->getResultArray()),
             'duplikatUpah' => $this->grupDuplikat($upah, 'jenis'),
         ], 'Master Bahan & Upah — Aplikasi PBJ Sekolah');
     }
