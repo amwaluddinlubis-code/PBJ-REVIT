@@ -105,14 +105,22 @@ window.inisiasiSelectCari = function (akar) {
     // apa pun menambah scroll atau memotong dropdown.
     function posisikan() {
       var r = tombol.getBoundingClientRect();
-      panel.style.left = r.left + 'px';
-      panel.style.width = r.width + 'px';
-      if (window.innerHeight - r.bottom < 290 && r.top > 290) {
+      // getBoundingClientRect memberi koordinat VISUAL sesudah zoom
+      // dokumen (fitur A-/A+ di topbar memasang zoom pada <html>),
+      // sedangkan style top/left/lebar dibaca dalam ruang gaya lalu
+      // diskalakan lagi oleh zoom yang sama — tanpa dibagi zoom, panel
+      // melayang menjauhi select sebanding jarak select dari tepi atas.
+      var z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+      var kiri = r.left / z, lebar = r.width / z;
+      var atas = r.top / z, bawah = r.bottom / z;
+      panel.style.left = kiri + 'px';
+      panel.style.width = lebar + 'px';
+      if (window.innerHeight - bawah < 290 && atas > 290) {
         panel.style.top = 'auto';
-        panel.style.bottom = (window.innerHeight - r.top + 4) + 'px';
+        panel.style.bottom = (window.innerHeight - atas + 4) + 'px';
       } else {
         panel.style.bottom = 'auto';
-        panel.style.top = (r.bottom + 4) + 'px';
+        panel.style.top = (bawah + 4) + 'px';
       }
     }
 

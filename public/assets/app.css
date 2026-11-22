@@ -2885,6 +2885,7 @@ html.gelap table tr:hover td {
 }
 
 .sc-panel {
+  box-sizing: border-box;
   position: fixed;
   left: 0;
   top: 0;
