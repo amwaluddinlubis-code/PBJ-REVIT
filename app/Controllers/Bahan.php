@@ -53,6 +53,7 @@ class Bahan extends BaseController
         $berubah = [];
         $tetap = 0;
         $tanpaHarga = 0;
+        $dilewatiSatuan = 0;
         foreach ($this->db()->query(
             'SELECT ak.id, ak.tarif, ak.nama AS komponen, ak.satuan, ak.bahan_id, a.id AS analisa_id, a.kode AS kode_analisa,
                     b.kode AS kode_bahan, b.nama AS nama_bahan, b.satuan AS satuan_bahan
@@ -79,11 +80,32 @@ class Bahan extends BaseController
             // dinormalkan ke satuan master (tarif / faktor) — selaras
             // dengan kolom Tarif Analisa per Gedung. Tanpa ini, menyalin
             // acuan mentah ke komponen bersatuan kg merusak harga AHSP.
-            $faktor = $this->faktorSatuan($k['satuan'] ?? null, [
-                'id' => (int) $k['bahan_id'],
-                'satuan' => $k['satuan_bahan'] ?? '',
-                'nama' => $k['nama_bahan'] ?? '',
-            ]);
+            // Jebakan kemasan: bila satuan komponen BERBEDA dari master dan
+            // tidak ada konversi yang dikenal (manual maupun bawaan),
+            // komponen DILEWATI — menyalin harga master mentah (mis. harga
+            // per dus ke komponen per buah) merusak harga AHSP.
+            $satK = strtolower(trim((string) ($k['satuan'] ?? '')));
+            $satM = strtolower(trim((string) ($k['satuan_bahan'] ?? '')));
+            $faktor = $this->faktorManual((int) $k['bahan_id'], (string) ($k['satuan'] ?? ''));
+            if ($faktor === null && $satK !== $satM) {
+                $f = $this->faktorSatuan($k['satuan'] ?? null, [
+                    'id' => (int) $k['bahan_id'],
+                    'satuan' => $k['satuan_bahan'] ?? '',
+                    'nama' => $k['nama_bahan'] ?? '',
+                ]);
+                if ($f <= 0 || abs($f - 1.0) < 1e-9) {
+                    $dilewatiSatuan++;
+                    continue;
+                }
+                $faktor = $f;
+            }
+            if ($faktor === null) {
+                $faktor = $this->faktorSatuan($k['satuan'] ?? null, [
+                    'id' => (int) $k['bahan_id'],
+                    'satuan' => $k['satuan_bahan'] ?? '',
+                    'nama' => $k['nama_bahan'] ?? '',
+                ]);
+            }
             if ($faktor <= 0) {
                 $faktor = 1.0;
             }
@@ -99,7 +121,7 @@ class Bahan extends BaseController
                 'tarif_lama' => (float) $k['tarif'], 'tarif_baru' => round($acuan * $faktor, 2),
             ];
         }
-        return ['berubah' => $berubah, 'tetap' => $tetap, 'tanpa_harga' => $tanpaHarga];
+        return ['berubah' => $berubah, 'tetap' => $tetap, 'tanpa_harga' => $tanpaHarga, 'dilewati_satuan' => $dilewatiSatuan];
     }
 
     /** Pratinjau sinkron (AJAX): hanya tarif yang berubah yang dikirim. */
@@ -108,6 +130,7 @@ class Bahan extends BaseController
         $d = $this->daftarSinkron();
         return $this->response->setJSON([
             'berubah' => $d['berubah'], 'tetap' => $d['tetap'], 'tanpa_harga' => $d['tanpa_harga'],
+            'dilewati_satuan' => $d['dilewati_satuan'],
             'analisa_terdampak' => count(array_unique(array_column($d['berubah'], 'analisa_id'))),
         ]);
     }
@@ -137,8 +160,9 @@ class Bahan extends BaseController
             $db->table('analisa')->where('id', $aid)->update(['harga_satuan' => $total]);
         }
         $db->transComplete();
-        $this->catatAudit('analisa_komponen', null, 'sinkron_harga_bahan', count($d['berubah']) . ' komponen di ' . count($analisaIds) . ' analisa disinkronkan dari harga bahan');
-        return redirect()->to('/bahan')->with('sukses', 'Sinkron selesai: ' . count($d['berubah']) . ' tarif komponen di ' . count($analisaIds) . ' analisa kini mengikuti harga bahan. Nilai BOQ dashboard sudah berubah mengikuti hasil AHSP baru.');
+        $this->catatAudit('analisa_komponen', null, 'sinkron_harga_bahan', count($d['berubah']) . ' komponen di ' . count($analisaIds) . ' analisa disinkronkan dari harga bahan; ' . $d['dilewati_satuan'] . ' komponen dilewati (satuan beda tanpa konversi)');
+        return redirect()->to('/bahan')->with('sukses', 'Sinkron selesai: ' . count($d['berubah']) . ' tarif komponen di ' . count($analisaIds) . ' analisa kini mengikuti harga bahan. Nilai BOQ dashboard sudah berubah mengikuti hasil AHSP baru.'
+            . ($d['dilewati_satuan'] > 0 ? ' ' . $d['dilewati_satuan'] . ' komponen dilewati karena satuan komponen berbeda dari master dan belum ada faktor konversinya — atur lewat panel Satuan Bahan Berbeda bila ingin disinkronkan.' : ''));
     }
 
     public function index()
