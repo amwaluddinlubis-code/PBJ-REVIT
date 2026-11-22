@@ -33,7 +33,25 @@ class Bahan extends BaseController
             $bind[] = '%' . $q . '%';
         }
         $sql .= ' GROUP BY b.id ORDER BY b.kode';
-        return $this->db()->query($sql, $bind)->getResultArray();
+        $baris = $this->db()->query($sql, $bind)->getResultArray();
+        // Qty RAB utama = kebutuhan langsung dari BOQ × analisa (sama seperti
+        // Kebutuhan Bahan & Rencana Belanja). Kolom lama qty_rkb/adm/toilet
+        // hanya terisi oleh impor Excel v4 — untuk sekolah hasil impor
+        // perencana kolom itu 0 semua, jadi tampilkan hitungan langsungnya
+        // bila bahan ini memang terpakai di pekerjaan gedung aktif.
+        $petaButuh = [];
+        foreach ($this->kebutuhanBahanSekolah()['tertaut'] as $b) {
+            $petaButuh[(int) $b['bahan_id']] = (float) $b['qty_butuh'];
+        }
+        foreach ($baris as &$r) {
+            $langsung = $petaButuh[(int) $r['id']] ?? null;
+            if ($langsung !== null) {
+                $r['qty_total'] = $langsung;
+                $r['anggaran']  = $langsung * (float) $r['harga_rab'];
+            }
+        }
+        unset($r);
+        return $baris;
     }
 
     /** Potongan tabel bahan untuk pencarian langsung (AJAX gaya Livewire). */
