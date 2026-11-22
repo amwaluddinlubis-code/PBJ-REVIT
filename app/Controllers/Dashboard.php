@@ -9,7 +9,7 @@ class Dashboard extends BaseController
         $db = $this->db();
         $sid = $this->sid();
 
-        $totalRab = (float) $db->query('SELECT COALESCE(SUM((qty_rkb+qty_adm+qty_toilet)*harga_rab),0) t FROM bahan WHERE sekolah_id = ? AND is_deleted = 0', [$sid])->getRow()->t;
+        $totalRab = 0.0; // Diisi dari total Nilai Analisa panel gedung di bawah (harga AHSP berjalan).
         $totalSpk = (float) $db->query('SELECT COALESCE(SUM(qty*harga),0) t FROM spk_detail WHERE spk_id IS NOT NULL AND sekolah_id = ? AND is_deleted = 0', [$sid])->getRow()->t;
         $realisasi = 0.0;
         $petaPpn = $this->ppnSpkMap();
@@ -122,15 +122,21 @@ class Dashboard extends BaseController
             }
         }
 
-        $tanpaHarga = (int) ($db->query(
-            'SELECT COUNT(*) AS j FROM bahan b
+        $setTerpakaiDash = $this->idBahanDipakaiGedung();
+        $tanpaHarga = 0;
+        foreach ($db->query(
+            'SELECT b.id FROM bahan b
              LEFT JOIN negosiasi n ON n.bahan_id = b.id AND n.is_deleted = 0
              WHERE b.sekolah_id = ? AND b.is_deleted = 0
                AND (b.harga_rab IS NULL OR b.harga_rab = 0)
                AND (n.harga_nego IS NULL OR n.harga_nego = 0)
                AND (n.harga_penawaran IS NULL OR n.harga_penawaran = 0)',
             [$sid]
-        )->getRow()->j ?? 0);
+        )->getResultArray() as $r) {
+            if (isset($setTerpakaiDash[(int) $r['id']])) {
+                $tanpaHarga++;
+            }
+        }
         $tanpaTarif = (int) $db->table('upah_master')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->where('tarif <=', 0)->countAllResults();
 
         // Panel Pembangunan Gedung: bandingkan Nilai BOQ Asli (volume awal x
@@ -157,6 +163,7 @@ class Dashboard extends BaseController
             $panelTotal['perubahan'] += $g['perubahan'];
             $panelGedung[] = $g;
         }
+        $totalRab = $panelTotal['analisa'];
 
         return $this->tampil('dashboard/index', [
             'panelGedung' => $panelGedung, 'panelTotal' => $panelTotal,

@@ -116,6 +116,26 @@ abstract class BaseController extends Controller
         return view('layout/main', $data);
     }
 
+    /** Id bahan yang dipakai gedung aktif yang didanai: tertaut komponen
+        analisa yang analisanya dipakai pekerjaan gedung tersebut.
+        Dipakai bersama oleh Master Bahan (panel Kelengkapan) dan Dashboard
+        (peringatan bahan tanpa harga) agar basis hitungnya selalu sama. */
+    protected function idBahanDipakaiGedung(): array
+    {
+        $set = [];
+        foreach ($this->db()->query(
+            'SELECT DISTINCT ak.bahan_id FROM analisa_komponen ak
+             JOIN analisa a ON a.id = ak.analisa_id AND a.is_deleted = 0
+             JOIN pekerjaan pk ON (pk.analisa_id = a.id OR (pk.analisa_id IS NULL AND pk.kode_analisa = a.kode)) AND pk.is_deleted = 0
+             JOIN gedung g ON g.id = pk.gedung_id AND g.is_deleted = 0 AND g.didanai = 1
+             WHERE a.sekolah_id = ? AND g.sekolah_id = ? AND ak.jenis = ? AND ak.bahan_id IS NOT NULL AND ak.is_deleted = 0',
+            [$this->sid(), $this->sid(), 'bahan']
+        )->getResultArray() as $r) {
+            $set[(int) $r['bahan_id']] = true;
+        }
+        return $set;
+    }
+
     /** ID sekolah yang sedang aktif (dari sesi; bawaan: sekolah pertama). */
     protected function sid(): int
     {

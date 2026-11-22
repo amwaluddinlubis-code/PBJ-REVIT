@@ -3482,3 +3482,106 @@ body:not(.login) .samping .profil {
 }
 body:not(.login) .samping .profil .siapa { color: #fff; }
 body:not(.login) .samping .profil .siapa small { color: rgba(231, 247, 255, .68); }
+
+/* === Fase 0+1 (2026-11-22): perbaikan kontras + fondasi polish ala Apple ===
+   Lapisan penimpa terakhir: font lokal, token permukaan, panel berlipat. */
+
+/* Font Inter lokal (sebelumnya @import Google Fonts di idds.css:
+   render-blocking dan bergantung internet). */
+@font-face { font-family: "Inter"; src: url("fonts/inter-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("fonts/inter-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("fonts/inter-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("fonts/inter-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("fonts/inter-800.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+
+:root {
+  --ui-radius: 18px;
+  --ui-radius-sm: 12px;
+  --ui-border: rgba(15, 35, 70, .09);
+  --ui-shadow-soft: 0 1px 2px rgba(16, 34, 62, .04), 0 10px 30px rgba(16, 34, 62, .05);
+  --ui-shadow-hover: 0 2px 4px rgba(16, 34, 62, .05), 0 18px 38px rgba(16, 34, 62, .10);
+}
+
+body { font-size: 13.5px; }
+td, .kpi .nilai { font-variant-numeric: tabular-nums; }
+.mk-kartu { border-radius: 20px; }
+
+/* Hero Dashboard: tombol sekunder harus terbaca di atas gradasi biru
+   (aturan .tombol.abu generik menimpanya menjadi pil putih teks putih). */
+body:not(.login) .dashboard-hero .tombol.abu {
+  background: rgba(255, 255, 255, .12);
+  border-color: rgba(255, 255, 255, .22);
+  color: #fff;
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+}
+body:not(.login) .dashboard-hero .tombol.abu:hover {
+  background: rgba(255, 255, 255, .2);
+  border-color: rgba(255, 255, 255, .38);
+}
+
+/* Angka perubahan & status pagu: kontras aman di terang dan gelap. */
+.perubahan-buruk { color: #b42318; }
+.perubahan-baik { color: #067647; }
+html.gelap .perubahan-buruk { color: #f97066; }
+html.gelap .perubahan-baik { color: #32d583; }
+html.gelap .peringatan a { color: #7cc4ff; }
+
+/* Panel peringatan berbasis tint (ikut tema; tanpa warna literal di view). */
+.panel-waspada {
+  background: #fffbeb;
+  border: 1px solid rgba(245, 158, 11, .45);
+  border-left: 4px solid var(--ina-amber-500, #f59e0b);
+}
+html.gelap .panel-waspada {
+  background: rgba(245, 158, 11, .10);
+  border-color: rgba(245, 158, 11, .35);
+}
+
+/* Panel berlipat (details.panel-lipat): kepala panel menjadi summary
+   bergaya h2 panel, isi dilipat; keadaan tersimpan per panel di layout. */
+details.panel-lipat > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  color: var(--ta-teks);
+  user-select: none;
+}
+details.panel-lipat > summary::-webkit-details-marker { display: none; }
+details.panel-lipat > summary::before {
+  content: "";
+  width: 4px;
+  height: 17px;
+  flex: 0 0 4px;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #0968f6, #18a5a1);
+}
+details.panel-lipat > summary::after {
+  content: "";
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-right: 2px solid var(--ta-teks-3);
+  border-bottom: 2px solid var(--ta-teks-3);
+  transform: rotate(45deg);
+  transition: transform .25s ease;
+}
+details.panel-lipat[open] > summary { margin-bottom: 14px; }
+details.panel-lipat[open] > summary::after { transform: rotate(225deg); }
+details.panel-lipat > summary .kecil-teks { font-weight: 500; }
+
+/* Toast di ponsel: jangan menutupi topbar. */
+@media (max-width: 760px) {
+  #wadah-toast { top: 70px; right: 12px; }
+}
+
+@media print {
+  details.panel-lipat > summary::after { display: none; }
+}

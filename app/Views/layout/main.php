@@ -318,7 +318,8 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
     };
     const btn = el.querySelector('.toast-tutup');
     if (btn) btn.addEventListener('click', tutup);
-    setTimeout(tutup, 5200);
+    const teksToast = el.querySelector('.toast-isi p');
+    if (!teksToast || teksToast.textContent.trim().length <= 160) setTimeout(tutup, 5200);
     requestAnimationFrame(() => el.classList.add('toast-masuk'));
   }
   if (wadah) wadah.querySelectorAll('.toast').forEach(pasangToast);
@@ -394,6 +395,19 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
     }
   });
 })();
+</script>
+<script>
+// Panel berlipat (details.panel-lipat): ingat keadaan buka/tutup per panel.
+document.querySelectorAll('details.panel-lipat[data-lipat-id]').forEach(function (d) {
+  const kunci = 'ap-lipat-' + d.getAttribute('data-lipat-id');
+  try {
+    const simpan = localStorage.getItem(kunci);
+    if (simpan !== null) d.open = simpan === '1';
+  } catch (e) {}
+  d.addEventListener('toggle', function () {
+    try { localStorage.setItem(kunci, d.open ? '1' : '0'); } catch (e) {}
+  });
+});
 </script>
 </body>
 </html>

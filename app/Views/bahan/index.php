@@ -1,8 +1,8 @@
 <?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 
 <?php if (! empty($bahanTanpaHarga) || ! empty($upahTanpaTarif)): ?>
-<div class="panel" style="border:1px solid #f59e0b;background:#fffbeb">
-  <h2 style="margin-top:0">Kelengkapan Harga &amp; Tarif</h2>
+<details class="panel panel-lipat panel-waspada" data-lipat-id="kelengkapan-harga" <?= (count($bahanTanpaHarga) + count($upahTanpaTarif)) <= 15 ? 'open' : '' ?>>
+  <summary>Kelengkapan Harga &amp; Tarif <span class="kecil-teks">(<?= count($bahanTanpaHarga) + count($upahTanpaTarif) ?> isian masih kosong)</span></summary>
   <p class="kecil-teks" style="margin:0 0 10px">Bahan tanpa harga acuan terhitung <strong>Rp 0</strong> di kebutuhan &amp; rencana belanja; jenis upah tanpa tarif terhitung Rp 0 di kebutuhan upah.
   Isi yang kosong di bawah ini lalu klik <strong>Simpan Semua Isian</strong> — yang sudah terisi tidak muncul lagi di panel ini.</p>
   <form method="post" action="<?= base_url('bahan/kelengkapan') ?>">
@@ -35,7 +35,7 @@
     <?php endif; ?>
     <p style="margin:12px 0 0"><button type="submit" class="tombol">Simpan Semua Isian</button></p>
   </form>
-</div>
+</details>
 <?php endif; ?>
 
 <div x-data="{
@@ -212,8 +212,8 @@
 </div>
 
 <?php if (! empty($duplikatBahan)): ?>
-<div class="panel" style="border-left:4px solid var(--ta-kuning,#b58900)">
-  <h2>ALERT: Bahan Sama dengan Satuan / Harga Berbeda</h2>
+<details class="panel panel-lipat" data-lipat-id="alert-duplikat" open style="border-left:4px solid var(--ta-kuning,#b58900)">
+  <summary>ALERT: Bahan Sama dengan Satuan / Harga Berbeda</summary>
   <p style="margin-top:0;color:var(--ta-teks-2)">Bahan berikut tercatat lebih dari satu kali dengan nama yang sama tetapi satuan atau harga yang berbeda. <strong>Perbaiki dulu</strong> — tentukan satuan &amp; harga final dan baris master utamanya — <strong>barulah gabungkan</strong> ke Master Bahan: semua referensi di SPK, analisa, survei harga, negosiasi, dan buku material dialihkan ke master itu, kuantitas RAB dijumlahkan, dan baris duplikat dihapus. Sesudah digabung, bahan ini hanya punya satu satuan dan satu harga acuan untuk semua modul.</p>
   <?php foreach ($duplikatBahan as $grup): ?>
   <form method="post" action="<?= base_url('bahan/gabung') ?>" data-konfirmasi="Gabungkan duplikat bahan ini? Referensi dari baris lain akan dialihkan ke baris utama yang dipilih.">
@@ -239,10 +239,10 @@
     <div class="aksi" style="justify-content:flex-start"><button type="submit">Perbaiki &amp; Gabungkan "<?= esc($grup['nama']) ?>"</button></div>
   </form>
   <?php endforeach; ?>
-</div>
+</details>
 <?php endif; ?>
 
-<div class="panel" x-data="{
+<details class="panel panel-lipat" data-lipat-id="master-upah" x-data="{
   kataUpah: '',
   terpilihUpah: [],
   pilihSemuaUpah(ev) {
@@ -263,7 +263,7 @@
     form.requestSubmit();
   }
 }">
-  <h2>Master Upah — Referensi Tarif Tenaga Kerja</h2>
+  <summary>Master Upah — Referensi Tarif Tenaga Kerja <span class="kecil-teks">(<?= (int) $totalUpah ?> jenis)</span></summary>
   <p style="margin-top:0;color:var(--ta-teks-2)">Satu jenis tenaga = satu tarif acuan. Master ini dipakai modul Upah saat mencatat pembayaran dan menjadi acuan komponen upah pada analisa. Menambah jenis dengan nama yang sama akan ditolak.</p>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
     <input type="search" placeholder="Saring jenis tenaga…" x-model="kataUpah" style="flex:1;min-width:200px">
@@ -363,4 +363,4 @@
     sesuaikan();
   })();
   </script>
-</div>
+</details>

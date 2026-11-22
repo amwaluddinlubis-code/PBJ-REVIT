@@ -21,8 +21,8 @@
 <form method="post" action="<?= base_url('bersih/langkah2') ?>">
   <?= csrf_field() ?>
   <?php foreach ($perGedung as $namaGedung => $rows): ?>
-  <div class="panel">
-    <h2><?= esc($namaGedung) ?> <span class="kecil-teks">(<?= count($rows) ?> pekerjaan volume &lt; 1)</span></h2>
+  <details class="panel panel-lipat">
+    <summary><?= esc($namaGedung) ?> <span class="kecil-teks">(<?= count($rows) ?> pekerjaan volume &lt; 1 · <?= $rp(array_sum(array_column($rows, 'jumlah'))) ?>)</span></summary>
     <table data-cari="Cari pekerjaan…">
       <tr><th style="width:36px">Buang</th><th>Pekerjaan</th><th>Kode Analisa</th><th class="angka">Volume</th><th>Satuan</th><th class="angka">Jumlah</th><th></th></tr>
       <?php foreach ($rows as $p): $nol = (float) $p['volume'] <= 0; $adaReal = (int) $p['punya_realisasi'] > 0; ?>
@@ -37,7 +37,7 @@
       </tr>
       <?php endforeach; ?>
     </table>
-  </div>
+  </details>
   <?php endforeach; ?>
   <div class="aksi" style="justify-content:flex-start;gap:8px">
     <button type="submit">Lanjut ke Langkah 2: Analisa</button>
