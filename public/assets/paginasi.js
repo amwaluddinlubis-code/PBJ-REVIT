@@ -1,7 +1,11 @@
 // Paginasi tabel sisi klien — untuk tabel bertanda data-paginasi="ukuran awal".
 // Baris pertama dianggap header; baris .baris-total selalu tampil dan tidak dihitung.
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('table[data-paginasi]').forEach(function (tabel) {
+// window.inisiasiPaginasi(akar) dapat dipanggil ulang untuk tabel yang baru
+// dimuat lewat AJAX (pencarian langsung gaya Livewire).
+window.inisiasiPaginasi = function (akar) {
+  (akar || document).querySelectorAll('table[data-paginasi]').forEach(function (tabel) {
+    if (tabel.dataset.sudahPaginasi) return;
+    tabel.dataset.sudahPaginasi = '1';
     var semua = Array.prototype.slice.call(tabel.querySelectorAll('tr'));
     if (semua.length < 2) return;
     var data = semua.slice(1).filter(function (tr) { return !tr.classList.contains('baris-total'); });
@@ -56,4 +60,5 @@ document.addEventListener('DOMContentLoaded', function () {
     pemilih.addEventListener('change', function () { ukuran = parseInt(pemilih.value, 10); halaman = 1; gambar(); });
     gambar();
   });
-});
+};
+document.addEventListener('DOMContentLoaded', function () { window.inisiasiPaginasi(document); });

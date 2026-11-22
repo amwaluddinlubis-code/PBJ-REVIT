@@ -23,6 +23,11 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('bahan/upah-perbarui/(:num)', 'Bahan::upahPerbarui/$1');
     $routes->post('bahan/upah-hapus/(:num)', 'Bahan::upahHapus/$1');
     $routes->post('bahan/upah-gabung', 'Bahan::upahGabung');
+    $routes->get('bahan/tabel', 'Bahan::tabel');
+    $routes->post('bahan/hapus-massal', 'Bahan::hapusMassal');
+    $routes->post('bahan/kosongkan', 'Bahan::kosongkan');
+    $routes->post('bahan/upah-hapus-massal', 'Bahan::upahHapusMassal');
+    $routes->post('bahan/upah-kosongkan', 'Bahan::upahKosongkan');
 
     // SPK + detail
     $routes->get('spk', 'Spk::index');

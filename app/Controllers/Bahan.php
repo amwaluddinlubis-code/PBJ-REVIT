@@ -7,6 +7,20 @@ class Bahan extends BaseController
     public function index()
     {
         $q = trim((string) ($this->request->getGet('q') ?? ''));
+        $bahan = $this->ambilBahan($q);
+        $upah = $this->db()->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray();
+        return $this->tampil('bahan/index', [
+            'bahan' => $bahan, 'q' => $q, 'upah' => $upah,
+            'totalBahan' => $this->db()->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults(),
+            'totalUpah' => count($upah),
+            'duplikatBahan' => $this->grupDuplikat($bahan),
+            'duplikatUpah' => $this->grupDuplikat($upah, 'jenis'),
+        ], 'Master Bahan & Upah — Aplikasi PBJ Sekolah');
+    }
+
+    /** Daftar bahan aktif sekolah ini (dengan total RAB & pemakaian SPK). */
+    private function ambilBahan(string $q = ''): array
+    {
         $sql = 'SELECT b.*, (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_total,
                     (b.qty_rkb+b.qty_adm+b.qty_toilet)*b.harga_rab AS anggaran,
                     COALESCE(SUM(d.qty),0) AS terpakai
@@ -19,13 +33,91 @@ class Bahan extends BaseController
             $bind[] = '%' . $q . '%';
         }
         $sql .= ' GROUP BY b.id ORDER BY b.kode';
-        $bahan = $this->db()->query($sql, $bind)->getResultArray();
-        $upah = $this->db()->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray();
-        return $this->tampil('bahan/index', [
-            'bahan' => $bahan, 'q' => $q, 'upah' => $upah,
-            'duplikatBahan' => $this->grupDuplikat($bahan),
-            'duplikatUpah' => $this->grupDuplikat($upah, 'jenis'),
-        ], 'Master Bahan & Upah — Aplikasi PBJ Sekolah');
+        return $this->db()->query($sql, $bind)->getResultArray();
+    }
+
+    /** Potongan tabel bahan untuk pencarian langsung (AJAX gaya Livewire). */
+    public function tabel()
+    {
+        $q = trim((string) ($this->request->getGet('q') ?? ''));
+        return view('bahan/_tabel', ['bahan' => $this->ambilBahan($q)]);
+    }
+
+    /** Hapus massal bahan tercentang; yang sudah dipakai SPK dilewati. */
+    public function hapusMassal()
+    {
+        $ids = array_values(array_unique(array_map('intval', (array) $this->request->getPost('ids'))));
+        [$dihapus, $dilewati] = $this->hapusBahanBanyak($ids);
+        return $this->laporHapusBahan($dihapus, $dilewati, 'terpilih');
+    }
+
+    /** Kosongkan master bahan sekolah aktif (yang dipakai SPK dipertahankan). */
+    public function kosongkan()
+    {
+        $ids = array_column($this->db()->table('bahan')->select('id')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
+        [$dihapus, $dilewati] = $this->hapusBahanBanyak(array_map('intval', $ids));
+        return $this->laporHapusBahan($dihapus, $dilewati, 'master');
+    }
+
+    /** @return array{0:int,1:array<int,string>} [jumlah terhapus, kode dilewati] */
+    private function hapusBahanBanyak(array $ids): array
+    {
+        $dihapus = 0;
+        $dilewati = [];
+        foreach ($ids as $id) {
+            $b = $this->db()->table('bahan')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+            if (! $b) {
+                continue;
+            }
+            $dipakai = $this->db()->table('spk_detail')->where(['bahan_id' => $id, 'is_deleted' => 0])->countAllResults();
+            if ($dipakai > 0) {
+                $dilewati[] = $b['kode'];
+                continue;
+            }
+            $this->hapusLunak('bahan', ['id' => $id, 'sekolah_id' => $this->sid()]);
+            $dihapus++;
+        }
+        return [$dihapus, $dilewati];
+    }
+
+    private function laporHapusBahan(int $dihapus, array $dilewati, string $konteks)
+    {
+        if ($dihapus === 0 && $dilewati === []) {
+            return redirect()->to('bahan')->with('galat', 'Tidak ada bahan yang diproses.');
+        }
+        $pesan = $dihapus . ' bahan ' . ($konteks === 'master' ? 'dihapus dari master.' : 'terpilih dihapus.');
+        if ($dilewati !== []) {
+            $pesan .= ' ' . count($dilewati) . ' bahan dipertahankan karena sudah dipakai di SPK Detail: ' . implode(', ', $dilewati) . '.';
+        }
+        return redirect()->to('bahan')->with($dihapus > 0 ? 'sukses' : 'galat', $pesan);
+    }
+
+    /** Hapus massal jenis tenaga tercentang dari Master Upah. */
+    public function upahHapusMassal()
+    {
+        $ids = array_values(array_unique(array_map('intval', (array) $this->request->getPost('ids'))));
+        $n = 0;
+        foreach ($ids as $id) {
+            $ada = $this->db()->table('upah_master')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults();
+            if ($ada > 0) {
+                $this->hapusLunak('upah_master', ['id' => $id, 'sekolah_id' => $this->sid()]);
+                $n++;
+            }
+        }
+        return redirect()->to('bahan')->with($n > 0 ? 'sukses' : 'galat',
+            $n > 0 ? $n . ' jenis tenaga terpilih dihapus dari Master Upah.' : 'Tidak ada jenis tenaga yang diproses.');
+    }
+
+    /** Kosongkan Master Upah sekolah aktif. */
+    public function upahKosongkan()
+    {
+        $ids = array_column($this->db()->table('upah_master')->select('id')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
+        foreach ($ids as $id) {
+            $this->hapusLunak('upah_master', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        }
+        return redirect()->to('bahan')->with('sukses', 'Master Upah dikosongkan: ' . count($ids) . ' jenis tenaga dihapus. Pembayaran upah yang sudah tercatat tidak berubah.');
     }
 
     /** Bentuk normal nama untuk pencocokan duplikat (huruf kecil, spasi tunggal). */
@@ -81,6 +173,16 @@ class Bahan extends BaseController
         }
         if ($sama = $this->namaBahanDipakai($data['nama'])) {
             return redirect()->back()->withInput()->with('galat', 'Bahan "' . $data['nama'] . '" sudah ada di master sebagai ' . $sama['kode'] . ' (' . $sama['satuan'] . ', ' . $this->rp($sama['harga_rab']) . '). Satu bahan hanya boleh punya satu satuan dan satu harga — ubah bahan yang sudah ada, atau gabungkan bila terlanjur ganda.');
+        }
+        // Baris terhapus-lunak berkode sama dihidupkan kembali (kunci unik
+        // (sekolah, kode) dipegang baris lunak itu, jadi insert akan gagal).
+        $lama = $this->db()->table('bahan')->where(['kode' => $data['kode'], 'sekolah_id' => $this->sid(), 'is_deleted' => 1])->get()->getRowArray();
+        if ($lama) {
+            $data['updated_at'] = date('Y-m-d H:i:s');
+            $data['is_deleted'] = 0;
+            $data['deleted_at'] = null;
+            $this->db()->table('bahan')->where('id', (int) $lama['id'])->update($data);
+            return redirect()->to('bahan')->with('sukses', 'Bahan ' . $data['kode'] . ' dihidupkan kembali dari data yang pernah dihapus.');
         }
         $data['sekolah_id'] = $this->sid();
         $data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
@@ -187,6 +289,16 @@ class Bahan extends BaseController
         foreach ($this->db()->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray() as $u) {
             if (self::normalNama($u['jenis']) === self::normalNama($jenis)) {
                 return redirect()->to('bahan')->with('galat', 'Jenis tenaga "' . $jenis . '" sudah ada di Master Upah dengan tarif ' . $this->rp($u['tarif']) . '. Satu jenis tenaga hanya boleh punya satu tarif acuan.');
+            }
+        }
+        // Baris terhapus-lunak berjenis sama dihidupkan kembali.
+        foreach ($this->db()->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 1])->get()->getResultArray() as $u) {
+            if (self::normalNama($u['jenis']) === self::normalNama($jenis)) {
+                $this->db()->table('upah_master')->where('id', (int) $u['id'])->update([
+                    'jenis' => $jenis, 'satuan' => trim((string) $this->request->getPost('satuan')) ?: 'OH',
+                    'tarif' => $tarif, 'is_deleted' => 0, 'deleted_at' => null,
+                ]);
+                return redirect()->to('bahan')->with('sukses', 'Jenis tenaga "' . $jenis . '" dihidupkan kembali di Master Upah.');
             }
         }
         $this->db()->table('upah_master')->insert([
