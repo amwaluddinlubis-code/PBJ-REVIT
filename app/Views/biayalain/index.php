@@ -35,7 +35,7 @@ $warnaSelisih = $selisih < 0 ? 'negatif' : ($selisih > 0 ? 'positif' : '');
 
   <!-- Aksi Bulk -->
   <div class="biaya-aksi">
-      <button type="button" class="tombol-buka-form" onclick="bukaModalTambah()">
+      <button type="button" class="tombol-buka-form" onclick="bukaModalTambah(this)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Tambah Baris Biaya
       </button>
@@ -75,7 +75,7 @@ $warnaSelisih = $selisih < 0 ? 'negatif' : ($selisih > 0 ? 'positif' : '');
       <svg class="lipat-panah" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
     </summary>
     <div class="tabel-envelop">
-    <table data-cari="Cari baris biaya…" class="tabel-data">
+    <table data-cari="Cari baris biaya…" data-paginasi="25" class="tabel-data">
       <thead>
         <tr>
           <th style="width:34px"><input type="checkbox" title="Pilih semua baris biaya" @change="pilihSemua($event)"></th>
@@ -114,7 +114,7 @@ $warnaSelisih = $selisih < 0 ? 'negatif' : ($selisih > 0 ? 'positif' : '');
                 'periode' => $r['periode'] !== null ? $angka($r['periode']) : '', 'satuan_periode' => $r['satuan_periode'] ?? '',
                 'harga' => (string) (int) round((float) $r['harga_satuan']), 'keterangan' => $r['keterangan'] ?? '',
                 'pajak' => $r['pajak'] ?? '',
-            ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>)">Ubah</button>
+            ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>, this)">Ubah</button>
             <form method="post" action="<?= base_url('biaya-non-gedung/hapus/' . $r['id']) ?>" style="display:inline" data-konfirmasi="Hapus baris biaya &quot;<?= esc($r['uraian']) ?>&quot;?">
               <?= csrf_field() ?>
               <button type="submit" class="tombol kecil bahaya">Hapus</button>
@@ -218,8 +218,10 @@ $warnaSelisih = $selisih < 0 ? 'negatif' : ($selisih > 0 ? 'positif' : '');
 
 <script>
 var modalBiaya = document.getElementById('modal-biaya');
+var pemicuModal = null;
 
-function bukaModalTambah() {
+function bukaModalTambah(btn) {
+  pemicuModal = btn || null;
   document.getElementById('form-biaya-modal').reset();
   document.getElementById('f-id-modal').value = '';
   document.getElementById('judul-modal').textContent = 'Tambah Baris Biaya';
@@ -229,7 +231,8 @@ function bukaModalTambah() {
   if (el) el.focus();
 }
 
-function isiForm(d) {
+function isiForm(d, btn) {
+  pemicuModal = btn || null;
   document.getElementById('f-id-modal').value = d.id;
   document.getElementById('f-kelompok-modal').value = d.kelompok;
   document.getElementById('f-uraian-modal').value = d.uraian;
@@ -251,6 +254,10 @@ function tutupModal() {
   document.getElementById('f-id-modal').value = '';
   document.getElementById('judul-modal').textContent = 'Tambah Baris Biaya';
   document.getElementById('tombol-simpan-modal').textContent = 'Simpan Baris';
+  if (pemicuModal) {
+    pemicuModal.focus();
+    pemicuModal = null;
+  }
 }
 
 modalBiaya.addEventListener('click', function (e) {
