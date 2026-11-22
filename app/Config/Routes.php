@@ -159,6 +159,12 @@ $routes->post('biaya-non-gedung/hapus-massal', 'BiayaLain::hapusMassal', ['filte
 $routes->post('biaya-non-gedung/kosongkan', 'BiayaLain::kosongkan', ['filter' => 'auth']);
 $routes->post('rencana-belanja/buat-spk', 'Rencana::buatSpk', ['filter' => 'auth']);
 $routes->post('rencana-belanja/hapus-bahan/(:num)', 'Rencana::hapusBahan/$1', ['filter' => 'auth']);
+$routes->get('rencana-mingguan', 'RencanaMingguan::index', ['filter' => 'auth']);
+$routes->post('rencana-mingguan/buat', 'RencanaMingguan::buat', ['filter' => 'auth']);
+$routes->get('rencana-mingguan/(:num)', 'RencanaMingguan::detail/$1', ['filter' => 'auth']);
+$routes->post('rencana-mingguan/(:num)/target', 'RencanaMingguan::simpanTarget/$1', ['filter' => 'auth']);
+$routes->post('rencana-mingguan/(:num)/buat-spk', 'RencanaMingguan::buatSpk/$1', ['filter' => 'auth']);
+$routes->post('rencana-mingguan/(:num)/hapus', 'RencanaMingguan::hapus/$1', ['filter' => 'auth']);
 $routes->get('upah', 'Upah::index', ['filter' => 'auth']);
 $routes->get('upah/cetak-daftar', 'Upah::cetakDaftar', ['filter' => 'auth']);
 $routes->post('upah/simpan', 'Upah::simpan', ['filter' => 'auth']);

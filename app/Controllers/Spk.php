@@ -19,7 +19,7 @@ class Spk extends BaseController
 
     public function baru()
     {
-        $row = $this->db()->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ? AND is_deleted = 0', [$this->sid()])->getRow();
+        $row = $this->db()->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ?', [$this->sid()])->getRow();
         return $this->tampil('spk/form', [
             's' => ['nomor' => ((int) $row->m) + 1, 'status' => 'Aktif'],
             'penyedia' => $this->db()->table('penyedia')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray(),

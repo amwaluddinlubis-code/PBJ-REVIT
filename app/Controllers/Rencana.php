@@ -122,7 +122,7 @@ class Rencana extends BaseController
         if ($baris === []) {
             return redirect()->to('/rencana-belanja')->with('galat', 'Centang minimal satu bahan dengan jumlah rencana lebih dari 0.');
         }
-        $row = $db->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ? AND is_deleted = 0', [$this->sid()])->getRow();
+        $row = $db->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ?', [$this->sid()])->getRow();
         $nomor = ((int) ($row->m ?? 0)) + 1;
         $db->transStart();
         $db->table('spk')->insert([

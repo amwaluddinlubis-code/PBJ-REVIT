@@ -1,0 +1,262 @@
+<?php
+
+namespace App\Controllers;
+
+/**
+ * Rencana Mingguan: target volume pekerjaan per gedung untuk satu minggu.
+ * Dari target dihitung daftar belanja bersih minggu itu:
+ * kebutuhan kotor (target × koefisien analisa) − stok tersedia
+ * (sudah diterima/BAST + saldo Buku Material) − pesanan berjalan
+ * (SPK aktif yang belum di-BAST), plus kebutuhan upah dalam Oh.
+ */
+class RencanaMingguan extends BaseController
+{
+    private function ambilRencana(int $id): ?array
+    {
+        $r = $this->db()->table('rencana_mingguan')
+            ->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        return $r ?: null;
+    }
+
+    public function index()
+    {
+        $db = $this->db();
+        $daftar = $db->query(
+            'SELECT r.*, g.nama AS gedung_nama,
+                    (SELECT COUNT(*) FROM rencana_mingguan_detail d WHERE d.rencana_id = r.id AND d.is_deleted = 0 AND d.volume_target > 0) AS jml_target
+             FROM rencana_mingguan r JOIN gedung g ON g.id = r.gedung_id
+             WHERE r.sekolah_id = ? AND r.is_deleted = 0 AND g.is_deleted = 0
+             ORDER BY r.minggu_mulai DESC, r.id DESC',
+            [$this->sid()]
+        )->getResultArray();
+        return $this->tampil('rencana_mingguan/index', [
+            'daftar' => $daftar,
+            'gedung' => $this->semuaGedung(),
+        ], 'Rencana Mingguan — Aplikasi PBJ Sekolah');
+    }
+
+    public function buat()
+    {
+        $gedungId = (int) $this->request->getPost('gedung_id');
+        $mulai = trim((string) $this->request->getPost('minggu_mulai'));
+        if ($this->ambilGedung($gedungId) === null || $mulai === '') {
+            return redirect()->to('rencana-mingguan')->with('galat', 'Pilih gedung dan tanggal mulai minggu terlebih dahulu.');
+        }
+        $this->db()->table('rencana_mingguan')->insert([
+            'sekolah_id' => $this->sid(), 'gedung_id' => $gedungId, 'minggu_mulai' => $mulai,
+            'keterangan' => trim((string) $this->request->getPost('keterangan')) ?: null,
+            'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+        $id = (int) $this->db()->insertID();
+        $this->catatAudit('rencana_mingguan', $id, 'buat', 'Rencana mingguan dibuat untuk gedung ' . ($this->ambilGedung($gedungId)['nama'] ?? '') . ', minggu mulai ' . $mulai . '.');
+        return redirect()->to('rencana-mingguan/' . $id)->with('sukses', 'Rencana mingguan dibuat. Isi target volume pekerjaan minggu ini di bawah.');
+    }
+
+    public function hapus($id)
+    {
+        $r = $this->ambilRencana((int) $id);
+        if ($r === null) {
+            return redirect()->to('rencana-mingguan')->with('galat', 'Rencana tidak ditemukan.');
+        }
+        $this->hapusLunak('rencana_mingguan_detail', ['rencana_id' => (int) $id]);
+        $this->hapusLunak('rencana_mingguan', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        return redirect()->to('rencana-mingguan')->with('sukses', 'Rencana mingguan dihapus.');
+    }
+
+    public function simpanTarget($id)
+    {
+        $r = $this->ambilRencana((int) $id);
+        if ($r === null) {
+            return redirect()->to('rencana-mingguan')->with('galat', 'Rencana tidak ditemukan.');
+        }
+        $db = $this->db();
+        $target = (array) $this->request->getPost('target');
+        $sah = [];
+        foreach ($db->table('pekerjaan')->select('id')->where(['gedung_id' => $r['gedung_id'], 'is_deleted' => 0])->get()->getResultArray() as $p) {
+            $sah[(int) $p['id']] = true;
+        }
+        $db->transStart();
+        foreach ($target as $pid => $nilai) {
+            $pid = (int) $pid;
+            if (! isset($sah[$pid])) {
+                continue;
+            }
+            $vol = max(0, (float) str_replace(',', '.', (string) $nilai));
+            $ada = $db->table('rencana_mingguan_detail')->where(['rencana_id' => (int) $id, 'pekerjaan_id' => $pid])->get()->getRowArray();
+            if ($vol <= 0) {
+                if ($ada !== null && (int) $ada['is_deleted'] === 0) {
+                    $this->hapusLunak('rencana_mingguan_detail', ['id' => (int) $ada['id']]);
+                }
+                continue;
+            }
+            if ($ada !== null) {
+                $db->table('rencana_mingguan_detail')->where('id', (int) $ada['id'])->update([
+                    'volume_target' => $vol, 'is_deleted' => 0, 'deleted_at' => null, 'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+            } else {
+                $db->table('rencana_mingguan_detail')->insert([
+                    'rencana_id' => (int) $id, 'pekerjaan_id' => $pid, 'volume_target' => $vol,
+                    'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+            }
+        }
+        $db->transComplete();
+        return redirect()->to('rencana-mingguan/' . $id)->with('sukses', 'Target minggu ini disimpan. Daftar belanja bersih di bawah sudah dihitung ulang.');
+    }
+
+    /** Hitungan belanja & upah dari target tersimpan pada satu rencana. */
+    private function hitung(array $r): array
+    {
+        $db = $this->db();
+        $target = [];
+        foreach ($db->table('rencana_mingguan_detail')->where(['rencana_id' => $r['id'], 'is_deleted' => 0])->get()->getResultArray() as $d) {
+            if ((float) $d['volume_target'] > 0) {
+                $target[(int) $d['pekerjaan_id']] = (float) $d['volume_target'];
+            }
+        }
+        if ($target === []) {
+            return ['bahan' => [], 'upah' => [], 'total_belanja_bersih' => 0.0, 'total_upah' => 0.0];
+        }
+        // Kebutuhan kotor bahan: target × koefisien, dikonversi ke satuan master.
+        $mentah = $db->query(
+            "SELECT b.id AS bahan_id, b.kode, b.nama, b.satuan, ak.satuan AS satuan_komponen,
+                    ak.koefisien, d.volume_target, p.id AS pekerjaan_id
+             FROM rencana_mingguan_detail d
+             JOIN pekerjaan p ON p.id = d.pekerjaan_id AND p.is_deleted = 0
+             JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
+             JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'bahan' AND ak.bahan_id IS NOT NULL
+             JOIN bahan b ON b.id = ak.bahan_id
+             WHERE d.rencana_id = ? AND d.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0 AND b.is_deleted = 0",
+            [$this->sid(), $r['id']]
+        )->getResultArray();
+        $bahan = [];
+        foreach ($mentah as $m) {
+            $bid = (int) $m['bahan_id'];
+            if (! isset($bahan[$bid])) {
+                $bahan[$bid] = $m + ['kotor' => 0.0];
+            }
+            $bahan[$bid]['kotor'] += (float) $m['volume_target'] * (float) $m['koefisien'] * $this->faktorSatuan($m['satuan_komponen'] ?? null, $m);
+        }
+
+        // Stok & pesanan berjalan per bahan (seluruh sekolah).
+        $diterima = $dalamPesanan = $bukuNet = [];
+        foreach ($db->query(
+            'SELECT d.bahan_id,
+                    SUM(CASE WHEN EXISTS (SELECT 1 FROM bast x WHERE x.spk_id = s.id AND x.is_deleted = 0) THEN d.qty ELSE 0 END) AS diterima,
+                    SUM(CASE WHEN EXISTS (SELECT 1 FROM bast x WHERE x.spk_id = s.id AND x.is_deleted = 0) THEN 0 ELSE d.qty END) AS berjalan
+             FROM spk_detail d JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0
+             WHERE s.sekolah_id = ? AND d.bahan_id IS NOT NULL AND d.is_deleted = 0 GROUP BY d.bahan_id',
+            [$this->sid()]
+        )->getResultArray() as $s) {
+            $diterima[(int) $s['bahan_id']] = (float) $s['diterima'];
+            $dalamPesanan[(int) $s['bahan_id']] = (float) $s['berjalan'];
+        }
+        foreach ($db->query(
+            'SELECT m.bahan_id, SUM(m.masuk - m.keluar) AS net FROM buku_material m
+             JOIN bahan b ON b.id = m.bahan_id WHERE b.sekolah_id = ? AND m.is_deleted = 0 GROUP BY m.bahan_id',
+            [$this->sid()]
+        )->getResultArray() as $s) {
+            $bukuNet[(int) $s['bahan_id']] = (float) $s['net'];
+        }
+        $totalBersih = 0.0;
+        foreach ($bahan as $bid => &$b) {
+            $b['stok'] = ($diterima[$bid] ?? 0) + ($bukuNet[$bid] ?? 0);
+            $b['berjalan'] = $dalamPesanan[$bid] ?? 0;
+            $b['bersih'] = max(0.0, $b['kotor'] - $b['stok'] - $b['berjalan']);
+            $b['harga'] = $this->hargaAcuan($bid);
+            $b['nilai'] = $b['bersih'] * $b['harga'];
+            $totalBersih += $b['nilai'];
+        }
+        unset($b);
+        $bahan = array_values($bahan);
+        usort($bahan, static fn ($a, $c) => $c['nilai'] <=> $a['nilai']);
+
+        // Kebutuhan upah: Oh per jenis + nilai dari tarif komponen.
+        $upah = [];
+        $totalUpah = 0.0;
+        foreach ($db->query(
+            "SELECT ak.nama, SUM(d.volume_target * ak.koefisien) AS oh, SUM(d.volume_target * ak.koefisien * COALESCE(ak.tarif, 0)) AS nilai
+             FROM rencana_mingguan_detail d
+             JOIN pekerjaan p ON p.id = d.pekerjaan_id AND p.is_deleted = 0
+             JOIN analisa a ON a.kode = p.kode_analisa AND a.sekolah_id = ?
+             JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'upah'
+             WHERE d.rencana_id = ? AND d.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0
+               AND NOT EXISTS (SELECT 1 FROM upah_master um WHERE um.sekolah_id = a.sekolah_id AND um.jenis = ak.nama AND um.is_deleted = 1)
+             GROUP BY ak.nama ORDER BY oh DESC",
+            [$this->sid(), $r['id']]
+        )->getResultArray() as $u) {
+            $upah[] = $u;
+            $totalUpah += (float) $u['nilai'];
+        }
+        return ['bahan' => $bahan, 'upah' => $upah, 'total_belanja_bersih' => $totalBersih, 'total_upah' => $totalUpah];
+    }
+
+    public function detail($id)
+    {
+        $r = $this->ambilRencana((int) $id);
+        if ($r === null) {
+            return redirect()->to('rencana-mingguan')->with('galat', 'Rencana tidak ditemukan.');
+        }
+        $db = $this->db();
+        $gedung = $this->ambilGedung((int) $r['gedung_id']);
+        $pekerjaan = $db->query(
+            'SELECT p.*, COALESCE(p.volume_revisi, p.volume) AS vol_berjalan,
+                    (SELECT COALESCE(SUM(x.volume), 0) FROM realisasi x WHERE x.pekerjaan_id = p.id AND x.is_deleted = 0) AS terealisasi,
+                    (SELECT d.volume_target FROM rencana_mingguan_detail d WHERE d.rencana_id = ? AND d.pekerjaan_id = p.id AND d.is_deleted = 0) AS target
+             FROM pekerjaan p WHERE p.gedung_id = ? AND p.is_deleted = 0 ORDER BY p.urutan, p.id',
+            [(int) $id, $r['gedung_id']]
+        )->getResultArray();
+        $hitung = $this->hitung($r);
+        $verif = $this->verifikasiAnggaran($this->sid());
+        return $this->tampil('rencana_mingguan/detail', [
+            'r' => $r, 'gedung' => $gedung, 'pekerjaan' => $pekerjaan,
+            'bahan' => $hitung['bahan'], 'upah' => $hitung['upah'],
+            'total_bersih' => $hitung['total_belanja_bersih'], 'total_upah' => $hitung['total_upah'],
+            'sisa_pagu' => max(0.0, (float) ($verif['pagu'] ?? 0) - (float) ($verif['total_semua'] ?? 0)),
+        ], 'Rencana Mingguan — Aplikasi PBJ Sekolah');
+    }
+
+    public function buatSpk($id)
+    {
+        $r = $this->ambilRencana((int) $id);
+        if ($r === null) {
+            return redirect()->to('rencana-mingguan')->with('galat', 'Rencana tidak ditemukan.');
+        }
+        $db = $this->db();
+        $pilihan = (array) $this->request->getPost('pilih');
+        $qtyPost = (array) $this->request->getPost('qty');
+        $baris = [];
+        foreach ($pilihan as $bahanId) {
+            $bahanId = (int) $bahanId;
+            $qty = (float) str_replace(',', '.', (string) ($qtyPost[$bahanId] ?? 0));
+            $b = $db->table('bahan')->where(['id' => $bahanId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+            if ($b !== null && $qty > 0) {
+                $baris[] = ['bahan' => $b, 'qty' => $qty, 'harga' => $this->hargaAcuan($bahanId)];
+            }
+        }
+        if ($baris === []) {
+            return redirect()->to('rencana-mingguan/' . $id)->with('galat', 'Centang minimal satu bahan dengan jumlah beli lebih dari 0.');
+        }
+        $row = $db->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ?', [$this->sid()])->getRow();
+        $nomor = ((int) ($row->m ?? 0)) + 1;
+        $gedung = $this->ambilGedung((int) $r['gedung_id']);
+        $db->transStart();
+        $db->table('spk')->insert([
+            'sekolah_id' => $this->sid(), 'nomor' => $nomor, 'tanggal' => date('Y-m-d'),
+            'gedung_id' => (int) $r['gedung_id'],
+            'paket' => 'Rencana mingguan ' . date('d/m/Y', strtotime($r['minggu_mulai'])) . ' — ' . ($gedung['nama'] ?? ''),
+            'status' => 'Aktif', 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+        $spkId = (int) $db->insertID();
+        foreach ($baris as $b) {
+            $db->table('spk_detail')->insert([
+                'spk_id' => $spkId, 'bahan_id' => (int) $b['bahan']['id'], 'sekolah_id' => $this->sid(),
+                'qty' => $b['qty'], 'harga' => $b['harga'],
+                'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+        $db->transComplete();
+        $this->catatAudit('spk', $spkId, 'buat', 'SPK ' . $nomor . ' dibuat dari rencana mingguan #' . $id . ' (' . count($baris) . ' bahan).');
+        return redirect()->to('/spk/detail/' . $spkId)->with('sukses', 'SPK ' . $nomor . ' dibuat dari rencana mingguan (' . count($baris) . ' bahan). Lengkapi penyedia & tanggalnya bila perlu.');
+    }
+}
