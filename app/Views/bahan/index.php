@@ -276,7 +276,7 @@
       <?= csrf_field() ?>
       <button type="submit" class="bahaya">Kosongkan Master Upah</button>
     </form>
-    <form method="post" action="<?= base_url('bahan/upah-rapikan') ?>" data-konfirmasi="Rapikan Master Upah menjadi 2 jenis saja? Semua varian Tukang (Batu, Kayu, Cat, Las, Listrik, Besi, Kepala Tukang, Mandor, dst.) digabung menjadi 'Tukang' dan semua Pekerja menjadi 'Pekerja' — nama & tautan komponen upah di semua analisa ikut diseragamkan, master lainnya dihapus lunak. Komponen bernama lain (mis. Peralatan) tidak diubah." data-konfirmasi-judul="Rapikan Master Upah — 2 Jenis" data-konfirmasi-tombol="Ya, Rapikan" style="display:inline">
+    <form method="post" action="<?= base_url('bahan/upah-rapikan') ?>" data-konfirmasi="Rapikan Master Upah menjadi 2 jenis saja? Semua varian Tukang (Batu, Kayu, Cat, Las, Listrik, Besi, dst.) digabung menjadi 'Tukang'; komponen Mandor & Kepala Tukang dihilangkan dari analisa dan semua Pekerja menjadi 'Pekerja' — nama & tautan komponen upah di semua analisa ikut diseragamkan, master lainnya dihapus lunak. Komponen bernama lain (mis. Peralatan) tidak diubah." data-konfirmasi-judul="Rapikan Master Upah — 2 Jenis" data-konfirmasi-tombol="Ya, Rapikan" style="display:inline">
       <?= csrf_field() ?>
       <button type="submit">Rapikan ke 2 Jenis (Pekerja &amp; Tukang)</button>
     </form>

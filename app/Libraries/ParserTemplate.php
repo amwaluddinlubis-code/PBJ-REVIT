@@ -123,10 +123,14 @@ class ParserTemplate
             }
             if (str_contains($jenis, 'upah')) {
                 // Kanon 2 jenis (Pekerja & Tukang) — selaras ParserPerencana.
+                // Mandor & Kepala Tukang dihilangkan: tidak dibuatkan master.
                 $nl = strtolower($nama);
+                if (str_contains($nl, 'mandor') || str_contains($nl, 'kepala')) {
+                    continue;
+                }
                 if (str_contains($nl, 'pekerja')) {
                     $nama = 'Pekerja';
-                } elseif (str_contains($nl, 'tukang') || str_contains($nl, 'mandor')) {
+                } elseif (str_contains($nl, 'tukang')) {
                     $nama = 'Tukang';
                 }
                 $ada = $this->db->table('upah_master')->where(['sekolah_id' => $this->sid, 'jenis' => $nama, 'is_deleted' => 0])->get()->getRowArray();
@@ -391,8 +395,16 @@ class ParserTemplate
     /** Tautkan komponen upah ke upah_master lewat id (kecocokan nama persis). */
     private function tautkanKomponenUpah(): void
     {
-        // Seragamkan dulu ke 2 jenis kanonik (keputusan AMWAL 22 Nov 2026:
-        // master upah hanya Pekerja & Tukang) lalu tautkan berdasar nama.
+        // Hilangkan dulu komponen Mandor & Kepala Tukang (keputusan AMWAL
+        // 22 Nov 2026), lalu seragamkan ke 2 jenis kanonik (master upah
+        // hanya Pekerja & Tukang) dan tautkan berdasar nama.
+        $this->db->query(
+            "UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             SET ak.is_deleted = 1, ak.deleted_at = NOW()
+             WHERE a.sekolah_id = ? AND ak.jenis = 'upah' AND ak.is_deleted = 0
+               AND (LOWER(ak.nama) LIKE '%mandor%' OR LOWER(ak.nama) LIKE '%kepala%')",
+            [$this->sid]
+        );
         $this->db->query(
             "UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
              SET ak.nama = CASE

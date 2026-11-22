@@ -389,10 +389,14 @@ class ParserPerencana
     private static function kanonUpah(string $nama): ?string
     {
         $n = strtolower(trim($nama));
+        // Mandor & Kepala Tukang dihilangkan (bukan digabung ke Tukang).
+        if (str_contains($n, 'mandor') || str_contains($n, 'kepala')) {
+            return null;
+        }
         if (str_contains($n, 'pekerja')) {
             return 'Pekerja';
         }
-        if (str_contains($n, 'tukang') || str_contains($n, 'mandor')) {
+        if (str_contains($n, 'tukang')) {
             return 'Tukang';
         }
         return null;
@@ -400,8 +404,16 @@ class ParserPerencana
 
     private function tautkanKomponenUpah(): void
     {
-        // Seragamkan dulu ke 2 jenis kanonik (keputusan AMWAL 22 Nov 2026:
-        // master upah hanya Pekerja & Tukang) lalu tautkan berdasar nama.
+        // Hilangkan dulu komponen Mandor & Kepala Tukang (keputusan AMWAL
+        // 22 Nov 2026), lalu seragamkan ke 2 jenis kanonik (master upah
+        // hanya Pekerja & Tukang) dan tautkan berdasar nama.
+        $this->db->query(
+            "UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             SET ak.is_deleted = 1, ak.deleted_at = NOW()
+             WHERE a.sekolah_id = ? AND ak.jenis = 'upah' AND ak.is_deleted = 0
+               AND (LOWER(ak.nama) LIKE '%mandor%' OR LOWER(ak.nama) LIKE '%kepala%')",
+            [$this->sid]
+        );
         $this->db->query(
             "UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
              SET ak.nama = CASE
@@ -518,6 +530,9 @@ class ParserPerencana
         foreach ($grupUpah as $kunci => $rows) {
             if (str_contains($kunci, 'peralatan')) {
                 continue; // baris alat yang tercantum di seksi upah dokumen
+            }
+            if (str_contains($kunci, 'mandor') || str_contains($kunci, 'kepala')) {
+                continue; // Mandor & Kepala Tukang dihilangkan, tidak dibuatkan master
             }
             $namaMaster = self::kanonUpah($rows[0]['nama']) ?? $rows[0]['nama'];
             $tarifRef = 0.0;

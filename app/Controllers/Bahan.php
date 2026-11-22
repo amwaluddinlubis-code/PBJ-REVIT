@@ -458,17 +458,42 @@ class Bahan extends BaseController
             $masterKanon[$kanon] = (int) $ada['id'];
         }
 
+        // 1b) Hilangkan komponen Mandor & Kepala Tukang (keputusan AMWAL
+        //     22 Nov 2026: keduanya dihapus, BUKAN digabung ke Tukang) dan
+        //     samakan harga satuan tersimpan analisa yang terdampak.
+        $analisaKena = array_column($db->query(
+            "SELECT DISTINCT ak.analisa_id FROM analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             WHERE a.sekolah_id = ? AND ak.jenis = 'upah' AND ak.is_deleted = 0
+               AND (LOWER(ak.nama) LIKE '%mandor%' OR LOWER(ak.nama) LIKE '%kepala%')",
+            [$sid]
+        )->getResultArray(), 'analisa_id');
+        $db->query(
+            "UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
+             SET ak.is_deleted = 1, ak.deleted_at = NOW()
+             WHERE a.sekolah_id = ? AND ak.jenis = 'upah' AND ak.is_deleted = 0
+               AND (LOWER(ak.nama) LIKE '%mandor%' OR LOWER(ak.nama) LIKE '%kepala%')",
+            [$sid]
+        );
+        $dihapus = $db->affectedRows();
+        foreach ($analisaKena as $aid) {
+            $total = (float) ($db->query(
+                'SELECT COALESCE(SUM(koefisien * COALESCE(tarif, 0)), 0) AS t FROM analisa_komponen WHERE analisa_id = ? AND is_deleted = 0',
+                [(int) $aid]
+            )->getRow()->t ?? 0);
+            $db->table('analisa')->where('id', (int) $aid)->update(['harga_satuan' => $total]);
+        }
+
         // 2) Seragamkan nama + tautan komponen upah (upah_id dibaca dari
         //    nama LAMA: penugasan SET MySQL berjalan kiri ke kanan).
         $db->query(
             "UPDATE analisa_komponen ak JOIN analisa a ON a.id = ak.analisa_id
              SET ak.upah_id = CASE
                    WHEN LOWER(ak.nama) LIKE '%pekerja%' THEN ?
-                   WHEN LOWER(ak.nama) LIKE '%tukang%' OR LOWER(ak.nama) LIKE '%mandor%' THEN ?
+                   WHEN LOWER(ak.nama) LIKE '%tukang%' THEN ?
                    ELSE ak.upah_id END,
                  ak.nama = CASE
                    WHEN LOWER(ak.nama) LIKE '%pekerja%' THEN 'Pekerja'
-                   WHEN LOWER(ak.nama) LIKE '%tukang%' OR LOWER(ak.nama) LIKE '%mandor%' THEN 'Tukang'
+                   WHEN LOWER(ak.nama) LIKE '%tukang%' THEN 'Tukang'
                    ELSE ak.nama END
              WHERE a.sekolah_id = ? AND ak.jenis = 'upah' AND ak.is_deleted = 0",
             [$masterKanon['Pekerja'], $masterKanon['Tukang'], $sid]
@@ -487,8 +512,8 @@ class Bahan extends BaseController
             $this->hapusLunak('upah_master', ['id' => (int) $m['id'], 'sekolah_id' => $sid]);
         }
         $db->transComplete();
-        $this->catatAudit('upah_master', null, 'rapikan_upah_2_jenis', $diseragamkan . ' komponen diseragamkan; ' . count($lainnya) . ' master digabung ke Pekerja & Tukang');
-        return redirect()->to('bahan')->with('sukses', 'Master Upah dirapikan menjadi 2 jenis (Pekerja & Tukang): ' . $diseragamkan . ' komponen analisa diseragamkan dan ' . count($lainnya) . ' jenis master digabungkan. Komponen bernama lain (mis. Peralatan) tidak diubah.');
+        $this->catatAudit('upah_master', null, 'rapikan_upah_2_jenis', $diseragamkan . ' komponen diseragamkan; ' . count($lainnya) . ' master digabung ke Pekerja & Tukang; ' . $dihapus . ' komponen Mandor/Kepala Tukang dihilangkan');
+        return redirect()->to('bahan')->with('sukses', 'Master Upah dirapikan menjadi 2 jenis (Pekerja & Tukang): ' . $diseragamkan . ' komponen analisa diseragamkan dan ' . count($lainnya) . ' jenis master digabungkan. ' . $dihapus . ' komponen Mandor & Kepala Tukang dihilangkan. Komponen bernama lain (mis. Peralatan) tidak diubah.');
     }
 
     /** Bentuk normal nama untuk pencocokan duplikat (huruf kecil, spasi tunggal). */

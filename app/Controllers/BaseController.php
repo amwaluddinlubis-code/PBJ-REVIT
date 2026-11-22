@@ -191,9 +191,10 @@ abstract class BaseController extends Controller
 
     /**
      * Nama kanonik jenis upah (keputusan AMWAL 22 Nov 2026: master upah
-     * hanya 2 baris): semua varian "Tukang ..." dan Mandor → 'Tukang',
-     * semua varian "Pekerja ..." → 'Pekerja'. Nama lain (mis. Peralatan)
-     * mengembalikan null dan tidak disentuh.
+     * hanya 2 baris): semua varian "Tukang ..." → 'Tukang', semua varian
+     * "Pekerja ..." → 'Pekerja'. Mandor & Kepala Tukang mengembalikan
+     * null khusus: keduanya dihilangkan, bukan digabung. Nama lain
+     * (mis. Peralatan) juga null dan tidak disentuh.
      */
     protected function upahKanon(?string $nama): ?string
     {
@@ -201,10 +202,16 @@ abstract class BaseController extends Controller
         if ($n === '') {
             return null;
         }
+        // Mandor & Kepala Tukang DIHILANGKAN (keputusan AMWAL 22 Nov 2026):
+        // tidak dipetakan ke jenis mana pun; komponennya dihapus lunak
+        // oleh perapian/impor dan tidak pernah terhitung.
+        if (str_contains($n, 'mandor') || str_contains($n, 'kepala')) {
+            return null;
+        }
         if (str_contains($n, 'pekerja')) {
             return 'Pekerja';
         }
-        if (str_contains($n, 'tukang') || str_contains($n, 'mandor')) {
+        if (str_contains($n, 'tukang')) {
             return 'Tukang';
         }
         return null;
