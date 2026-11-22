@@ -169,6 +169,20 @@ Pengembangan lanjutan berdasarkan Juknis (migrasi 000008–000011):
 - **RAB Gabungan**: selain RAB per gedung di LPJ Gedung, tersedia RAB
   gabungan beberapa gedung (pekerjaan yang sama dijumlahkan volumenya
   lintas gedung) lengkap dengan cetaknya.
+- **Pembersihan Hasil Impor** (menu tersendiri, wizard 3 langkah):
+  pekerjaan bervolume < 1 adalah sisa baris template perencana yang
+  analisanya tidak akan terpakai. Langkah 1 menandai pekerjaan tak
+  terpakai (volume 0 tercentang bawaan; volume pecahan menunggu
+  keputusan; tersedia mode massal "Pilih Semua Volume 0 / < 1" karena
+  formulir ribuan centang melampaui batas POST PHP; pekerjaan yang
+  sudah punya realisasi selalu dikecualikan pada mode massal).
+  Langkah 2 menawarkan analisa yang hanya dirujuk pekerjaan terpilih
+  untuk ikut dibuang. Langkah 3 menawarkan bahan "yatim" — Kelompok A
+  hanya dipakai analisa yang dibuang (tercentang bawaan), Kelompok B
+  tidak dirujuk apa pun (tidak tercentang bawaan); bahan yang masih
+  dirujuk analisa aktif, SPK, survei, negosiasi, atau buku material
+  terlindungi dan tidak ditawarkan. Eksekusi bersifat hapus lunak dan
+  nilai BOQ gedung dihitung ulang dari pekerjaan yang tersisa.
 
 Langkah sesudah `git pull` versi ini: jalankan `php spark migrate`
 (migrasi 000007–000011).

@@ -64,7 +64,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       <?php
       $uriPenuh = uri_string();
       $indukAktif = [
-        'perencanaan' => in_array($seg, ['impor', 'rencana-belanja', 'biaya-non-gedung'], true),
+        'perencanaan' => in_array($seg, ['impor', 'bersih', 'rencana-belanja', 'biaya-non-gedung'], true),
         'gedung'      => $seg === 'gedung',
         'belanja'     => in_array($seg, ['spk', 'belum-bernomor', 'survei', 'negosiasi', 'dokumen', 'invoice', 'upah'], true),
         'bahan'       => in_array($seg, ['bahan', 'material', 'sisa-bahan', 'lpj', 'laporan'], true),
@@ -80,6 +80,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       ?>
       <?php $induk('perencanaan', 'rencana', 'Perencanaan'); ?>
         <a href="<?= base_url('impor') ?>"<?= $aktif('impor') ?>>Impor Dokumen Perencana</a>
+        <a href="<?= base_url('bersih') ?>"<?= $aktif('bersih') ?>>Pembersihan Hasil Impor</a>
         <a href="<?= base_url('rencana-belanja') ?>"<?= $aktif('rencana-belanja') ?>>Rencana Belanja</a>
         <a href="<?= base_url('biaya-non-gedung') ?>"<?= $aktif('biaya-non-gedung') ?>>Biaya Non-Gedung</a>
       <?= $tutupInduk() ?>
@@ -327,12 +328,9 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
   // ---------- Modal konfirmasi ----------
   const lapik = document.getElementById('modal-konfirmasi');
   if (!lapik) return;
-  const kartu = lapik.querySelector('.mk-kartu');
   const judulEl = document.getElementById('mk-judul');
   const pesanEl = document.getElementById('mk-pesan');
   const ikonEl = document.getElementById('mk-ikon');
-  const ikonBawaan = ikonEl.innerHTML;
-  const ikonImpor = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 8l5-5 5 5"/><path d="M12 3v12"/></svg>';
   const btnYa = document.getElementById('mk-ya');
   const btnBatal = document.getElementById('mk-batal');
   let formAntrian = null;
@@ -340,22 +338,13 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
   function tutupModal() {
     lapik.hidden = true;
     formAntrian = null;
-    kartu.classList.remove('lebar');
   }
   function bukaModal(form) {
     formAntrian = form;
     const aksi = form.getAttribute('action') || '';
     const bahaya = aksi.includes('hapus');
     judulEl.textContent = form.dataset.konfirmasiJudul || (bahaya ? 'Konfirmasi Hapus' : 'Konfirmasi');
-    if (form.dataset.konfirmasiHtml) {
-      pesanEl.innerHTML = form.dataset.konfirmasiHtml;
-      kartu.classList.add('lebar');
-      ikonEl.innerHTML = ikonImpor;
-    } else {
-      pesanEl.textContent = form.dataset.konfirmasi || 'Lanjutkan operasi ini?';
-      kartu.classList.remove('lebar');
-      ikonEl.innerHTML = ikonBawaan;
-    }
+    pesanEl.textContent = form.dataset.konfirmasi || 'Lanjutkan operasi ini?';
     btnYa.textContent = form.dataset.konfirmasiTombol || (bahaya ? 'Ya, Hapus' : 'Ya, Lanjutkan');
     btnYa.className = 'mk-tombol ' + (bahaya ? 'bahaya' : 'utama');
     ikonEl.className = 'mk-ikon ' + (bahaya ? 'bahaya' : 'utama');
@@ -377,7 +366,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
   });
   document.addEventListener('submit', function (e) {
     const form = e.target;
-    if (form.dataset && (form.dataset.konfirmasi || form.dataset.konfirmasiHtml) && !form.dataset.terkonfirmasi) {
+    if (form.dataset && form.dataset.konfirmasi && !form.dataset.terkonfirmasi) {
       e.preventDefault();
       bukaModal(form);
     }
