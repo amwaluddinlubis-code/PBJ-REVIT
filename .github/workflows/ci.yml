@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mariadb-admin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Siapkan PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, intl, mbstring, gd, zip, sqlite3
+          coverage: pcov
+          tools: composer
+
+      - name: Validasi composer.json
+        run: composer validate --strict
+
+      - name: Pasang dependensi
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Buat database & pengguna tes
+        run: |
+          mariadb -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS pbj_test; CREATE USER IF NOT EXISTS 'pbj_test'@'%' IDENTIFIED BY 'pbj_test'; GRANT ALL PRIVILEGES ON pbj_test.* TO 'pbj_test'@'%'; FLUSH PRIVILEGES;"
+
+      - name: Lint semua berkas PHP aplikasi
+        run: find app tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+
+      - name: Jalankan pengujian (composer test)
+        run: composer test

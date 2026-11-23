@@ -12,6 +12,34 @@ lihat [`docs/Panduan_Penggunaan.md`](docs/Panduan_Penggunaan.md) (panduan penggu
 [`docs/CHANGELOG.md`](docs/CHANGELOG.md) (riwayat migrasi), dan
 [`AGENTS.md`](AGENTS.md) (aturan pengembangan wajib).
 
+## Pengujian Otomatis & CI
+
+Jalankan seluruh pengujian dengan `composer test` (PHPUnit). Ada dua lapis:
+
+- `tests/Unit` — fungsi murni (terbilang, format rupiah, ketentuan PBJ, pajak,
+  faktor satuan) dan konsistensi dokumentasi; tidak butuh database.
+- `tests/Database` — mesin uang yang butuh database: harga berjalan/AHSP dan
+  total BOQ, penomoran SPK (termasuk aturan nomor SPK terhapus), kunci invoice
+  berjurnal pembayaran, dan hitungan kebutuhan bersih Rencana Belanja
+  (`hitungPilihan`). Pengujian memakai data sintetis di database khusus tes.
+
+Database tes memakai MySQL/MariaDB (grup koneksi `tests` di
+`app/Config/Database.php`): buat database `pbj_test` dan pengguna
+`pbj_test`/`pbj_test` dengan hak penuh atas database itu, misalnya:
+
+```sql
+CREATE DATABASE pbj_test;
+CREATE USER 'pbj_test'@'localhost' IDENTIFIED BY 'pbj_test';
+GRANT ALL PRIVILEGES ON pbj_test.* TO 'pbj_test'@'localhost';
+```
+
+JANGAN pernah menunjuk grup `tests` ke database produksi — rangkaian
+pengujian mengosongkan dan memigrasi ulang database tes dari nol.
+
+GitHub Actions (`.github/workflows/ci.yml`) menjalankan validasi composer,
+lint PHP, dan `composer test` dengan layanan MariaDB pada setiap push dan
+pull request ke `main`.
+
 ## Menjalankan di PC (XAMPP)
 
 1. Letakkan folder proyek di dalam `htdocs` XAMPP (contoh: `D:\xampp\htdocs\pbj-revit`).
