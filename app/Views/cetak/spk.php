@@ -25,6 +25,16 @@
   <?php endforeach; ?>
   <tr><th colspan="5" style="text-align:right">Nilai Kontrak</th><th class="angka"><?= $rp($total) ?></th></tr>
 </table>
+<?php if (! empty($tenaga)): ?>
+<p style="margin-bottom:4px">Perkiraan kebutuhan tenaga kerja untuk paket ini:</p>
+<table class="baris">
+  <tr><th style="width:40px">No</th><th>Jenis Tenaga</th><th>Keahlian</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Perkiraan Orang</th></tr>
+  <?php $noT = 1; $totOhT = 0; $totOrangT = 0; foreach ($tenaga as $t): $totOhT += (float) $t['oh']; $totOrangT += (int) ($t['jumlah_orang'] ?? 0); ?>
+  <tr><td><?= $noT++ ?></td><td><?= esc($t['jenis']) ?></td><td><?= esc($t['keahlian'] ?? '—') ?></td><td class="angka"><?= number_format((float) $t['oh'], 2, ',', '.') ?></td><td class="angka"><?= $t['jumlah_orang'] === null ? '—' : (int) $t['jumlah_orang'] ?></td></tr>
+  <?php endforeach; ?>
+  <tr><th colspan="3" style="text-align:right">Total</th><th class="angka"><?= number_format($totOhT, 2, ',', '.') ?></th><th class="angka"><?= $totOrangT ?></th></tr>
+</table>
+<?php endif; ?>
 <p>Nilai kontrak sebesar <strong><?= $rp($total) ?></strong> (terbilang: <em><?= esc(trim($terbilang)) ?> Rupiah</em>). Jangka waktu pelaksanaan: <?= esc(tgl($s['tgl_mulai'] ?? null)) ?> s.d. <?= esc(tgl($s['tgl_selesai'] ?? null)) ?>. Pembayaran dilakukan setelah barang diterima dan dituangkan dalam Berita Acara Serah Terima.</p>
 <div class="ttd">
   <div class="kol tengah">PIHAK KEDUA<br><?= esc($s['penyedia'] ?? '') ?><div class="ruang"></div><strong><?= esc($s['ttd_penyedia'] ?? '') ?></strong></div>

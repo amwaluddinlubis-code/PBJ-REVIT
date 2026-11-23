@@ -88,6 +88,10 @@
   <h2>Langkah 3 — Kebutuhan Bahan dari Pekerjaan Terpilih</h2>
   <form method="post" action="<?= base_url('rencana-belanja/buat-spk') ?>">
     <?= csrf_field() ?>
+    <?php foreach ($vol_rencana ?? [] as $pidK => $vK): ?>
+    <input type="hidden" name="kerja[<?= (int) $pidK ?>]" value="<?= esc($polos($vK)) ?>">
+    <?php endforeach; ?>
+    <input type="hidden" name="hari" value="<?= (int) ($hari_kerja ?? 6) ?>">
     <table data-paginasi="25" data-cari="Cari bahan…">
       <tr><th style="width:34px"></th><th>Bahan</th><th class="angka">Kebutuhan</th><th class="angka">Sudah Dipesan</th><th class="angka">Sisa Kebutuhan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Sisa</th><th style="width:130px">Qty Rencana</th><th data-tanpa-urut style="width:150px">Aksi</th></tr>
       <?php $totalSisa = 0; foreach ($hasil['kebutuhan']['tertaut'] as $b): $nilaiSisa = (float) $b['sisa'] * (float) $b['harga']; $totalSisa += $nilaiSisa; ?>

@@ -56,6 +56,8 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('spk/ceklis/(:num)', 'Spk::ceklis/$1');
     $routes->post('spk/tuntaskan/(:num)', 'Spk::tuntaskan/$1');
     $routes->post('spk/bayar-cepat/(:num)', 'Spk::bayarCepat/$1');
+    $routes->post('spk/tenaga-tambah/(:num)', 'Spk::tenagaTambah/$1');
+    $routes->post('spk/tenaga-hapus/(:num)', 'Spk::tenagaHapus/$1');
     $routes->post('spk/detail-tambah/(:num)', 'Spk::detailTambah/$1');
     $routes->post('spk/detail-ubah/(:num)', 'Spk::detailUbah/$1');
     $routes->post('spk/detail-hapus/(:num)', 'Spk::detailHapus/$1');

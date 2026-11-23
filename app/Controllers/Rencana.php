@@ -182,34 +182,7 @@ class Rencana extends BaseController
         unset($b);
 
         // Langkah 4: kebutuhan tenaga dari pekerjaan terpilih.
-        $upah = [];
-        foreach ($db->query(
-            "SELECT p.id AS pid, ak.nama AS jenis, SUM(ak.koefisien) AS koef_total,
-                    COALESCE(MAX(um.tarif), MAX(umn.tarif), MAX(ak.tarif), 0) AS tarif
-             FROM pekerjaan p {$joinA}
-             JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'upah'
-             LEFT JOIN upah_master um ON um.id = ak.upah_id AND um.is_deleted = 0
-             LEFT JOIN upah_master umn ON ak.upah_id IS NULL AND umn.sekolah_id = a.sekolah_id AND umn.jenis = ak.nama AND umn.is_deleted = 0
-             WHERE p.id IN ({$in}) AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0
-               AND NOT EXISTS (SELECT 1 FROM upah_master umh WHERE umh.is_deleted = 1
-                     AND (umh.id = ak.upah_id OR (ak.upah_id IS NULL AND umh.sekolah_id = a.sekolah_id AND umh.jenis = ak.nama)))
-             GROUP BY p.id, ak.nama",
-            [$this->sid()]
-        )->getResultArray() as $r) {
-            $j = $r['jenis'];
-            if (! isset($upah[$j])) {
-                $upah[$j] = ['jenis' => $j, 'orang_hari' => 0.0, 'tarif' => (float) $r['tarif']];
-            }
-            $upah[$j]['orang_hari'] += ($volRencana[(int) $r['pid']] ?? 0) * (float) $r['koef_total'];
-            $upah[$j]['tarif'] = max($upah[$j]['tarif'], (float) $r['tarif']);
-        }
-        $upah = array_values($upah);
-        usort($upah, static fn ($x, $y) => $y['orang_hari'] <=> $x['orang_hari']);
-        foreach ($upah as &$u) {
-            $u['jumlah_pekerja'] = (int) ceil($u['orang_hari'] / $hari);
-            $u['nilai'] = $u['orang_hari'] * $u['tarif'];
-        }
-        unset($u);
+        $upah = $this->upahPilihan($volRencana, $hari);
 
         return [
             'analisa' => $analisa,
@@ -252,6 +225,51 @@ class Rencana extends BaseController
     }
 
     /** Buat SPK baru berisi bahan-bahan terpilih dari rencana belanja. */
+    /**
+     * Kebutuhan tenaga (OH per jenis kanonik Pekerja/Tukang) dari pekerjaan
+     * terpilih: volume rencana x koefisien komponen upah analisanya.
+     * Dipakai Langkah 4 halaman Rencana dan pengisian otomatis catatan
+     * tenaga kerja SPK saat dibuat dari rencana belanja.
+     */
+    private function upahPilihan(array $volRencana, int $hari): array
+    {
+        if ($volRencana === []) {
+            return [];
+        }
+        $db = $this->db();
+        $in = implode(',', array_map('intval', array_keys($volRencana)));
+        $joinA = 'JOIN analisa a ON (a.id = p.analisa_id OR (p.analisa_id IS NULL AND a.kode = p.kode_analisa AND a.sekolah_id = ?))';
+        $upah = [];
+        foreach ($db->query(
+            "SELECT p.id AS pid, ak.nama AS jenis, SUM(ak.koefisien) AS koef_total,
+                    COALESCE(MAX(um.tarif), MAX(umn.tarif), MAX(ak.tarif), 0) AS tarif
+             FROM pekerjaan p {$joinA}
+             JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'upah'
+             LEFT JOIN upah_master um ON um.id = ak.upah_id AND um.is_deleted = 0
+             LEFT JOIN upah_master umn ON ak.upah_id IS NULL AND umn.sekolah_id = a.sekolah_id AND umn.jenis = ak.nama AND umn.is_deleted = 0
+             WHERE p.id IN ({$in}) AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0
+               AND NOT EXISTS (SELECT 1 FROM upah_master umh WHERE umh.is_deleted = 1
+                     AND (umh.id = ak.upah_id OR (ak.upah_id IS NULL AND umh.sekolah_id = a.sekolah_id AND umh.jenis = ak.nama)))
+             GROUP BY p.id, ak.nama",
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $j = $r['jenis'];
+            if (! isset($upah[$j])) {
+                $upah[$j] = ['jenis' => $j, 'orang_hari' => 0.0, 'tarif' => (float) $r['tarif']];
+            }
+            $upah[$j]['orang_hari'] += ($volRencana[(int) $r['pid']] ?? 0) * (float) $r['koef_total'];
+            $upah[$j]['tarif'] = max($upah[$j]['tarif'], (float) $r['tarif']);
+        }
+        $upah = array_values($upah);
+        usort($upah, static fn ($x, $y) => $y['orang_hari'] <=> $x['orang_hari']);
+        foreach ($upah as &$u) {
+            $u['jumlah_pekerja'] = (int) ceil($u['orang_hari'] / max(1, $hari));
+            $u['nilai'] = $u['orang_hari'] * $u['tarif'];
+        }
+        unset($u);
+        return $upah;
+    }
+
     public function buatSpk()
     {
         $db = $this->db();
@@ -290,7 +308,42 @@ class Rencana extends BaseController
                 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
             ]);
         }
+        // Catatan kebutuhan tenaga kerja SPK: dari pekerjaan terpilih
+        // Langkah 1 (dikirim form sebagai kerja[pid]=volume + hari).
+        $jmlTenaga = 0;
+        $volKerja = [];
+        foreach ((array) $this->request->getPost('kerja') as $pid => $v) {
+            $pid = (int) $pid;
+            $v = (float) str_replace(',', '.', (string) $v);
+            if ($pid > 0 && $v > 0) {
+                $volKerja[$pid] = $v;
+            }
+        }
+        if ($volKerja !== []) {
+            $valid = array_map('intval', array_column($db->query(
+                'SELECT p.id FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0',
+                [$this->sid()]
+            )->getResultArray(), 'id'));
+            $volKerja = array_intersect_key($volKerja, array_flip($valid));
+            $hari = max(1, (int) ($this->request->getPost('hari') ?: 6));
+            foreach ($this->upahPilihan($volKerja, $hari) as $u) {
+                if ((float) $u['orang_hari'] <= 0) {
+                    continue;
+                }
+                $db->table('spk_tenaga')->insert([
+                    'sekolah_id' => $this->sid(), 'spk_id' => $spkId, 'jenis' => $u['jenis'], 'keahlian' => null,
+                    'oh' => round((float) $u['orang_hari'], 2), 'jumlah_orang' => (int) $u['jumlah_pekerja'],
+                    'keterangan' => 'Otomatis dari Rencana Belanja — ' . count($volKerja) . ' pekerjaan terpilih, target ' . $hari . ' hari kerja.',
+                    'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+                $jmlTenaga++;
+            }
+        }
         $db->transComplete();
-        return redirect()->to('/spk/detail/' . $spkId)->with('sukses', 'SPK ' . $nomor . ' dibuat dari rencana belanja (' . count($baris) . ' bahan). Lengkapi penyedia & tanggalnya bila perlu.');
+        $pesan = 'SPK ' . $nomor . ' dibuat dari rencana belanja (' . count($baris) . ' bahan). Lengkapi penyedia & tanggalnya bila perlu.';
+        if ($jmlTenaga > 0) {
+            $pesan .= ' Catatan kebutuhan tenaga kerja ikut terisi otomatis (' . $jmlTenaga . ' jenis tenaga) — lihat panel Kebutuhan Tenaga Kerja.';
+        }
+        return redirect()->to('/spk/detail/' . $spkId)->with('sukses', $pesan);
     }
 }

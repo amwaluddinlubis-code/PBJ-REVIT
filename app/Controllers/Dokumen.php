@@ -175,11 +175,18 @@ class Dokumen extends BaseController
             [(int) $spkId]
         )->getResultArray();
         $total = array_sum(array_column($detail, 'total'));
+        $tenaga = [];
+        try {
+            $tenaga = $db->table('spk_tenaga')->where(['spk_id' => (int) $spkId, 'is_deleted' => 0])->orderBy('id')->get()->getResultArray();
+        } catch (\Throwable $e) {
+            // tabel spk_tenaga belum dimigrasi
+        }
         return view('cetak/spk', [
             'idn' => $this->identitas(), 's' => $s, 'detail' => $detail,
             'total' => $total, 'terbilang' => $this->terbilang($total),
             'nomor' => $this->nomorSurat('SPK', (int) $s['nomor']),
             'hariTanggal' => $this->hariTanggal($s['tanggal']),
+            'tenaga' => $tenaga,
         ]);
     }
 

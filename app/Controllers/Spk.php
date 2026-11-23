@@ -181,6 +181,13 @@ class Spk extends BaseController
             'pajak' => $pajakTuntas,
             'tgl_terima' => $s['tgl_selesai'] ?: date('Y-m-d'),
         ];
+        // Catatan kebutuhan tenaga kerja SPK (panel + cetak).
+        $tenaga = [];
+        try {
+            $tenaga = $db->table('spk_tenaga')->where(['spk_id' => (int) $id, 'is_deleted' => 0])->orderBy('id')->get()->getResultArray();
+        } catch (\Throwable $e) {
+            // tabel spk_tenaga belum dimigrasi
+        }
         return $this->tampil('spk/detail', [
             's' => $s, 'detail' => $detail, 'bahan' => $bahan,
             'nilai_paket' => $nilaiPaket,
@@ -188,6 +195,7 @@ class Spk extends BaseController
             'pembanding' => $pembanding,
             'ceklis' => $ceklis,
             'tuntas' => $tuntas,
+            'tenaga' => $tenaga,
         ], 'SPK ' . $s['nomor']);
     }
 
@@ -266,6 +274,42 @@ class Spk extends BaseController
         }
         $this->catatAudit('spk', (int) $id, 'tuntaskan', "BAP urut {$urutBap}, BAST urut {$urutBast}, dan Invoice urut {$urutInv} dibuat sekaligus (tanggal terima {$tgl}).");
         return redirect()->to('spk/detail/' . (int) $id)->with('sukses', "SPK dituntaskan: BAP urut {$urutBap}, BAST urut {$urutBast}, dan Invoice urut {$urutInv} dibuat sekaligus. Tinggal catat pembayarannya di panel yang sama.");
+    }
+
+    /** Tambah baris catatan kebutuhan tenaga kerja SPK. */
+    public function tenagaTambah($spkId)
+    {
+        $db = $this->db();
+        $s = $db->table('spk')->where(['id' => (int) $spkId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        if (! $s) {
+            return redirect()->to('spk')->with('galat', 'SPK tidak ditemukan di sekolah aktif.');
+        }
+        $jenis = trim((string) $this->request->getPost('jenis'));
+        if (! in_array($jenis, ['Pekerja', 'Tukang'], true)) {
+            return redirect()->to('spk/detail/' . (int) $spkId)->with('galat', 'Jenis tenaga harus Pekerja atau Tukang.');
+        }
+        $oh = (float) str_replace(',', '.', (string) ($this->request->getPost('oh') ?: 0));
+        $orang = $this->request->getPost('jumlah_orang');
+        $db->table('spk_tenaga')->insert([
+            'sekolah_id' => $this->sid(), 'spk_id' => (int) $spkId, 'jenis' => $jenis,
+            'keahlian' => trim((string) $this->request->getPost('keahlian')) ?: null,
+            'oh' => round($oh, 2),
+            'jumlah_orang' => ($orang === '' || $orang === null) ? null : max(0, (int) $orang),
+            'keterangan' => trim((string) $this->request->getPost('keterangan')) ?: null,
+            'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+        return redirect()->to('spk/detail/' . (int) $spkId)->with('sukses', 'Baris kebutuhan tenaga kerja ditambahkan.');
+    }
+
+    /** Hapus baris catatan kebutuhan tenaga kerja SPK (hapus lunak). */
+    public function tenagaHapus($tenagaId)
+    {
+        $t = $this->db()->table('spk_tenaga')->where(['id' => (int) $tenagaId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        if (! $t) {
+            return redirect()->to('spk')->with('galat', 'Baris tenaga kerja tidak ditemukan.');
+        }
+        $this->hapusLunak('spk_tenaga', ['id' => (int) $tenagaId]);
+        return redirect()->to('spk/detail/' . (int) $t['spk_id'])->with('sukses', 'Baris kebutuhan tenaga kerja dihapus.');
     }
 
     /** Catat pembayaran invoice SPK ini langsung dari panel Tuntaskan. */
