@@ -54,11 +54,14 @@ a:hover {
   overflow: hidden;
 }
 
-/* Sidebar: logo & profil statis di atasnya; scroll hanya menu di dalamnya. */
+/* Sidebar: logo & profil statis di atasnya; scroll hanya menu di dalamnya.
+   Logo & profil juga TIDAK ikut membesar/mengecil saat zoom dokumen
+   (A−/A+): keduanya diberi zoom balik 1/zoom lewat --ap-zoom-balik. */
 .samping .logo,
 .samping .profil {
   flex: none;
   position: static;
+  zoom: var(--ap-zoom-balik, 1);
 }
 .samping nav {
   flex: 1 1 auto;

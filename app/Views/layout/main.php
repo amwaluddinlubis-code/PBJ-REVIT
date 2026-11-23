@@ -11,7 +11,10 @@
 try {
   if (localStorage.getItem('ap-tema') === 'gelap') document.documentElement.classList.add('gelap');
   var _z = parseFloat(localStorage.getItem('ap-zoom') || '1');
-  if (_z && _z !== 1) document.documentElement.style.zoom = _z;
+  if (_z && _z !== 1) {
+    document.documentElement.style.zoom = _z;
+    document.documentElement.style.setProperty('--ap-zoom-balik', String(1 / _z));
+  }
 } catch (e) {}
 </script>
 </head>
@@ -320,6 +323,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
   const label = document.getElementById('font-label');
   const terapkan = function () {
     document.documentElement.style.zoom = zoom === 1 ? '' : zoom;
+    document.documentElement.style.setProperty('--ap-zoom-balik', String(1 / zoom));
     localStorage.setItem('ap-zoom', String(zoom));
     if (label) label.textContent = Math.round(zoom * 100) + '%';
   };
