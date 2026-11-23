@@ -1,5 +1,6 @@
-<?php /* Partial spk/detail: panel Kebutuhan Tenaga Kerja dari baris upah SPK. */ ?><div class="panel">
-  <h2>Kebutuhan Tenaga Kerja</h2>
+<?php /* Partial spk/detail: panel Kebutuhan Tenaga Kerja dari baris upah SPK. */ ?><details class="panel panel-lipat" data-lipat-id="spk-detail-kebutuhan-tenaga-kerja">
+  <summary>Kebutuhan Tenaga Kerja</summary>
+
   <p class="kecil-teks" style="margin-top:0">Catatan perkiraan tenaga kerja untuk paket ini — jenis tenaga, keahliannya, kebutuhan OH (orang-hari), dan perkiraan jumlah orang yang harus disediakan panitia. Terisi otomatis bila SPK dibuat dari Rencana Belanja; dapat ditambah atau diubah manual di sini, dan ikut tercetak pada SPK.</p>
   <?php if ($tenaga): ?>
   <table data-cari="Cari tenaga…">
@@ -35,4 +36,4 @@
       <button class="tombol kecil" type="submit">+ Tambah Baris</button>
     </div>
   </form>
-</div>
+</details>

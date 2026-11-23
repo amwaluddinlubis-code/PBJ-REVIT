@@ -1,5 +1,6 @@
-<?php /* Partial spk/detail: panel Tambah Baris Barang (form pilih bahan/upah/pekerjaan). */ ?><div class="panel">
-  <h2>Tambah Baris Barang</h2>
+<?php /* Partial spk/detail: panel Tambah Baris Barang (form pilih bahan/upah/pekerjaan). */ ?><details class="panel panel-lipat" data-lipat-id="spk-detail-tambah-baris-barang" open>
+  <summary>Tambah Baris Barang</summary>
+
   <form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('spk/detail-tambah/' . $s['id']) ?>">
     <?= csrf_field() ?>
     <label>Bahan
@@ -18,4 +19,4 @@
     <div class="aksi md:col-span-2"><button type="submit">Tambah Baris</button></div>
   </form>
   <p class="kecil-teks">Harga acuan diambil berjenjang: harga negosiasi → harga penawaran → harga RAB.</p>
-</div>
+</details>

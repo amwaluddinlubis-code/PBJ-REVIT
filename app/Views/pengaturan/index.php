@@ -9,8 +9,9 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
 <form method="post" action="<?= base_url('pengaturan/simpan') ?>">
   <?= csrf_field() ?>
 
-  <div class="panel">
-    <h2>Identitas Sekolah</h2>
+  <details class="panel panel-lipat" data-lipat-id="pengaturan-identitas-sekolah" open>
+  <summary>Identitas Sekolah</summary>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <?= $f('nama_sekolah', 'Nama Sekolah') ?>
       <?= $f('npsn', 'NPSN') ?>
@@ -24,10 +25,11 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
       <?= $f('kode_pos', 'Kode Pos') ?>
       <?= $f('email', 'Email Sekolah') ?>
     </div>
-  </div>
+  </details>
 
-  <div class="panel">
-    <h2>Pagu Anggaran (Kontrol Belanja)</h2>
+  <details class="panel panel-lipat" data-lipat-id="pengaturan-pagu-anggaran-kontrol-belanja">
+  <summary>Pagu Anggaran (Kontrol Belanja)</summary>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <label>Total Anggaran / Bantuan (Rp)
         <input data-uang name="total_anggaran" value="<?= $anggaran > 0 ? $rp($anggaran) : '' ?>" placeholder="mis. 2.540.292.000">
@@ -38,19 +40,21 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
         <span class="kecil-teks">Pembayaran invoice &amp; upah yang menembus pagu akan ditahan aplikasi.</span>
       </label>
     </div>
-  </div>
+  </details>
 
-  <div class="panel">
-    <h2>Kop Surat Dokumen</h2>
+  <details class="panel panel-lipat" data-lipat-id="pengaturan-kop-surat-dokumen">
+  <summary>Kop Surat Dokumen</summary>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <?= $f('kop_pemerintah', 'Kop Baris 1 (Pemerintah)', 'mis. PEMERINTAH KABUPATEN MANDAILING NATAL') ?>
       <?= $f('kop_dinas', 'Kop Baris 2 (Dinas)', 'mis. DINAS PENDIDIKAN') ?>
       <?= $f('alamat_kop', 'Alamat pada Kop', 'Kosongkan untuk memakai alamat sekolah di atas secara otomatis.') ?>
     </div>
-  </div>
+  </details>
 
-  <div class="panel">
-    <h2>Panitia &amp; Penandatangan</h2>
+  <details class="panel panel-lipat" data-lipat-id="pengaturan-panitia-penandatangan">
+  <summary>Panitia &amp; Penandatangan</summary>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <?= $f('kepsek_nama', 'Kepala Sekolah') ?>
       <?= $f('kepsek_nip', 'NIP Kepala Sekolah') ?>
@@ -58,7 +62,7 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
       <?= $f('sekretaris_nama', 'Sekretaris / Logistik') ?>
       <?= $f('pelaksana_nama', 'Kepala Pelaksana') ?>
     </div>
-  </div>
+  </details>
 
   <div class="panel">
     <details>
@@ -81,11 +85,12 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
 </form>
 
 <?php if (($pengguna['peran'] ?? '') === 'admin'): ?>
-<div class="panel login-version-settings">
+<details class="panel panel-lipat login-version-settings" data-lipat-id="pengaturan-halaman-login">
+  <summary>Halaman Login</summary>
   <div class="login-version-heading">
     <div>
       <span class="kecil-teks">Khusus administrator</span>
-      <h2>Halaman Login</h2>
+
       <p class="kecil-teks">Pilih tampilan yang digunakan semua pengguna saat masuk. Alur login tetap sama.</p>
     </div>
     <span class="login-version-active">Aktif: <?= strtoupper(esc($loginVersion ?? 'v1')) ?></span>
@@ -96,7 +101,7 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
     <label class="login-version-option"><input type="radio" name="login_version" value="v2" <?= ($loginVersion ?? 'v1') === 'v2' ? 'checked' : '' ?>><span><b>Versi 2 — Fokus kerja</b><small>Tampilan lebih ringkas dengan fokus pada identitas sekolah, keamanan, dan akses masuk.</small></span></label>
     <div class="aksi"><button type="submit">Simpan Tampilan Login</button></div>
   </form>
-</div>
+</details>
 <?php endif; ?>
 
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-penyedia','ids-penyedia')">

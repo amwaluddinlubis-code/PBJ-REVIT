@@ -51,6 +51,9 @@ Sejak 2026-11-24 tampilan mengikuti pola komponen ala TALL tanpa mengganti frame
 - Argumen kedua `$this->include()` adalah opsi render CI4, bukan data — jangan memakainya untuk mengoper variabel.
 - Formatter tampilan bersama tinggal di `app/Common.php` sebagai fungsi global: `tgl()`, `tglWaktu()`, `rp()` (rupiah), dan `ikonSvg()` (peta ikon SVG). Jangan menyalin closure formatter lokal baru; varian yang memang berbeda (mis. null → '—', tanpa awalan 'Rp') boleh tetap lokal di berkasnya.
 - Layout utama `layout/main.php` hanya merangkai `layout/_kepala`, `_sidebar`, `_atas`, `_skrip`, dan `_modal_konfirmasi`.
+- Form tambah/ubah yang isinya singkat TIDAK membuka halaman baru: tampilkan sebagai modal `mk-lapik` di halaman daftarnya (pola `spk/_modal_form.php`, `invoice/_modal_form.php`, `sekolah/_modal_form.php` — bidang sama persis dengan halaman formnya, POST biasa ke endpoint simpan/perbarui yang sama, data baris dioper sebagai JSON di halaman). Halaman form mandiri tetap dipertahankan sebagai cadangan (jalur kembali validasi & tautan langsung). Form panjang/bertab tetap halaman sendiri.
+- Semua tombol SATU keluarga gaya (ala Apple) dari aturan `button, .tombol` di `public/assets/app.css`: pil penuh (radius 999px), tebal 600, bayangan halus, transisi + efek tekan `scale(.97)`. Varian hanya soal warna: utama biru IDDS, `bahaya` marun #800000, `ekspor` hijau pastel, `abu` netral. Jangan membuat kelas tombol baru dengan bentuk berbeda.
+- Halaman dengan banyak panel WAJIB memakai panel lipat `<details class="panel panel-lipat" data-lipat-id="...">` dengan judul panel sebagai `<summary>` (keadaan buka/tutup diingat per pengguna via localStorage oleh skrip layout). Panel yang sedang dikerjakan/utama boleh `open` sebagai bawaan; panel akar Alpine (`x-data`/`data-bulk-akar`) dan bilah alat tetap `<div class="panel">` biasa.
 
 ### Form Compact
 

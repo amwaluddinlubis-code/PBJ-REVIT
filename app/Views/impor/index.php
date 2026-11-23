@@ -9,7 +9,8 @@ $pilihSekolah = static function () use ($semuaSekolah, $sekolahAktif) {
     return $html . '</select></label>';
 };
 ?>
-<div class="panel">
+<details class="panel panel-lipat" data-lipat-id="impor-impor-rab-unggah-berkas-excel" open>
+  <summary>Impor RAB — Unggah Berkas Excel</summary>
   <p class="kecil-teks" id="pilihan-terakhir" style="display:none"></p>
 <script>
 // P6: muatAwal saat submit impor: disable tombol + beri indikasi proses.
@@ -82,11 +83,12 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
     </div>
     <p class="kecil-teks">Cara unggah kena batas ukuran PHP server — bila berkas besar gagal, pakai Cara 1 (folder). Impor workbook besar berjalan beberapa detik sampai ±1 menit; jangan tutup halaman selama proses.</p>
   </form>
-</div>
+</details>
 
 <?php if (isset($verifikasi)): ?>
-<div class="panel">
-  <h2>Verifikasi Anggaran — <?= esc($sekolahAktif['nama_sekolah'] ?? 'Sekolah Aktif') ?></h2>
+<details class="panel panel-lipat" data-lipat-id="impor-verifikasi-anggaran">
+  <summary>Verifikasi Anggaran — <?= esc($sekolahAktif['nama_sekolah'] ?? 'Sekolah Aktif') ?></summary>
+
   <table>
     <tr><th>Uraian</th><th class="angka">Nilai</th></tr>
     <tr><td>Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung didanai</b> (dari <?= (int) ($verifikasi['gedung_semua'] ?? $verifikasi['gedung']) ?> gedung aktif — hanya yang didanai yang dihitung; tandai di <a href="<?= base_url('gedung') ?>">Kelola Gedung</a>)</td><td class="angka"><b><?= rp($verifikasi['total_boq']) ?></b></td></tr>
@@ -104,21 +106,23 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
   <?php else: ?>
     <p class="kecil-teks" style="margin-bottom:0;color:var(--ina-red-700,#a61e1e)"><b>Melebihi pagu</b> — total keseluruhan melebihi pagu anggaran. Periksa kembali gedung yang aktif atau sesuaikan pagu di Pengaturan.</p>
   <?php endif; ?>
-</div>
+</details>
 <?php endif; ?>
 
-<div class="panel">
-  <h2>Template Manual — Jalur Pasti untuk RAB Format Apa Pun</h2>
+<details class="panel panel-lipat" data-lipat-id="impor-template-manual-jalur-pasti-untuk-rab-form">
+  <summary>Template Manual — Jalur Pasti untuk RAB Format Apa Pun</summary>
+
   <p style="margin-top:0;color:var(--ta-teks-2)">Bila workbook perencana tidak terbaca rapi (format perencana lain, PDF, atau hitungan manual), isi <b>template 7 sheet</b> (Sekolah, Harga, Analisa, Harsat, BOQ, BiayaLain, dan Petunjuk) lalu impor berkasnya lewat salah satu cara di atas — aplikasi mengenali format template secara otomatis. Sebaliknya, data sekolah aktif juga bisa <b>dieksper sebagai template terisi</b> untuk diperiksa/dikoreksi di Excel lalu diimpor kembali.</p>
   <div class="aksi" style="justify-content:flex-start;gap:10px">
     <a class="tombol" href="<?= base_url('impor/unduh-template') ?>">Unduh Template Kosong</a>
     <a class="tombol" href="<?= base_url('impor/ekspor-template') ?>">Ekspor Template Terisi (Sekolah Aktif)</a>
   </div>
-</div>
+</details>
 
 <?php if ($tak_tertaut !== []): ?>
-<div class="panel">
-  <h2>Komponen Belum Tertaut ke Master Bahan — <?= count($tak_tertaut) ?> nama</h2>
+<details class="panel panel-lipat" data-lipat-id="impor-komponen-belum-tertaut-ke-master-bahan-nam">
+  <summary>Komponen Belum Tertaut ke Master Bahan — <?= count($tak_tertaut) ?> nama</summary>
+
   <p style="margin-top:0;color:var(--ta-teks-2)">Komponen ini belum punya padanan di master bahan sehingga belum terhitung di kebutuhan. Aplikasi menyarankan padanan terdekat — periksa, lalu tautkan satu-satu atau massal untuk saran yang meyakinkan (skor ≥ 80).</p>
   <?php if ($jumlah_massal > 0): ?>
   <form method="post" action="<?= base_url('impor/tautkan-massal') ?>" data-konfirmasi="Tautkan <?= (int) $jumlah_massal ?> nama komponen sesuai saran skor ≥ 80?">
@@ -149,12 +153,13 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
     </tr>
     <?php endforeach; ?>
   </table>
-</div>
+</details>
 <?php endif; ?>
 
 <?php if (! empty($log)): ?>
-<div class="panel">
-  <h2>Riwayat &amp; Hasil Verifikasi Impor</h2>
+<details class="panel panel-lipat" data-lipat-id="impor-riwayat-hasil-verifikasi-impor">
+  <summary>Riwayat &amp; Hasil Verifikasi Impor</summary>
+
   <?php foreach ($log as $l): ?>
     <p style="margin:6px 0"><b><?= esc($l['berkas']) ?></b> · <?= esc(tglWaktu($l['created_at'] ?? null, '')) ?></p>
     <?php if (! empty($l['ringkasan'])): $r = $l['ringkasan']; ?>
@@ -173,5 +178,5 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
     <p class="kecil-teks">Analisa terbaca: <?= (int) ($r['analisa'] ?? 0) ?> · Komponen: <?= (int) ($r['komponen'] ?? 0) ?> · Komponen bahan belum tertaut ke master: <?= (int) ($r['komponen_tak_tertaut'] ?? 0) ?> · Bahan baru: <?= (int) ($r['bahan_baru'] ?? 0) ?> · Jenis upah: <?= (int) ($r['upah'] ?? 0) ?> · Total anggaran (Rekap RAB): Rp <?= number_format((float) ($r['total_anggaran'] ?? 0), 0, ',', '.') ?><?= ! empty($r['npsn']) ? ' · NPSN dokumen: ' . esc($r['npsn']) : '' ?></p>
     <?php endif; ?>
   <?php endforeach; ?>
-</div>
+</details>
 <?php endif; ?>

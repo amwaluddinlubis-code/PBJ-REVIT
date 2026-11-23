@@ -1,5 +1,6 @@
 <?php /* Partial spk/detail: panel baris barang SPK (register detail + ubah/hapus). */ ?>
-<div class="panel">
+<details class="panel panel-lipat" data-lipat-id="spk-detail-baris-barang-spk" open>
+  <summary>Baris Barang SPK</summary>
 <?php if ($detail === []): ?>
   <p style="margin-top:0"><strong>SPK ini belum mempunyai rincian.</strong> Tambahkan lewat formulir Tambah Rincian di bawah halaman ini, atau buat SPK-nya dari <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a> / <a href="<?= base_url('rencana-mingguan') ?>">Rencana Mingguan</a> agar rinciannya terisi otomatis. Tanpa rincian, BAP belum bisa dibuat dari halaman <a href="<?= base_url('dokumen') ?>">Dokumen</a>.</p>
 <?php endif; ?>
@@ -34,4 +35,4 @@
   <?php endforeach; ?>
   <tr class="baris-total"><th colspan="5" style="text-align:right">TOTAL</th><th class="angka"><?= rp($grand) ?></th><th class="angka"><?= rp($grandPpn) ?></th><th colspan="2"></th></tr>
 </table>
-</div>
+</details>

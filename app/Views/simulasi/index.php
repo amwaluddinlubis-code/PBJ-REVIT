@@ -7,22 +7,25 @@ $pct = static function ($n) {
 };
 ?>
 <?php if (($belum ?? null) !== null): ?>
-<div class="panel">
-  <h2 style="margin-top:0">Simulasi Mingguan</h2>
+<details class="panel panel-lipat" data-lipat-id="simulasi-simulasi-mingguan" open>
+  <summary>Simulasi Mingguan</summary>
+
   <?php if ($belum === 'migrasi'): ?>
   <p>Tabel Kurva S belum tersedia. Jalankan lebih dulu <code>php spark migrate</code> di komputer server (migrasi Kurva S &amp; Simulasi), lalu buka lagi halaman ini.</p>
   <?php else: ?>
   <p>Rencana Kurva S resmi belum diimpor untuk sekolah ini, jadi simulasi belum dapat dihitung. Impor dulu berkas JSON Time Schedule perencana di halaman <a href="<?= base_url('kurva-s') ?>">Kurva S</a>, lalu kembali ke sini.</p>
   <?php endif; ?>
-</div>
+</details>
 <?php else: ?>
-<div class="panel">
-  <h2 style="margin-top:0">Simulasi Mingguan — Cara Kerja</h2>
-  <p class="kecil-teks" style="margin:0">Isi <strong>bobot realisasi tiap minggu per gedung</strong> (persen terhadap total proyek <?= rp($total_proyek) ?>, satuan yang sama dengan Kurva S), simpan, dan simulasi di bawah terhitung ulang: realisasi disebar ke bab mengikuti pola Kurva S minggu itu, sisa volume tiap bab dijadwalkan ulang ke minggu berikutnya mengikuti pola babnya, lalu kebutuhan bahan &amp; pekerja dihitung dengan mesin <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a>. Minggu terakhir yang terisi dianggap minggu berjalan (sekarang minggu ke-<strong><?= (int) $berjalan ?></strong>). Kosongkan sel untuk menganggap minggu itu belum ada realisasi.</p>
-</div>
+<details class="panel panel-lipat" data-lipat-id="simulasi-simulasi-mingguan-cara-kerja">
+  <summary>Simulasi Mingguan — Cara Kerja</summary>
 
-<div class="panel">
-  <h2 style="margin-top:0">1. Realisasi Mingguan (Masukan)</h2>
+  <p class="kecil-teks" style="margin:0">Isi <strong>bobot realisasi tiap minggu per gedung</strong> (persen terhadap total proyek <?= rp($total_proyek) ?>, satuan yang sama dengan Kurva S), simpan, dan simulasi di bawah terhitung ulang: realisasi disebar ke bab mengikuti pola Kurva S minggu itu, sisa volume tiap bab dijadwalkan ulang ke minggu berikutnya mengikuti pola babnya, lalu kebutuhan bahan &amp; pekerja dihitung dengan mesin <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a>. Minggu terakhir yang terisi dianggap minggu berjalan (sekarang minggu ke-<strong><?= (int) $berjalan ?></strong>). Kosongkan sel untuk menganggap minggu itu belum ada realisasi.</p>
+</details>
+
+<details class="panel panel-lipat" data-lipat-id="simulasi-1-realisasi-mingguan-masukan">
+  <summary>1. Realisasi Mingguan (Masukan)</summary>
+
   <form method="post" action="<?= base_url('simulasi/simpan') ?>">
     <?= csrf_field() ?>
     <div class="bungkus-tabel"><table>
@@ -41,10 +44,11 @@ $pct = static function ($n) {
     </table></div>
     <p style="margin:10px 0 0"><button type="submit" class="tombol">Simpan &amp; Generate Ulang Simulasi</button></p>
   </form>
-</div>
+</details>
 
-<div class="panel">
-  <h2 style="margin-top:0">2. Kedudukan per Gedung s.d. Minggu Berjalan (ke-<?= (int) $berjalan ?>)</h2>
+<details class="panel panel-lipat" data-lipat-id="simulasi-2-kedudukan-per-gedung-s-d-minggu-berjalan">
+  <summary>2. Kedudukan per Gedung s.d. Minggu Berjalan (ke-<?= (int) $berjalan ?>)</summary>
+
   <div class="bungkus-tabel"><table>
     <tr><th>Gedung</th><th class="angka">Bobot Gedung</th><th class="angka">Rencana Kumulatif</th><th class="angka">Realisasi Kumulatif</th><th class="angka">Selisih</th><th>Keterangan</th></tr>
     <?php foreach ($ringkas as $r): $sel = $r['realisasi_kum'] - $r['rencana_kum']; ?>
@@ -58,10 +62,11 @@ $pct = static function ($n) {
     </tr>
     <?php endforeach; ?>
   </table></div>
-</div>
+</details>
 
-<div class="panel">
-  <h2 style="margin-top:0">3. Ringkasan Mingguan</h2>
+<details class="panel panel-lipat" data-lipat-id="simulasi-3-ringkasan-mingguan">
+  <summary>3. Ringkasan Mingguan</summary>
+
   <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari minggu…">
     <tr><th>Minggu</th><th>Tanggal</th><th>Status</th><th class="angka">Bobot Rencana</th><th class="angka">Belanja Bahan</th><th class="angka">Nilai Upah</th><th class="angka">Perkiraan Orang</th><th data-tanpa-urut>Rincian</th></tr>
     <?php foreach ($hasil as $h):
@@ -82,7 +87,7 @@ $pct = static function ($n) {
     <?php endforeach; ?>
   </table></div>
   <p class="kecil-teks">Belanja bahan adalah kebutuhan kotor minggu itu pada harga acuan aplikasi — saat pelaksanaan kurangi stok tersedia &amp; SPK berjalan (gunakan <a href="<?= base_url('rencana-mingguan') ?>">Rencana Mingguan</a> untuk daftar belanja bersihnya). Perkiraan orang = kebutuhan OH ÷ 6 hari kerja.</p>
-</div>
+</details>
 
 <?php foreach ($hasil as $h): ?>
 <details class="panel" id="minggu-<?= (int) $h['ke'] ?>" <?= ((int) $h['ke'] === (int) $berjalan + 1) ? 'open' : '' ?>>
@@ -139,13 +144,14 @@ $pct = static function ($n) {
 </details>
 <?php endforeach; ?>
 
-<div class="panel">
-  <h2 style="margin-top:0">Catatan</h2>
+<details class="panel panel-lipat" data-lipat-id="simulasi-catatan">
+  <summary>Catatan</summary>
+
   <ul class="kecil-teks" style="margin:0">
     <li>Simulasi ini memakai realisasi mingguan yang diisi di halaman ini — terpisah dari catatan Realisasi per pekerjaan di modul Gedung. Mengubah masukan lalu menyimpan akan menghitung ulang seluruh minggu.</li>
     <li>Penyebaran realisasi ke bab mengikuti porsi bobot rencana minggu itu; bab yang jatahnya sudah habis berhenti menerima, kelebihannya pindah ke bab terjadwal berikutnya pada gedung yang sama.</li>
     <li>Bab BOQ tanpa baris sendiri di Kurva S mengikuti bab induknya: Tangga Beton → Struktur; Arsitektur &amp; Rampa → Lain-lain. Baris Perabot, Persiapan umum, dan Biaya Manajemen tampil sebagai biaya non-BOQ terjadwal (bukan pekerjaan BOQ).</li>
     <li>Tarif upah memakai tarif efektif analisa (terbesar antara tarif komponen dan Master Upah); jenis upah hanya Pekerja &amp; Tukang.</li>
   </ul>
-</div>
+</details>
 <?php endif; ?>

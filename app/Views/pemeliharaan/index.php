@@ -1,5 +1,6 @@
-<div class="panel">
-  <h2>Informasi Database</h2>
+<details class="panel panel-lipat" data-lipat-id="pemeliharaan-informasi-database" open>
+  <summary>Informasi Database</summary>
+
   <p style="margin-top:0;color:var(--ta-teks-2)">Database aktif: <strong><?= esc($namaDb) ?></strong> · MariaDB <?= esc($versi) ?> · <?= count($tabel) ?> tabel · total ukuran <?= esc($totalUkuran) ?>. Halaman ini hanya untuk administrator.</p>
   <div class="bungkus-tabel">
   <table class="satu-baris" data-cari="Cari tabel…">
@@ -13,10 +14,11 @@
     <?php endforeach; ?>
   </table>
   </div>
-</div>
+</details>
 
-<div class="panel">
-  <h2>Backup Database</h2>
+<details class="panel panel-lipat" data-lipat-id="pemeliharaan-backup-database">
+  <summary>Backup Database</summary>
+
   <p style="margin-top:0;color:var(--ta-teks-2)">Backup berisi seluruh struktur dan data database; bila ada berkas Template Laporan, backup menjadi satu paket .zip (database + template). Simpan berkasnya di tempat aman di luar komputer ini.</p>
   <form method="post" action="<?= base_url('pemeliharaan-db/backup') ?>">
     <?= csrf_field() ?>
@@ -46,10 +48,11 @@
   <?php else: ?>
   <p class="kecil-teks">Belum ada backup tersimpan.</p>
   <?php endif; ?>
-</div>
+</details>
 
-<div class="panel">
-  <h2>Pulihkan Database</h2>
+<details class="panel panel-lipat" data-lipat-id="pemeliharaan-pulihkan-database">
+  <summary>Pulihkan Database</summary>
+
   <p style="margin-top:0;color:var(--ta-teks-2)"><strong>Perhatian:</strong> pemulihan MENIMPA seluruh data saat ini dengan isi berkas backup. Sebelum memulihkan, aplikasi otomatis membuat backup keadaan saat ini (berawalan <em>pra-pulih-</em>) sehingga pemulihan masih bisa dibatalkan.</p>
   <form method="post" action="<?= base_url('pemeliharaan-db/pulih') ?>" enctype="multipart/form-data" data-konfirmasi="Pulihkan database dari berkas ini? SELURUH data saat ini akan ditimpa. Backup keadaan saat ini dibuat otomatis sebelum pemulihan.">
     <?= csrf_field() ?>
@@ -61,10 +64,11 @@
     </label>
     <button type="submit" class="bahaya">Pulihkan Database</button>
   </form>
-</div>
+</details>
 
-<div class="panel">
-  <h2>Sampah — Baris Terhapus</h2>
+<details class="panel panel-lipat" data-lipat-id="pemeliharaan-sampah-baris-terhapus">
+  <summary>Sampah — Baris Terhapus</summary>
+
   <p style="margin-top:0;color:var(--ta-teks-2)">Penghapusan di aplikasi ini bersifat lunak: baris disembunyikan, bukan dimusnahkan. Di sini baris terhapus bisa <strong>dipulihkan</strong> (tampil lagi) atau <strong>dihapus permanen</strong> (tidak bisa dikembalikan).</p>
   <div class="bungkus-tabel">
   <table class="satu-baris" data-cari="Cari tabel…">
@@ -94,13 +98,14 @@
     <?php endforeach; ?>
   </table>
   </div>
-</div>
+</details>
 
-<div class="panel">
-  <h2>Optimasi Tabel</h2>
+<details class="panel panel-lipat" data-lipat-id="pemeliharaan-optimasi-tabel">
+  <summary>Optimasi Tabel</summary>
+
   <p style="margin-top:0;color:var(--ta-teks-2)">Optimasi menyusun ulang penyimpanan tabel dan mengembalikan ruang kosong sisa penghapusan. Aman dijalankan kapan saja dan tidak mengubah data.</p>
   <form method="post" action="<?= base_url('pemeliharaan-db/optimasi') ?>">
     <?= csrf_field() ?>
     <button type="submit">Optimasi Semua Tabel</button>
   </form>
-</div>
+</details>

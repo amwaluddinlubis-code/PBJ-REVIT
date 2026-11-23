@@ -1,6 +1,7 @@
 <?php $label = ['pph22' => 'PPh Pasal 22', 'ppn' => 'PPN dipungut', 'pph21' => 'PPh Pasal 21', 'pph23' => 'PPh Pasal 23', 'pph42' => 'PPh Pasal 4 ayat 2', 'sisa_dana' => 'Pengembalian sisa dana (SIMPONI)']; ?>
-<div class="panel">
-  <h2>Kewajiban Pajak per Masa — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></h2>
+<details class="panel panel-lipat" data-lipat-id="setor-kewajiban-pajak-per-masa" open>
+  <summary>Kewajiban Pajak per Masa — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></summary>
+
   <p style="margin-top:0;color:var(--ta-teks-2)">Pajak yang dipungut/dipotong dari pembayaran invoice (PPh 22 &amp; PPN), pembayaran upah (PPh 21), dan biaya non-gedung (PPh 23 / PPh 4 ayat 2 / PPh 21 honor) wajib disetor ke kas negara dengan kode e-billing; bukti sahnya adalah NTPN. Tabel ini membandingkan kewajiban dengan bukti setor yang sudah dicatat.</p>
   <table data-cari="Cari pajak / masa…">
     <tr><th>Jenis Pajak</th><th>Masa</th><th class="angka">Kewajiban</th><th class="angka">Sudah Disetor</th><th class="angka">Kekurangan</th><th>Status</th></tr>
@@ -16,20 +17,22 @@
     <?php endforeach; ?>
     <?php if ($baris === []): ?><tr><td colspan="6">Belum ada kewajiban pajak dari transaksi yang tercatat.</td></tr><?php endif; ?>
   </table>
-</div>
+</details>
 
-<div class="panel">
-  <h2>Sisa Dana Bantuan</h2>
+<details class="panel panel-lipat" data-lipat-id="setor-sisa-dana-bantuan">
+  <summary>Sisa Dana Bantuan</summary>
+
   <table>
     <tr><td style="width:300px">Sisa dana (diterima − digunakan)</td><td class="angka"><?= rp($sisa) ?></td></tr>
     <tr><td>Sudah disetor kembali ke kas negara</td><td class="angka"><?= rp($setor_sisa) ?></td></tr>
     <tr><td><b>Belum disetor</b></td><td class="angka"><b><?= rp(max(0, $sisa - $setor_sisa)) ?></b></td></tr>
   </table>
   <p class="kecil-teks">Menurut Juknis, sisa dana bantuan yang tidak digunakan wajib disetorkan kembali ke kas negara melalui SIMPONI dan bukti setoran dilampirkan pada laporan akhir.</p>
-</div>
+</details>
 
-<div class="panel">
-  <h2>Catat Bukti Setor</h2>
+<details class="panel panel-lipat" data-lipat-id="setor-catat-bukti-setor">
+  <summary>Catat Bukti Setor</summary>
+
   <form method="post" action="<?= base_url('bukti-setor/simpan') ?>">
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
@@ -47,7 +50,7 @@
     </div>
     <div class="aksi" style="justify-content:flex-start"><button type="submit">Catat Bukti Setor</button></div>
   </form>
-</div>
+</details>
 
 <?php if ($setor !== []): ?>
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-setor','ids-setor')">

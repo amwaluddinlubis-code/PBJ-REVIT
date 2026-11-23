@@ -1,6 +1,7 @@
 <?php /* Partial spk/detail: panel Tuntaskan SPK satu panel (BAST, invoice, pembayaran, LPJ). */ ?>
-<div class="panel">
-  <h2>Tuntaskan SPK — Satu Panel</h2>
+<details class="panel panel-lipat" data-lipat-id="spk-detail-tuntaskan-spk-satu-panel">
+  <summary>Tuntaskan SPK — Satu Panel</summary>
+
   <?php if ($tuntas['invoice'] && $tuntas['invoice']['status'] === 'Sudah Bayar'): ?>
     <p style="margin-top:0">Rantai SPK ini <strong>sudah selesai</strong>: BAP, BAST, Invoice, dan pembayaran tercatat. Tinggal cetak berkasnya.</p>
   <?php elseif ($tuntas['jml_bap'] === 0 && ! $tuntas['invoice']): ?>
@@ -30,4 +31,4 @@
   <?php foreach ($template_spk ?? [] as $tpl): ?>
     <a class="tombol abu" href="<?= base_url('template-laporan/render/' . $tpl['id'] . '?spk=' . $s['id']) ?>" title="Render SPK ini dari Template Laporan (.xlsx)">Unduh dari Template: <?= esc($tpl['nama']) ?></a>
   <?php endforeach; ?></p>
-</div>
+</details>

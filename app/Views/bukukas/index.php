@@ -1,6 +1,7 @@
 <?php $namaBulan = static fn ($ym) => date('F Y', strtotime($ym . '-01')); ?>
-<div class="panel">
-  <h2><?= esc($nama_buku) ?> — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></h2>
+<details class="panel panel-lipat" data-lipat-id="bukukas-panel" open>
+  <summary><?= esc($nama_buku) ?> — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></summary>
+
   <p style="margin-top:0;color:var(--ta-teks-2)">Pembukuan menurut Juknis Revitalisasi SMP 2026. Isi buku tergabung otomatis dari pembayaran invoice (bank), pembayaran upah (tunai), bukti setor ke kas negara, dan transaksi manual di bawah. Buku ditutup setiap akhir bulan.</p>
   <div class="aksi" style="justify-content:flex-start;gap:8px;flex-wrap:wrap">
     <?php foreach (['bku' => 'Buku Kas Umum', 'bank' => 'Buku Bank', 'tunai' => 'Buku Pembantu Kas Tunai'] as $k => $label): ?>
@@ -13,10 +14,11 @@
     </form>
     <a class="tombol abu" href="<?= base_url('buku-kas/cetak?buku=' . $buku . '&bulan=' . $bulan) ?>" target="_blank">Cetak Bulan Ini</a>
   </div>
-</div>
+</details>
 
-<div class="panel">
-  <h2><?= esc($nama_buku) ?> — Bulan <?= esc($namaBulan($bulan)) ?></h2>
+<details class="panel panel-lipat" data-lipat-id="bukukas-bulan">
+  <summary><?= esc($nama_buku) ?> — Bulan <?= esc($namaBulan($bulan)) ?></summary>
+
   <table data-paginasi="25" data-cari="Cari transaksi…">
     <tr><th>Tanggal</th><th>Uraian</th><th class="angka">Penerimaan</th><th class="angka">Pengeluaran</th><th class="angka">Saldo</th></tr>
     <tr><td colspan="2"><b>Saldo awal bulan</b></td><td></td><td></td><td class="angka"><b><?= rp($saldo_awal) ?></b></td></tr>
@@ -32,10 +34,11 @@
     <?php if ($baris === []): ?><tr><td colspan="5">Tidak ada transaksi pada bulan ini.</td></tr><?php endif; ?>
     <tr><td colspan="2"><b>Saldo akhir bulan (penutupan buku)</b></td><td></td><td></td><td class="angka"><b><?= rp($saldo_akhir) ?></b></td></tr>
   </table>
-</div>
+</details>
 
-<div class="panel">
-  <h2>Catat Transaksi Kas Manual</h2>
+<details class="panel panel-lipat" data-lipat-id="bukukas-catat-transaksi-kas-manual">
+  <summary>Catat Transaksi Kas Manual</summary>
+
   <form method="post" action="<?= base_url('buku-kas/simpan') ?>">
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
@@ -64,7 +67,7 @@
     <div class="aksi" style="justify-content:flex-start"><button type="submit">Catat Transaksi</button></div>
   </form>
   <p class="kecil-teks">Pembayaran invoice, pembayaran upah, dan penyetoran pajak/sisa dana tidak perlu dicatat di sini — sudah masuk buku secara otomatis dari modulnya masing-masing.</p>
-</div>
+</details>
 
 <?php if ($manual !== []): ?>
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-kas','ids-kas')">

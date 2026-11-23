@@ -1,5 +1,6 @@
-<div class="panel">
-  <h2 style="margin-top:0">Mesin Laporan dari Template Excel</h2>
+<details class="panel panel-lipat" data-lipat-id="template-laporan-mesin-laporan-dari-template-excel" open>
+  <summary>Mesin Laporan dari Template Excel</summary>
+
   <p style="margin-top:0">Mengikuti mesin template SPJ BOSP: buat dokumen/laporan dalam format bebas di Excel dengan menaruh <strong>penanda <code>{{NAMA_PLACEHOLDER}}</code></strong> pada sel, unggah berkasnya di sini, lalu render dari data nyata aplikasi (satu SPK, satu gedung, atau rekap sekolah). Baris contoh yang penandanya berawalan <code>RINCIAN_</code>, <code>TENAGA_</code>, <code>KERJA_</code>, atau <code>REKAP_</code> digandakan otomatis mengikuti jumlah baris data. Render <strong>dibatalkan</strong> bila masih ada penanda yang tidak terisi — dokumen setengah jadi tidak akan terunduh.</p>
   <p style="margin-bottom:0">
     Unduh template contoh:
@@ -8,10 +9,11 @@
     <?php endforeach; ?>
     <span class="kecil-teks">— berisi semua penanda katalog, tinggal ditata ulang di Excel.</span>
   </p>
-</div>
+</details>
 
-<div class="panel">
-  <h2 style="margin-top:0">Unggah Template</h2>
+<details class="panel panel-lipat" data-lipat-id="template-laporan-unggah-template">
+  <summary>Unggah Template</summary>
+
   <form method="post" enctype="multipart/form-data" action="<?= base_url('template-laporan/unggah') ?>">
     <?= csrf_field() ?>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
@@ -25,10 +27,11 @@
       <button class="tombol" type="submit">Unggah Template</button>
     </div>
   </form>
-</div>
+</details>
 
-<div class="panel">
-  <h2 style="margin-top:0">Perpustakaan Template</h2>
+<details class="panel panel-lipat" data-lipat-id="template-laporan-perpustakaan-template">
+  <summary>Perpustakaan Template</summary>
+
   <?php if ($template === []): ?>
     <p class="kecil-teks" style="margin-bottom:0">Belum ada template. Unduh template contoh di atas, tata di Excel, lalu unggah di formulir ini.</p>
   <?php else: ?>
@@ -71,7 +74,7 @@
     <?php endforeach; ?>
   </table>
   <?php endif; ?>
-</div>
+</details>
 
 <?php foreach ($jenis as $kode => $j): ?>
 <details class="panel panel-lipat">

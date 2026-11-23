@@ -5,8 +5,9 @@
   </form>
   <span class="kecil-teks">Format dokumen pembayaran upah Juknis — lengkap dengan kolom tanda tangan penerima.</span>
 </div>
-<div class="panel">
-  <h2>Catat Pembayaran Upah</h2>
+<details class="panel panel-lipat" data-lipat-id="upah-catat-pembayaran-upah" open>
+  <summary>Catat Pembayaran Upah</summary>
+
   <form method="post" action="<?= base_url('upah/simpan') ?>">
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
@@ -34,7 +35,7 @@
     </div>
   </form>
   <p class="kecil-teks">Jumlah bayar = orang-hari × tarif, dihitung otomatis. Pembayaran upah ikut terhitung dalam kontrol pagu total anggaran. PPh 21 mengikuti Juknis Revitalisasi: upah harian sampai dengan Rp450.000 per hari tidak dipotong; di atasnya dipotong 5% dari kelebihan per hari (batas kumulatif Rp4.500.000 dalam 22 hari kerja per bulan untuk penerima yang sama perlu dicek manual).</p>
-</div>
+</details>
 
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-upah','ids-upahbayar')">
   <h2>Riwayat Pembayaran Upah — Total <?= rp($total) ?> · PPh 21 <?= rp($total_pph21) ?> · Bersih <?= rp($total - $total_pph21) ?></h2>
@@ -70,8 +71,9 @@
   </table>
 </div>
 
-<div class="panel">
-  <h2>Master Tarif Upah (per OH)</h2>
+<details class="panel panel-lipat" data-lipat-id="upah-master-tarif-upah-per-oh">
+  <summary>Master Tarif Upah (per OH)</summary>
+
   <table data-cari="Cari jenis tenaga…">
     <tr><th>Jenis Tenaga</th><th style="width:300px">Tarif (Rp)</th></tr>
     <?php foreach ($master as $m): ?>
@@ -111,7 +113,7 @@
   <?php else: ?>
   <p class="kecil-teks">Master upah hanya mengenal dua jenis kanonik: <strong>Pekerja</strong> dan <strong>Tukang</strong>, dengan tarif per OH. Tarif bawaan berasal dari daftar upah dokumen perencana (berbasis UMK); ubah pada kolom Tarif di tabel atau lewat tombol <strong>Rapikan ke 2 Jenis</strong> di <a href="<?= base_url('bahan') ?>">Master Bahan &amp; Upah</a> bila masih ada varian lain.</p>
   <?php endif; ?>
-</div>
+</details>
 
 <script>
 const pekerjaanPerGedung = <?= json_encode($pekerjaan_per_gedung) ?>;

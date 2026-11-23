@@ -1,5 +1,6 @@
-<?php /* Partial spk/detail: panel Ceklis Kelengkapan Dokumen Bukti Belanja. */ ?><div class="panel">
-  <h2>Ceklis Kelengkapan Dokumen Bukti Belanja</h2>
+<?php /* Partial spk/detail: panel Ceklis Kelengkapan Dokumen Bukti Belanja. */ ?><details class="panel panel-lipat" data-lipat-id="spk-detail-ceklis-kelengkapan-dokumen-bukti-belanja">
+  <summary>Ceklis Kelengkapan Dokumen Bukti Belanja</summary>
+
   <p class="kecil-teks" style="margin-top:0">Menurut Juknis, pengadaan di luar SIPLah dibuktikan dengan dokumen perencanaan, hasil pembandingan, hasil negosiasi, surat pemesanan, hasil pemeriksaan barang, dan BAST. Status modul terisi otomatis; dokumen fisik ditandai manual.</p>
   <table data-cari="Cari dokumen…">
     <tr><th style="width:60px">Status</th><th>Dokumen</th><th style="width:170px">Penanda</th></tr>
@@ -23,4 +24,4 @@
     </tr>
     <?php endforeach; ?>
   </table>
-</div>
+</details>

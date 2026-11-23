@@ -6,15 +6,17 @@
   <div class="kpi"><div class="label">Gedung Tercakup</div><div class="nilai"><?= count($semuaGedung ?? []) ?> gedung</div></div>
 </div>
 <?php if ($anggaran > 0): $persen = min(100, $terbayar / $anggaran * 100); ?>
-<div class="panel">
-  <h2>Kontrol Pagu (Total Belanja ≤ Total Anggaran)</h2>
+<details class="panel panel-lipat" data-lipat-id="rencana-kontrol-pagu-total-belanja-total-anggaran" open>
+  <summary>Kontrol Pagu (Total Belanja ≤ Total Anggaran)</summary>
+
   <div class="bar<?= $persen > 90 ? '' : ' hijau' ?>" style="height:10px"><div style="width:<?= $persen ?>%;<?= $persen > 90 ? 'background:var(--ina-red-500,#f02d2d)' : '' ?>"></div></div>
   <p class="kecil-teks" style="margin-bottom:0">Terpakai <?= number_format($persen, 1, ',', '.') ?>%. Harga satuan belanja boleh melebihi harga dokumen perencana (selisihnya tampil di laporan); yang dikunci hanya total keseluruhan. Pembayaran yang menembus pagu akan ditahan aplikasi.</p>
-</div>
+</details>
 <?php endif; ?>
 
-<div class="panel">
-  <h2>Langkah 1 — Pilih Pekerjaan</h2>
+<details class="panel panel-lipat" data-lipat-id="rencana-langkah-1-pilih-pekerjaan" open>
+  <summary>Langkah 1 — Pilih Pekerjaan</summary>
+
   <p class="kecil-teks" style="margin-top:0">Centang pekerjaan yang mau direncanakan belanjanya — boleh dari satu gedung atau gabungan beberapa gedung. Volume Rencana bawaan = sisa volume (volume berjalan − realisasi tercatat); silakan diubah bila belanja direncanakan bertahap.</p>
   <form method="get" action="<?= base_url('rencana-belanja') ?>">
     <label style="display:inline-block;margin-bottom:10px">Tampilkan pekerjaan:
@@ -57,7 +59,7 @@
     document.querySelectorAll('input[name="pilih_pekerjaan[]"]').forEach(function (c) { c.checked = document.getElementById('centang-semua-pekerjaan').checked; });
   });
   </script>
-</div>
+</details>
 
 <?php if (empty($hasil)): ?>
 <div class="panel">
@@ -65,8 +67,9 @@
 </div>
 <?php else: ?>
 
-<div class="panel">
-  <h2>Langkah 2 — Analisa dari <?= (int) $hasil['jumlah_pekerjaan'] ?> Pekerjaan Terpilih</h2>
+<details class="panel panel-lipat" data-lipat-id="rencana-langkah-2-analisa-dari-pekerjaan-terpilih">
+  <summary>Langkah 2 — Analisa dari <?= (int) $hasil['jumlah_pekerjaan'] ?> Pekerjaan Terpilih</summary>
+
   <table data-paginasi="25" data-cari="Cari analisa…">
     <tr><th>Kode</th><th>Analisa</th><th class="angka">Dipakai Pekerjaan</th><th class="angka">Total Volume Rencana</th><th class="angka">Harga AHSP</th><th class="angka">Nilai</th></tr>
     <?php $totalNilaiAnalisa = 0; foreach ($hasil['analisa'] as $a): $totalNilaiAnalisa += (float) $a['nilai']; ?>
@@ -81,10 +84,11 @@
     <?php endforeach; ?>
     <tr class="total"><td colspan="5">Total Nilai Analisa Pekerjaan Terpilih</td><td class="angka"><?= number_format($totalNilaiAnalisa, 0, ',', '.') ?></td></tr>
   </table>
-</div>
+</details>
 
-<div class="panel">
-  <h2>Langkah 3 — Kebutuhan Bahan dari Pekerjaan Terpilih</h2>
+<details class="panel panel-lipat" data-lipat-id="rencana-langkah-3-kebutuhan-bahan-dari-pekerjaan-t">
+  <summary>Langkah 3 — Kebutuhan Bahan dari Pekerjaan Terpilih</summary>
+
   <form method="post" action="<?= base_url('rencana-belanja/buat-spk') ?>">
     <?= csrf_field() ?>
     <?php foreach ($vol_rencana ?? [] as $pidK => $vK): ?>
@@ -132,10 +136,11 @@
   <?php if (! empty($hasil['kebutuhan']['tak_tertaut'])): ?>
   <p class="kecil-teks" style="margin-bottom:0">Komponen bahan yang belum tertaut ke master bahan (belum bisa direncanakan belanjanya): <?php $tt = []; foreach ($hasil['kebutuhan']['tak_tertaut'] as $nama => $q) { $tt[] = esc($nama) . ' (' . number_format((float) $q, 2, ',', '.') . ')'; } echo implode(', ', $tt); ?>. Tautkan dari tab Kebutuhan Bahan pada halaman <a href="<?= base_url('gedung') ?>">Gedung</a> — panel Komponen Belum Tertaut ada di sana.</p>
   <?php endif; ?>
-</div>
+</details>
 
-<div class="panel">
-  <h2>Langkah 4 — Kebutuhan Pekerja dari Pekerjaan Terpilih</h2>
+<details class="panel panel-lipat" data-lipat-id="rencana-langkah-4-kebutuhan-pekerja-dari-pekerjaan">
+  <summary>Langkah 4 — Kebutuhan Pekerja dari Pekerjaan Terpilih</summary>
+
   <table data-paginasi="25" data-cari="Cari jenis tenaga…">
     <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Tarif / OH</th><th class="angka">Nilai Kebutuhan</th><th class="angka">Jumlah Pekerja Dibutuhkan</th></tr>
     <?php $totalUpah = 0; $totalPekerja = 0; foreach ($hasil['upah'] as $u): $totalUpah += (float) $u['nilai']; $totalPekerja += (int) $u['jumlah_pekerja']; ?>
@@ -144,5 +149,5 @@
     <tr class="total"><td colspan="3">Total Nilai Kebutuhan Upah</td><td class="angka"><?= number_format($totalUpah, 0, ',', '.') ?></td><td class="angka"><?= $totalPekerja ?> orang</td></tr>
   </table>
   <p class="kecil-teks">Jumlah pekerja dihitung dari kebutuhan OH dibagi target hari kerja (<?= (int) $hari_kerja ?> hari, diatur di Langkah 1) dan dibulatkan ke atas — itulah jumlah orang per jenis tenaga yang perlu disiapkan bila pekerjaan terpilih mau diselesaikan dalam target hari itu. Pembayaran upah dicatat per gedung di menu <a href="<?= base_url('upah') ?>">Pembayaran Upah</a> dan ikut terhitung dalam kontrol pagu.</p>
-</div>
+</details>
 <?php endif; ?>
