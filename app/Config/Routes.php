@@ -114,6 +114,13 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
 
     // Laporan & ekspor (Fase 3)
     $routes->get('laporan', 'Laporan::index');
+    $routes->get('template-laporan', 'TemplateLaporan::index', ['filter' => 'auth']);
+    $routes->post('template-laporan/unggah', 'TemplateLaporan::unggah', ['filter' => 'auth']);
+    $routes->get('template-laporan/contoh/(:segment)', 'TemplateLaporan::contoh/$1', ['filter' => 'auth']);
+    $routes->get('template-laporan/render/(:num)', 'TemplateLaporan::render/$1', ['filter' => 'auth']);
+    $routes->get('template-laporan/unduh/(:num)', 'TemplateLaporan::unduh/$1', ['filter' => 'auth']);
+    $routes->post('template-laporan/aktif/(:num)', 'TemplateLaporan::aktif/$1', ['filter' => 'auth']);
+    $routes->post('template-laporan/hapus/(:num)', 'TemplateLaporan::hapus/$1', ['filter' => 'auth']);
     $routes->get('laporan/cetak', 'Laporan::cetak');
     $routes->get('laporan/ekspor-spk', 'Laporan::eksporSpk');
     $routes->get('laporan/ekspor-material', 'Laporan::eksporMaterial');

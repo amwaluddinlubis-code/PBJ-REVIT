@@ -440,6 +440,17 @@ Menu **Bahan & Laporan → Laporan**: ringkasan belanja sekolah, rekap per gedun
 
 ![Laporan](panduan_pbj/24-laporan.png)
 
+### Template Laporan — dokumen berformat bebas dari template Excel
+
+Menu **Laporan → Template Laporan** adalah mesin laporan yang mengikuti cara kerja SPJ BOSP: format dokumen tidak dikunci aplikasi, melainkan ditentukan berkas template Excel yang Bapak/Ibu tata sendiri.
+
+1. **Unduh template contoh** untuk jenis yang diinginkan — Dokumen SPK (konteks satu SPK), Laporan Gedung (satu gedung), atau Laporan Sekolah (rekap). Berkas contoh berisi semua penanda yang tersedia.
+2. **Tata ulang di Excel** sebebasnya (kop, tabel, tanda tangan): yang penting penanda seperti `{{NAMA_SEKOLAH}}`, `{{TOTAL_SPK_RP}}`, `{{TANGGAL_SPK_PANJANG}}` ejaannya tidak diubah. Untuk tabel rincian, tulis penanda baris (`{{RINCIAN_NAMA}}`, `{{RINCIAN_QTY}}`, dst.) pada **satu baris contoh** — saat render, baris itu digandakan mengikuti jumlah data.
+3. **Unggah** berkasnya di halaman Template Laporan. Aplikasi memindai dan mencatat penanda yang terdeteksi.
+4. **Render** dari data nyata: pilih SPK/gedung pada baris template, atau langsung dari tombol *Unduh dari Template* di Detail SPK dan halaman Gedung. Hasilnya berkas .xlsx siap cetak.
+
+Aturan mesinnya: nilai uang tersedia dua bentuk — angka polos (mis. `{{TOTAL_SPK}}` → 8750000, bisa dijumlah Excel) dan terformat (`{{TOTAL_SPK_RP}}` → Rp 8.750.000). Bila ada penanda yang tidak dikenal atau tidak ada nilainya, **render dibatalkan** dan penandanya disebutkan — perbaiki ejaan penanda pada template terhadap katalog di halaman yang sama (katalog menampilkan contoh nilai dari data nyata). Cetakan HTML bawaan aplikasi tetap tersedia seperti biasa; template adalah jalur tambahan untuk format khusus (mis. format dinas kabupaten).
+
 ## 17. LPJ — sekolah dan per gedung
 
 Menu **Bahan & Laporan → LPJ**: pertanggungjawaban per gedung (anggaran BOQ, realisasi belanja bahan + upah, persen fisik, sisa) dan rekap gabungan satu sekolah. LPJ dapat dibuka per gedung maupun **dicetak** untuk sekolah dan per gedung.

@@ -81,7 +81,10 @@
   <?php else: ?>
     <p class="kecil-teks" style="margin-top:0">SPK ini sudah mempunyai BAP/BAST tetapi belum ada invoice — <a href="<?= base_url('invoice/baru?spk=' . $s['id']) ?>">buat invoice-nya sekarang</a> (formulir Register Invoice langsung memilih SPK ini); BAP/BAST dikelola dari halaman <a href="<?= base_url('dokumen') ?>">Dokumen</a>.</p>
   <?php endif; ?>
-  <p style="margin-bottom:0"><a class="tombol abu" href="<?= base_url('dokumen/cetak-spj/' . $s['id']) ?>" target="_blank">Cetak SPJ Lengkap (SPK + BAP + BAST + Invoice)</a></p>
+  <p style="margin-bottom:0"><a class="tombol abu" href="<?= base_url('dokumen/cetak-spj/' . $s['id']) ?>" target="_blank">Cetak SPJ Lengkap (SPK + BAP + BAST + Invoice)</a>
+  <?php foreach ($template_spk ?? [] as $tpl): ?>
+    <a class="tombol abu" href="<?= base_url('template-laporan/render/' . $tpl['id'] . '?spk=' . $s['id']) ?>" title="Render SPK ini dari Template Laporan (.xlsx)">Unduh dari Template: <?= esc($tpl['nama']) ?></a>
+  <?php endforeach; ?></p>
 </div>
 <div class="panel">
   <h2>Kebutuhan Tenaga Kerja</h2>

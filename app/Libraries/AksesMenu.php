@@ -63,6 +63,7 @@ class AksesMenu
             'Laporan' => [
                 'lpj'     => 'LPJ & Realisasi (termasuk RAB Gabungan)',
                 'laporan' => 'Laporan & Ekspor',
+                'template-laporan' => 'Template Laporan',
             ],
             'Pengaturan' => [
                 'pengaturan' => 'Identitas & Pengaturan',

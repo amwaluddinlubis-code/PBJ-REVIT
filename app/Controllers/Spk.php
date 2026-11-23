@@ -191,8 +191,14 @@ class Spk extends BaseController
         } catch (\Throwable $e) {
             // tabel spk_tenaga belum dimigrasi
         }
+        // Template Laporan aktif untuk konteks SPK (tombol render di panel).
+        try {
+            $templateSpk = $db->table('laporan_template')->where(['sekolah_id' => $this->sid(), 'jenis' => 'spk', 'aktif' => 1, 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray();
+        } catch (\Throwable $e) {
+            $templateSpk = [];
+        }
         return $this->tampil('spk/detail', [
-            's' => $s, 'detail' => $detail, 'gabungan' => $gabungan, 'bahan' => $bahan,
+            's' => $s, 'detail' => $detail, 'gabungan' => $gabungan, 'template_spk' => $templateSpk, 'bahan' => $bahan,
             'nilai_paket' => $nilaiPaket,
             'ketentuan' => $this->ketentuanPbj($nilaiPaket),
             'pembanding' => $pembanding,

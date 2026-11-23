@@ -224,6 +224,12 @@ class Gedung extends BaseController
                 [$g['id']]
             )->getResultArray();
         }
+        // Template Laporan aktif untuk konteks gedung (tombol render di header).
+        try {
+            $data['template_gedung'] = $db->table('laporan_template')->where(['sekolah_id' => $this->sid(), 'jenis' => 'gedung', 'aktif' => 1, 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray();
+        } catch (\Throwable $e) {
+            $data['template_gedung'] = [];
+        }
         return $this->tampil('gedung/detail', $data, 'Gedung: ' . $g['nama']);
     }
 

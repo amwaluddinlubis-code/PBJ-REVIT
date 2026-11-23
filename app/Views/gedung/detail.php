@@ -8,6 +8,9 @@ $tabAktif = $tab ?? 'boq';
   <span class="lencana hijau">Realisasi <b>&nbsp;<?= $rp($nilai_realisasi) ?> (<?= number_format($persen_fisik, 1, ',', '.') ?>%)</b></span>
   <?php if (! empty($g['sumber_sheet'])): ?><span class="lencana abu">Sumber sheet: <?= esc($g['sumber_sheet']) ?></span><?php endif; ?>
   <a class="tombol kecil" style="float:right" href="<?= base_url('rencana-belanja?gedung=' . $g['id']) ?>">Buat Rencana Belanja Gedung Ini</a>
+  <?php foreach ($template_gedung ?? [] as $tpl): ?>
+    <a class="tombol kecil abu" style="float:right;margin-right:6px" href="<?= base_url('template-laporan/render/' . $tpl['id'] . '?gedung=' . $g['id']) ?>" title="Render gedung ini dari Template Laporan">Template: <?= esc($tpl['nama']) ?></a>
+  <?php endforeach; ?>
 </div>
 <div class="tab">
   <a href="<?= base_url('gedung/' . $g['id'] . '/boq') ?>"<?= $tabAktif === 'boq' ? ' class="aktif"' : '' ?>>BOQ Pekerjaan</a>
