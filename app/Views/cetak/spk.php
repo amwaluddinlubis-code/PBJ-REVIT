@@ -25,7 +25,7 @@
   <?php endforeach; ?>
   <tr><th colspan="5" style="text-align:right">Nilai Kontrak</th><th class="angka"><?= $rp($total) ?></th></tr>
 </table>
-<p>Nilai kontrak sebesar <strong><?= $rp($total) ?></strong> (terbilang: <em><?= esc(trim($terbilang)) ?> Rupiah</em>). Jangka waktu pelaksanaan: <?= esc($s['tgl_mulai'] ?? '—') ?> s.d. <?= esc($s['tgl_selesai'] ?? '—') ?>. Pembayaran dilakukan setelah barang diterima dan dituangkan dalam Berita Acara Serah Terima.</p>
+<p>Nilai kontrak sebesar <strong><?= $rp($total) ?></strong> (terbilang: <em><?= esc(trim($terbilang)) ?> Rupiah</em>). Jangka waktu pelaksanaan: <?= esc(tgl($s['tgl_mulai'] ?? null)) ?> s.d. <?= esc(tgl($s['tgl_selesai'] ?? null)) ?>. Pembayaran dilakukan setelah barang diterima dan dituangkan dalam Berita Acara Serah Terima.</p>
 <div class="ttd">
   <div class="kol tengah">PIHAK KEDUA<br><?= esc($s['penyedia'] ?? '') ?><div class="ruang"></div><strong><?= esc($s['ttd_penyedia'] ?? '') ?></strong></div>
   <div class="kol tengah">PIHAK KESATU<br>Ketua Panitia P2SP<div class="ruang"></div><strong><?= esc($idn['ketua_nama'] ?? '') ?></strong></div>

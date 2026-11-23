@@ -56,7 +56,7 @@
     <?php foreach ($daftar as $d): ?>
     <tr>
       <td><input type="checkbox" data-pilih value="<?= (int) $d['id'] ?>" x-model="terpilih"></td>
-      <td><?= esc($d['tanggal']) ?></td>
+      <td><?= esc(tgl($d['tanggal'])) ?></td>
       <td><?= $d['tahap'] ? 'Tahap ' . (int) $d['tahap'] : '—' ?></td>
       <td class="angka"><?= $rp($d['jumlah']) ?></td>
       <td><?= esc($d['keterangan'] ?? '') ?></td>

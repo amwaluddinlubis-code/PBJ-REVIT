@@ -69,7 +69,7 @@
     <?php foreach ($setor as $s): ?>
     <tr>
       <td><input type="checkbox" data-pilih value="<?= (int) $s['id'] ?>" x-model="terpilih"></td>
-      <td><?= esc($s['tanggal_setor']) ?></td>
+      <td><?= esc(tgl($s['tanggal_setor'])) ?></td>
       <td><?= esc($label[$s['jenis']] ?? $s['jenis']) ?></td>
       <td><?= esc($s['masa'] ?? '—') ?></td>
       <td class="angka"><?= $rp($s['jumlah']) ?></td>

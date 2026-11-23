@@ -13,7 +13,7 @@
   <tr><td style="width:170px">Nama</td><td>: <strong><?= esc($idn['pelaksana_nama'] ?? '') ?></strong></td></tr>
   <tr><td>Jabatan</td><td>: Kepala Pelaksana P2SP <?= esc($idn['nama_sekolah'] ?? '') ?> — selanjutnya disebut <strong>PIHAK KEDUA</strong></td></tr>
 </table>
-<p>PIHAK KESATU menyerahkan kepada PIHAK KEDUA, dan PIHAK KEDUA menerima dari PIHAK KESATU, barang berdasarkan Surat Perintah Kerja Nomor <?= esc($nomorSpk) ?> tanggal <?= esc($s['tanggal'] ?? '—') ?> sebagai berikut:</p>
+<p>PIHAK KESATU menyerahkan kepada PIHAK KEDUA, dan PIHAK KEDUA menerima dari PIHAK KESATU, barang berdasarkan Surat Perintah Kerja Nomor <?= esc($nomorSpk) ?> tanggal <?= esc(tgl($s['tanggal'] ?? null)) ?> sebagai berikut:</p>
 <table class="baris">
   <tr><th>No</th><th>Nama Barang</th><th class="angka">Jumlah</th><th>Satuan</th></tr>
   <?php $no = 1; foreach ($items as $it): ?>

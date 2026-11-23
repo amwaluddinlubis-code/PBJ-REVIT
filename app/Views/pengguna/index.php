@@ -34,7 +34,7 @@
       <td><b><?= esc($u['username']) ?></b><?= (int) $u['id'] === $saya ? ' <span class="lencana biru">Anda</span>' : '' ?></td>
       <td><?= esc($u['nama']) ?></td>
       <td><span class="lencana <?= $u['peran'] === 'admin' ? 'biru' : 'abu' ?>"><?= esc(ucfirst($u['peran'])) ?></span></td>
-      <td><?= esc(substr((string) ($u['created_at'] ?? ''), 0, 10)) ?></td>
+      <td><?= esc(tgl($u['created_at'] ?? null)) ?></td>
       <td style="white-space:nowrap">
         <button type="button" class="kecil" onclick="isiUbah(<?= (int) $u['id'] ?>, '<?= esc($u['username'], 'attr') ?>', '<?= esc($u['nama'], 'js') ?>', '<?= esc($u['peran'], 'js') ?>')">Ubah</button>
         <?php if ((int) $u['id'] !== $saya): ?>

@@ -23,7 +23,7 @@
     <tr><td colspan="2"><b>Saldo awal bulan</b></td><td></td><td></td><td class="angka"><b><?= $rp($saldo_awal) ?></b></td></tr>
     <?php foreach ($baris as $e): ?>
     <tr>
-      <td><?= esc($e['tanggal'] ?? '—') ?></td>
+      <td><?= esc(tgl($e['tanggal'] ?? null)) ?></td>
       <td><?= esc($e['uraian']) ?> <span class="kecil-teks">(<?= $e['sumber'] === 'manual' ? 'manual' : ($e['sumber'] === 'invoice' ? 'jurnal pembayaran' : ($e['sumber'] === 'upah' ? 'upah' : 'bukti setor')) ?>)</span></td>
       <td class="angka"><?= $e['masuk'] > 0 ? $rp($e['masuk']) : '—' ?></td>
       <td class="angka"><?= $e['keluar'] > 0 ? $rp($e['keluar']) : '—' ?></td>
@@ -86,7 +86,7 @@
     <?php foreach ($manual as $m): ?>
     <tr>
       <td><input type="checkbox" data-pilih value="<?= (int) $m['id'] ?>" x-model="terpilih"></td>
-      <td><?= esc($m['tanggal']) ?></td>
+      <td><?= esc(tgl($m['tanggal'])) ?></td>
       <td><?= esc($m['uraian']) ?></td>
       <td><?= esc($m['kategori']) ?><?= $m['tahap'] ? ' · tahap ' . (int) $m['tahap'] : '' ?></td>
       <td><?= esc($m['kanal']) ?> · <?= esc($m['jenis']) ?></td>

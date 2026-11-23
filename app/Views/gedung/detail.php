@@ -261,7 +261,7 @@ $tabAktif = $tab ?? 'boq';
     <tr><th>Tanggal</th><th>Pekerjaan</th><th class="angka">Volume</th><th>Keterangan</th><th>Aksi</th></tr>
     <?php foreach ($riwayat as $r): ?>
     <tr>
-      <td><?= esc($r['tanggal']) ?></td>
+      <td><?= esc(tgl($r['tanggal'])) ?></td>
       <td><?= esc($r['nama_pekerjaan']) ?></td>
       <td class="angka"><?= rtrim(rtrim(number_format((float) $r['volume'], 3, ',', '.'), '0'), ',') ?></td>
       <td><?= esc($r['keterangan'] ?? '') ?></td>

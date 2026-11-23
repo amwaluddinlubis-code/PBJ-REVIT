@@ -40,7 +40,7 @@ class Impor extends BaseController
 
         $berkasFolder = [];
         foreach (glob($this->folderImpor() . '/*.xlsx') ?: [] as $f) {
-            $berkasFolder[] = ['nama' => basename($f), 'ukuran' => filesize($f), 'tanggal' => date('Y-m-d H:i', filemtime($f))];
+            $berkasFolder[] = ['nama' => basename($f), 'ukuran' => filesize($f), 'tanggal' => date('d/m/Y H:i', filemtime($f))];
         }
         usort($berkasFolder, static fn ($a, $b) => strcmp($b['tanggal'], $a['tanggal']));
 
@@ -48,7 +48,7 @@ class Impor extends BaseController
         $unggahan = glob($this->folderUnggahan() . '/perencana-*.xlsx') ?: [];
         if ($unggahan !== []) {
             usort($unggahan, static fn ($a, $b) => filemtime($b) <=> filemtime($a));
-            $berkasTerakhir = ['nama' => basename($unggahan[0]), 'tanggal' => date('Y-m-d H:i', filemtime($unggahan[0]))];
+            $berkasTerakhir = ['nama' => basename($unggahan[0]), 'tanggal' => date('d/m/Y H:i', filemtime($unggahan[0]))];
         }
 
         [$takTertaut, $semuaBahan, $jumlahMassal] = $this->dataTakTertaut();

@@ -20,7 +20,7 @@
     <td><input type="checkbox" data-pilih value="<?= (int) $i['id'] ?>" x-model="terpilih"></td>
     <td><?= (int) $i['nomor_urut'] ?></td>
     <td><?= esc($i['no_toko'] ?? '—') ?></td>
-    <td><?= esc($i['tanggal'] ?? '—') ?></td>
+    <td><?= esc(tgl($i['tanggal'] ?? null)) ?></td>
     <td><a href="<?= base_url('spk/detail/' . $i['spk_id']) ?>"><?= (int) $i['spk_nomor'] ?></a></td>
     <td><?= esc($i['penyedia'] ?? '—') ?></td>
     <td class="angka"><?= $rp($i['nilai']) ?></td>

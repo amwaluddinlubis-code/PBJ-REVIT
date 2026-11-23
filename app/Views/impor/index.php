@@ -156,7 +156,7 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
 <div class="panel">
   <h2>Riwayat &amp; Hasil Verifikasi Impor</h2>
   <?php foreach ($log as $l): ?>
-    <p style="margin:6px 0"><b><?= esc($l['berkas']) ?></b> · <?= esc($l['created_at'] ?? '') ?></p>
+    <p style="margin:6px 0"><b><?= esc($l['berkas']) ?></b> · <?= esc(tglWaktu($l['created_at'] ?? null, '')) ?></p>
     <?php if (! empty($l['ringkasan'])): $r = $l['ringkasan']; ?>
     <table>
       <tr><th>Gedung (sheet)</th><th class="angka">Pekerjaan</th><th class="angka">Total Terhitung</th><th class="angka">GRAND TOTAL Sheet</th><th class="angka">Selisih</th></tr>

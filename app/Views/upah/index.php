@@ -55,7 +55,7 @@
     <?php foreach ($daftar as $u): ?>
     <tr>
       <td><input type="checkbox" data-pilih value="<?= (int) $u['id'] ?>" x-model="terpilih"></td>
-      <td><?= esc($u['tanggal']) ?></td>
+      <td><?= esc(tgl($u['tanggal'])) ?></td>
       <td><?= esc($u['nama_gedung'] ?? '—') ?><?= $u['nama_pekerjaan'] ? '<br><span class="kecil-teks">' . esc($u['nama_pekerjaan']) . '</span>' : '' ?></td>
       <td><?= esc($u['jenis_tenaga']) ?></td>
       <td><?= esc($u['penerima'] ?? '—') ?></td>

@@ -43,7 +43,7 @@
     <figure style="margin:0;border:1px solid var(--ta-garis,#ddd);border-radius:8px;overflow:hidden" data-teks="<?= esc(mb_strtolower($f['tahap'] . ' ' . ($f['gedung_nama'] ?? '') . ' ' . ($f['keterangan'] ?? '') . ' ' . $f['tanggal'])) ?>" x-show="kata === '' || $el.dataset.teks.includes(kata.toLowerCase())">
       <a href="<?= base_url($f['berkas']) ?>" target="_blank"><img src="<?= base_url($f['berkas']) ?>" alt="<?= esc($f['keterangan'] ?? 'Foto progres') ?>" style="width:100%;height:150px;object-fit:cover;display:block"></a>
       <figcaption style="padding:8px 10px">
-        <div><b><?= esc(ucfirst($f['tahap'])) ?></b> · <?= esc($f['tanggal']) ?></div>
+        <div><b><?= esc(ucfirst($f['tahap'])) ?></b> · <?= esc(tgl($f['tanggal'])) ?></div>
         <div class="kecil-teks"><?= esc($f['gedung_nama'] ?? 'Umum') ?><?= $f['keterangan'] ? ' — ' . esc($f['keterangan']) : '' ?></div>
         <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
           <label class="kecil-teks"><input type="checkbox" data-pilih value="<?= (int) $f['id'] ?>" x-model="terpilih"> Pilih</label>

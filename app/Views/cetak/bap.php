@@ -9,7 +9,7 @@
   <tr><td style="width:30px"><?= $no++ ?>.</td><td><?= esc($idn[$k]) ?></td><td>Anggota Pemeriksa</td></tr>
   <?php endif; endforeach; ?>
 </table>
-<p>telah memeriksa barang yang diserahkan oleh <strong><?= esc($s['penyedia'] ?? '') ?></strong> berdasarkan Surat Perintah Kerja Nomor <?= esc($nomorSpk) ?> tanggal <?= esc($s['tanggal'] ?? '—') ?>, dengan hasil sebagai berikut:</p>
+<p>telah memeriksa barang yang diserahkan oleh <strong><?= esc($s['penyedia'] ?? '') ?></strong> berdasarkan Surat Perintah Kerja Nomor <?= esc($nomorSpk) ?> tanggal <?= esc(tgl($s['tanggal'] ?? null)) ?>, dengan hasil sebagai berikut:</p>
 <table class="baris">
   <tr><th>No</th><th>Nama Barang</th><th class="angka">Jumlah</th><th>Satuan</th><th>Kondisi</th><th>Keterangan</th></tr>
   <?php $no = 1; foreach ($items as $it): ?>

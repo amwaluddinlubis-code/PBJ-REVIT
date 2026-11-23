@@ -7,8 +7,8 @@
 <table>
   <tr><td style="width:170px">Dari (Penyedia)</td><td>: <strong><?= esc($i['penyedia'] ?? '—') ?></strong><?= $i['penyedia_alamat'] ? ', ' . esc($i['penyedia_alamat']) : '' ?></td></tr>
   <tr><td>Kepada</td><td>: Panitia P2SP <?= esc($idn['nama_sekolah'] ?? '') ?></td></tr>
-  <tr><td>Dasar</td><td>: SPK Nomor <?= esc($nomorSpk) ?> tanggal <?= esc($i['spk_tanggal'] ?? '—') ?> — <?= esc($i['paket'] ?? '') ?></td></tr>
-  <tr><td>Tanggal Invoice</td><td>: <?= esc($i['tanggal'] ?? '—') ?></td></tr>
+  <tr><td>Dasar</td><td>: SPK Nomor <?= esc($nomorSpk) ?> tanggal <?= esc(tgl($i['spk_tanggal'] ?? null)) ?> — <?= esc($i['paket'] ?? '') ?></td></tr>
+  <tr><td>Tanggal Invoice</td><td>: <?= esc(tgl($i['tanggal'] ?? null)) ?></td></tr>
 </table>
 <table class="baris">
   <tr><th>No</th><th>Nama Bahan</th><th class="angka">Qty</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah</th></tr>

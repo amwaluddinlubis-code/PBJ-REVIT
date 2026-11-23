@@ -31,7 +31,7 @@
     <?php foreach ($baris as $r): ?>
     <tr>
       <td><input type="checkbox" data-pilih value="<?= (int) $r['id'] ?>" x-model="terpilih"></td>
-      <td><?= esc($r['tanggal'] ?? '—') ?></td><td><?= esc($r['no_bpb'] ?? '') ?></td>
+      <td><?= esc(tgl($r['tanggal'] ?? null)) ?></td><td><?= esc($r['no_bpb'] ?? '') ?></td>
       <td><?= esc($r['kode']) ?> — <?= esc($r['nama']) ?> (<?= esc($r['satuan'] ?? '') ?>)</td>
       <td class="angka"><?= $fmt($r['masuk']) ?></td><td class="angka"><?= $fmt($r['keluar']) ?></td>
       <td class="angka"><?= $fmt($r['sisa']) ?></td><td><?= esc($r['keterangan'] ?? '') ?></td>

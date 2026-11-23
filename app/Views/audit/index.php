@@ -11,7 +11,7 @@
       <tbody>
       <?php foreach ($daftar as $a): ?>
         <tr>
-          <td><?= esc($a['created_at']) ?></td>
+          <td><?= esc(tglWaktu($a['created_at'])) ?></td>
           <td><?= esc($a['username'] ?? '-') ?></td>
           <td><?= esc($a['entitas']) ?><?= $a['entitas_id'] ? ' #' . (int) $a['entitas_id'] : '' ?></td>
           <td><?= esc($a['aksi']) ?></td>

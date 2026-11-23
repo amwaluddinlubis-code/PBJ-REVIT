@@ -10,7 +10,7 @@
   <?php $no = 0; foreach ($rows as $u): $no++; ?>
   <tr>
     <td><?= $no ?></td>
-    <td><?= esc($u['tanggal']) ?></td>
+    <td><?= esc(tgl($u['tanggal'])) ?></td>
     <td><?= esc($u['jenis_tenaga']) ?></td>
     <td><?= esc($u['penerima'] ?? '') ?></td>
     <td class="angka"><?= $angka($u['orang_hari']) ?></td>

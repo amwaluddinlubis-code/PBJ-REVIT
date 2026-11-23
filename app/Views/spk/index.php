@@ -18,10 +18,10 @@
   <tr>
     <td><input type="checkbox" data-pilih value="<?= (int) $s['id'] ?>" x-model="terpilih"></td>
     <td><a href="<?= base_url('spk/detail/' . $s['id']) ?>"><?= (int) $s['nomor'] ?></a></td>
-    <td><?= esc($s['tanggal'] ?? '—') ?></td>
+    <td><?= esc(tgl($s['tanggal'] ?? null)) ?></td>
     <td><?= esc($s['penyedia'] ?? '—') ?></td>
     <td><?= esc($s['paket'] ?? '—') ?></td>
-    <td><?= esc($s['tgl_mulai'] ?? '—') ?> s.d. <?= esc($s['tgl_selesai'] ?? '—') ?></td>
+    <td><?= esc(tgl($s['tgl_mulai'] ?? null)) ?> s.d. <?= esc(tgl($s['tgl_selesai'] ?? null)) ?></td>
     <td class="angka"><?= (int) $s['jumlah'] ?></td>
     <td class="angka"><?= $rp($s['nilai']) ?></td>
     <td><?= esc($s['status']) ?></td>

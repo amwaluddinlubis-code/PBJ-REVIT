@@ -338,6 +338,40 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
     if (i > 0) { zoom = langkah[i - 1]; terapkan(); }
   });
   terapkan();
+
+  // Semua isian tanggal tampil dd/mm/yyyy untuk pengguna, sedangkan nilai
+  // yang dikirim & disimpan tetap format baku yyyy-mm-dd: input type=date
+  // diganti teks dd/mm/yyyy, lalu dikonversi balik saat formulir dikirim.
+  const isoKeDmy = function (v) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+    return m ? m[3] + '/' + m[2] + '/' + m[1] : '';
+  };
+  const dmyKeIso = function (v) {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec((v || '').trim());
+    if (!m) return '';
+    const d = new Date(+m[3], +m[2] - 1, +m[1]);
+    if (d.getFullYear() !== +m[3] || d.getMonth() !== +m[2] - 1 || d.getDate() !== +m[1]) return '';
+    return m[3] + '-' + m[2] + '-' + m[1];
+  };
+  document.querySelectorAll('input[type="date"]').forEach(function (inp) {
+    const awal = inp.value;
+    inp.type = 'text';
+    inp.classList.add('isian-tanggal');
+    inp.setAttribute('inputmode', 'numeric');
+    inp.setAttribute('placeholder', 'dd/mm/yyyy');
+    inp.setAttribute('autocomplete', 'off');
+    inp.value = isoKeDmy(awal);
+    inp.addEventListener('input', function () {
+      const a = inp.value.replace(/\D/g, '').slice(0, 8);
+      inp.value = a.length > 4 ? a.slice(0, 2) + '/' + a.slice(2, 4) + '/' + a.slice(4)
+        : a.length > 2 ? a.slice(0, 2) + '/' + a.slice(2) : a;
+    });
+  });
+  document.addEventListener('submit', function (e) {
+    e.target.querySelectorAll('input.isian-tanggal').forEach(function (inp) {
+      if (!inp.readOnly && !inp.disabled) inp.value = dmyKeIso(inp.value);
+    });
+  }, true);
 })();
 </script>
 <div id="modal-konfirmasi" class="mk-lapik" hidden>

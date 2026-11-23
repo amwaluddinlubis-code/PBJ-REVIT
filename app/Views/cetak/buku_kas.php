@@ -9,7 +9,7 @@
   <tr><td></td><td><strong>Saldo awal bulan</strong></td><td></td><td></td><td class="angka"><strong><?= $rp($saldo_awal) ?></strong></td></tr>
   <?php foreach ($baris as $e): ?>
   <tr>
-    <td><?= esc($e['tanggal'] ?? '—') ?></td>
+    <td><?= esc(tgl($e['tanggal'] ?? null)) ?></td>
     <td><?= esc($e['uraian']) ?></td>
     <td class="angka"><?= $e['masuk'] > 0 ? $rp($e['masuk']) : '—' ?></td>
     <td class="angka"><?= $e['keluar'] > 0 ? $rp($e['keluar']) : '—' ?></td>

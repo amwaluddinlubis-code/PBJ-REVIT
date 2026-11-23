@@ -22,7 +22,7 @@
     <tr><th>Tanggal</th><th>Invoice</th><th>SPK</th><th class="angka">Nilai Tagihan</th><th class="angka">PPN Dipungut</th><th class="angka">DPP</th><th class="angka">PPh 22 (1,5% dari DPP)</th><th class="angka">Nilai Dibayar</th><th>Keterangan</th><th></th></tr>
     <?php foreach ($baris as $r): $tot += (float) $r['dibayar']; ?>
     <tr>
-      <td><?= esc($r['tanggal'] ?? '— (belum diisi)') ?></td>
+      <td><?= esc(tgl($r['tanggal'] ?? null, '— (belum diisi)')) ?></td>
       <td><?= (int) $r['nomor_urut'] ?> (<?= esc($r['no_toko'] ?? '') ?>)</td>
       <td><?= (int) $r['spk_nomor'] ?></td>
       <td class="angka"><?= $rp($r['nilai']) ?><?php if ((float) $r['nilai'] >= 5000000): ?><br><span class="kecil-teks">kuitansi ≥ Rp5 jt: materai Rp10.000</span><?php endif; ?></td>

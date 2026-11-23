@@ -8,7 +8,7 @@
   <tr><td>Uang sebesar</td><td>: <strong><?= $rp($k['jumlah']) ?></strong></td></tr>
   <tr><td>Terbilang</td><td>: <em><?= esc(trim($terbilang)) ?> Rupiah</em></td></tr>
   <tr><td>Untuk pembayaran</td><td>: Tahap <?= (int) $k['tahap'] === 1 ? 'I (Pertama)' : 'II (Kedua)' ?> Bantuan Pemerintah Program Revitalisasi Satuan Pendidikan Sekolah Menengah Pertama (SMP) Tahun <?= esc($idn['tahun_anggaran'] ?? '2026') ?></td></tr>
-  <tr><td>Tanggal diterima</td><td>: <?= esc($k['tanggal']) ?></td></tr>
+  <tr><td>Tanggal diterima</td><td>: <?= esc(tgl($k['tanggal'])) ?></td></tr>
   <?php if (! empty($k['keterangan'])): ?><tr><td>Keterangan</td><td>: <?= esc($k['keterangan']) ?></td></tr><?php endif; ?>
 </table>
 <div class="ttd">

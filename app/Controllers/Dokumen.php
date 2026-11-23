@@ -14,7 +14,7 @@ class Dokumen extends BaseController
         $bulan = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         return $hari[date('l', $ts)] . ', tanggal ' . $this->terbilang((int) date('j', $ts)) . ' bulan '
             . $bulan[(int) date('n', $ts)] . ' tahun ' . $this->terbilang((int) date('Y', $ts))
-            . ' (' . date('d-m-Y', $ts) . ')';
+            . ' (' . date('d/m/Y', $ts) . ')';
     }
 
     private function identitas(): array

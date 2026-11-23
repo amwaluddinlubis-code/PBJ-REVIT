@@ -9,7 +9,7 @@
       <td><?= esc($s['paket'] ?? '—') ?><br><span class="kecil-teks"><?= esc($s['penyedia'] ?? '—') ?></span></td>
       <td>
         <?php foreach ($bap[$s['id']] ?? [] as $b): ?>
-          <div>BAP urut <?= (int) $b['nomor_urut'] ?> · <?= esc($b['tanggal'] ?? 'tgl?') ?>
+          <div>BAP urut <?= (int) $b['nomor_urut'] ?> · <?= esc(tgl($b['tanggal'] ?? null, 'tgl?')) ?>
             <a href="<?= base_url('dokumen/bap-ubah/' . $b['id']) ?>">Ubah</a> ·
             <a href="<?= base_url('dokumen/cetak-bap/' . $b['id']) ?>" target="_blank">Cetak</a></div>
         <?php endforeach; ?>
@@ -17,7 +17,7 @@
       </td>
       <td>
         <?php foreach ($bast[$s['id']] ?? [] as $b): ?>
-          <div>BAST urut <?= (int) $b['nomor_urut'] ?> · <?= esc($b['tanggal'] ?? 'tgl?') ?>
+          <div>BAST urut <?= (int) $b['nomor_urut'] ?> · <?= esc(tgl($b['tanggal'] ?? null, 'tgl?')) ?>
             <a href="<?= base_url('dokumen/bast-ubah/' . $b['id']) ?>">Ubah</a> ·
             <a href="<?= base_url('dokumen/cetak-bast/' . $b['id']) ?>" target="_blank">Cetak</a></div>
         <?php endforeach; ?>

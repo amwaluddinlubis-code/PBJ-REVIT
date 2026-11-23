@@ -90,7 +90,7 @@
     <?php foreach ($perSpk as $s): ?>
     <tr>
       <td><a href="<?= base_url('spk') ?>"><?= (int) $s['nomor'] ?></a></td>
-      <td><?= esc($s['tanggal'] ?? '—') ?></td>
+      <td><?= esc(tgl($s['tanggal'] ?? null)) ?></td>
       <td><?= esc($s['penyedia'] ?? '—') ?></td>
       <td><?= esc($s['paket'] ?? '—') ?></td>
       <td class="angka"><?= (int) $s['jumlah'] ?></td>

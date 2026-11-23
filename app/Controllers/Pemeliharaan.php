@@ -88,7 +88,7 @@ class Pemeliharaan extends BaseController
             $backups[] = [
                 'nama'    => basename($f),
                 'ukuran'  => $this->formatUkuran((float) filesize($f)),
-                'tanggal' => date('d-m-Y H:i', filemtime($f)),
+                'tanggal' => date('d/m/Y H:i', filemtime($f)),
                 'mtime'   => filemtime($f),
             ];
         }

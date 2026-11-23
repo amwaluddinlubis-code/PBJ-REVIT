@@ -102,7 +102,7 @@ class Laporan extends BaseController
         $this->gayaJudul($sh, ['Nomor SPK', 'Tanggal', 'Paket', 'Penyedia', 'Status', 'Jumlah Baris', 'Nilai (Rp)'], [12, 14, 42, 26, 12, 14, 18]);
         $r = 2;
         foreach ($baris as $b) {
-            $sh->fromArray([(int) $b['nomor'], $b['tanggal'], $b['paket'], $b['penyedia'], $b['status'], (int) $b['jumlah'], (float) $b['nilai']], null, 'A' . $r++);
+            $sh->fromArray([(int) $b['nomor'], tgl($b['tanggal'] ?? null, ''), $b['paket'], $b['penyedia'], $b['status'], (int) $b['jumlah'], (float) $b['nilai']], null, 'A' . $r++);
         }
         $sh->setCellValue('F' . $r, 'TOTAL');
         $sh->setCellValue('G' . $r, array_sum(array_column($baris, 'nilai')));

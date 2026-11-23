@@ -63,7 +63,7 @@
     <?php foreach ($revisi as $r): ?>
     <tr>
       <td><input type="checkbox" data-pilih value="<?= (int) $r['id'] ?>" x-model="terpilih"></td>
-      <td><?= esc($r['tanggal']) ?></td>
+      <td><?= esc(tgl($r['tanggal'])) ?></td>
       <td><?= esc($r['gedung_nama']) ?><?= $r['pekerjaan_nama'] ? '<br><span class="kecil-teks">' . esc($r['pekerjaan_nama']) . '</span>' : '' ?><?= ! empty($r['nama_baru']) ? '<br><span class="kecil-teks">→ ' . esc($r['nama_baru']) . '</span>' : '' ?></td>
       <td><?= esc($labelJenis[$r['jenis'] ?? 'catatan'] ?? 'Catatan') ?><br>
         <?php if (($r['status'] ?? 'draft') === 'disahkan'): ?><span class="lencana" style="background:var(--ina-green-100);color:var(--ina-green-700)">Disahkan</span><?php else: ?><span class="lencana" style="background:var(--ina-yellow-100, #fef9c3);color:var(--ina-yellow-700, #854d0e)">Draft</span><?php endif; ?>
