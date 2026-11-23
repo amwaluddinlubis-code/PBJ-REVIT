@@ -25,7 +25,7 @@
     <td class="angka"><?= (int) $s['jumlah'] ?></td>
     <td class="angka"><?= $rp($s['nilai']) ?></td>
     <td><?= esc($s['status']) ?></td>
-    <td><a href="<?= base_url('spk/ubah/' . $s['id']) ?>">Ubah</a> · <a href="<?= base_url('spk/detail/' . $s['id']) ?>">Detail</a></td>
+    <td><a class="tombol kecil abu" href="<?= base_url('spk/ubah/' . $s['id']) ?>">Ubah</a> <a class="tombol kecil" href="<?= base_url('spk/detail/' . $s['id']) ?>">Detail</a></td>
   </tr>
   <?php endforeach; ?>
 </table>
