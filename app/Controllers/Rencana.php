@@ -13,30 +13,151 @@ class Rencana extends BaseController
     {
         $db = $this->db();
         $gedungFilter = (int) ($this->request->getGet('gedung') ?? 0);
-        $kb = $gedungFilter > 0 && $this->ambilGedung($gedungFilter) !== null
-            ? $this->kebutuhanBahan($gedungFilter)
-            : $this->kebutuhanBahanSekolah();
+        if ($gedungFilter > 0 && $this->ambilGedung($gedungFilter) === null) {
+            $gedungFilter = 0;
+        }
+        $hari = max(1, (int) ($this->request->getGet('hari') ?? 6));
+
+        // Langkah 1: daftar pekerjaan (per gedung atau gabungan semua gedung).
+        $realisasi = [];
+        foreach ($db->query(
+            'SELECT r.pekerjaan_id, SUM(r.volume) v FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id
+             JOIN gedung g ON g.id = p.gedung_id WHERE g.sekolah_id = ? AND r.is_deleted = 0 GROUP BY r.pekerjaan_id',
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $realisasi[(int) $r['pekerjaan_id']] = (float) $r['v'];
+        }
+        $sqlPek = 'SELECT p.id, p.nama, p.bab, p.satuan, COALESCE(p.volume_revisi, p.volume) AS volume_berjalan,
+                          g.id AS gedung_id, g.nama AS gedung_nama,
+                          COALESCE(a.kode, p.kode_analisa) AS kode_analisa, a.nama AS nama_analisa
+                   FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
+                   LEFT JOIN analisa a ON (a.id = p.analisa_id OR (p.analisa_id IS NULL AND a.kode = p.kode_analisa AND a.sekolah_id = g.sekolah_id)) AND a.is_deleted = 0
+                   WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0';
+        $bindPek = [$this->sid()];
+        if ($gedungFilter > 0) {
+            $sqlPek .= ' AND g.id = ?';
+            $bindPek[] = $gedungFilter;
+        }
+        $sqlPek .= ' ORDER BY g.urutan, g.id, p.urutan, p.id';
+        $daftarPekerjaan = [];
+        foreach ($db->query($sqlPek, $bindPek)->getResultArray() as $p) {
+            $p['realisasi'] = $realisasi[(int) $p['id']] ?? 0.0;
+            $p['sisa_volume'] = max(0, (float) $p['volume_berjalan'] - $p['realisasi']);
+            $daftarPekerjaan[(int) $p['id']] = $p;
+        }
+
+        // Pilihan pengguna: pekerjaan tercentang + volume rencana per pekerjaan.
+        $pilihanIds = array_values(array_filter(array_map('intval', (array) $this->request->getGet('pilih_pekerjaan')), static fn ($i) => $i > 0));
+        $volPost = (array) $this->request->getGet('vol');
+        $volRencana = [];
+        foreach ($pilihanIds as $pid) {
+            if (! isset($daftarPekerjaan[$pid])) {
+                continue;
+            }
+            $v = isset($volPost[$pid]) ? (float) str_replace(',', '.', (string) $volPost[$pid]) : $daftarPekerjaan[$pid]['sisa_volume'];
+            $volRencana[$pid] = max(0, $v);
+        }
+        $sudahHitung = $this->request->getGet('hitung') !== null && $volRencana !== [];
+
+        $hasil = null;
+        if ($sudahHitung) {
+            $hasil = $this->hitungPilihan($volRencana, $daftarPekerjaan, $hari);
+        }
+
+        $sekolah = $this->sekolahAktif();
+        $anggaran = (float) ($sekolah['total_anggaran'] ?? 0);
+        $terbayar = $this->totalBelanja();
+
+        return $this->tampil('rencana/index', [
+            'daftar_pekerjaan' => array_values($daftarPekerjaan),
+            'vol_rencana' => $volRencana, 'pilihan_ids' => array_keys($volRencana),
+            'hasil' => $hasil, 'hari_kerja' => $hari,
+            'gedung_filter' => $gedungFilter,
+            'anggaran' => $anggaran, 'terbayar' => $terbayar,
+            'sisa_pagu' => $anggaran > 0 ? $anggaran - $terbayar : null,
+        ], 'Rencana Belanja — Aplikasi PBJ Sekolah');
+    }
+
+    /**
+     * Langkah 2–4 dari pilihan pekerjaan: analisa terpakai, kebutuhan bahan
+     * bersih (kotor dari volume rencana − sudah dipesan di SPK), dan kebutuhan
+     * tenaga (OH + perkiraan jumlah pekerja dari target hari kerja).
+     */
+    private function hitungPilihan(array $volRencana, array $daftarPekerjaan, int $hari): array
+    {
+        $db = $this->db();
+        $ids = array_keys($volRencana);
+        $in = implode(',', array_map('intval', $ids));
+        $joinA = 'JOIN analisa a ON (a.id = p.analisa_id OR (p.analisa_id IS NULL AND a.kode = p.kode_analisa AND a.sekolah_id = ?))';
+
+        // Langkah 2: analisa yang dipakai pekerjaan terpilih.
+        $analisa = [];
+        foreach ($db->query(
+            "SELECT a.id, a.kode, a.nama, a.satuan, p.id AS pid FROM pekerjaan p {$joinA}
+             WHERE p.id IN ({$in}) AND p.is_deleted = 0 AND a.is_deleted = 0",
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $aid = (int) $r['id'];
+            if (! isset($analisa[$aid])) {
+                $analisa[$aid] = $r + ['volume' => 0.0, 'pekerjaan' => 0];
+            }
+            $analisa[$aid]['volume'] += $volRencana[(int) $r['pid']] ?? 0;
+            $analisa[$aid]['pekerjaan']++;
+        }
+        foreach ($analisa as &$a) {
+            $a['harga'] = (float) ($this->hargaAhspId((int) $a['id'], $this->sid()) ?? 0);
+            $a['nilai'] = $a['volume'] * $a['harga'];
+        }
+        unset($a);
+        $analisa = array_values($analisa);
+        usort($analisa, static fn ($x, $y) => $y['nilai'] <=> $x['nilai']);
+
+        // Langkah 3: kebutuhan bahan dari volume rencana x koefisien.
+        $gabung = [];
+        foreach ($db->query(
+            "SELECT p.id AS pid, b.id AS bahan_id, b.kode, b.nama, b.satuan, ak.satuan AS satuan_komponen,
+                    SUM(ak.koefisien) AS koef_total
+             FROM pekerjaan p {$joinA}
+             JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'bahan' AND ak.bahan_id IS NOT NULL
+             JOIN bahan b ON b.id = ak.bahan_id
+             WHERE p.id IN ({$in}) AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0 AND b.is_deleted = 0
+             GROUP BY p.id, b.id, b.kode, b.nama, b.satuan, ak.satuan",
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $id = (int) $r['bahan_id'];
+            if (! isset($gabung[$id])) {
+                $gabung[$id] = $r + ['qty_butuh' => 0.0, 'dikonversi' => false, 'satuan_beda' => false];
+            }
+            $faktor = $this->faktorSatuan($r['satuan_komponen'] ?? null, $r);
+            $gabung[$id]['qty_butuh'] += ($volRencana[(int) $r['pid']] ?? 0) * (float) $r['koef_total'] * $faktor;
+            if ($faktor !== 1.0) {
+                $gabung[$id]['dikonversi'] = true;
+            } elseif (mb_strtolower(trim((string) ($r['satuan_komponen'] ?? ''))) !== ''
+                && mb_strtolower(trim((string) ($r['satuan_komponen'] ?? ''))) !== mb_strtolower(trim((string) $r['satuan']))) {
+                $gabung[$id]['satuan_beda'] = true;
+            }
+        }
+        $takTertaut = [];
+        foreach ($db->query(
+            "SELECT ak.nama, p.id AS pid, SUM(ak.koefisien) AS koef_total
+             FROM pekerjaan p {$joinA}
+             JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'bahan' AND ak.bahan_id IS NULL
+             WHERE p.id IN ({$in}) AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0
+             GROUP BY ak.nama, p.id",
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $takTertaut[$r['nama']] = ($takTertaut[$r['nama']] ?? 0) + ($volRencana[(int) $r['pid']] ?? 0) * (float) $r['koef_total'];
+        }
+        arsort($takTertaut);
 
         $dipesan = [];
-        $sql = 'SELECT d.bahan_id, SUM(d.qty) q FROM spk_detail d JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0
-                WHERE s.sekolah_id = ? AND d.bahan_id IS NOT NULL AND d.is_deleted = 0';
-        $bind = [$this->sid()];
-        if ($gedungFilter > 0) {
-            $sql .= ' AND s.gedung_id = ?';
-            $bind[] = $gedungFilter;
-        }
-        $sql .= ' GROUP BY d.bahan_id';
-        foreach ($db->query($sql, $bind)->getResultArray() as $r) {
+        foreach ($db->query(
+            'SELECT d.bahan_id, SUM(d.qty) q FROM spk_detail d JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0
+             WHERE s.sekolah_id = ? AND d.bahan_id IS NOT NULL AND d.is_deleted = 0 GROUP BY d.bahan_id',
+            [$this->sid()]
+        )->getResultArray() as $r) {
             $dipesan[(int) $r['bahan_id']] = (float) $r['q'];
         }
-        foreach ($kb['tertaut'] as &$b) {
-            $b['harga'] = $this->hargaAcuan((int) $b['bahan_id']);
-            $b['dipesan'] = $dipesan[(int) $b['bahan_id']] ?? 0;
-            $b['sisa'] = max(0, (float) $b['qty_butuh'] - $b['dipesan']);
-        }
-
-        // Asal-usul tiap bahan di rencana: jumlah komponen & analisa sumbernya
-        // (untuk aksi hapus dari rencana lewat penghapusan komponen di Analisa).
         $asalBahan = [];
         foreach ($db->query(
             'SELECT ak.bahan_id, COUNT(*) AS komponen, COUNT(DISTINCT ak.analisa_id) AS analisa, MIN(ak.analisa_id) AS analisa_pertama
@@ -47,7 +168,12 @@ class Rencana extends BaseController
         )->getResultArray() as $r) {
             $asalBahan[(int) $r['bahan_id']] = $r;
         }
-        foreach ($kb['tertaut'] as &$b) {
+        $tertaut = array_values($gabung);
+        usort($tertaut, static fn ($x, $y) => $y['qty_butuh'] <=> $x['qty_butuh']);
+        foreach ($tertaut as &$b) {
+            $b['harga'] = $this->hargaAcuan((int) $b['bahan_id']);
+            $b['dipesan'] = $dipesan[(int) $b['bahan_id']] ?? 0;
+            $b['sisa'] = max(0, (float) $b['qty_butuh'] - $b['dipesan']);
             $asal = $asalBahan[(int) $b['bahan_id']] ?? null;
             $b['komponen_dari'] = (int) ($asal['komponen'] ?? 0);
             $b['analisa_dari'] = (int) ($asal['analisa'] ?? 0);
@@ -55,17 +181,42 @@ class Rencana extends BaseController
         }
         unset($b);
 
-        $upah = $gedungFilter > 0 ? $this->kebutuhanUpah($gedungFilter) : $this->kebutuhanUpahSekolah();
-        $sekolah = $this->sekolahAktif();
-        $anggaran = (float) ($sekolah['total_anggaran'] ?? 0);
-        $terbayar = $this->totalBelanja();
+        // Langkah 4: kebutuhan tenaga dari pekerjaan terpilih.
+        $upah = [];
+        foreach ($db->query(
+            "SELECT p.id AS pid, ak.nama AS jenis, SUM(ak.koefisien) AS koef_total,
+                    COALESCE(MAX(um.tarif), MAX(umn.tarif), MAX(ak.tarif), 0) AS tarif
+             FROM pekerjaan p {$joinA}
+             JOIN analisa_komponen ak ON ak.analisa_id = a.id AND ak.jenis = 'upah'
+             LEFT JOIN upah_master um ON um.id = ak.upah_id AND um.is_deleted = 0
+             LEFT JOIN upah_master umn ON ak.upah_id IS NULL AND umn.sekolah_id = a.sekolah_id AND umn.jenis = ak.nama AND umn.is_deleted = 0
+             WHERE p.id IN ({$in}) AND p.is_deleted = 0 AND a.is_deleted = 0 AND ak.is_deleted = 0
+               AND NOT EXISTS (SELECT 1 FROM upah_master umh WHERE umh.is_deleted = 1
+                     AND (umh.id = ak.upah_id OR (ak.upah_id IS NULL AND umh.sekolah_id = a.sekolah_id AND umh.jenis = ak.nama)))
+             GROUP BY p.id, ak.nama",
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $j = $r['jenis'];
+            if (! isset($upah[$j])) {
+                $upah[$j] = ['jenis' => $j, 'orang_hari' => 0.0, 'tarif' => (float) $r['tarif']];
+            }
+            $upah[$j]['orang_hari'] += ($volRencana[(int) $r['pid']] ?? 0) * (float) $r['koef_total'];
+            $upah[$j]['tarif'] = max($upah[$j]['tarif'], (float) $r['tarif']);
+        }
+        $upah = array_values($upah);
+        usort($upah, static fn ($x, $y) => $y['orang_hari'] <=> $x['orang_hari']);
+        foreach ($upah as &$u) {
+            $u['jumlah_pekerja'] = (int) ceil($u['orang_hari'] / $hari);
+            $u['nilai'] = $u['orang_hari'] * $u['tarif'];
+        }
+        unset($u);
 
-        return $this->tampil('rencana/index', [
-            'kebutuhan' => $kb, 'kebutuhan_upah' => $upah,
-            'gedung_filter' => $gedungFilter,
-            'anggaran' => $anggaran, 'terbayar' => $terbayar,
-            'sisa_pagu' => $anggaran > 0 ? $anggaran - $terbayar : null,
-        ], 'Rencana Belanja — Aplikasi PBJ Sekolah');
+        return [
+            'analisa' => $analisa,
+            'kebutuhan' => ['tertaut' => $tertaut, 'tak_tertaut' => $takTertaut],
+            'upah' => $upah,
+            'jumlah_pekerjaan' => count($volRencana),
+        ];
     }
 
     /**

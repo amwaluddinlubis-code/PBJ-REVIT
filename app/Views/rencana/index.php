@@ -1,4 +1,5 @@
 <?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
+<?php $polos = static fn ($n) => rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0'), '.'); ?>
 <div class="kartu-kpi">
   <div class="kpi"><div class="label">Total Anggaran (Pagu)</div><div class="nilai"><?= $anggaran > 0 ? $rp($anggaran) : 'Belum diatur' ?></div></div>
   <div class="kpi"><div class="label">Belanja Terbayar</div><div class="nilai"><?= $rp($terbayar) ?></div></div>
@@ -13,24 +14,83 @@
 </div>
 <?php endif; ?>
 
-<form method="get" action="<?= base_url('rencana-belanja') ?>" style="margin-bottom:14px">
-  <label style="display:inline-block">Tampilkan kebutuhan:
-    <select data-select-cari name="gedung" onchange="this.form.submit()" style="width:auto;display:inline-block;margin-left:6px">
-      <option value="0">Seluruh sekolah (gabungan gedung)</option>
-      <?php foreach ($semuaGedung ?? [] as $gd): ?>
-        <option value="<?= (int) $gd['id'] ?>"<?= $gedung_filter === (int) $gd['id'] ? ' selected' : '' ?>><?= esc($gd['nama']) ?></option>
+<div class="panel">
+  <h2>Langkah 1 — Pilih Pekerjaan</h2>
+  <p class="kecil-teks" style="margin-top:0">Centang pekerjaan yang mau direncanakan belanjanya — boleh dari satu gedung atau gabungan beberapa gedung. Volume Rencana bawaan = sisa volume (volume berjalan − realisasi tercatat); silakan diubah bila belanja direncanakan bertahap.</p>
+  <form method="get" action="<?= base_url('rencana-belanja') ?>">
+    <label style="display:inline-block;margin-bottom:10px">Tampilkan pekerjaan:
+      <select data-select-cari name="gedung" onchange="this.form.submit()" style="width:auto;display:inline-block;margin-left:6px">
+        <option value="0">Seluruh sekolah (gabungan gedung)</option>
+        <?php foreach ($semuaGedung ?? [] as $gd): ?>
+          <option value="<?= (int) $gd['id'] ?>"<?= $gedung_filter === (int) $gd['id'] ? ' selected' : '' ?>><?= esc($gd['nama']) ?></option>
+        <?php endforeach; ?>
+      </select>
+    </label>
+    <table data-paginasi="25" data-cari="Cari pekerjaan…">
+      <tr>
+        <th style="width:34px"><input type="checkbox" id="centang-semua-pekerjaan" style="width:auto;margin:0" title="Centang semua pekerjaan"></th>
+        <th>Gedung</th><th>Pekerjaan</th><th>Analisa</th>
+        <th class="angka">Volume Berjalan</th><th class="angka">Realisasi</th><th class="angka">Sisa Volume</th>
+        <th style="width:130px">Volume Rencana</th>
+      </tr>
+      <?php foreach ($daftar_pekerjaan as $p): $pid = (int) $p['id']; $terpilih = in_array($pid, $pilihan_ids ?? [], true); ?>
+      <tr>
+        <td><input type="checkbox" name="pilih_pekerjaan[]" value="<?= $pid ?>"<?= $terpilih ? ' checked' : '' ?> style="width:auto;margin:0"></td>
+        <td><?= esc($p['gedung_nama']) ?></td>
+        <td><?= esc($p['nama']) ?><?php if (! empty($p['bab'])): ?><br><span class="kecil-teks"><?= esc($p['bab']) ?></span><?php endif; ?></td>
+        <td><?= esc($p['kode_analisa'] ?? '') ?><?php if (! empty($p['nama_analisa'])): ?><br><span class="kecil-teks"><?= esc($p['nama_analisa']) ?></span><?php endif; ?></td>
+        <td class="angka"><?= number_format((float) $p['volume_berjalan'], 2, ',', '.') ?> <?= esc($p['satuan'] ?? '') ?></td>
+        <td class="angka"><?= number_format((float) $p['realisasi'], 2, ',', '.') ?></td>
+        <td class="angka"><b><?= number_format((float) $p['sisa_volume'], 2, ',', '.') ?></b></td>
+        <td><input type="text" name="vol[<?= $pid ?>]" value="<?= esc($polos($terpilih ? ($vol_rencana[$pid] ?? $p['sisa_volume']) : $p['sisa_volume'])) ?>" style="margin:0"></td>
+      </tr>
       <?php endforeach; ?>
-    </select>
-  </label>
-</form>
+    </table>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-top:12px">
+      <label>Target hari kerja (untuk hitungan jumlah pekerja di Langkah 4)
+        <input type="number" name="hari" min="1" value="<?= (int) $hari_kerja ?>" style="width:90px">
+      </label>
+      <div class="aksi"><button type="submit" name="hitung" value="1">Hitung Kebutuhan (Langkah 2–4)</button></div>
+    </div>
+  </form>
+  <script>
+  document.getElementById('centang-semua-pekerjaan').addEventListener('change', function () {
+    document.querySelectorAll('input[name="pilih_pekerjaan[]"]').forEach(function (c) { c.checked = document.getElementById('centang-semua-pekerjaan').checked; });
+  });
+  </script>
+</div>
+
+<?php if (empty($hasil)): ?>
+<div class="panel">
+  <p style="margin:0">Sesudah pekerjaan dicentang dan tombol <b>Hitung Kebutuhan</b> ditekan, di bawah ini akan muncul berturut-turut: <b>Langkah 2</b> analisa yang dipakai pekerjaan terpilih, <b>Langkah 3</b> kebutuhan bahannya, dan <b>Langkah 4</b> kebutuhan pekerja/tukangnya.</p>
+</div>
+<?php else: ?>
 
 <div class="panel">
-  <h2>Rencana Belanja Bahan — Dari Kebutuhan Pekerjaan</h2>
+  <h2>Langkah 2 — Analisa dari <?= (int) $hasil['jumlah_pekerjaan'] ?> Pekerjaan Terpilih</h2>
+  <table data-paginasi="25" data-cari="Cari analisa…">
+    <tr><th>Kode</th><th>Analisa</th><th class="angka">Dipakai Pekerjaan</th><th class="angka">Total Volume Rencana</th><th class="angka">Harga AHSP</th><th class="angka">Nilai</th></tr>
+    <?php $totalNilaiAnalisa = 0; foreach ($hasil['analisa'] as $a): $totalNilaiAnalisa += (float) $a['nilai']; ?>
+    <tr>
+      <td><a class="lencana abu" style="text-decoration:none" href="<?= base_url('analisa/' . (int) $a['id']) ?>"><?= esc($a['kode']) ?></a></td>
+      <td><?= esc($a['nama']) ?></td>
+      <td class="angka"><?= (int) $a['pekerjaan'] ?></td>
+      <td class="angka"><?= number_format((float) $a['volume'], 2, ',', '.') ?> <?= esc($a['satuan'] ?? '') ?></td>
+      <td class="angka"><?= number_format((float) $a['harga'], 0, ',', '.') ?></td>
+      <td class="angka"><?= number_format((float) $a['nilai'], 0, ',', '.') ?></td>
+    </tr>
+    <?php endforeach; ?>
+    <tr class="total"><td colspan="5">Total Nilai Analisa Pekerjaan Terpilih</td><td class="angka"><?= number_format($totalNilaiAnalisa, 0, ',', '.') ?></td></tr>
+  </table>
+</div>
+
+<div class="panel">
+  <h2>Langkah 3 — Kebutuhan Bahan dari Pekerjaan Terpilih</h2>
   <form method="post" action="<?= base_url('rencana-belanja/buat-spk') ?>">
     <?= csrf_field() ?>
     <table data-paginasi="25" data-cari="Cari bahan…">
       <tr><th style="width:34px"></th><th>Bahan</th><th class="angka">Kebutuhan</th><th class="angka">Sudah Dipesan</th><th class="angka">Sisa Kebutuhan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Sisa</th><th style="width:130px">Qty Rencana</th><th data-tanpa-urut style="width:150px">Aksi</th></tr>
-      <?php $totalSisa = 0; foreach ($kebutuhan['tertaut'] as $b): $nilaiSisa = (float) $b['sisa'] * (float) $b['harga']; $totalSisa += $nilaiSisa; ?>
+      <?php $totalSisa = 0; foreach ($hasil['kebutuhan']['tertaut'] as $b): $nilaiSisa = (float) $b['sisa'] * (float) $b['harga']; $totalSisa += $nilaiSisa; ?>
       <tr>
         <td><input type="checkbox" name="pilih[]" value="<?= (int) $b['bahan_id'] ?>"<?= $b['sisa'] > 0 ? ' checked' : '' ?> style="width:auto;margin:0"></td>
         <td><?= esc($b['kode']) ?> — <?= esc($b['nama']) ?><?= ! empty($b['dikonversi']) ? ' <span class="lencana kuning">dikonversi</span>' : '' ?><?= ! empty($b['satuan_beda']) ? ' <span class="lencana abu">satuan beda</span>' : '' ?><br><span class="kecil-teks">satuan: <?= esc($b['satuan']) ?></span></td>
@@ -39,7 +99,7 @@
         <td class="angka"><b><?= number_format((float) $b['sisa'], 2, ',', '.') ?></b></td>
         <td class="angka"><?= number_format((float) $b['harga'], 0, ',', '.') ?></td>
         <td class="angka"><?= number_format($nilaiSisa, 0, ',', '.') ?></td>
-        <td><input type="text" name="qty[<?= (int) $b['bahan_id'] ?>]" value="<?= esc(rtrim(rtrim(number_format((float) $b['sisa'], 2, '.', ''), '0'), '.')) ?>" style="margin:0"></td>
+        <td><input type="text" name="qty[<?= (int) $b['bahan_id'] ?>]" value="<?= esc($polos($b['sisa'])) ?>" style="margin:0"></td>
         <td>
           <?php if (($b['analisa_pertama'] ?? 0) > 0): ?><a class="tombol kecil abu" href="<?= base_url('analisa/' . (int) $b['analisa_pertama']) ?>" title="Buka analisa sumber bahan ini">Analisa</a> <?php endif; ?>
           <button type="submit" class="tombol kecil bahaya" form="hapus-rencana-bahan-<?= (int) $b['bahan_id'] ?>">Hapus</button>
@@ -61,21 +121,25 @@
     </div>
     <p class="kecil-teks">SPK dibuat dengan nomor berikutnya, tanggal hari ini, dan harga acuan saat ini. Penyedia dapat dilengkapi sesudahnya di Register SPK. Jumlah rencana bawaan = sisa kebutuhan; silakan sesuaikan (mis. dibeli bertahap).</p>
   </form>
-  <?php foreach ($kebutuhan['tertaut'] as $b): ?>
+  <?php foreach ($hasil['kebutuhan']['tertaut'] as $b): ?>
   <form id="hapus-rencana-bahan-<?= (int) $b['bahan_id'] ?>" method="post" action="<?= base_url('rencana-belanja/hapus-bahan/' . (int) $b['bahan_id']) ?>" data-konfirmasi="Hapus bahan <?= esc($b['nama']) ?> dari rencana belanja? Bahan ini berasal dari <?= (int) ($b['komponen_dari'] ?? 0) ?> komponen di <?= (int) ($b['analisa_dari'] ?? 0) ?> analisa — komponennya akan dihapus dari modul Analisa sehingga bahan hilang dari kebutuhan SEMUA gedung. SPK yang sudah terlanjur memakai bahan ini tidak berubah, dan penghapusan dapat dipulihkan lewat Pemeliharaan Database (Sampah)." hidden>
     <?= csrf_field() ?>
   </form>
   <?php endforeach; ?>
+  <?php if (! empty($hasil['kebutuhan']['tak_tertaut'])): ?>
+  <p class="kecil-teks" style="margin-bottom:0">Komponen bahan yang belum tertaut ke master bahan (belum bisa direncanakan belanjanya): <?php $tt = []; foreach ($hasil['kebutuhan']['tak_tertaut'] as $nama => $q) { $tt[] = esc($nama) . ' (' . number_format((float) $q, 2, ',', '.') . ')'; } echo implode(', ', $tt); ?>. Tautkan lewat panel Komponen Belum Tertaut di menu Analisa.</p>
+  <?php endif; ?>
 </div>
 
 <div class="panel">
-  <h2>Rencana Upah — Dari Kebutuhan Tenaga</h2>
+  <h2>Langkah 4 — Kebutuhan Pekerja dari Pekerjaan Terpilih</h2>
   <table data-paginasi="25" data-cari="Cari jenis tenaga…">
-    <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Tarif / OH</th><th class="angka">Nilai Kebutuhan</th></tr>
-    <?php $totalUpah = 0; foreach ($kebutuhan_upah as $u): $n = (float) $u['orang_hari'] * (float) $u['tarif']; $totalUpah += $n; ?>
-    <tr><td><?= esc($u['jenis']) ?></td><td class="angka"><?= number_format((float) $u['orang_hari'], 2, ',', '.') ?></td><td class="angka"><?= number_format((float) $u['tarif'], 0, ',', '.') ?></td><td class="angka"><?= number_format($n, 0, ',', '.') ?></td></tr>
+    <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Tarif / OH</th><th class="angka">Nilai Kebutuhan</th><th class="angka">Jumlah Pekerja Dibutuhkan</th></tr>
+    <?php $totalUpah = 0; $totalPekerja = 0; foreach ($hasil['upah'] as $u): $totalUpah += (float) $u['nilai']; $totalPekerja += (int) $u['jumlah_pekerja']; ?>
+    <tr><td><?= esc($u['jenis']) ?></td><td class="angka"><?= number_format((float) $u['orang_hari'], 2, ',', '.') ?></td><td class="angka"><?= number_format((float) $u['tarif'], 0, ',', '.') ?></td><td class="angka"><?= number_format((float) $u['nilai'], 0, ',', '.') ?></td><td class="angka"><b><?= (int) $u['jumlah_pekerja'] ?> orang</b></td></tr>
     <?php endforeach; ?>
-    <tr class="total"><td colspan="3">Total Nilai Kebutuhan Upah</td><td class="angka"><?= number_format($totalUpah, 0, ',', '.') ?></td></tr>
+    <tr class="total"><td colspan="3">Total Nilai Kebutuhan Upah</td><td class="angka"><?= number_format($totalUpah, 0, ',', '.') ?></td><td class="angka"><?= $totalPekerja ?> orang</td></tr>
   </table>
-  <p class="kecil-teks">Pembayaran upah dicatat per gedung di menu <a href="<?= base_url('upah') ?>">Pembayaran Upah</a> dan ikut terhitung dalam kontrol pagu.</p>
+  <p class="kecil-teks">Jumlah pekerja dihitung dari kebutuhan OH dibagi target hari kerja (<?= (int) $hari_kerja ?> hari, diatur di Langkah 1) dan dibulatkan ke atas — itulah jumlah orang per jenis tenaga yang perlu disiapkan bila pekerjaan terpilih mau diselesaikan dalam target hari itu. Pembayaran upah dicatat per gedung di menu <a href="<?= base_url('upah') ?>">Pembayaran Upah</a> dan ikut terhitung dalam kontrol pagu.</p>
 </div>
+<?php endif; ?>
