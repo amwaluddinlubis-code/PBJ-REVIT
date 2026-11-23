@@ -23,7 +23,7 @@
     <tr><th>Gedung / Paket</th><th class="angka">Nilai BOQ</th><th class="angka">Nilai Realisasi</th><th class="angka">Kemajuan Fisik</th></tr>
     <?php foreach ($gedung as $g): ?>
     <tr>
-      <td><?= esc($g['nama']) ?></td>
+      <td><a href="<?= base_url('gedung/' . (int) ($g['id'] ?? 0) . '/realisasi') ?>"><?= esc($g['nama']) ?></a></td>
       <td class="angka"><?= $rp($g['nilai_boq']) ?></td>
       <td class="angka"><?= $rp($g['nilai_realisasi']) ?></td>
       <td class="angka"><?= number_format((float) $g['persen_fisik'], 1, ',', '.') ?>%</td>

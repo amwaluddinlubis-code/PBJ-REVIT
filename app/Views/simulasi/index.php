@@ -18,7 +18,7 @@ $pct = static function ($n) {
 <?php else: ?>
 <div class="panel">
   <h2 style="margin-top:0">Simulasi Mingguan — Cara Kerja</h2>
-  <p class="kecil-teks" style="margin:0">Isi <strong>bobot realisasi tiap minggu per gedung</strong> (persen terhadap total proyek <?= $rp($total_proyek) ?>, satuan yang sama dengan Kurva S), simpan, dan simulasi di bawah terhitung ulang: realisasi disebar ke bab mengikuti pola Kurva S minggu itu, sisa volume tiap bab dijadwalkan ulang ke minggu berikutnya mengikuti pola babnya, lalu kebutuhan bahan &amp; pekerja dihitung dengan mesin Rencana Belanja. Minggu terakhir yang terisi dianggap minggu berjalan (sekarang minggu ke-<strong><?= (int) $berjalan ?></strong>). Kosongkan sel untuk menganggap minggu itu belum ada realisasi.</p>
+  <p class="kecil-teks" style="margin:0">Isi <strong>bobot realisasi tiap minggu per gedung</strong> (persen terhadap total proyek <?= $rp($total_proyek) ?>, satuan yang sama dengan Kurva S), simpan, dan simulasi di bawah terhitung ulang: realisasi disebar ke bab mengikuti pola Kurva S minggu itu, sisa volume tiap bab dijadwalkan ulang ke minggu berikutnya mengikuti pola babnya, lalu kebutuhan bahan &amp; pekerja dihitung dengan mesin <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a>. Minggu terakhir yang terisi dianggap minggu berjalan (sekarang minggu ke-<strong><?= (int) $berjalan ?></strong>). Kosongkan sel untuk menganggap minggu itu belum ada realisasi.</p>
 </div>
 
 <div class="panel">
@@ -81,7 +81,7 @@ $pct = static function ($n) {
     </tr>
     <?php endforeach; ?>
   </table></div>
-  <p class="kecil-teks">Belanja bahan adalah kebutuhan kotor minggu itu pada harga acuan aplikasi — saat pelaksanaan kurangi stok tersedia &amp; SPK berjalan (gunakan Rencana Mingguan untuk daftar belanja bersihnya). Perkiraan orang = kebutuhan OH ÷ 6 hari kerja.</p>
+  <p class="kecil-teks">Belanja bahan adalah kebutuhan kotor minggu itu pada harga acuan aplikasi — saat pelaksanaan kurangi stok tersedia &amp; SPK berjalan (gunakan <a href="<?= base_url('rencana-mingguan') ?>">Rencana Mingguan</a> untuk daftar belanja bersihnya). Perkiraan orang = kebutuhan OH ÷ 6 hari kerja.</p>
 </div>
 
 <?php foreach ($hasil as $h): ?>

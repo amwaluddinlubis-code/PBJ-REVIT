@@ -25,8 +25,11 @@ class Invoice extends BaseController
     public function baru()
     {
         $row = $this->db()->query('SELECT MAX(nomor_urut) m FROM invoice')->getRow();
+        // Tautan dalam dari modul lain (mis. Detail SPK) dapat membawa
+        // ?spk=<id> agar formulir langsung memilih SPK itu.
+        $spkPilih = (int) $this->request->getGet('spk') ?: null;
         return $this->tampil('invoice/form', [
-            'i' => ['nomor_urut' => ((int) $row->m) + 1, 'status' => 'Belum Bayar'],
+            'i' => ['nomor_urut' => ((int) $row->m) + 1, 'status' => 'Belum Bayar', 'spk_id' => $spkPilih],
             'spk' => $this->daftarSpk(),
             'aksi' => 'invoice/simpan',
         ], 'Invoice Baru');

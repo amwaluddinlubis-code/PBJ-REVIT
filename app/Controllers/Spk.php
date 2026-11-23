@@ -161,13 +161,13 @@ class Spk extends BaseController
         }
         $ceklis = [
             ['kunci' => 'perencanaan', 'label' => 'Dokumen perencanaan pengadaan (jumlah, spesifikasi, waktu & lokasi serah terima, alokasi anggaran, persyaratan penyedia)', 'ada' => $manual['perencanaan'] ?? false, 'manual' => true],
-            ['kunci' => 'pembandingan', 'label' => 'Hasil pembandingan harga (Survei Harga)', 'ada' => $pembanding > 0, 'manual' => false],
-            ['kunci' => 'negosiasi', 'label' => 'Hasil negosiasi harga', 'ada' => $hitung('SELECT COUNT(*) AS j FROM negosiasi n JOIN spk_detail d ON d.bahan_id = n.bahan_id AND d.is_deleted = 0 WHERE d.spk_id = ? AND n.is_deleted = 0 AND n.harga_nego IS NOT NULL') > 0, 'manual' => false],
+            ['kunci' => 'pembandingan', 'label' => 'Hasil pembandingan harga (Survei Harga)', 'ada' => $pembanding > 0, 'manual' => false, 'tautan' => 'survei', 'label_tautan' => 'Buka Survei Harga'],
+            ['kunci' => 'negosiasi', 'label' => 'Hasil negosiasi harga', 'ada' => $hitung('SELECT COUNT(*) AS j FROM negosiasi n JOIN spk_detail d ON d.bahan_id = n.bahan_id AND d.is_deleted = 0 WHERE d.spk_id = ? AND n.is_deleted = 0 AND n.harga_nego IS NOT NULL') > 0, 'manual' => false, 'tautan' => 'negosiasi', 'label_tautan' => 'Buka Negosiasi'],
             ['kunci' => 'pemesanan', 'label' => 'Surat pemesanan (SPK ini)', 'ada' => true, 'manual' => false],
-            ['kunci' => 'pemeriksaan', 'label' => 'Hasil pemeriksaan barang/jasa (BAP)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM bap WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false],
-            ['kunci' => 'bast', 'label' => 'Berita Acara Serah Terima (BAST)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM bast WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false],
-            ['kunci' => 'invoice', 'label' => 'Invoice / tagihan penyedia', 'ada' => $hitung('SELECT COUNT(*) AS j FROM invoice WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false],
-            ['kunci' => 'pembayaran', 'label' => 'Bukti pembayaran (jurnal pembayaran)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0 WHERE i.spk_id = ? AND p.is_deleted = 0') > 0, 'manual' => false],
+            ['kunci' => 'pemeriksaan', 'label' => 'Hasil pemeriksaan barang/jasa (BAP)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM bap WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false, 'tautan' => 'dokumen', 'label_tautan' => 'Buka Dokumen (BAP)'],
+            ['kunci' => 'bast', 'label' => 'Berita Acara Serah Terima (BAST)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM bast WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false, 'tautan' => 'dokumen', 'label_tautan' => 'Buka Dokumen (BAST)'],
+            ['kunci' => 'invoice', 'label' => 'Invoice / tagihan penyedia', 'ada' => $hitung('SELECT COUNT(*) AS j FROM invoice WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false, 'tautan' => 'invoice', 'label_tautan' => 'Buka Register Invoice'],
+            ['kunci' => 'pembayaran', 'label' => 'Bukti pembayaran (jurnal pembayaran)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0 WHERE i.spk_id = ? AND p.is_deleted = 0') > 0, 'manual' => false, 'tautan' => 'invoice/jurnal', 'label_tautan' => 'Buka Jurnal Pembayaran'],
             ['kunci' => 'kuitansi', 'label' => 'Kuitansi/faktur fisik dari penyedia (ditandatangani + stempel; bermaterai bila nilai kuitansi ≥ Rp5 juta)', 'ada' => $manual['kuitansi'] ?? false, 'manual' => true],
         ];
         // Panel Tuntaskan SPK (Ide A): status rantai BAP/BAST/Invoice/Bayar

@@ -131,7 +131,7 @@
   </form>
   <?php endforeach; ?>
   <?php if (! empty($hasil['kebutuhan']['tak_tertaut'])): ?>
-  <p class="kecil-teks" style="margin-bottom:0">Komponen bahan yang belum tertaut ke master bahan (belum bisa direncanakan belanjanya): <?php $tt = []; foreach ($hasil['kebutuhan']['tak_tertaut'] as $nama => $q) { $tt[] = esc($nama) . ' (' . number_format((float) $q, 2, ',', '.') . ')'; } echo implode(', ', $tt); ?>. Tautkan lewat panel Komponen Belum Tertaut di menu Analisa.</p>
+  <p class="kecil-teks" style="margin-bottom:0">Komponen bahan yang belum tertaut ke master bahan (belum bisa direncanakan belanjanya): <?php $tt = []; foreach ($hasil['kebutuhan']['tak_tertaut'] as $nama => $q) { $tt[] = esc($nama) . ' (' . number_format((float) $q, 2, ',', '.') . ')'; } echo implode(', ', $tt); ?>. Tautkan dari tab Kebutuhan Bahan pada halaman <a href="<?= base_url('gedung') ?>">Gedung</a> — panel Komponen Belum Tertaut ada di sana.</p>
   <?php endif; ?>
 </div>
 

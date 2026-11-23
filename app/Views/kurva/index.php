@@ -6,9 +6,9 @@ $resmi = ($mode ?? 'perkiraan') === 'resmi';
 <div class="panel">
   <h2>Kurva S Pelaksanaan Pekerjaan</h2>
   <?php if ($adaRencana): ?>
-  <p style="margin-top:0;color:var(--ta-teks-2)">Garis rencana memakai <strong>bobot resmi Time Schedule perencana</strong> yang sudah diimpor (per minggu kalender proyek), dibandingkan realisasi kumulatif dari data realisasi BOQ. Kelompok Persiapan &amp; Biaya Manajemen hanya masuk kurva Total Sekolah.</p>
+  <p style="margin-top:0;color:var(--ta-teks-2)">Garis rencana memakai <strong>bobot resmi Time Schedule perencana</strong> yang sudah diimpor (per minggu kalender proyek), dibandingkan realisasi kumulatif dari data realisasi BOQ. Kelompok Persiapan &amp; Biaya Manajemen hanya masuk kurva Total Sekolah. Realisasi diisi dari tab Realisasi pada halaman <a href="<?= base_url('gedung') ?>">Gedung</a> dan diringkas di <a href="<?= base_url('laporan-kemajuan') ?>">Laporan Kemajuan</a>.</p>
   <?php else: ?>
-  <p style="margin-top:0;color:var(--ta-teks-2)">Jadwal pelaksanaan dalam bentuk kurva S (format dokumen Juknis): garis rencana kumulatif dibandingkan realisasi kumulatif mingguan dari data realisasi BOQ. Jendela waktu mengikuti tanggal mulai–selesai SPK yang tertaut ke gedung. Impor rencana resmi perencana (berkas JSON) agar garis rencana mengikuti Time Schedule dokumen.</p>
+  <p style="margin-top:0;color:var(--ta-teks-2)">Jadwal pelaksanaan dalam bentuk kurva S (format dokumen Juknis): garis rencana kumulatif dibandingkan realisasi kumulatif mingguan dari data realisasi BOQ. Jendela waktu mengikuti tanggal mulai–selesai SPK yang tertaut ke gedung. Impor rencana resmi perencana (berkas JSON) agar garis rencana mengikuti Time Schedule dokumen. Realisasi diisi dari tab Realisasi pada halaman <a href="<?= base_url('gedung') ?>">Gedung</a> dan diringkas di <a href="<?= base_url('laporan-kemajuan') ?>">Laporan Kemajuan</a>.</p>
   <?php endif; ?>
   <form method="get" action="<?= base_url('kurva-s') ?>" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
     <label>Tampilan
@@ -28,7 +28,7 @@ $resmi = ($mode ?? 'perkiraan') === 'resmi';
       </label>
       <button type="submit">Impor Rencana</button>
     </form>
-    <p class="kecil-teks" style="margin-bottom:0">Kelompok pada dokumen dipetakan otomatis: RUANG KELAS BARU → gedung RKB, RUANG GURU → gedung ADM, TOILET → gedung Toilet; PERSIAPAN &amp; BIAYA MANAGEMEN masuk kurva total saja. Mengimpor menggantikan rencana resmi sebelumnya untuk sekolah aktif. Rencana resmi juga menjadi sumber tombol "Ambil Target dari Kurva S" di Rencana Mingguan.</p>
+    <p class="kecil-teks" style="margin-bottom:0">Kelompok pada dokumen dipetakan otomatis: RUANG KELAS BARU → gedung RKB, RUANG GURU → gedung ADM, TOILET → gedung Toilet; PERSIAPAN &amp; BIAYA MANAGEMEN masuk kurva total saja. Mengimpor menggantikan rencana resmi sebelumnya untuk sekolah aktif. Rencana resmi juga menjadi sumber tombol "Ambil Target dari Kurva S" di <a href="<?= base_url('rencana-mingguan') ?>">Rencana Mingguan</a> dan mesin <a href="<?= base_url('simulasi') ?>">Simulasi Mingguan</a>.</p>
   </details>
 </div>
 

@@ -46,7 +46,7 @@ $polos = static fn ($n) => rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0
       <?php foreach ($bahan as $b): ?>
       <tr>
         <td><input type="checkbox" name="pilih[]" value="<?= (int) $b['bahan_id'] ?>"<?= $b['bersih'] > 0 ? ' checked' : '' ?>></td>
-        <td class="potong" title="<?= esc($b['nama']) ?>"><strong><?= esc($b['kode']) ?></strong> <?= esc($b['nama']) ?></td>
+        <td class="potong" title="<?= esc($b['nama']) ?>"><strong><?= esc($b['kode']) ?></strong> <?= esc($b['nama']) ?><?php if (($b['analisa_pertama'] ?? 0) > 0): ?> <a class="tombol kecil abu" href="<?= base_url('analisa/' . (int) $b['analisa_pertama']) ?>" title="Buka analisa sumber bahan ini">Analisa</a><?php endif; ?></td>
         <td><?= esc($b['satuan'] ?? '') ?></td>
         <td class="angka"><?= $qty($b['kotor']) ?></td>
         <td class="angka"><?= $qty($b['stok']) ?></td>

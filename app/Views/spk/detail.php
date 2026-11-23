@@ -3,7 +3,7 @@
 <div class="panel">
   <h2>SPK Nomor <?= (int) $s['nomor'] ?> — <?= esc($s['paket'] ?? '') ?></h2>
   <div class="kecil-teks">
-    Tanggal <?= esc(tgl($s['tanggal'] ?? null)) ?> · Penyedia <?= esc($s['penyedia'] ?? '—') ?><?php if (! empty($s['penerima_manual'])): ?> <span class="lencana abu">penyedia Masyarakat</span><?php endif; ?> (ttd: <?= esc($s['ttd_penyedia'] ?? '—') ?>) ·
+    Tanggal <?= esc(tgl($s['tanggal'] ?? null)) ?> · Penyedia <?= trim((string) ($s['penyedia'] ?? '')) !== '' ? esc($s['penyedia']) : '<a href="' . base_url('spk/ubah/' . $s['id']) . '">— (belum diisi, lengkapi)</a>' ?><?php if (! empty($s['penerima_manual'])): ?> <span class="lencana abu">penyedia Masyarakat</span><?php endif; ?> (ttd: <?= esc($s['ttd_penyedia'] ?? '—') ?>) ·
     Periode <?= esc(tgl($s['tgl_mulai'] ?? null)) ?> s.d. <?= esc(tgl($s['tgl_selesai'] ?? null)) ?> · Status <?= esc($s['status']) ?> ·
     <a href="<?= base_url('spk/ubah/' . $s['id']) ?>">Ubah kepala SPK</a>
   </div>
@@ -13,12 +13,15 @@
   <p class="kecil-teks" style="margin-bottom:0">
     Nilai paket <b><?= $rp($nilai_paket) ?></b> · Bentuk surat pemesanan menurut nilai: <b><?= esc($ketentuan['dokumen']) ?></b> ·
     Metode penetapan penyedia: <b><?= esc($ketentuan['metode']) ?></b> dengan calon penyedia minimal <b><?= (int) $ketentuan['min_penyedia'] ?></b> ·
-    Toko pembanding tercatat di Survei Harga untuk bahan paket ini: <b><?= (int) $pembanding ?> toko</b><?php if ($pembanding < (int) $ketentuan['min_penyedia']): ?> — <b style="color:#b91c1c">masih kurang dari minimum menurut Juknis, lengkapi Survei Harga</b><?php endif; ?>.
+    Toko pembanding tercatat di Survei Harga untuk bahan paket ini: <b><?= (int) $pembanding ?> toko</b><?php if ($pembanding < (int) $ketentuan['min_penyedia']): ?> — <b style="color:#b91c1c">masih kurang dari minimum menurut Juknis, lengkapi di <a href="<?= base_url('survei') ?>">Survei Harga</a></b><?php endif; ?>.
     <?php if ($nilai_paket <= 50000000): ?>Menurut Juknis, nilai sampai dengan Rp50 juta cukup dengan nota/kuitansi — SPK yang lebih lengkap seperti ini tetap boleh dipakai.<?php endif; ?>
     <?php if ($ketentuan['materai']): ?>Kuitansi pembayaran Rp5 juta ke atas wajib dibubuhi materai Rp10.000.<?php endif; ?>
   </p>
 </div>
 <div class="panel">
+<?php if ($detail === []): ?>
+  <p style="margin-top:0"><strong>SPK ini belum mempunyai rincian.</strong> Tambahkan lewat formulir Tambah Rincian di bawah halaman ini, atau buat SPK-nya dari <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a> / <a href="<?= base_url('rencana-mingguan') ?>">Rencana Mingguan</a> agar rinciannya terisi otomatis. Tanpa rincian, BAP belum bisa dibuat dari halaman <a href="<?= base_url('dokumen') ?>">Dokumen</a>.</p>
+<?php endif; ?>
 <table data-paginasi="10">
   <tr><th>Kode</th><th>Nama Bahan</th><?php if (! empty($gabungan)): ?><th>Gedung Tujuan</th><?php endif; ?><th class="angka">Qty</th><th>Satuan</th><th class="angka">Harga</th><th class="angka">Total</th><th class="angka">PPN</th><th>Ubah Qty/Harga</th><th></th></tr>
   <?php $grand = 0; $grandPpn = 0; foreach ($detail as $d): $grand += (float) $d['total']; $grandPpn += (float) $d['ppn']; ?>
@@ -76,7 +79,7 @@
       <p class="kecil-teks">Pembayaran tercatat di Jurnal Pembayaran dan status invoice menjadi Sudah Bayar; kontrol pagu anggaran tetap berlaku.</p>
     </form>
   <?php else: ?>
-    <p class="kecil-teks" style="margin-top:0">SPK ini sudah mempunyai BAP/BAST tetapi belum ada invoice — buat invoice-nya dari Register Invoice; BAP/BAST dikelola dari halaman Dokumen.</p>
+    <p class="kecil-teks" style="margin-top:0">SPK ini sudah mempunyai BAP/BAST tetapi belum ada invoice — <a href="<?= base_url('invoice/baru?spk=' . $s['id']) ?>">buat invoice-nya sekarang</a> (formulir Register Invoice langsung memilih SPK ini); BAP/BAST dikelola dari halaman <a href="<?= base_url('dokumen') ?>">Dokumen</a>.</p>
   <?php endif; ?>
   <p style="margin-bottom:0"><a class="tombol abu" href="<?= base_url('dokumen/cetak-spj/' . $s['id']) ?>" target="_blank">Cetak SPJ Lengkap (SPK + BAP + BAST + Invoice)</a></p>
 </div>
@@ -134,6 +137,8 @@
           <input type="hidden" name="item" value="<?= esc($c['kunci']) ?>">
           <label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" name="ada" value="1" <?= $c['ada'] ? 'checked' : '' ?> onchange="this.form.submit()"> Sudah ada (fisik)</label>
         </form>
+        <?php elseif (! empty($c['tautan'])): ?>
+        <a class="kecil-teks" href="<?= base_url($c['tautan']) ?>"><?= esc($c['label_tautan'] ?? 'Buka modulnya') ?> →</a>
         <?php else: ?>
         <span class="kecil-teks">otomatis dari modul</span>
         <?php endif; ?>

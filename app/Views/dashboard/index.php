@@ -30,10 +30,10 @@
         <a href="<?= base_url('belum-bernomor') ?>">pasangkan nomornya</a>.</li>
     <?php endif; ?>
     <?php foreach ($invoiceCek as $c): ?>
-      <li>Invoice No. <?= (int) $c['nomor_urut'] ?>: nilai <?= $rp($c['nilai']) ?> tidak sama dengan total SPK <?= (int) $c['spk_nomor'] ?> (<?= $rp($c['total_spk']) ?>) — cek dokumennya.</li>
+      <li>Invoice No. <?= (int) $c['nomor_urut'] ?>: nilai <?= $rp($c['nilai']) ?> tidak sama dengan total SPK <?= (int) $c['spk_nomor'] ?> (<?= $rp($c['total_spk']) ?>) — <a href="<?= base_url('invoice') ?>">periksa di Register Invoice</a>.</li>
     <?php endforeach; ?>
     <?php foreach ($sisaNegatif as $n): ?>
-      <li>Sisa bahan negatif: <strong><?= esc($n['kode']) ?> <?= esc($n['nama']) ?></strong> — terpakai <?= rtrim(rtrim(number_format((float) $n['terpakai'], 2, ',', '.'), '0'), ',') ?> dari RAB <?= rtrim(rtrim(number_format((float) $n['qty_rab'], 2, ',', '.'), '0'), ',') ?>.</li>
+      <li>Sisa bahan negatif: <strong><?= esc($n['kode']) ?> <?= esc($n['nama']) ?></strong> — terpakai <?= rtrim(rtrim(number_format((float) $n['terpakai'], 2, ',', '.'), '0'), ',') ?> dari RAB <?= rtrim(rtrim(number_format((float) $n['qty_rab'], 2, ',', '.'), '0'), ',') ?> — <a href="<?= base_url('sisa-bahan') ?>">lihat di Sisa Bahan</a>.</li>
     <?php endforeach; ?>
     <?php foreach ($pecahCek ?? [] as $p): ?>
       <li><?= esc($p) ?></li>

@@ -252,7 +252,7 @@ class RencanaMingguan extends BaseController
         // Kebutuhan kotor bahan: target × koefisien, dikonversi ke satuan master.
         $mentah = $db->query(
             "SELECT b.id AS bahan_id, b.kode, b.nama, b.satuan, ak.satuan AS satuan_komponen,
-                    ak.koefisien, d.volume_target, p.id AS pekerjaan_id
+                    ak.koefisien, d.volume_target, p.id AS pekerjaan_id, a.id AS analisa_id
              FROM rencana_mingguan_detail d
              JOIN pekerjaan p ON p.id = d.pekerjaan_id AND p.is_deleted = 0
              JOIN analisa a ON (a.id = p.analisa_id OR (p.analisa_id IS NULL AND a.kode = p.kode_analisa AND a.sekolah_id = ?))
@@ -265,7 +265,7 @@ class RencanaMingguan extends BaseController
         foreach ($mentah as $m) {
             $bid = (int) $m['bahan_id'];
             if (! isset($bahan[$bid])) {
-                $bahan[$bid] = $m + ['kotor' => 0.0];
+                $bahan[$bid] = $m + ['kotor' => 0.0, 'analisa_pertama' => (int) ($m['analisa_id'] ?? 0)];
             }
             $bahan[$bid]['kotor'] += (float) $m['volume_target'] * (float) $m['koefisien'] * $this->faktorSatuan($m['satuan_komponen'] ?? null, $m);
         }

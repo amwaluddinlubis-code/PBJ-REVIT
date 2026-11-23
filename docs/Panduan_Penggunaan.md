@@ -57,6 +57,7 @@ Prinsip-prinsip penting:
 - **Harga satuan belanja boleh melebihi harga dokumen** (fluktuasi lapangan wajar; selisihnya ditampilkan), tetapi **total belanja keseluruhan tidak boleh melebihi pagu anggaran sekolah** — aplikasi menahan transaksi yang menembus pagu.
 - **Rencana belanja adalah turunan kebutuhan**, bukan daftar bebas: paket belanja dibuat dari hitungan kebutuhan bahan/upah per pekerjaan, dan terhitung ulang bila volume pekerjaan berubah.
 - **Alur SPK → SPJ bisa diselesaikan dari satu panel.** Sesudah barang diterima, panel **Tuntaskan SPK** di halaman rincian SPK membuat BAP, BAST, dan Invoice sekaligus dari satu tanggal terima, mencatat pembayarannya, dan mencetak keempat dokumen dalam satu berkas — lihat Bab 13.
+- **Setiap peringatan membawa jalan keluarnya.** Bila suatu halaman menyatakan ada yang kurang — SPK belum punya rincian, bahan belum punya harga, komponen belum tertaut, invoice belum cocok — kalimatnya selalu disertai tautan langsung ke halaman tempat kekurangan itu dilengkapi, jadi tidak perlu bolak-balik mencari menu. Ceklis dokumen di Detail SPK juga menaut ke modul pemilik tiap dokumen (Survei, Negosiasi, Dokumen, Invoice, Jurnal).
 
 ## 2. Memulai — masuk, tampilan, profil & sandi
 

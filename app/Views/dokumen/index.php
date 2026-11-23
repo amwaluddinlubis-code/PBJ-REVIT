@@ -13,6 +13,9 @@ $tutupModal = static fn (string $id) => "document.getElementById('{$id}').hidden
       <td><a href="<?= base_url('spk/detail/' . $s['id']) ?>"><?= (int) $s['nomor'] ?></a></td>
       <td><?= esc($s['paket'] ?? '—') ?> · <span class="kecil-teks"><?= esc($s['penyedia'] ?? '—') ?></span></td>
       <td style="white-space:nowrap">
+        <?php if ((int) $s['jumlah_detail'] === 0): ?>
+          <span class="kecil-teks" style="white-space:normal;display:inline-block;max-width:340px">SPK belum mempunyai rincian — <a href="<?= base_url('spk/detail/' . $s['id']) ?>">lengkapi rinciannya di Detail SPK</a> agar bisa dibuatkan BAP.</span>
+        <?php endif; ?>
         <?php $pisah = false; ?>
         <?php foreach ($bap[$s['id']] ?? [] as $b): ?>
           <?= $pisah ? ' <span class="kecil-teks">|</span> ' : '' ?>

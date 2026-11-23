@@ -1,6 +1,6 @@
 <?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); $tot = 0; ?>
 <div class="panel">
-  <p>Baris-baris ini sudah punya barang, qty, dan harga, tetapi <strong>belum terhubung ke SPK mana pun</strong> sehingga tidak terbaca register dan dokumen. Pasangkan ke nomor SPK yang benar sesuai dokumen fisiknya.</p>
+  <p>Baris-baris ini sudah punya barang, qty, dan harga, tetapi <strong>belum terhubung ke SPK mana pun</strong> sehingga tidak terbaca register dan dokumen. Pasangkan ke nomor SPK yang benar sesuai dokumen fisiknya. Bila nomornya belum ada, <a href="<?= base_url('spk/baru') ?>">buat SPK baru</a> dulu, atau periksa daftarnya di <a href="<?= base_url('spk') ?>">Register SPK</a>.</p>
   <table data-paginasi="10" data-cari="Cari baris belum bernomor…">
     <tr><th>Kode</th><th>Nama</th><th class="angka">Qty</th><th>Satuan</th><th class="angka">Harga</th><th class="angka">Total</th><th>Pasangkan ke SPK</th></tr>
     <?php foreach ($detail as $d): $tot += (float) $d['total']; ?>
