@@ -2,7 +2,9 @@
 
 **Aplikasi pengelolaan pembangunan/revitalisasi sekolah berbasis dokumen perencana** — dari impor RAB perencana, perhitungan kebutuhan bahan & upah, perencanaan belanja, sampai LPJ.
 
-Versi panduan: 22 November 2026 · Aplikasi: PBJ-REVIT (CodeIgniter 4) · Contoh data pada gambar: SMP Negeri 3 Ranto Baek SATAP
+Versi panduan: 24 November 2026 · Terakhir diverifikasi terhadap kode: 24 November 2026 (migrasi 000028) · Aplikasi: PBJ-REVIT (CodeIgniter 4) · Contoh data: SMP Negeri 3 Ranto Baek SATAP
+
+> Catatan: tangkapan layar belum disertakan pada versi ini. Setiap bab menyebut menu, tombol, dan hasil yang harus terlihat agar tetap dapat diikuti.
 
 ---
 
@@ -10,6 +12,7 @@ Versi panduan: 22 November 2026 · Aplikasi: PBJ-REVIT (CodeIgniter 4) · Contoh
 
 1. Pendahuluan — alur besar aplikasi
 2. Memulai — masuk, tampilan, profil & sandi
+2a. Konvensi Antarmuka (berlaku di semua modul)
 3. Mengelola Sekolah & Pengaturan
 4. Impor Dokumen Perencana
 5. Dashboard & Panel Perlu Perhatian
@@ -61,32 +64,43 @@ Prinsip-prinsip penting:
 
 ## 2. Memulai — masuk, tampilan, profil & sandi
 
-Buka alamat aplikasi (di komputer server, mis. `http://localhost:81/pbj_revit/`), lalu masuk dengan nama pengguna dan kata sandi yang diberikan admin. Akun bawaan awal adalah **admin / admin123** — segera ganti sandinya sesudah masuk pertama kali.
+Buka alamat aplikasi (di komputer server, mis. `http://localhost:81/pbj-revit/`), lalu masuk dengan nama pengguna dan kata sandi yang diberikan admin. Akun bawaan awal adalah **admin / admin123**.
 
-![Halaman masuk](panduan_pbj/01-login.png)
+- **Wajib ganti sandi.** Akun bawaan dan akun yang baru dibuat admin memiliki status *harus ganti sandi*: sesudah masuk, aplikasi langsung mengarahkan ke halaman **Profil** dan menolak membuka menu lain sampai sandi diganti. Ini pengaman, bukan gangguan.
+- **Akun nonaktif** tidak dapat masuk. Admin dapat menonaktifkan akun lewat **Pengaturan → Manajemen User**.
+- Halaman masuk memakai **tampilan v2** (dua panel). Admin dapat memilih tampilan masuk lain lewat **Pengaturan → Identitas & Pengaturan → Tampilan halaman masuk**.
 
 Sesudah masuk, tampilan utama terdiri dari:
 
-- **Menu samping (kiri)** — berkelompok: Perencanaan, Pembangunan Gedung, Belanja, Bahan & Laporan, Pengaturan. Klik nama kelompok untuk membuka/menutup isinya; tombol di topbar menyembunyikan/menampilkan menu samping. Di HP, menu menjadi laci geser.
-- **Pengalih sekolah aktif** di bagian atas menu samping.
-- **Topbar** — pencarian bahan, cip nama sekolah aktif, tombol ukuran huruf (A- dan A+), tombol tema gelap/terang, dan menu profil.
+- **Menu samping (kiri)** — berlatar gradasi hijau, berkelompok: **Perencanaan**, **Pembangunan Gedung**, **Belanja**, **Material**, **Keuangan**, **Laporan**, dan **Pengaturan**. Klik nama kelompok untuk membuka/menutup isinya; tombol di topbar menyembunyikan/menampilkan menu samping. Di HP, menu menjadi laci geser.
+- **Blok logo statis** di puncak menu samping — memuat logo aplikasi, tulisan "Analisa Perencana", label **Sekolah aktif**, dan pemilih sekolah. Blok ini tidak ikut bergulir saat daftar menu panjang; yang bergulir hanya daftar menu di bawahnya. Saat ukuran huruf diubah (A−/A+), ukuran logo dan blok profil tetap.
+- **Topbar** — pencarian bahan, cip nama sekolah aktif, tombol ukuran huruf (A− dan A+), tombol tema gelap/terang, dan menu profil.
 - **Notifikasi toast** — setiap operasi simpan/ubah/hapus memunculkan pemberitahuan "Berhasil/Gagal" di kanan atas yang hilang sendiri dalam ±5 detik.
 
-![Dashboard aplikasi](panduan_pbj/02-dashboard.png)
+Menu yang terlihat mengikuti **peran** Anda dan pengaturan **Akses Menu** (Bab 18). Bila sebuah menu yang disebut panduan ini tidak tampak, kemungkinan peran Anda tidak diberi akses ke menu tersebut.
 
 ### Profil & ganti sandi
 
-Klik avatar/nama Anda di topbar → **Profil**: ubah nama tampilan, dan ganti kata sandi (isi sandi lama + sandi baru). Tombol **Keluar** juga ada di menu yang sama.
+Klik avatar/nama Anda di topbar → **Profil**: ubah nama tampilan, dan ganti kata sandi (isi sandi lama + sandi baru). Tombol **Keluar** juga ada di menu yang sama. Setelah sandi berhasil diganti, status *harus ganti sandi* hilang dan seluruh menu terbuka kembali.
 
-![Halaman profil](panduan_pbj/27-profil.png)
+## 2a. Konvensi Antarmuka (berlaku di semua modul)
+
+Agar panduan ini tidak mengulang hal yang sama di setiap bab, berikut konvensi yang berlaku di seluruh aplikasi:
+
+- **Tanggal tampil dd/mm/yyyy.** Semua tanggal yang tampil (tabel, laporan, cetakan) memakai format hari/bulan/tahun. Penyimpanan tetap yyyy-mm-dd. Input tanggal adalah kotak teks bertanggal (kelas `isian-tanggal`) yang otomatis dikonversi saat formulir dikirim — jangan mengetik format ISO manual.
+- **Isian uang berformat ribuan.** Field harga/rupiah memakai atribut `data-uang`: nilai tampil dengan pemisah ribuan Indonesia saat diketik dan saat halaman dimuat, dan otomatis dikembalikan ke angka polos sebelum formulir terkirim. Gunakan `type="text"` + `inputmode="numeric"` (bukan `type="number"`).
+- **Select pencarian.** Semua select tunggal otomatis menjadi searchable. Untuk placeholder khusus, pakai `data-placeholder` atau helper `select_cari()`. Panel dropdown dirender sebagai lapisan tetap di `<body>` (portal) agar tidak terpotong. **Pengecualian:** select "Per halaman" pada paginasi tabel adalah select biasa (nilai 10/25/50/100) agar cepat diganti tanpa membuka panel pencarian.
+- **Tabel Standar v2.** Setiap tabel daftar mendapat: pencarian langsung, paginasi, pengurutan klik-header (sadar angka format Indonesia, tanggal, teks; kolom berisi kontrol formulir tidak bisa diurutkan atau ditandai `data-tanpa-urut`), empty state seragam saat saringan kosong, baris judul grup mengikuti baris anaknya, baris total selalu tampil dan tidak dihitung, baris rincian tersinkron dengan pemiliknya, "pilih semua" hanya mencentang baris yang terlihat, dan semua baris tercetak saat print. Status tabel (kata cari, urutan, ukuran halaman, halaman) tersimpan per sesi; tombol Ekspor CSV mengunduh baris yang sedang tersaring; header urut membawa `aria-sort`; kotak cari berlabel aksesibel.
+- **Tabel lebar** boleh memiliki scroll horizontal pada pembungkusnya; jangan membuat seluruh halaman ikut melebar. Header tabel menempel (sticky) bila tabel cukup tinggi.
+- **Modal konfirmasi.** Setiap tombol Hapus membuka modal konfirmasi gaya TailAdmin; data tidak terhapus sebelum menekan **Ya, Hapus**. Esc atau klik di luar menutup.
+- **Tema terang/gelap** (tombol bulan di topbar) dan **ukuran huruf** (A−/A+) diingat oleh peramban. Saat zoom in/out, ukuran logo dan blok profil di sidebar tetap (zoom balik).
+- **Tautan lintas modul.** Setiap peringatan/keadaan kosong menyertakan tautan langsung ke halaman tempat kekurangan itu dilengkapi (mis. bahan tanpa harga → Master Bahan, SPK tanpa rincian → Detail SPK, invoice tak cocok → Register Invoice).
 
 ## 3. Mengelola Sekolah & Pengaturan
 
 ### Menambah & memilih sekolah
 
 Menu **Pengaturan → Kelola Sekolah**: daftar semua sekolah, tombol tambah sekolah baru (form singkat: nama sekolah), pindah sekolah aktif, dan hapus sekolah yang masih kosong. Sekolah yang baru dibuat selanjutnya dilengkapi identitasnya di halaman Pengaturan.
-
-![Kelola sekolah](panduan_pbj/03-sekolah.png)
 
 ### Pengaturan sekolah aktif
 
@@ -100,13 +114,9 @@ Menu **Pengaturan → Identitas & Pengaturan** berisi lima kelompok untuk sekola
 
 Di halaman yang sama ada **Master Penyedia**: tambah, **Ubah**, dan hapus toko/rekanan yang dipakai pada SPK dan invoice.
 
-![Pengaturan sekolah](panduan_pbj/04-pengaturan.png)
-
 ## 4. Impor Dokumen Perencana
 
-Menu **Perencanaan → Impor Dokumen Perencana**. Ada dua format yang dikenali otomatis: **workbook RAB perencana** (format konsultan) dan **template manual** (format aplikasi sendiri).
-
-![Panel impor](panduan_pbj/05-impor.png)
+Menu **Perencanaan → Impor Dokumen Perencana**. Ada dua format yang dikenali otomatis: **workbook RAB perencana** (format konsultan) dan **template manual** (format aplikasi sendiri). Impor hanya dapat dijalankan oleh peran **operator** dan **admin**.
 
 ### Tahap peninjauan & pemetaan sheet
 
@@ -158,32 +168,46 @@ Menu **Perencanaan → Pembersihan Hasil Impor** merapikan sisa-sisa impor workb
 
 Menu **Perencanaan → Analisa Pekerjaan** adalah jantung hitungan aplikasi: daftar analisa (AHSP) sekolah beserta harga satuannya. Buka satu analisa untuk melihat dan mengurus **komponennya** — bahan, upah, dan peralatan beserta koefisien dan tarifnya:
 
-- Komponen dapat **ditambah, diubah, dan dihapus**; harga satuan analisa terhitung ulang dari komponennya.
+- Komponen dapat **ditambah, diubah, dan dihapus**; harga satuan analisa terhitung ulang dari komponennya. Editor komponen berjalan di **modal live** — ubah koefisien atau tarif, nilai koefisien × tarif terhitung langsung saat mengetik, dan penyimpanan dilakukan lewat AJAX tanpa memuat ulang halaman (tabel & ringkasan disegarkan otomatis).
 - Komponen yang belum tertaut ke master bahan/upah dikumpulkan di panel **Komponen Belum Tertaut** — tautkan dari sana agar kebutuhan bahan/upah terbaca di BOQ dan Rencana Belanja.
 - Untuk bahan yang satuan komponennya berbeda dari satuan beli master (mis. semen kg → zak), isi **konversi satuan manual** pada komponennya; konversi manual ini mengalahkan konversi bawaan aplikasi di semua hitungan.
+- Bila analisa berpadanan dengan **Acuan AHSP Nasional**, kolom **Koef. Acuan** dan **Nilai Acuan** tampil di samping setiap komponen, dan koefisien acuan ditampilkan sebagai petunjuk di modal Ubah. Acuan hanya pembanding — perbaikan koefisien tetap dilakukan di sini; tidak ada tombol yang menyalin koefisien acuan otomatis.
+- Panel **Dipakai di Pekerjaan** di bawah analisa menampilkan daftar pekerjaan + gedung yang memakai analisa ini (lewat relasi id, cadangan kode), masing-masing bertautan ke baris pekerjaan itu di BOQ gedungnya (halaman digulir, baris disorot, rinciannya terbuka).
+- Pencarian di halaman Analisa juga menemukan analisa dari **nama bahan/komponen** di baliknya (indeks cari per baris), tanpa mencemari pengurutan kolom dan ekspor CSV.
 
 ### Memeriksa Analisa — Acuan AHSP Nasional & Validasi Harga Satuan
 
 Dua menu pemeriksaan membantu memastikan analisa dan harga pekerjaan sekolah masuk akal:
 
-- **Acuan AHSP Nasional** (menu Perencanaan): membandingkan **koefisien** analisa sekolah (dari dokumen perencana) terhadap acuan nasional **SE Dirjen Bina Konstruksi 68/SE/Dk/2024** (dasar Permen PUPR 8/2023). Pencocokan lewat kode analisa; harga acuan dihitung ulang memakai tarif komponen sekolah sendiri, sehingga yang dibandingkan murni koefisiennya. Master acuan diisi sekali lewat perintah `php spark impor:acuan` di folder aplikasi. Selisih koefisien yang besar layak ditanyakan ke perencana.
-- **Validasi Harga Satuan** (menu Perencanaan): membandingkan harga satuan pekerjaan untuk **kode analisa yang sama** — antar pekerjaan itu sendiri dan terhadap harga hasil kalkulasi komponen analisanya. Bila ada pekerjaan yang harganya menyimpang dari saudara sekodenya, halaman ini menandainya dan menyediakan tombol untuk **menyamakan** harga dalam satu kode (satu pekerjaan, atau semua sekaligus). Harga berjalan yang berasal dari BA Revisi yang sudah disahkan **tidak disentuh** oleh penyamaan ini.
+- **Acuan AHSP Nasional** (menu **Perencanaan → Acuan AHSP Nasional**): membandingkan **koefisien** analisa sekolah (dari dokumen perencana) terhadap acuan nasional **SE Dirjen Bina Konstruksi 68/SE/Dk/2024** (dasar Permen PUPR 8/2023). Pencocokan lewat kode analisa; harga acuan dihitung ulang memakai tarif komponen sekolah sendiri, sehingga yang dibandingkan murni koefisiennya. Master acuan diisi sekali lewat perintah `php spark impor:acuan` di folder aplikasi. Halaman ini **hanya pembanding** — perbaikan koefisien tetap dilakukan di **Analisa Pekerjaan**; tidak ada tombol yang menyalin koefisien acuan secara otomatis.
+- **Validasi Harga Satuan** (menu **Perencanaan → Validasi Harga Satuan**): membandingkan harga satuan pekerjaan untuk **kode analisa yang sama** — antar pekerjaan itu sendiri dan terhadap harga hasil kalkulasi komponen analisanya. Bila ada pekerjaan yang harganya menyimpang dari saudara sekodenya, halaman ini menandainya dan menyediakan tombol untuk **menyamakan** harga dalam satu kode (satu pekerjaan, atau semua sekaligus). Harga berjalan yang berasal dari BA Revisi yang sudah disahkan **tidak disentuh** oleh penyamaan ini. Tindakan menyamakan harga hanya untuk peran **operator** dan **admin**.
 
 ## 5. Dashboard & Panel Perlu Perhatian
 
-Dashboard merangkum sekolah aktif: Total RAB, Total SPK Terdaftar, Realisasi Dibayar (bersih sesudah PPh 22), dan Sisa Anggaran; panel **Pembangunan Gedung** menampilkan nilai BOQ dan persen fisik tiap gedung; dan panel kuning **Perlu perhatian** menandai hal yang harus diperiksa, misalnya:
+Dashboard merangkum sekolah aktif: **Total RAB**, **Total SPK Terdaftar**, **Realisasi Dibayar** (bersih sesudah PPh 22), dan **Sisa Anggaran**.
 
-- baris rincian SPK yang **belum bernomor SPK** (dengan tautan untuk memasangkannya),
-- invoice yang nilainya **tidak sama** dengan total SPK-nya,
-- **sisa bahan negatif** (pemakaian melebihi RAB).
+Panel **Pembangunan Gedung — Dari Dokumen Perencana** membandingkan, per gedung aktif:
+- **Nilai BOQ Asli** = jumlah volume awal × harga satuan dokumen perencana (nilai gedung pada dokumen asal),
+- **Nilai Analisa** = nilai AHSP berjalan (total verifikasi anggaran),
+- **Perubahan** = selisihnya bertanda +/− dan persennya terhadap BOQ asli, dengan baris total di kaki tabel.
 
-![Dashboard dengan panel perhatian](panduan_pbj/02-dashboard.png)
+Perbandingan inilah yang menunjukkan dampak perbaikan harga/tarif analisa terhadap nilai gedung. Panel **Ringkasan per SPK** menampilkan nomor, tanggal, penyedia, paket, jumlah bahan, nilai, dan status (belum/tuntaskan) per SPK.
+
+Panel kuning **Perlu perhatian** menandai hal yang harus diperiksa, masing-masing dengan tautan langsung ke halaman pemilik datanya:
+- kemajuan fisik ≥ 50% tetapi **dana tahap 2 (30%) belum diterima** (ajukan pencairan di Penerimaan Dana),
+- **baris rincian SPK yang belum bernomor SPK** (pasangkan nomornya),
+- **invoice yang nilainya tidak sama** dengan total SPK-nya (periksa di Register Invoice),
+- **sisa bahan negatif** (pemakaian melebihi RAB),
+- **pola pemecahan pembelian** (pembelian besar yang dicicil lewat SPK kecil berturut-turut),
+- **ALERT MASTER**: bahan/jenis tenaga sama dengan satuan atau harga berbeda,
+- **bahan tanpa harga acuan** (terhitung Rp 0 di kebutuhan & rencana belanja),
+- **jenis upah tanpa tarif** (terhitung Rp 0 di kebutuhan upah).
+
+Di bawah panel utama tampil juga **verifikasi anggaran**: total BOQ gedung aktif + biaya non-gedung dibandingkan dengan pagu anggaran, beserta selisih dan status (sesuai/melebihi).
 
 ## 6. Gedung & BOQ — kebutuhan bahan, kebutuhan upah, realisasi
 
-Menu **Pembangunan Gedung → Daftar Gedung** (atau klik nama gedung di menu samping). Setiap gedung dapat ditambah, diubah namanya, dan dihapus (menghapus gedung ikut menandai BOQ dan realisasinya).
-
-![Daftar gedung](panduan_pbj/06-gedung.png)
+Menu **Pembangunan Gedung → Kelola Gedung** (atau klik nama gedung di menu samping). Setiap gedung dapat ditambah, diubah namanya, dan dihapus (menghapus gedung ikut menandai BOQ dan realisasinya).
 
 Halaman detail gedung mempunyai empat tab:
 
@@ -191,31 +215,30 @@ Halaman detail gedung mempunyai empat tab:
 
 Daftar pekerjaan gedung itu: bab/kelompok, uraian, kode analisa, volume, satuan, harga satuan, dan jumlah. Volume dapat **diubah langsung** di barisnya (kebutuhan bahan/upah dan nilai gedung terhitung ulang). Pekerjaan baru dapat ditambah; pekerjaan dapat dihapus lewat tombol hapus (dengan modal konfirmasi).
 
-![Tab BOQ](panduan_pbj/07-gedung-boq.png)
+Hal yang perlu diketahui:
+- **Subtotal per bab** tampil pada baris judul bab (kolom Jumlah Berjalan = jumlah seluruh Jumlah Berjalan pekerjaan dalam bab itu), dihitung atas semua baris bab tersebut (bukan hanya yang tampil di halaman paginasi aktif).
+- **Kode analisa** pada baris pekerjaan adalah tautan ke halaman analisa itu; nama pekerjaan yang punya analisa dapat diklik untuk membuka rincian bahan & upah di tempat.
+- **Dasar nilai pekerjaan** adalah hasil AHSP: harga berjalan = harga revisi yang disahkan (bila ada) > jumlah koefisien × tarif komponen analisa terkini (tarif upah memakai yang terbesar antara tarif komponen dan Master Upah) > harga satuan dokumen BOQ (hanya untuk pekerjaan tanpa analisa/komponen). Total BOQ dashboard, verifikasi anggaran, nilai realisasi, Kurva S, dan RAB Gabungan LPJ semuanya memakai dasar ini.
+- Nama pekerjaan yang punya analisa dapat diklik untuk membuka rincian bahan & upahnya di tempat.
 
 ### Tab Kebutuhan Bahan
 
 Hitungan kebutuhan bahan gedung ini: untuk setiap bahan — satuan **komponen** dari analisa (mis. kg), jumlah kebutuhan, satuan **beli** (mis. zak), jumlah beli, dan nilai rupiahnya. Konversi yang dipakai: semen kg → zak (÷50), pasir kg → m³ (÷1.400), kerikil/batu kg → m³ (÷1.600), keramik bh → ktk (sesuai ukuran). Bila ada komponen yang belum tertaut ke master bahan, formulir penautan tersedia di tab ini.
 
-![Tab kebutuhan bahan](panduan_pbj/08-gedung-bahan.png)
-
 ### Tab Kebutuhan Upah
 
-Hitungan kebutuhan tenaga per jenis (Pekerja, Tukang Kayu, Tukang Batu, dst.): orang-hari (OH) hasil perkalian volume × koefisien analisa, tarif per OH dari master upah, dan total upahnya.
-
-![Tab kebutuhan upah](panduan_pbj/09-gedung-upah.png)
+Hitungan kebutuhan tenaga per jenis: **Pekerja** dan **Tukang** — dua jenis kanonik master upah. Orang-hari (OH) dihasilkan dari perkalian volume × koefisien analisa, tarif per OH dari master upah, dan total upahnya dijumlahkan per jenis.
 
 ### Tab Realisasi
 
 Catatan realisasi fisik per tanggal: persen atau volume terealisasi dan keterangan. Persen fisik gedung dihitung dari catatan ini dan tampil di daftar gedung, dashboard, dan LPJ.
-
-![Tab realisasi](panduan_pbj/10-gedung-realisasi.png)
 
 ### BA Revisi Pekerjaan & RAB Berjalan
 
 Di lapangan, pekerjaan dapat berubah: volume bertambah/berkurang, pekerjaan baru muncul, atau pekerjaan diganti/dihapus. Menu **Pembangunan Gedung → BA Revisi Pekerjaan** mencatat perubahan itu secara resmi:
 
 - Setiap revisi dicatat dengan jenisnya (**volume, baru, ganti, hapus**), uraian perubahan, dan nomor berita acaranya. Revisi yang dicatat berstatus **draft** dan **belum mengubah angka apa pun**.
+- **Pengesahan revisi hanya dapat dilakukan peran ketua, kepsek, atau admin** — bukan pencatat revisi biasa. Gunakan tombol **Sahkan** pada baris revisi; tindakan ini tercatat di Jejak Audit.
 - Sesudah berita acara ditandatangani dan revisi **disahkan**, barulah **RAB berjalan** pekerjaan itu bergerak (volume/harga revisi). **RAB awal tidak pernah berubah** — yang tampil di BOQ dan hitungan kebutuhan adalah nilai berjalan, dan riwayat perubahannya tersimpan di halaman ini.
 - Berita acara revisi dapat **dicetak** untuk ditandatangani Kepala Sekolah, Ketua P2SP, dan Tim Teknis.
 
@@ -244,10 +267,6 @@ Menu **Perencanaan → Biaya Non-Gedung** menampung biaya tingkat sekolah yang b
 - **Biaya Pengelolaan** — terbaca otomatis dari sheet *ADMINISTRASI*: honor P2SP, ATK, komunikasi, konsumsi rapat, transportasi, dan pelaporan. Pada contoh yang sama totalnya Rp 20.435.000.
 - **Perabot** — terbaca otomatis dari sheet *Perabot*: daftar perabot per ruangan (meja, kursi, lemari, papan, dst.). Hanya baris yang **terisi jumlah harga** yang diimpor, dikelompokkan per ruangan — sebagian besar sheet adalah daftar kebutuhan yang volumenya belum diisi. Pada contoh yang sama: 24 baris terisi senilai Rp 152.413.610 (Ruang Kelas Unit 1 Rp 94.710.000 dan blok Administrasi Rp 57.703.610).
 
-![Halaman Biaya Non-Gedung](panduan_pbj/30-biaya-non-gedung.png)
-
-![Kelompok Perabot pada Biaya Non-Gedung](panduan_pbj/31-perabot-biaya.png)
-
 Hal yang perlu diketahui:
 
 1. Baris bersumber **Impor** diganti segar setiap impor ulang (workbook maupun template); baris **Manual** yang Anda tambahkan sendiri tidak ikut terhapus.
@@ -264,8 +283,6 @@ Menu **Perencanaan → Rencana Belanja** menyusun paket belanja dari pekerjaan y
 3. **Langkah 3 — Kebutuhan Bahan:** kebutuhan bahan hasil hitungan (volume × koefisien analisa), dikurangi yang sudah dipesan pada SPK lain, sehingga terlihat **sisa kebutuhan**. Centang bahan yang akan dibeli, sesuaikan qty rencana (boleh dibeli bertahap), pilih gedung tujuan, lalu klik **Buat SPK dari Pilihan**.
 4. **Langkah 4 — Kebutuhan Pekerja:** kebutuhan tenaga dari pekerjaan terpilih — OH (orang-hari) per jenis tenaga dan perkiraan jumlah orang menurut target hari kerja.
 
-![Rencana belanja](panduan_pbj/11-rencana.png)
-
 SPK yang dibuat dari rencana bernomor urut berikutnya, bertanggal hari ini, dan berisi baris bahan yang dicentang. **Catatan kebutuhan tenaga kerjanya ikut terisi otomatis** dari hitungan Langkah 4 (lihat Bab 11). Lengkapi penyedia dan tanggalnya di Register SPK atau halaman rincian SPK.
 
 Harga satuan pada rencana boleh diisi melebihi harga dokumen — yang dikunci hanya **total keseluruhan terhadap pagu**.
@@ -275,9 +292,13 @@ Harga satuan pada rencana boleh diisi melebihi harga dokumen — yang dikunci ha
 Menu **Perencanaan → Rencana Mingguan** memecah pekerjaan menjadi target per minggu untuk satu gedung:
 
 1. Buat rencana mingguan: pilih gedung dan tanggal mulai minggu.
-2. Isi **target volume** tiap pekerjaan untuk minggu itu.
+2. Isi **target volume** tiap pekerjaan untuk minggu itu, atau gunakan tombol **Ambil Target dari Kurva S** bila rencana Kurva S resmi sudah diimpor — target per bab dihitung dari rencana kumulatif dokumen s.d. minggu itu dikurangi realisasi tercatat bab itu (pola kejar ketertinggalan), dibagi ke pekerjaan menurut porsi sisa nilainya.
 3. Aplikasi menghitung **daftar belanja bersih minggu itu**: kebutuhan kotor (target × koefisien analisa) dikurangi **stok tersedia** (barang sudah diterima/BAST dan saldo Buku Material) dan **pesanan berjalan** (SPK aktif yang belum di-BAST) — jadi yang dibeli hanya kekurangannya. Kebutuhan upah minggu itu tampil dalam OH.
 4. Dari daftar belanja bersih itu, SPK mingguannya dapat dibuat langsung dari halaman ini.
+
+**SPK gabungan** (tombol **Gabungkan Beberapa Rencana Jadi 1 SPK** di halaman ini): beberapa rencana mingguan beda gedung disatukan jadi satu SPK. Kebutuhan kotor per bahan per gedung dijumlahkan, stok tersedia & pesanan berjalan (sifatnya se-sekolah) dikurangkan **satu kali** dari gabungan lalu dialokasikan ke gedung menurut porsi kebutuhannya (sisa pembulatan ke gedung berporsi terbesar). SPK gabungan ber-gedung NULL; rinciannya terpisah per (bahan, gedung) dengan keterangan "Untuk <gedung>", Detail SPK menampilkan kolom Gedung Tujuan, dan cetakan SPK mengelompokkan rincian per gedung hanya bila multi-gedung.
+
+**Buku Material per gedung**: keluar-masuk material dicatat per gedung (kolom Gedung Tujuan pada formulir, boleh kosong untuk gudang bersama) dan halaman Buku Material menampilkan Rekap per Gedung; saldo stok utama tetap gabungan se-sekolah.
 
 ### Simulasi Mingguan
 
@@ -301,45 +322,43 @@ Keluar–masuk material per gedung dicatat di **Buku Material**: kolom **Gedung 
 
 ## 9. Pembayaran Upah
 
-Menu **Pembangunan Gedung → Pembayaran Upah** mencatat pembayaran tenaga kerja: tanggal, gedung (dan pekerjaan bila tertaut), jenis tenaga, nama penerima/mandor, orang-hari, dan tarif per OH (kosongkan untuk memakai tarif master). Jumlah bayar = orang-hari × tarif, dan **diperiksa ke pagu sebelum disimpan** — pembayaran yang membuat total belanja melewati pagu ditolak.
+Menu **Keuangan → Pembayaran Upah** mencatat pembayaran tenaga kerja: tanggal, gedung (dan pekerjaan bila tertaut), jenis tenaga, nama penerima, orang-hari, dan tarif per OH (kosongkan untuk memakai tarif master). Jumlah bayar = orang-hari × tarif, dan **diperiksa ke pagu sebelum disimpan** — pembayaran yang membuat total belanja melewati pagu ditolak. Pencatatan pembayaran hanya dapat dilakukan peran **bendahara** atau **admin**.
 
-Di halaman yang sama ada **Master Tarif Upah**: tarif resmi per jenis tenaga untuk sekolah ini (berasal dari dokumen perencana; dapat diubah, mis. mengisi tarif Kepala Tukang/Mandor yang di dokumen masih 0).
-
-![Pembayaran upah](panduan_pbj/12-upah.png)
+Di halaman yang sama ada **Master Tarif Upah**: tarif resmi per jenis tenaga untuk sekolah ini. Master upah hanya mengenal **dua jenis kanonik: Pekerja dan Tukang** (tarif per OH). Varian nama lain (mis. Tukang Batu, Tukang Kayu) dan komponen Mandor/Kepala Tukang **tidak dipakai lagi**; rapikan data lama dengan tombol **Rapikan ke 2 Jenis** di halaman **Material → Master Bahan & Upah**. Formulir "Tambah ke Master" hanya menawarkan jenis kanonik yang belum ada.
 
 ## 10. Master Bahan
 
-Menu **Bahan & Laporan → Master Bahan & Upah**: daftar bahan sekolah aktif (kode, nama, satuan beli, harga RAB, dan kebutuhan per gedung warisan format lama). **Kotak pencarian di atas tabel menyaring langsung** — ketik sebagian kode atau nama, daftar berubah seketika tanpa memuat ulang halaman (kotak pencarian di topbar juga menuju ke sini). Bahan dapat ditambah, diubah, dan dihapus. Kode bahan unik per sekolah. Master ini terisi otomatis dari impor dokumen perencana dan menjadi acuan harga pertama pada rincian SPK.
+Menu **Material → Master Bahan & Upah**: daftar bahan sekolah aktif (kode, nama, satuan beli, harga RAB, dan kebutuhan per gedung warisan format lama). **Kotak pencarian di atas tabel menyaring langsung** — ketik sebagian kode atau nama, daftar berubah seketika tanpa memuat ulang halaman (kotak pencarian di topbar juga menuju ke sini). Bahan dapat ditambah, diubah, dan dihapus. Kode bahan unik per sekolah. Master ini terisi otomatis dari impor dokumen perencana dan menjadi acuan harga pertama pada rincian SPK.
 
 **Hapus banyak sekaligus (bulk):** centang kotak di kiri baris (kotak di kepala tabel mencentang semua), lalu klik **Hapus Terpilih (n)** dan konfirmasi. Bahan yang sudah dipakai di rincian SPK tidak ikut terhapus — ia dipertahankan dan namanya disebutkan pada laporan hasil. Hal yang sama berlaku di tabel **Master Upah** di bawahnya: kotak saring menyaring jenis tenaga seketika, dan baris tercentang dapat dihapus sekaligus.
 
 **Tombol Kosongkan:** **Kosongkan Master Bahan** / **Kosongkan Master Upah** menghapus seluruh isi master sekolah aktif dalam sekali klik (sesudah dialog konfirmasi). Semua penghapusan di halaman ini bersifat **hapus lunak** — data tidak musnah. Bahan yang sudah dipakai di rincian SPK tetap dipertahankan saat pengosongan bahan. Menambahkan kembali bahan berkode sama dengan yang pernah dihapus akan **menghidupkan kembali** baris lamanya.
 
-**Fitur yang sama di semua modul.** Pencarian langsung, hapus terpilih (centang), dan tombol Kosongkan juga tersedia di: Daftar Gedung, BOQ Pekerjaan per gedung, Biaya Non-Gedung, Register SPK, Survei Harga dan Negosiasi (centang per bahan), Invoice, Buku Material, Riwayat Pembayaran Upah, Master Penyedia (di Pengaturan), Transaksi Manual Buku Kas, Penerimaan Dana, Bukti Setor & Pajak, Foto Progres (centang pada kartu foto), dan BA Revisi Pekerjaan. Penjaga tiap modul tetap berlaku: menghapus SPK membuat rinciannya belum bernomor, penyedia yang dipakai SPK dilewati, dan foto ikut menghapus berkasnya. Perbedaan yang disengaja: **Manajemen User** hanya mempunyai hapus terpilih (akun sendiri dan admin terakhir selalu dilewati; tidak ada Kosongkan), **Kosongkan Buku Kas** hanya menghapus transaksi yang dicatat manual (baris dari jurnal pembayaran, upah, dan bukti setor dihapus di modul sumbernya), sedangkan halaman **Kelola Sekolah** dan **Dokumen BAP/BAST** hanya mendapat kotak pencarian langsung.
+**Fitur yang sama di semua modul.** Pencarian langsung, hapus terpilih (centang), dan tombol Kosongkan juga tersedia di: Kelola Gedung, BOQ Pekerjaan per gedung, Biaya Non-Gedung, Register SPK, Survei Harga dan Negosiasi (centang per bahan), Invoice, Buku Material, Riwayat Pembayaran Upah, Master Penyedia (di Pengaturan), Transaksi Manual Buku Kas, Penerimaan Dana, Bukti Setor & Pajak, Foto Progres (centang pada kartu foto), dan BA Revisi Pekerjaan. Penjaga tiap modul tetap berlaku: menghapus SPK membuat rinciannya belum bernomor, penyedia yang dipakai SPK dilewati, dan foto ikut menghapus berkasnya. Perbedaan yang disengaja: **Manajemen User** hanya mempunyai hapus terpilih (akun sendiri dan admin terakhir selalu dilewati; tidak ada Kosongkan), **Kosongkan Buku Kas** hanya menghapus transaksi yang dicatat manual (baris dari jurnal pembayaran, upah, dan bukti setor dihapus di modul sumbernya), sedangkan halaman **Kelola Sekolah** dan **Dokumen BAP/BAST** hanya mendapat kotak pencarian langsung.
 
-![Master bahan](panduan_pbj/13-bahan.png)
+### Tab Dipakai Gedung & Tidak Dipakai Gedung, Gabungkan Duplikat, Sinkronkan Harga
 
-### Tab Terpakai & Belum Terpakai, Gabungkan Duplikat, Sinkronkan Harga
-
-Halaman Master Bahan terbagi dua tab: **Terpakai** (bahan yang dipakai analisa gedung yang didanai) dan **Belum Terpakai**. Tiga alat perapian tersedia di halaman ini:
+Halaman Master Bahan terbagi dua tab: **Dipakai Gedung** (bahan yang dipakai analisa gedung aktif yang didanai) dan **Tidak Dipakai Gedung**. Tiga alat perapian tersedia di halaman ini:
 
 - **Perbaiki & Gabungkan (duplikat):** impor dapat melahirkan bahan yang sama dengan nama persis sama tetapi kode/satuan/harga berbeda. Alat ini mendeteksi kelompok nama yang sama dan menggabungkannya ke satu bahan utama: seluruh referensi (komponen analisa, rincian SPK, dsb.) dialihkan ke bahan utama, lalu duplikatnya dihapus. Berlaku juga untuk **Master Upah**. Deteksinya hanya untuk **nama yang persis sama** — beda ejaan dianggap bahan berbeda.
-- **Sinkronkan Harga ke Analisa:** menulis harga master bahan ke komponen-komponen analisa yang tertaut, agar harga AHSP hasil hitungan mengikuti harga master terbaru. Sesudah tombol ditekan, modal konfirmasi menampilkan **hanya tarif yang benar-benar berubah** (yang tetap dan yang dilewati karena satuan kemasan berbeda ditampilkan sebagai ringkasan), baru sesudah Anda menyetujui harga ditulis.
+- **Sinkronkan Harga ke Analisa:** menulis harga master bahan ke komponen-komponen analisa yang tertaut, agar harga AHSP hasil hitungan mengikuti harga master terbaru. Harga baru disesuaikan ke satuan komponen lewat faktor konversi (mis. harga per zak menjadi per kg), dan perbandingannya memakai tarif yang dinormalkan ke satuan master — jadi tarif yang setara tidak dianggap berubah. Komponen yang satuan komponennya berbeda dari satuan master **tanpa faktor konversi (manual maupun bawaan)** dilewati, bukan disalin mentah, agar AHSP tidak rusak (mis. baut per buah tidak tertimpa harga per dus). Hanya komponen yang analisanya benar-benar dipakai pekerjaan di gedung didanai yang disinkronkan; komponen pada analisa yang tidak dipakai pekerjaan gedung mana pun tidak diubah. Sesudah tombol ditekan, modal konfirmasi menampilkan **hanya tarif yang benar-benar berubah** (yang tetap, yang dilewati karena satuan, dan yang bahannya belum berharga ditampilkan sebagai ringkasan), baru sesudah Anda menyetujui harga ditulis.
 - **Konversi satuan manual:** untuk bahan yang satuan komponen analisanya berbeda dari satuan belinya (mis. semen kg → zak), faktor konversi manual yang diisi di halaman Analisa **mengalahkan** konversi bawaan aplikasi.
+
+- **Kelengkapan Harga & Tarif:** panel waspada di puncak halaman (hanya muncul bila ada yang kosong) menampilkan **bahan tanpa harga acuan** dan **jenis upah tanpa tarif** dalam satu formulir — isi semuanya lalu klik **Simpan Semua Isian**. Yang sudah terisi tidak ditampilkan lagi. Bahan/upah tanpa harga terhitung Rp 0 di kebutuhan dan rencana belanja.
+
+- **Tarif Analisa per Gedung** (kolom di tabel Master Bahan): menampilkan tarif komponen analisa per gedung didanai, dengan lencana **Sama/Beda** terhadap harga acuan bahan. Bila seragam di semua gedung, diringkas "Semua Gedung". Perbandingan menormalkan tarif komponen ke satuan master lewat faktor konversi, sehingga tarif per kg yang setara per zak tetap terbaca Sama.
+
+- **Rapikan ke 2 Jenis (Master Upah):** menyeragamkan semua varian upah menjadi **Pekerja** dan **Tukang**, menghapus komponen Mandor/Kepala Tukang, menautkan ulang komponen ke master kanonik, dan menghapus lunak master lain. Jalankan sekali sesudah impor data lama.>
 
 ## 11. SPK & Rincian — termasuk Belum Bernomor
 
-Menu **Belanja → SPK**: register Surat Perintah Kerja. Tambah SPK (nomor, tanggal, masa mulai–selesai, penyedia, paket, gedung tertaut bila dari rencana), ubah, atau hapus (menghapus SPK membuat rinciannya kembali **belum bernomor**, bukan ikut terhapus).
+Menu **Belanja → Register SPK**: register Surat Perintah Kerja. Tambah SPK (nomor, tanggal, masa mulai–selesai, penyedia, paket, gedung tertaut bila dari rencana), ubah, atau hapus (menghapus SPK membuat rinciannya kembali **belum bernomor**, bukan ikut terhapus).
 
 **Pembelian dari masyarakat.** Untuk belanja seperti pasir, batu, atau kayu yang dibeli dari warga, pilih penyedia khusus **"Masyarakat"**, lalu isi kolom **Nama Penerima** dengan nama orangnya. Nama itu **diwarisi ke semua dokumen turunan** SPK tersebut — cetak SPK, BAP, BAST, dan Invoice mencantumkan nama penerima itu sebagai pihak kedua, tanpa perlu membuat satu record penyedia per orang.
-
-![Register SPK](panduan_pbj/14-spk.png)
 
 ### Rincian SPK
 
 Klik nomor SPK untuk membuka rinciannya: tambah baris bahan, isi jumlah dan harga. **Harga acuan berjenjang**: aplikasi menyarankan harga dari negosiasi → penawaran survei → harga RAB, dan Anda tetap dapat mengetik harga lain. Total SPK dan PPN (11% dari dasar pengenaan) terhitung otomatis.
-
-![Rincian SPK](panduan_pbj/15-spk-detail.png)
 
 ### Kebutuhan Tenaga Kerja
 
@@ -352,18 +371,12 @@ Panel **Kebutuhan Tenaga Kerja** pada halaman rincian SPK mencatat perkiraan ten
 
 ### Belum Bernomor
 
-Menu **Belanja → Belum Bernomor** mengumpulkan baris rincian yang belum masuk SPK mana pun (mis. hasil impor data lama atau SPK yang dihapus). Pasangkan baris ke SPK tujuan dari halaman ini, atau **hapus** baris yang memang tidak terpakai lagi lewat tombol **Hapus** pada barisnya (sesudah dihapus, baris tidak bisa dipasangkan lagi).
-
-![Belum bernomor](panduan_pbj/16-belum-bernomor.png)
+Menu **Belanja → Belum Bernomor SPK** mengumpulkan baris rincian yang belum masuk SPK mana pun (mis. hasil impor data lama atau SPK yang dihapus). Pasangkan baris ke SPK tujuan dari halaman ini, atau **hapus** baris yang memang tidak terpakai lagi lewat tombol **Hapus** pada barisnya (sesudah dihapus, baris tidak bisa dipasangkan lagi).
 
 ## 12. Survei Harga & Negosiasi
 
-- **Survei Harga** (menu Belanja): catat harga penawaran beberapa toko untuk bahan yang sama; kolom Termurah dan Terpilih terhitung otomatis.
-- **Negosiasi**: catat harga hasil negosiasi per bahan — harga ini menjadi **acuan pertama** saat mengisi rincian SPK.
-
-![Survei harga](panduan_pbj/17-survei.png)
-
-![Negosiasi](panduan_pbj/18-negosiasi.png)
+- **Survei Harga** (menu **Belanja → Survei Harga**): catat harga penawaran beberapa toko untuk bahan yang sama; kolom Termurah dan Terpilih terhitung otomatis.
+- **Negosiasi** (menu **Belanja → Negosiasi**): catat harga hasil negosiasi per bahan — harga ini menjadi **acuan pertama** saat mengisi rincian SPK.
 
 ## 13. BAP & BAST — dan mencetak dokumen
 
@@ -379,7 +392,7 @@ Syaratnya: SPK **belum mempunyai BAP maupun Invoice**. SPK yang rantainya sudah 
 
 ### Jalur manual lewat menu Dokumen
 
-Menu **Belanja → BAP & BAST** (halaman Dokumen, satu baris per SPK): untuk setiap SPK, buat **BAP** (Berita Acara Pemeriksaan hasil pekerjaan), periksa/ubah isinya (termasuk rincian hasil pemeriksaan), lalu buat **BAST** (Berita Acara Serah Terima) dari BAP itu. Aturannya ketat: tombol Buat BAP hilang bila seluruh rincian sudah ter-BAP, dan **satu BAP hanya mempunyai satu BAST**. Dokumen yang dapat dicetak dari aplikasi (berkop sekolah, lengkap dengan terbilang dan blok tanda tangan):
+Menu **Belanja → BAP & BAST / Cetak** (halaman Dokumen, satu baris per SPK): untuk setiap SPK, buat **BAP** (Berita Acara Pemeriksaan hasil pekerjaan), periksa/ubah isinya (termasuk rincian hasil pemeriksaan), lalu buat **BAST** (Berita Acara Serah Terima) dari BAP itu. Aturannya ketat: tombol Buat BAP hilang bila seluruh rincian sudah ter-BAP, dan **satu BAP hanya mempunyai satu BAST**. Dokumen yang dapat dicetak dari aplikasi (berkop sekolah, lengkap dengan terbilang dan blok tanda tangan):
 
 - **SPK**, **BAP**, **BAST** — dari halaman ini (nomor surat format `422/<JENIS>/<urut>/<tahun>`),
 - **Invoice** — dari halaman Invoice,
@@ -387,25 +400,21 @@ Menu **Belanja → BAP & BAST** (halaman Dokumen, satu baris per SPK): untuk set
 - **Papan Nama Proyek** — dari halaman Dokumen, untuk dipasang di lokasi pekerjaan,
 - **Laporan** dan **LPJ** — dari halaman masing-masing.
 
-![BAP dan BAST](panduan_pbj/19-dokumen.png)
-
 ## 14. Invoice & Jurnal Pembayaran
 
-Menu **Belanja → Invoice**: catat tagihan penyedia (nomor urut, toko, tanggal, SPK/BAP/BAST terkait, nilai). Invoice dapat diubah, dihapus, dan **dicetak** (nomor `422/INV/<urut>/<tahun>`).
+Menu **Keuangan → Invoice**: catat tagihan penyedia (nomor urut, toko, tanggal, SPK/BAP/BAST terkait, nilai). Invoice dapat diubah, dihapus, dan **dicetak** (nomor `422/INV/<urut>/<tahun>`).
 
-![Daftar invoice](panduan_pbj/20-invoice.png)
+> **Invoice terkunci sesudah dibayar.** Invoice yang sudah memiliki jurnal pembayaran aktif tidak dapat diubah, dihapus, atau ikut dikosongkan. Untuk mengoreksi, hapus dulu jurnal pembayarannya (tercatat di Jejak Audit), baru invoice dapat diperbaiki. Ini menjaga agar buku kas dan laporan tidak berubah tanpa jejak.
 
 ### Jurnal Pembayaran
 
-Menu **Belanja → Jurnal Pembayaran** mencatat pembayaran invoice: pilih invoice, tanggal bayar, dan cara bayar. Aplikasi menghitung **PPh 22 sebesar 1,5%** secara otomatis, menandai invoice **Sudah Bayar**, dan memeriksa total terhadap pagu — jurnal yang menembus pagu ditolak. Baris jurnal dapat dihapus bila keliru catat (invoice kembali Belum Bayar).
+Menu **Keuangan → Jurnal Pembayaran** mencatat pembayaran invoice: pilih invoice, tanggal bayar, dan cara bayar. Aplikasi menghitung **PPh 22 sebesar 1,5%** secara otomatis, menandai invoice **Sudah Bayar**, dan memeriksa total terhadap pagu — jurnal yang menembus pagu ditolak. Baris jurnal dapat dihapus bila keliru catat (invoice kembali Belum Bayar). Pencatatan jurnal hanya untuk peran **bendahara** atau **admin**.
 
 Pembayaran invoice sebuah SPK juga dapat dicatat langsung dari panel **Tuntaskan SPK** di rincian SPK (Bab 13) — hasil dan aturannya sama, panel hanya menghemat perpindahan menu.
 
-![Jurnal pembayaran](panduan_pbj/21-jurnal.png)
-
 ### Penerimaan Dana Bantuan
 
-Menu **Keuangan → Penerimaan Dana** mencatat pencairan Bantuan Pemerintah yang diterima sekolah. Sesuai Juknis Revitalisasi SMP 2026, pencairan bertahap: **Tahap 1 sebesar 70%**, dan **Tahap 2 sebesar 30%** sesudah kemajuan pekerjaan mencapai minimal 50%. Catat tanggal, tahap, jumlah, dan kanal penerimaannya — penerimaan otomatis tampil sebagai kas masuk di Buku Kas, dan kuitansi penerimaannya dapat **dicetak** mengikuti format dokumen Juknis.
+Menu **Keuangan → Penerimaan Dana** mencatat pencairan Bantuan Pemerintah yang diterima sekolah. Sesuai Juknis Revitalisasi SMP 2026, pencairan bertahap: **Tahap 1 sebesar 70%**, dan **Tahap 2 sebesar 30%** sesudah kemajuan pekerjaan mencapai minimal 50%. Catat tanggal, tahap, jumlah, dan kanal penerimaannya — penerimaan otomatis tampil sebagai kas masuk di Buku Kas, dan kuitansi penerimaannya dapat **dicetak** mengikuti format dokumen Juknis. Pencatatan hanya untuk peran **bendahara** atau **admin**.
 
 ### Buku Kas (BKU)
 
@@ -416,29 +425,23 @@ Menu **Keuangan → Buku Kas** adalah pembukuan resmi menurut Juknis: **Buku Kas
 - pembayaran upah, dan
 - bukti setor pajak.
 
-Buku ditutup per bulan (saldo awal, mutasi, saldo akhir) dan dapat **dicetak** mengikuti format dokumen Juknis. Mengosongkan Buku Kas hanya menghapus transaksi manualnya — baris dari modul lain dihapus di modul sumbernya masing-masing.
+Buku ditutup per bulan (saldo awal, mutasi, saldo akhir) dan dapat **dicetak** mengikuti format dokumen Juknis. **Transaksi manual** hanya dapat dicatat peran **bendahara** atau **admin**. Mengosongkan Buku Kas hanya menghapus transaksi manualnya — baris dari modul lain dihapus di modul sumbernya masing-masing — dan hanya dapat dilakukan **admin**.
 
 ### Bukti Setor & Pajak
 
-Menu **Keuangan → Bukti Setor & Pajak** mencatat penyetoran pajak yang dipungut/dipotong bendahara (**PPh 22, PPN, PPh 21, PPh 23, PPh Pasal 4 ayat (2)**) ke kas negara: tanggal setor, masa pajak, kode e-billing, dan **NTPN**. Register ini membandingkan setoran terhadap kewajiban pajak yang timbul dari transaksi, dan juga mencatat pengembalian sisa dana bantuan lewat **SIMPONI** — sesuai tata cara penyetoran pada Juknis.
+Menu **Keuangan → Bukti Setor & Pajak** mencatat penyetoran pajak yang dipungut/dipotong bendahara (**PPh 22, PPN, PPh 21, PPh 23, PPh Pasal 4 ayat (2)**) ke kas negara: tanggal setor, masa pajak, kode e-billing, dan **NTPN**. Register ini membandingkan setoran terhadap kewajiban pajak yang timbul dari transaksi, dan juga mencatat pengembalian sisa dana bantuan lewat **SIMPONI** — sesuai tata cara penyetoran pada Juknis. Pencatatan hanya untuk peran **bendahara** atau **admin**.
 
 ## 15. Buku Material & Sisa Bahan
 
-- **Buku Material** (menu Bahan & Laporan): catatan keluar–masuk bahan per tanggal (dari pembelian/SPK dan pemakaian), menjadi dasar stok.
-- **Sisa Bahan**: perbandingan kebutuhan RAB dengan realisasi pemakaian per bahan; sisa negatif ditandai (juga muncul di panel Perlu Perhatian dashboard).
-
-![Buku material](panduan_pbj/22-material.png)
-
-![Sisa bahan](panduan_pbj/23-sisa-bahan.png)
+- **Buku Material** (menu **Material → Buku Material**): catatan keluar–masuk bahan per tanggal (dari pembelian/SPK dan pemakaian), menjadi dasar stok. Kolom **Gedung Tujuan** boleh diisi untuk mencatat pemakaian per gedung; saldo utama tetap se-sekolah.
+- **Sisa Bahan** (menu **Material → Sisa Bahan**): perbandingan kebutuhan RAB dengan realisasi pemakaian per bahan; sisa negatif ditandai (juga muncul di panel Perlu Perhatian dashboard).
 
 ## 16. Laporan & Ekspor Excel
 
-Menu **Bahan & Laporan → Laporan**: ringkasan belanja sekolah, rekap per gedung, dan rekap per SPK. Tersedia:
+Menu **Laporan → Laporan & Ekspor**: ringkasan belanja sekolah, rekap per gedung, dan rekap per SPK. Tersedia:
 
 - **Cetak laporan** ber-kop sekolah,
 - **Ekspor Excel**: Rekap SPK, Buku Material, dan Sisa Bahan (berkas `.xlsx`).
-
-![Laporan](panduan_pbj/24-laporan.png)
 
 ### Template Laporan — dokumen berformat bebas dari template Excel
 
@@ -455,27 +458,34 @@ Kemampuan blok berulang: satu sheet boleh memuat banyak tabel berulang — blok 
 
 ## 17. LPJ — sekolah dan per gedung
 
-Menu **Bahan & Laporan → LPJ**: pertanggungjawaban per gedung (anggaran BOQ, realisasi belanja bahan + upah, persen fisik, sisa) dan rekap gabungan satu sekolah. LPJ dapat dibuka per gedung maupun **dicetak** untuk sekolah dan per gedung.
-
-![LPJ sekolah](panduan_pbj/25-lpj.png)
+Menu **Laporan → LPJ & Realisasi**: pertanggungjawaban per gedung (anggaran BOQ, realisasi belanja bahan + upah, persen fisik, sisa) dan rekap gabungan satu sekolah. LPJ dapat dibuka per gedung maupun **dicetak** untuk sekolah dan per gedung. Menu **Laporan → RAB Gabungan** menyajikan RAB beberapa gedung sekaligus (pekerjaan sama dijumlahkan lintas gedung) beserta cetaknya.
 
 ## 18. Manajemen Pengguna
 
-Menu **Pengaturan → Pengguna** (khusus admin): tambah pengguna, ubah nama/peran/kata sandi, dan hapus pengguna. Peran yang tersedia: **admin, ketua, bendahara, pelaksana, kepsek, operator**. Perlindungan bawaan: akun Anda sendiri tidak dapat dihapus, dan admin terakhir tidak dapat dihapus/diturunkan perannya. Pengguna yang terhapus tidak dapat masuk lagi.
+Menu **Pengaturan → Manajemen User** (khusus admin): tambah pengguna, ubah nama/peran/kata sandi, dan hapus pengguna. Peran yang tersedia: **admin, ketua, bendahara, pelaksana, kepsek, operator**. Perlindungan bawaan: akun Anda sendiri tidak dapat dihapus, dan admin terakhir tidak dapat dihapus/diturunkan perannya. Pengguna yang dinonaktifkan atau terhapus tidak dapat masuk lagi.
 
-![Manajemen pengguna](panduan_pbj/26-pengguna.png)
+**Akun baru wajib ganti sandi.** Setiap akun yang dibuat admin — dan akun bawaan `admin/admin123` — memiliki status *harus ganti sandi*. Sesudah masuk, pengguna hanya bisa membuka **Profil** sampai sandinya diganti; menu lain menolak akses. Admin dapat mengatur ulang sandi pengguna dari halaman ini, dan pengguna itu akan diminta menggantinya lagi saat masuk.
+
+**Aksi sensitif dibatasi peran di server**, bukan hanya disembunyikan di tampilan:
+
+| Aksi | Peran yang diizinkan |
+|---|---|
+| Pengesahan BA Revisi Pekerjaan | ketua, kepsek, admin |
+| Jurnal pembayaran, penerimaan dana, bukti setor, pembayaran upah, transaksi manual Buku Kas | bendahara, admin |
+| Impor dokumen, Rapikan ke 2 Jenis, Samakan harga di Validasi Harga | operator, admin |
+| Mengosongkan master/modul (Kosongkan Bahan, Kosongkan Buku Kas, dll.) | admin |
+
+Admin selalu lolos semua gerbang. Bila tombol aksi tidak muncul padahal peran Anda seharusnya berhak, periksa pembagian peran di halaman ini.
 
 Tampilan dapat disesuaikan per pengguna: **tema gelap** (tombol bulan di topbar) dan **ukuran huruf** (tombol A−/A+); keduanya diingat oleh peramban.
 
-![Tema gelap](panduan_pbj/29-tema-gelap.png)
-
 ### Hak Akses Menu per Peran
 
-Menu **Pengaturan → Hak Akses Menu** (khusus admin) mengatur menu apa saja yang boleh dibuka tiap peran selain admin (admin selalu boleh semua). Bawaan aplikasi: semua peran boleh semua menu. Hilangkan centang pada menu yang tidak perlu diakses suatu peran, lalu simpan — menu itu hilang dari tampilan peran tersebut dan alamatnya pun ditolak bila diketik langsung. Tombol **Atur Ulang** mengembalikan akses semua peran ke bawaan. Gunakan ini, misalnya, agar bendahara tidak membuka menu perencanaan, atau pelaksana hanya melihat menu pembangunan dan belanja.
+Menu **Pengaturan → Akses Menu** (khusus admin) mengatur menu apa saja yang boleh dibuka tiap peran selain admin (admin selalu boleh semua). Bawaan aplikasi: semua peran boleh semua menu. Hilangkan centang pada menu yang tidak perlu diakses suatu peran, lalu simpan — menu itu hilang dari tampilan peran tersebut dan alamatnya pun ditolak bila diketik langsung. Tombol **Atur Ulang** mengembalikan akses semua peran ke bawaan. Gunakan ini, misalnya, agar bendahara tidak membuka menu perencanaan, atau pelaksana hanya melihat menu pembangunan dan belanja.
 
 ### Jejak Audit
 
-Menu **Jejak Audit** mencatat siapa melakukan apa dan kapan: pengguna, modul, jenis tindakan (tambah/ubah/hapus/pengesahan/dsb.), dan keterangan ringkasnya — misalnya pembuatan SPK, pengesahan BA Revisi, perubahan hak akses menu, dan pemulihan data. Halaman ini bahan penelusuran bila ada angka yang berubah tanpa diketahui siapa yang mengubahnya.
+Menu **Pengaturan → Jejak Audit** mencatat siapa melakukan apa dan kapan: pengguna, modul, jenis tindakan (tambah/ubah/hapus/pengesahan/dsb.), dan keterangan ringkasnya — misalnya pembuatan SPK, pengesahan BA Revisi, perubahan hak akses menu, dan pemulihan data. Halaman ini bahan penelusuran bila ada angka yang berubah tanpa diketahui siapa yang mengubahnya.
 
 ## 19. Menghapus Data dengan Aman
 
@@ -483,11 +493,9 @@ Menu **Jejak Audit** mencatat siapa melakukan apa dan kapan: pengguna, modul, je
 - Penghapusan bersifat **lunak (soft delete)**: baris ditandai terhapus dan disembunyikan dari semua daftar, laporan, dan hitungan, tetapi masih tersimpan di database dan dapat dipulihkan oleh admin database bila terlanjur.
 - Menghapus **gedung** ikut menyembunyikan BOQ dan realisasinya; menghapus **SPK** mengembalikan rinciannya menjadi belum bernomor.
 
-![Modal konfirmasi hapus](panduan_pbj/28-modal-hapus.png)
-
 ### Pemeliharaan Database (khusus admin)
 
-Menu **Pemeliharaan Database** adalah ruang perawatan data aplikasi:
+Menu **Pengaturan → Pemeliharaan Database** adalah ruang perawatan data aplikasi:
 
 - **Informasi & ukuran tabel** — melihat isi database per tabel.
 - **Backup SQL** — membuat cadangan seluruh database sebagai berkas `.sql`, mengunduhnya, atau menghapus cadangan lama. Buat backup **sebelum** pekerjaan besar (impor ulang, pengosongan master, pemulihan data).
@@ -506,8 +514,8 @@ Wajar pada sebagian kecil gedung: ada sheet yang Grand Total-nya memang tidak sa
 **Harga satuan pekerjaan terhitung 0.**
 Kode analisa pekerjaan tidak ditemukan di Analisa maupun Harsat (mis. kode varian khusus di BOQ). Isi harga lewat kolom Harga Satuan pada template, atau perbaiki kode analisanya di tab BOQ.
 
-**Tarif Kepala Tukang / Mandor 0.**
-Di dokumen perencana kedua tarif ini memang tersimpan 0. Isi lewat **Master Tarif Upah** di halaman Pembayaran Upah.
+**Jenis upah di dokumen perencana berbeda-beda (Tukang Batu, Tukang Kayu, dan seterusnya).**
+Aplikasi hanya memakai dua jenis upah kanonik: **Pekerja** dan **Tukang**; komponen Kepala Tukang dan Mandor sudah dihapus. Jalankan tombol **Rapikan ke 2 Jenis** di halaman **Material → Master Bahan & Upah** sekali sesudah impor data lama — semua varian nama diseragamkan dan ditautkan ke master Pekerja/Tukang, lalu tarifnya diatur di **Keuangan → Pembayaran Upah**.
 
 **Transaksi ditolak karena pagu.**
 Total belanja (invoice terbayar + pembayaran upah) akan melewati pagu anggaran sekolah. Periksa sisa pagu di Rencana Belanja/Pengaturan; naikkan pagu di Pengaturan bila memang ada perubahan anggaran resmi.
@@ -516,17 +524,32 @@ Total belanja (invoice terbayar + pembayaran upah) akan melewati pagu anggaran s
 Tekan **Ctrl+F5** di peramban untuk memuat ulang tanpa cache.
 
 **Lupa kata sandi.**
-Admin dapat mengatur ulang sandi pengguna mana pun dari menu Pengaturan → Pengguna.
+Admin dapat mengatur ulang sandi pengguna mana pun dari menu **Pengaturan → Manajemen User**. Pengguna tersebut akan diminta mengganti sandi lagi saat masuk berikutnya.
 
 ## 21. Lampiran — Ringkasan Hasil QA
 
-Pengujian browser menyeluruh terakhir: **22 November 2026**, terhadap seluruh halaman dan alur utama:
+Pengujian browser menyeluruh terakhir: **22 November 2026**, terhadap halaman dan alur utama saat itu:
 
 - **34/34 pemeriksaan halaman & tampilan lulus** — login (termasuk penolakan sandi salah), dashboard, kelola sekolah, pengaturan, impor, daftar & detail gedung (4 tab), rencana belanja, pembayaran upah, master bahan, SPK & rincian, belum bernomor, survei, negosiasi, BAP & BAST, invoice, jurnal, buku material, sisa bahan, laporan, LPJ sekolah & per gedung, pengguna, profil, dan halaman cetak (SPK, laporan, LPJ).
 - **11/11 pemeriksaan fungsi lulus** — ekspor Excel (rekap SPK, buku material, sisa bahan), unduh template kosong, ekspor template terisi, cetak invoice, pembuatan BAP, simpan + hapus pembayaran upah melalui modal, modal konfirmasi hapus, tema gelap, dan **0 dialog bawaan peramban** di seluruh pengujian.
 - Uji impor-balik template: template terisi SMP Negeri 3 Ranto Baek SATAP diimpor kembali dengan selisih nilai **Rp 0**; jalur harga Harsat saja berselisih +1,7% (sisa selisih berasal dari inkonsistensi dokumen perencana sendiri).
 - Catatan data (bukan kerusakan aplikasi): panel Perlu Perhatian menandai data warisan yang menunggu keputusan sekolah — 159 baris rincian belum bernomor, ketidaksamaan nilai Invoice No. 1 dengan SPK 1, dan dua sisa bahan negatif.
 
+**Belum diuji ulang secara menyeluruh** (fitur sesudah 22 November): Acuan AHSP Nasional, Validasi Harga Satuan, Simulasi Mingguan, SPK Gabungan dari Rencana Mingguan, Tuntaskan SPK satu panel, dan Template Laporan. Langkah kerjanya sudah ditulis di panduan ini berdasarkan kode dan uji coba terbatas, tetapi belum melewati putaran QA browser penuh. Selain itu, **9 tes unit** (`composer test`) mencakup fungsi dasar `BaseController` (terbilang, rupiah, pajak, ketentuan PBJ, faktor satuan) — bukan pengganti QA antarmuka.
+
 ---
 
-*Panduan ini disusun bersamaan dengan QA aplikasi pada 22 November 2026. Gambar memakai data contoh SMP Negeri 3 Ranto Baek SATAP; tampilan sekolah Anda sama, isinya mengikuti data sekolah Anda.*
+## Lampiran — Glosarium
+
+- **BOQ** (Bill of Quantity): daftar pekerjaan gedung dengan volume dan harga satuan; dasar nilai gedung.
+- **AHSP**: Analisa Harga Satuan Pekerjaan — komponen (bahan, upah, peralatan) × koefisien yang membentuk harga satuan.
+- **SPK**: Surat Perintah Kerja — dokumen pembelian bahan/pekerjaan ke penyedia.
+- **BAP**: Berita Acara Pemeriksaan hasil pekerjaan.
+- **BAST**: Berita Acara Serah Terima (tertatu ke satu BAP).
+- **LPJ**: Laporan Pertanggungjawaban (per gedung dan gabungan sekolah).
+- **RAB**: Rencana Anggaran Biaya.
+- **OH**: Orang-hari (satuan kebutuhan tenaga).
+- **Pagu**: batas total belanja yang boleh dikeluarkan.
+- **Soft delete**: penghapusan lunak (baris ditandai terhapus, dapat dipulihkan).
+
+*Panduan ini diperbarui 24 November 2026 mengikuti kode aplikasi (hingga migrasi 000028). Data contoh yang disebut berasal dari SMP Negeri 3 Ranto Baek SATAP; tampilan sekolah Anda sama, isinya mengikuti data sekolah Anda.*
