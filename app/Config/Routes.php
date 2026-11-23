@@ -54,6 +54,8 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('spk/kosongkan', 'Spk::kosongkan');
     $routes->get('spk/detail/(:num)', 'Spk::detail/$1');
     $routes->post('spk/ceklis/(:num)', 'Spk::ceklis/$1');
+    $routes->post('spk/tuntaskan/(:num)', 'Spk::tuntaskan/$1');
+    $routes->post('spk/bayar-cepat/(:num)', 'Spk::bayarCepat/$1');
     $routes->post('spk/detail-tambah/(:num)', 'Spk::detailTambah/$1');
     $routes->post('spk/detail-ubah/(:num)', 'Spk::detailUbah/$1');
     $routes->post('spk/detail-hapus/(:num)', 'Spk::detailHapus/$1');
@@ -80,6 +82,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('dokumen/bast-ubah/(:num)', 'Dokumen::bastUbah/$1');
     $routes->post('dokumen/bast-simpan/(:num)', 'Dokumen::bastSimpan/$1');
     $routes->get('dokumen/cetak-spk/(:num)', 'Dokumen::cetakSpk/$1');
+    $routes->get('dokumen/cetak-spj/(:num)', 'Dokumen::cetakSpj/$1');
     $routes->get('dokumen/cetak-bast-aset/(:num)', 'Dokumen::cetakBastAset/$1');
     $routes->get('dokumen/cetak-papan-nama', 'Dokumen::cetakPapanNama');
     $routes->get('dokumen/cetak-bap/(:num)', 'Dokumen::cetakBap/$1');

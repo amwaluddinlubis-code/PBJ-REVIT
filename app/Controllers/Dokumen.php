@@ -227,6 +227,68 @@ class Dokumen extends BaseController
     }
 
     /**
+     * Cetak SPJ Lengkap (Ide A): SPK + BAP + BAST + Invoice SPK ini dalam
+     * satu berkas siap cetak, tiap dokumen mulai di halaman baru. Dokumen
+     * yang belum ada dilewati.
+     */
+    public function cetakSpj($spkId)
+    {
+        $db = $this->db();
+        $s = $db->table('spk')->where(['id' => (int) $spkId, 'is_deleted' => 0])->get()->getRowArray();
+        if (! $s || (int) $s['sekolah_id'] !== $this->sid()) {
+            return redirect()->to('dokumen')->with('galat', 'SPK tidak ditemukan di sekolah aktif.');
+        }
+        $ambilIsi = static function ($html): string {
+            if (! is_string($html)) {
+                return '';
+            }
+            if (preg_match('/<body>(.*)<\/body>/s', $html, $m)) {
+                $html = $m[1];
+            }
+            return (string) preg_replace('/<div class="takcetak">.*?<\/div>/s', '', $html);
+        };
+        $lembar = [];
+        $lembar[] = $ambilIsi($this->cetakSpk($spkId));
+        $bap = $db->query('SELECT * FROM bap WHERE spk_id = ? AND is_deleted = 0 ORDER BY nomor_urut LIMIT 1', [(int) $spkId])->getRowArray();
+        if ($bap) {
+            $lembar[] = $ambilIsi($this->cetakBap((int) $bap['id']));
+            $bast = $db->query('SELECT * FROM bast WHERE bap_id = ? AND is_deleted = 0 ORDER BY nomor_urut LIMIT 1', [(int) $bap['id']])->getRowArray();
+            if ($bast) {
+                $lembar[] = $ambilIsi($this->cetakBast((int) $bast['id']));
+            }
+        }
+        $inv = $db->query('SELECT * FROM invoice WHERE spk_id = ? AND is_deleted = 0 ORDER BY nomor_urut LIMIT 1', [(int) $spkId])->getRowArray();
+        if ($inv) {
+            // Data sama seperti Invoice::cetak.
+            $i = $db->query(
+                'SELECT i.*, s.nomor AS spk_nomor, s.tanggal AS spk_tanggal, s.paket, COALESCE(NULLIF(TRIM(s.ttd_penyedia), ""), NULLIF(TRIM(s.penerima_manual), "")) AS ttd_penyedia,
+                        COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia, p.alamat AS penyedia_alamat
+                 FROM invoice i JOIN spk s ON s.id = i.spk_id
+                 LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE i.id = ? AND s.sekolah_id = ? AND i.is_deleted = 0 AND s.is_deleted = 0',
+                [(int) $inv['id'], $this->sid()]
+            )->getRowArray();
+            if ($i) {
+                $detailInv = $db->query(
+                    'SELECT COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan,
+                            d.qty, d.harga, d.qty*d.harga AS total
+                     FROM spk_detail d LEFT JOIN bahan b ON b.id = d.bahan_id WHERE d.spk_id = ? AND d.is_deleted = 0 ORDER BY d.id',
+                    [(int) $spkId]
+                )->getResultArray();
+                $lembar[] = $ambilIsi(view('cetak/invoice', [
+                    'idn' => $this->sekolahAktif(), 'i' => $i, 'detail' => $detailInv,
+                    'pajak' => $this->pajakPembelian((float) $i['nilai'], $this->ppnInvoice($this->ppnSpkMap(), (int) $spkId, (float) $i['nilai'])),
+                    'totalSpk' => array_sum(array_column($detailInv, 'total')),
+                    'terbilang' => $this->terbilang($i['nilai']),
+                    'nomor' => $this->nomorSurat('INV', (int) $i['nomor_urut']),
+                    'nomorSpk' => $this->nomorSurat('SPK', (int) $i['spk_nomor']),
+                ]));
+            }
+        }
+        $lembar = array_values(array_filter($lembar, static fn ($x) => trim((string) $x) !== ''));
+        return view('cetak/spj', ['lembar' => $lembar, 'nomorSpk' => $this->nomorSurat('SPK', (int) $s['nomor'])]);
+    }
+
+    /**
      * BAST Aset per gedung (format dokumen Juknis): serah terima aset
      * hasil pembangunan — untuk satuan pendidikan negeri disampaikan
      * kepada Dinas Pendidikan, untuk swasta kepada penyelenggara

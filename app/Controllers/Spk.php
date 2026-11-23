@@ -167,12 +167,27 @@ class Spk extends BaseController
             ['kunci' => 'pembayaran', 'label' => 'Bukti pembayaran (jurnal pembayaran)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0 WHERE i.spk_id = ? AND p.is_deleted = 0') > 0, 'manual' => false],
             ['kunci' => 'kuitansi', 'label' => 'Kuitansi/faktur fisik dari penyedia (ditandatangani + stempel; bermaterai bila nilai kuitansi ≥ Rp5 juta)', 'ada' => $manual['kuitansi'] ?? false, 'manual' => true],
         ];
+        // Panel Tuntaskan SPK (Ide A): status rantai BAP/BAST/Invoice/Bayar
+        // untuk penyelesaian satu panel dari halaman ini.
+        $invTuntas = $db->query('SELECT * FROM invoice WHERE spk_id = ? AND is_deleted = 0 ORDER BY nomor_urut LIMIT 1', [(int) $id])->getRowArray();
+        $pajakTuntas = null;
+        if ($invTuntas) {
+            $pajakTuntas = $this->pajakPembelian((float) $invTuntas['nilai'], $this->ppnInvoice($this->ppnSpkMap(), (int) $id, (float) $invTuntas['nilai']));
+        }
+        $tuntas = [
+            'jml_bap' => $hitung('SELECT COUNT(*) AS j FROM bap WHERE spk_id = ? AND is_deleted = 0'),
+            'jml_bast' => $hitung('SELECT COUNT(*) AS j FROM bast WHERE spk_id = ? AND is_deleted = 0'),
+            'invoice' => $invTuntas,
+            'pajak' => $pajakTuntas,
+            'tgl_terima' => $s['tgl_selesai'] ?: date('Y-m-d'),
+        ];
         return $this->tampil('spk/detail', [
             's' => $s, 'detail' => $detail, 'bahan' => $bahan,
             'nilai_paket' => $nilaiPaket,
             'ketentuan' => $this->ketentuanPbj($nilaiPaket),
             'pembanding' => $pembanding,
             'ceklis' => $ceklis,
+            'tuntas' => $tuntas,
         ], 'SPK ' . $s['nomor']);
     }
 
@@ -199,6 +214,96 @@ class Spk extends BaseController
             ]);
         }
         return redirect()->to('spk/detail/' . (int) $id)->with('sukses', 'Ceklis kelengkapan dokumen diperbarui.');
+    }
+
+    /**
+     * Tuntaskan SPK (Ide A): buat BAP + BAST + Invoice sekaligus dalam satu
+     * transaksi dari satu tanggal terima. Hanya untuk SPK yang belum punya
+     * BAP maupun Invoice — SPK yang sudah berjalan sebagian tetap dikelola
+     * dari halaman Dokumen/Invoice seperti biasa.
+     */
+    public function tuntaskan($id)
+    {
+        $db = $this->db();
+        $s = $db->table('spk')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        if (! $s) {
+            return redirect()->to('spk')->with('galat', 'SPK tidak ditemukan di sekolah aktif.');
+        }
+        $jmlBap = (int) $db->query('SELECT COUNT(*) AS j FROM bap WHERE spk_id = ? AND is_deleted = 0', [(int) $id])->getRow()->j;
+        $jmlInv = (int) $db->query('SELECT COUNT(*) AS j FROM invoice WHERE spk_id = ? AND is_deleted = 0', [(int) $id])->getRow()->j;
+        if ($jmlBap > 0 || $jmlInv > 0) {
+            return redirect()->to('spk/detail/' . (int) $id)->with('galat', 'SPK ini sudah mempunyai BAP/Invoice — penyelesaian satu klik hanya untuk SPK yang belum dimulai; lanjutkan dari halaman Dokumen/Invoice.');
+        }
+        $detail = $db->table('spk_detail')->where(['spk_id' => (int) $id, 'is_deleted' => 0])->get()->getResultArray();
+        if (! $detail) {
+            return redirect()->to('spk/detail/' . (int) $id)->with('galat', 'SPK belum mempunyai rincian barang.');
+        }
+        $tgl = (string) ($this->request->getPost('tanggal_terima') ?: '');
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $tgl)) {
+            $tgl = $s['tgl_selesai'] ?: date('Y-m-d');
+        }
+        $total = (int) round(array_sum(array_map(static fn ($d) => (float) $d['qty'] * (float) $d['harga'], $detail)));
+        $now = date('Y-m-d H:i:s');
+        $db->transStart();
+        $urutBap = (int) $db->query('SELECT MAX(nomor_urut) m FROM bap')->getRow()->m + 1;
+        $db->table('bap')->insert(['spk_id' => (int) $id, 'nomor_urut' => $urutBap, 'tanggal' => $tgl, 'created_at' => $now, 'updated_at' => $now]);
+        $bapId = (int) $db->insertID();
+        foreach ($detail as $d) {
+            $db->table('bap_detail')->insert(['bap_id' => $bapId, 'detail_id' => $d['id'], 'kondisi' => 'Cukup']);
+        }
+        $urutBast = (int) $db->query('SELECT MAX(nomor_urut) m FROM bast')->getRow()->m + 1;
+        $db->table('bast')->insert(['spk_id' => (int) $id, 'bap_id' => $bapId, 'nomor_urut' => $urutBast, 'tanggal' => $tgl, 'created_at' => $now, 'updated_at' => $now]);
+        $bastId = (int) $db->insertID();
+        $urutInv = (int) $db->query('SELECT MAX(nomor_urut) m FROM invoice')->getRow()->m + 1;
+        $db->table('invoice')->insert([
+            'nomor_urut' => $urutInv, 'no_toko' => null, 'tanggal' => $tgl, 'spk_id' => (int) $id,
+            'bap_id' => $bapId, 'bast_id' => $bastId, 'nilai' => $total, 'status' => 'Belum Bayar',
+            'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $db->transComplete();
+        if (! $db->transStatus()) {
+            return redirect()->to('spk/detail/' . (int) $id)->with('galat', 'Penyelesaian gagal disimpan; tidak ada dokumen yang dibuat.');
+        }
+        $this->catatAudit('spk', (int) $id, 'tuntaskan', "BAP urut {$urutBap}, BAST urut {$urutBast}, dan Invoice urut {$urutInv} dibuat sekaligus (tanggal terima {$tgl}).");
+        return redirect()->to('spk/detail/' . (int) $id)->with('sukses', "SPK dituntaskan: BAP urut {$urutBap}, BAST urut {$urutBast}, dan Invoice urut {$urutInv} dibuat sekaligus. Tinggal catat pembayarannya di panel yang sama.");
+    }
+
+    /** Catat pembayaran invoice SPK ini langsung dari panel Tuntaskan. */
+    public function bayarCepat($id)
+    {
+        if ($d = $this->penjagaPeran(['bendahara'])) {
+            return $d;
+        }
+        $db = $this->db();
+        $s = $db->table('spk')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        if (! $s) {
+            return redirect()->to('spk')->with('galat', 'SPK tidak ditemukan di sekolah aktif.');
+        }
+        $inv = $db->query("SELECT * FROM invoice WHERE spk_id = ? AND is_deleted = 0 AND status <> 'Sudah Bayar' ORDER BY nomor_urut LIMIT 1", [(int) $id])->getRowArray();
+        if (! $inv) {
+            return redirect()->to('spk/detail/' . (int) $id)->with('galat', 'Tidak ada invoice yang menunggu pembayaran untuk SPK ini.');
+        }
+        // Kontrol pagu sama seperti Jurnal Pembayaran.
+        [$boleh, $sisaPagu, $anggaran] = $this->cekPagu((float) $inv['nilai']);
+        if (! $boleh) {
+            return redirect()->to('spk/detail/' . (int) $id)->with('galat', sprintf(
+                'Pembayaran ditahan: nilai invoice %s melewati sisa pagu anggaran %s dari total anggaran %s.',
+                $this->rp($inv['nilai']),
+                $this->rp(max(0, $sisaPagu)),
+                $this->rp($anggaran)
+            ));
+        }
+        $tgl = (string) ($this->request->getPost('tanggal_bayar') ?: '');
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $tgl)) {
+            $tgl = date('Y-m-d');
+        }
+        $now = date('Y-m-d H:i:s');
+        $db->transStart();
+        $db->table('pembayaran')->insert(['invoice_id' => (int) $inv['id'], 'tanggal' => $tgl, 'keterangan' => null, 'created_at' => $now, 'updated_at' => $now]);
+        $db->table('invoice')->where('id', (int) $inv['id'])->update(['status' => 'Sudah Bayar', 'updated_at' => $now]);
+        $db->transComplete();
+        $this->catatAudit('pembayaran', (int) $inv['id'], 'buat', 'Pembayaran invoice sebesar ' . $this->rp($inv['nilai']) . ' dicatat dari panel Tuntaskan SPK.');
+        return redirect()->to('spk/detail/' . (int) $id)->with('sukses', 'Pembayaran dicatat; PPh 22 dan nilai bersih terhitung otomatis. Rantai SPK ini selesai — tinggal cetak SPJ lengkapnya.');
     }
 
     public function detailTambah($spkId)
