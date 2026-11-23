@@ -373,8 +373,7 @@ class RencanaMingguan extends BaseController
         if ($baris === []) {
             return redirect()->to('rencana-mingguan/' . $id)->with('galat', 'Centang minimal satu bahan dengan jumlah beli lebih dari 0.');
         }
-        $row = $db->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ?', [$this->sid()])->getRow();
-        $nomor = ((int) ($row->m ?? 0)) + 1;
+        $nomor = $this->nomorSpkBerikutnya();
         $gedung = $this->ambilGedung((int) $r['gedung_id']);
         $db->transStart();
         $db->table('spk')->insert([
@@ -539,8 +538,7 @@ class RencanaMingguan extends BaseController
             $namaGedung[(int) $r['gedung_id']] = (string) $r['gedung_nama'];
             $minggu[] = date('d/m/Y', strtotime($r['minggu_mulai']));
         }
-        $row = $db->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ?', [$this->sid()])->getRow();
-        $nomor = ((int) ($row->m ?? 0)) + 1;
+        $nomor = $this->nomorSpkBerikutnya();
         $db->transStart();
         $db->table('spk')->insert([
             'sekolah_id' => $this->sid(), 'nomor' => $nomor, 'tanggal' => date('Y-m-d'),

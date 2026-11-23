@@ -83,7 +83,7 @@ class Invoice extends BaseController
     }
 
     /** Invoice terkunci bila sudah memiliki jurnal pembayaran aktif. */
-    private function sudahTerbayar(int $invoiceId): bool
+    protected function sudahTerbayar(int $invoiceId): bool
     {
         return $this->db()->table('pembayaran')->where(['invoice_id' => $invoiceId, 'is_deleted' => 0])->countAllResults() > 0;
     }

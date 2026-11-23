@@ -291,8 +291,7 @@ class Rencana extends BaseController
         if ($baris === []) {
             return redirect()->to('/rencana-belanja')->with('galat', 'Centang minimal satu bahan dengan jumlah rencana lebih dari 0.');
         }
-        $row = $db->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ?', [$this->sid()])->getRow();
-        $nomor = ((int) ($row->m ?? 0)) + 1;
+        $nomor = $this->nomorSpkBerikutnya();
         $db->transStart();
         $db->table('spk')->insert([
             'sekolah_id' => $this->sid(), 'nomor' => $nomor, 'tanggal' => date('Y-m-d'),

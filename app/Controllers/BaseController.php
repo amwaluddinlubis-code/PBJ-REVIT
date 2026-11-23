@@ -650,6 +650,24 @@ abstract class BaseController extends Controller
     }
 
     /**
+     * Nomor SPK berikutnya untuk satu sekolah: MAX(nomor) dari SELURUH
+     * baris spk sekolah itu, termasuk yang terhapus lunak, ditambah 1.
+     * Kunci unik spk_sekolah_nomor tetap dipegang baris terhapus, jadi
+     * menghitung hanya dari baris aktif menyebabkan tabrakan
+     * "duplicate entry" sesudah ada SPK yang dihapus. Dipakai semua
+     * jalur pembuatan SPK (Register SPK, Rencana Belanja, Rencana
+     * Mingguan) — jangan menghitung nomor dengan cara lain.
+     */
+    protected function nomorSpkBerikutnya(?int $sid = null): int
+    {
+        $row = $this->db()->query(
+            'SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ?',
+            [$sid ?? $this->sid()]
+        )->getRow();
+        return ((int) ($row->m ?? 0)) + 1;
+    }
+
+    /**
      * Hitung ulang volume/harga berjalan satu pekerjaan dari revisi
      * disahkan TERAKHIR yang menyentuhnya (jenis volume/hapus/ganti).
      * Tanpa revisi disahkan, berjalan kembali ke RAB awal (NULL).
