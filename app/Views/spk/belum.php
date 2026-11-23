@@ -20,6 +20,10 @@
           </select>
           <button type="submit" class="kecil">Pasang</button>
         </form>
+        <form class="inline" method="post" action="<?= base_url('spk/detail-hapus/' . $d['id']) ?>" data-konfirmasi="Hapus baris belum bernomor ini? Sesudah dihapus, baris tidak bisa dipasangkan ke SPK mana pun.">
+          <?= csrf_field() ?>
+          <button type="submit" class="kecil bahaya">Hapus</button>
+        </form>
       </td>
     </tr>
     <?php endforeach; ?>
