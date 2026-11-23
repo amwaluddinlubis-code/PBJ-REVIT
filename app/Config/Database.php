@@ -162,32 +162,34 @@ class Database extends Config
      *
      * @var array<string, mixed>
      */
+    /**
+     * Grup pengujian memakai MySQL/MariaDB sungguhan (bukan SQLite):
+     * migrasi dan query aplikasi memakai sintaks MySQL (ALTER majemuk,
+     * GREATEST, kunci unik) yang tidak berjalan di SQLite, dan DBPrefix
+     * harus kosong karena query mentah aplikasi memakai nama tabel
+     * tanpa awalan. Nilai bawaan di bawah hanya untuk mesin pengembang
+     * dan CI (database pbj_test, pengguna pbj_test) — timpa lewat
+     * variabel lingkungan database.tests.* bila perlu. JANGAN memakai
+     * database produksi sebagai database tes.
+     */
     public array $tests = [
-        'DSN'         => '',
-        'hostname'    => '127.0.0.1',
-        'username'    => '',
-        'password'    => '',
-        'database'    => ':memory:',
-        'DBDriver'    => 'SQLite3',
-        'DBPrefix'    => 'db_',  // Needed to ensure we're working correctly with prefixes live. DO NOT REMOVE FOR CI DEVS
-        'pConnect'    => false,
-        'DBDebug'     => true,
-        'charset'     => 'utf8',
-        'DBCollat'    => '',
-        'swapPre'     => '',
-        'encrypt'     => false,
-        'compress'    => false,
-        'strictOn'    => true,
-        'failover'    => [],
-        'port'        => 3306,
-        'foreignKeys' => true,
-        'busyTimeout' => 1000,
-        'synchronous' => null,
-        'dateFormat'  => [
-            'date'     => 'Y-m-d',
-            'datetime' => 'Y-m-d H:i:s',
-            'time'     => 'H:i:s',
-        ],
+        'DSN'      => '',
+        'hostname' => '127.0.0.1',
+        'username' => 'pbj_test',
+        'password' => 'pbj_test',
+        'database' => 'pbj_test',
+        'DBDriver' => 'MySQLi',
+        'DBPrefix' => '',
+        'pConnect' => false,
+        'DBDebug'  => true,
+        'charset'  => 'utf8mb4',
+        'DBCollat' => 'utf8mb4_general_ci',
+        'swapPre'  => '',
+        'encrypt'  => false,
+        'compress' => false,
+        'strictOn' => true,
+        'failover' => [],
+        'port'     => 3306,
     ];
 
     public function __construct()

@@ -55,4 +55,46 @@ class TestableBaseController extends BaseController
     {
         return $this->faktorSatuan($satuanKomponen, $bahan);
     }
+
+    // --- Proxy mesin uang (butuh database tes grup 'tests') ---
+
+    public function pubHargaBerjalan(array $p, ?int $sid = null): float
+    {
+        return $this->hargaBerjalan($p, $sid);
+    }
+
+    public function pubPetaHargaAhsp(?int $sid = null): array
+    {
+        return $this->petaHargaAhsp($sid);
+    }
+
+    public function pubHargaAhspKode(?string $kode, ?int $sid = null): ?float
+    {
+        return $this->hargaAhspKode($kode, $sid);
+    }
+
+    public function pubTotalBoqGedung(int $gedungId): float
+    {
+        return $this->totalBoqGedung($gedungId);
+    }
+
+    public function pubTotalBoqAktif(?int $sid = null): float
+    {
+        return $this->totalBoqAktif($sid);
+    }
+
+    public function pubVerifikasiAnggaran(?int $sid = null): array
+    {
+        return $this->verifikasiAnggaran($sid);
+    }
+
+    public function pubNomorSpkBerikutnya(?int $sid = null): int
+    {
+        return $this->nomorSpkBerikutnya($sid);
+    }
+
+    public function pubSid(): int
+    {
+        return $this->sid();
+    }
 }
