@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <div class="panel">
   <h2 style="margin-top:0">Buat Rencana Mingguan</h2>
   <form method="post" action="<?= base_url('rencana-mingguan/buat') ?>" style="display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:8px;align-items:end">

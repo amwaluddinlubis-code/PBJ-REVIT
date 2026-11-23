@@ -1,5 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
-
 <div class="panel">
   <h2>Tinjau &amp; Petakan Impor</h2>
   <p style="margin-top:0;color:var(--ta-teks-2)">Berkas <b><?= esc($stage['nama']) ?></b> akan diimpor ke sekolah <b><?= esc($nama_sekolah) ?></b> (format: <?= $stage['format'] === 'template' ? 'Template Manual' : 'Workbook Perencana' ?>). <b>Belum ada data yang ditulis</b> — periksa daftar sheet di bawah ini: pilih tujuan impor tiap sheet, atau tandai <b>Lewati</b> untuk yang tidak akan diimpor. Nama gedung dapat diubah sebelum impor.</p>
@@ -23,7 +21,7 @@
       <tr>
         <td><b><?= esc($l['nama']) ?></b><input type="hidden" name="sheet[<?= $i ?>]" value="<?= esc($l['nama']) ?>"></td>
         <td><?= esc($l['jenis']) ?></td>
-        <td class="angka"><?php if ($l['baris'] > 0): ?><?= number_format($l['baris'], 0, ',', '.') ?> baris<?php endif; ?><?php if ($l['total'] > 0): ?><br><?= $rp($l['total']) ?><?php endif; ?></td>
+        <td class="angka"><?php if ($l['baris'] > 0): ?><?= number_format($l['baris'], 0, ',', '.') ?> baris<?php endif; ?><?php if ($l['total'] > 0): ?><br><?= rp($l['total']) ?><?php endif; ?></td>
         <td>
           <select data-select-cari name="tujuan[<?= $i ?>]" data-baris="<?= $i ?>">
             <?php foreach ($opsi as $nilai => $label): ?>

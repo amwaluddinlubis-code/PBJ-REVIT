@@ -21,7 +21,6 @@ tr.total td { font-weight: bold; background: #f4f4f4; }
 </style>
 </head>
 <body>
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <?php $angka = static fn ($n) => rtrim(rtrim(number_format((float) $n, 2, ',', '.'), '0'), ','); ?>
 <div class="kop">
   <div class="pem"><?= esc($sekolah['kop_pemerintah'] ?? 'PEMERINTAH KABUPATEN') ?></div>
@@ -35,9 +34,9 @@ tr.total td { font-weight: bold; background: #f4f4f4; }
 <table>
   <tr><th style="width:34px">No</th><th>Gedung</th><th class="angka">Nilai BOQ (RAB)</th></tr>
   <?php $no = 0; $totBoq = 0; foreach ($perGedung as $g): $no++; $totBoq += (float) $g['nilai_boq']; ?>
-  <tr><td><?= $no ?></td><td><?= esc($g['nama']) ?></td><td class="angka"><?= $rp($g['nilai_boq']) ?></td></tr>
+  <tr><td><?= $no ?></td><td><?= esc($g['nama']) ?></td><td class="angka"><?= rp($g['nilai_boq']) ?></td></tr>
   <?php endforeach; ?>
-  <tr class="total"><td colspan="2" style="text-align:right">TOTAL BOQ GEDUNG TERPILIH</td><td class="angka"><?= $rp($totBoq) ?></td></tr>
+  <tr class="total"><td colspan="2" style="text-align:right">TOTAL BOQ GEDUNG TERPILIH</td><td class="angka"><?= rp($totBoq) ?></td></tr>
 </table>
 
 <table>
@@ -47,12 +46,12 @@ tr.total td { font-weight: bold; background: #f4f4f4; }
     <td><?= $no ?></td>
     <td><?= esc($p['nama']) ?></td>
     <td><?= esc($p['satuan'] ?? '') ?></td>
-    <td class="angka"><?= $rp($p['harga_satuan']) ?></td>
+    <td class="angka"><?= rp($p['harga_satuan']) ?></td>
     <td class="angka"><?= $angka($p['volume']) ?></td>
-    <td class="angka"><?= $rp($p['jumlah']) ?></td>
+    <td class="angka"><?= rp($p['jumlah']) ?></td>
   </tr>
   <?php endforeach; ?>
-  <tr class="total"><td colspan="5" style="text-align:right">TOTAL RAB GABUNGAN</td><td class="angka"><?= $rp($total) ?></td></tr>
+  <tr class="total"><td colspan="5" style="text-align:right">TOTAL RAB GABUNGAN</td><td class="angka"><?= rp($total) ?></td></tr>
 </table>
 
 <div class="ttd">

@@ -1,5 +1,5 @@
 <?php
-$rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.');
+
 $qty = static fn ($n) => rtrim(rtrim(number_format((float) $n, 2, ',', '.'), '0'), ',');
 $polos = static fn ($n) => rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0'), '.');
 ?>
@@ -38,7 +38,7 @@ $polos = static fn ($n) => rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0
 <?php if ($bahan !== []): ?>
 <div class="panel">
   <h2 style="margin-top:0">Daftar Belanja Bersih Minggu Ini</h2>
-  <p class="kecil-teks" style="margin-top:0">Perlu Beli = kebutuhan dari target − stok tersedia (sudah di-BAST + saldo Buku Material) − pesanan berjalan (SPK yang belum di-BAST). Jumlah beli boleh diubah sebelum dibuatkan SPK. Estimasi total belanja bersih: <strong><?= $rp($total_bersih) ?></strong> · sisa pagu sekolah saat ini: <strong><?= $rp($sisa_pagu) ?></strong>.</p>
+  <p class="kecil-teks" style="margin-top:0">Perlu Beli = kebutuhan dari target − stok tersedia (sudah di-BAST + saldo Buku Material) − pesanan berjalan (SPK yang belum di-BAST). Jumlah beli boleh diubah sebelum dibuatkan SPK. Estimasi total belanja bersih: <strong><?= rp($total_bersih) ?></strong> · sisa pagu sekolah saat ini: <strong><?= rp($sisa_pagu) ?></strong>.</p>
   <form method="post" action="<?= base_url('rencana-mingguan/' . $r['id'] . '/buat-spk') ?>">
     <?= csrf_field() ?>
     <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari bahan…">
@@ -52,11 +52,11 @@ $polos = static fn ($n) => rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0
         <td class="angka"><?= $qty($b['stok']) ?></td>
         <td class="angka"><?= $qty($b['berjalan']) ?></td>
         <td class="angka"><input type="text" name="qty[<?= (int) $b['bahan_id'] ?>]" value="<?= esc($polos($b['bersih'])) ?>" style="width:100px;margin:0;text-align:right"></td>
-        <td class="angka"><?= $rp($b['harga']) ?></td>
-        <td class="angka"><?= $rp($b['nilai']) ?></td>
+        <td class="angka"><?= rp($b['harga']) ?></td>
+        <td class="angka"><?= rp($b['nilai']) ?></td>
       </tr>
       <?php endforeach; ?>
-      <tr class="baris-total"><td colspan="8"><strong>Total estimasi belanja bersih</strong></td><td class="angka"><strong><?= $rp($total_bersih) ?></strong></td></tr>
+      <tr class="baris-total"><td colspan="8"><strong>Total estimasi belanja bersih</strong></td><td class="angka"><strong><?= rp($total_bersih) ?></strong></td></tr>
     </table></div>
     <p style="margin-top:10px"><button type="submit" class="tombol">Buat SPK dari Daftar Ini</button></p>
   </form>
@@ -69,9 +69,9 @@ $polos = static fn ($n) => rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0
   <div class="bungkus-tabel"><table class="satu-baris">
     <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (Oh)</th><th class="angka">Perkiraan Nilai</th></tr>
     <?php foreach ($upah as $u): ?>
-    <tr><td><?= esc($u['nama']) ?></td><td class="angka"><?= $qty($u['oh']) ?></td><td class="angka"><?= $rp($u['nilai']) ?></td></tr>
+    <tr><td><?= esc($u['nama']) ?></td><td class="angka"><?= $qty($u['oh']) ?></td><td class="angka"><?= rp($u['nilai']) ?></td></tr>
     <?php endforeach; ?>
-    <tr class="baris-total"><td><strong>Total perkiraan upah</strong></td><td></td><td class="angka"><strong><?= $rp($total_upah) ?></strong></td></tr>
+    <tr class="baris-total"><td><strong>Total perkiraan upah</strong></td><td></td><td class="angka"><strong><?= rp($total_upah) ?></strong></td></tr>
   </table></div>
   <p class="kecil-teks">Oh = orang-hari. Bagi kebutuhan Oh dengan jumlah hari kerja untuk memperkirakan jumlah tukang/pekerja yang perlu hadir setiap hari.</p>
 </div>

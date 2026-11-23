@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <nav class="remah" aria-label="Jejak halaman"><a href="<?= base_url() ?>">Dashboard</a> <span aria-hidden="true">/</span> <span>Validasi Harga Satuan</span></nav>
 
 <div class="panel">
@@ -24,14 +23,14 @@
         <tr>
           <td><strong><?= esc($v['kode']) ?></strong></td>
           <td class="potong" title="<?= esc($v['nama'] ?? '') ?>"><?= esc($v['nama'] ?? '—') ?> <span class="kecil-teks">(<?= (int) $v['n'] ?> pekerjaan)</span></td>
-          <td><?php foreach ($v['harga'] as $h => $n): ?><div><?= $rp($h) ?> <span class="kecil-teks">× <?= (int) $n ?> pekerjaan</span></div><?php endforeach; ?></td>
+          <td><?php foreach ($v['harga'] as $h => $n): ?><div><?= rp($h) ?> <span class="kecil-teks">× <?= (int) $n ?> pekerjaan</span></div><?php endforeach; ?></td>
           <td>
             <?php foreach ($v['harga'] as $h => $n): ?>
-            <form method="post" action="<?= base_url('validasi-harga/samakan-pekerjaan') ?>" data-konfirmasi="Samakan harga satuan semua pekerjaan berkode <?= esc($v['kode'], 'attr') ?> ke <?= esc($rp($h), 'attr') ?>?" style="display:inline-block;margin:0 4px 4px 0">
+            <form method="post" action="<?= base_url('validasi-harga/samakan-pekerjaan') ?>" data-konfirmasi="Samakan harga satuan semua pekerjaan berkode <?= esc($v['kode'], 'attr') ?> ke <?= esc(rp($h), 'attr') ?>?" style="display:inline-block;margin:0 4px 4px 0">
               <?= csrf_field() ?>
               <input type="hidden" name="kode" value="<?= esc($v['kode'], 'attr') ?>">
               <input type="hidden" name="harga" value="<?= esc($h, 'attr') ?>">
-              <button type="submit" class="tombol kecil">Samakan ke <?= $rp($h) ?></button>
+              <button type="submit" class="tombol kecil">Samakan ke <?= rp($h) ?></button>
             </form>
             <?php endforeach; ?>
           </td>
@@ -63,11 +62,11 @@
         <tr>
           <td><strong><?= esc($v['kode']) ?></strong></td>
           <td class="potong" title="<?= esc($v['nama'] ?? '') ?>"><?= esc($v['nama'] ?? '—') ?> <span class="kecil-teks">(<?= (int) $v['n'] ?> pekerjaan)</span></td>
-          <td><?php foreach ($v['harga'] as $h => $n): ?><div<?php if (abs((float) $h - $v['kalkulasi']) > 1): ?> style="color:var(--ina-red-700,#a61e1e);font-weight:600"<?php endif; ?>><?= $rp($h) ?> <span class="kecil-teks" style="font-weight:400;color:inherit">× <?= (int) $n ?></span></div><?php endforeach; ?></td>
-          <td class="angka"><?= $v['harga_a'] !== null && $v['harga_a'] > 0 ? $rp($v['harga_a']) : '—' ?></td>
-          <td class="angka"><strong><?= $rp($v['kalkulasi']) ?></strong></td>
+          <td><?php foreach ($v['harga'] as $h => $n): ?><div<?php if (abs((float) $h - $v['kalkulasi']) > 1): ?> style="color:var(--ina-red-700,#a61e1e);font-weight:600"<?php endif; ?>><?= rp($h) ?> <span class="kecil-teks" style="font-weight:400;color:inherit">× <?= (int) $n ?></span></div><?php endforeach; ?></td>
+          <td class="angka"><?= $v['harga_a'] !== null && $v['harga_a'] > 0 ? rp($v['harga_a']) : '—' ?></td>
+          <td class="angka"><strong><?= rp($v['kalkulasi']) ?></strong></td>
           <td>
-            <form method="post" action="<?= base_url('validasi-harga/samakan-kalkulasi') ?>" data-konfirmasi="Samakan harga satuan semua pekerjaan berkode <?= esc($v['kode'], 'attr') ?> ke kalkulasi komponen <?= esc($rp($v['kalkulasi']), 'attr') ?>?" style="display:inline">
+            <form method="post" action="<?= base_url('validasi-harga/samakan-kalkulasi') ?>" data-konfirmasi="Samakan harga satuan semua pekerjaan berkode <?= esc($v['kode'], 'attr') ?> ke kalkulasi komponen <?= esc(rp($v['kalkulasi']), 'attr') ?>?" style="display:inline">
               <?= csrf_field() ?>
               <input type="hidden" name="kode" value="<?= esc($v['kode'], 'attr') ?>">
               <button type="submit" class="tombol kecil">Samakan ke Kalkulasi</button>

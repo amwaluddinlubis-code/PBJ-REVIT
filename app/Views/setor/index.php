@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <?php $label = ['pph22' => 'PPh Pasal 22', 'ppn' => 'PPN dipungut', 'pph21' => 'PPh Pasal 21', 'pph23' => 'PPh Pasal 23', 'pph42' => 'PPh Pasal 4 ayat 2', 'sisa_dana' => 'Pengembalian sisa dana (SIMPONI)']; ?>
 <div class="panel">
   <h2>Kewajiban Pajak per Masa — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></h2>
@@ -9,9 +8,9 @@
     <tr>
       <td><?= esc($label[$b['jenis']] ?? $b['jenis']) ?></td>
       <td><?= esc($b['masa']) ?></td>
-      <td class="angka"><?= $rp($b['wajib']) ?></td>
-      <td class="angka"><?= $rp($b['disetor']) ?></td>
-      <td class="angka"><?= $rp(max(0, $b['kurang'])) ?></td>
+      <td class="angka"><?= rp($b['wajib']) ?></td>
+      <td class="angka"><?= rp($b['disetor']) ?></td>
+      <td class="angka"><?= rp(max(0, $b['kurang'])) ?></td>
       <td><?= esc($b['status']) ?></td>
     </tr>
     <?php endforeach; ?>
@@ -22,9 +21,9 @@
 <div class="panel">
   <h2>Sisa Dana Bantuan</h2>
   <table>
-    <tr><td style="width:300px">Sisa dana (diterima − digunakan)</td><td class="angka"><?= $rp($sisa) ?></td></tr>
-    <tr><td>Sudah disetor kembali ke kas negara</td><td class="angka"><?= $rp($setor_sisa) ?></td></tr>
-    <tr><td><b>Belum disetor</b></td><td class="angka"><b><?= $rp(max(0, $sisa - $setor_sisa)) ?></b></td></tr>
+    <tr><td style="width:300px">Sisa dana (diterima − digunakan)</td><td class="angka"><?= rp($sisa) ?></td></tr>
+    <tr><td>Sudah disetor kembali ke kas negara</td><td class="angka"><?= rp($setor_sisa) ?></td></tr>
+    <tr><td><b>Belum disetor</b></td><td class="angka"><b><?= rp(max(0, $sisa - $setor_sisa)) ?></b></td></tr>
   </table>
   <p class="kecil-teks">Menurut Juknis, sisa dana bantuan yang tidak digunakan wajib disetorkan kembali ke kas negara melalui SIMPONI dan bukti setoran dilampirkan pada laporan akhir.</p>
 </div>
@@ -72,7 +71,7 @@
       <td><?= esc(tgl($s['tanggal_setor'])) ?></td>
       <td><?= esc($label[$s['jenis']] ?? $s['jenis']) ?></td>
       <td><?= esc($s['masa'] ?? '—') ?></td>
-      <td class="angka"><?= $rp($s['jumlah']) ?></td>
+      <td class="angka"><?= rp($s['jumlah']) ?></td>
       <td><?= esc($s['kode_billing'] ?? '—') ?></td>
       <td><?= esc($s['ntpn'] ?? '—') ?></td>
       <td><form class="inline" method="post" action="<?= base_url('bukti-setor/hapus/' . $s['id']) ?>" data-konfirmasi="Hapus bukti setor ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>

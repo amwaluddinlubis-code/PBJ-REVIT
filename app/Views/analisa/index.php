@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <div class="panel">
   <h2 style="margin-top:0">Analisa Pekerjaan (AHSP)</h2>
   <p class="kecil-teks" style="margin-top:0">Analisa menentukan kebutuhan bahan &amp; upah dari volume BOQ. Klik <strong>Buka</strong> untuk mengubah koefisien atau tarif komponen tanpa impor ulang — harga satuan analisa dihitung ulang dari komponennya dan kebutuhan di semua gedung langsung mengikuti.</p>
@@ -67,7 +66,7 @@
       <td><strong><?= esc($a['kode']) ?></strong></td>
       <td class="potong" title="<?= esc($a['nama'] ?? '') ?>"><?= esc($a['nama'] ?? '') ?></td>
       <td><?= esc($a['satuan'] ?? '') ?></td>
-      <td class="angka"><?= $rp($a['harga_satuan'] ?? 0) ?><?php if ((float) ($a['harga_satuan'] ?? 0) <= 0): ?> <span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:99px;font-size:11px">belum terverifikasi</span><?php endif; ?></td>
+      <td class="angka"><?= rp($a['harga_satuan'] ?? 0) ?><?php if ((float) ($a['harga_satuan'] ?? 0) <= 0): ?> <span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:99px;font-size:11px">belum terverifikasi</span><?php endif; ?></td>
       <td class="angka"><?= (int) $a['jml_komponen'] ?></td>
       <td class="angka"><?= (int) $a['dipakai'] ?> pekerjaan<br><span class="kecil-teks"><?= (int) ($a['dipakai_didanai'] ?? 0) ?> di gedung didanai<?= (int) ($a['dipakai_lain'] ?? 0) > 0 ? ' · ' . (int) $a['dipakai_lain'] . ' di gedung tidak didanai' : '' ?></span></td>
       <td><a class="tombol kecil" href="<?= base_url('analisa/' . $a['id']) ?>">Buka</a></td>

@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>SPK <?= esc($nomor) ?></title></head><body>
 <?= view('cetak/_gaya') ?>
 <?= view('cetak/_kop', ['idn' => $idn]) ?>
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <h1>Surat Perintah Kerja (SPK)</h1>
 <div class="nomor">Nomor : <?= esc($nomor) ?></div>
 <p>Pada hari ini, <?= esc($hariTanggal) ?>, kami yang bertanda tangan di bawah ini:</p>
@@ -24,9 +23,9 @@
   <?php if ($multiGedung && ($d['gedung_rincian'] ?? null) !== $gedungLalu): $gedungLalu = $d['gedung_rincian'] ?? null; ?>
   <tr><th colspan="6" style="text-align:left">Untuk Gedung: <?= esc($gedungLalu ?? '—') ?></th></tr>
   <?php endif; ?>
-  <tr><td><?= $no++ ?></td><td><?= esc($d['nama']) ?></td><td class="angka"><?= number_format((float) $d['qty'], 2, ',', '.') ?></td><td><?= esc($d['satuan'] ?? '') ?></td><td class="angka"><?= $rp($d['harga']) ?></td><td class="angka"><?= $rp($d['total']) ?></td></tr>
+  <tr><td><?= $no++ ?></td><td><?= esc($d['nama']) ?></td><td class="angka"><?= number_format((float) $d['qty'], 2, ',', '.') ?></td><td><?= esc($d['satuan'] ?? '') ?></td><td class="angka"><?= rp($d['harga']) ?></td><td class="angka"><?= rp($d['total']) ?></td></tr>
   <?php endforeach; ?>
-  <tr><th colspan="5" style="text-align:right">Nilai Kontrak</th><th class="angka"><?= $rp($total) ?></th></tr>
+  <tr><th colspan="5" style="text-align:right">Nilai Kontrak</th><th class="angka"><?= rp($total) ?></th></tr>
 </table>
 <?php if (! empty($tenaga)): ?>
 <p style="margin-bottom:4px">Perkiraan kebutuhan tenaga kerja untuk paket ini:</p>
@@ -38,7 +37,7 @@
   <tr><th colspan="3" style="text-align:right">Total</th><th class="angka"><?= number_format($totOhT, 2, ',', '.') ?></th><th class="angka"><?= $totOrangT ?></th></tr>
 </table>
 <?php endif; ?>
-<p>Nilai kontrak sebesar <strong><?= $rp($total) ?></strong> (terbilang: <em><?= esc(trim($terbilang)) ?> Rupiah</em>). Jangka waktu pelaksanaan: <?= esc(tgl($s['tgl_mulai'] ?? null)) ?> s.d. <?= esc(tgl($s['tgl_selesai'] ?? null)) ?>. Pembayaran dilakukan setelah barang diterima dan dituangkan dalam Berita Acara Serah Terima.</p>
+<p>Nilai kontrak sebesar <strong><?= rp($total) ?></strong> (terbilang: <em><?= esc(trim($terbilang)) ?> Rupiah</em>). Jangka waktu pelaksanaan: <?= esc(tgl($s['tgl_mulai'] ?? null)) ?> s.d. <?= esc(tgl($s['tgl_selesai'] ?? null)) ?>. Pembayaran dilakukan setelah barang diterima dan dituangkan dalam Berita Acara Serah Terima.</p>
 <div class="ttd">
   <div class="kol tengah">PIHAK KEDUA<br><?= esc($s['penyedia'] ?? '') ?><div class="ruang"></div><strong><?= esc($s['ttd_penyedia'] ?? '') ?></strong></div>
   <div class="kol tengah">PIHAK KESATU<br>Ketua Panitia P2SP<div class="ruang"></div><strong><?= esc($idn['ketua_nama'] ?? '') ?></strong></div>

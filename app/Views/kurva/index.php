@@ -1,5 +1,5 @@
 <?php
-$rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.');
+
 $tgl = static fn ($d) => $d ? date('d/m/Y', strtotime((string) $d)) : '';
 $resmi = ($mode ?? 'perkiraan') === 'resmi';
 ?>
@@ -35,9 +35,9 @@ $resmi = ($mode ?? 'perkiraan') === 'resmi';
 <?php if ($total || $g): ?>
 <div class="panel">
   <?php if ($total): ?>
-  <h2>Total Sekolah — Basis Nilai Realisasi <?= $rp($basis) ?> (BOQ berjalan + biaya non-gedung)</h2>
+  <h2>Total Sekolah — Basis Nilai Realisasi <?= rp($basis) ?> (BOQ berjalan + biaya non-gedung)</h2>
   <?php else: ?>
-  <h2><?= esc($g['nama']) ?> — Nilai BOQ <?= $rp($g['nilai_boq']) ?> · Realisasi saat ini <?= number_format((float) $g['persen_fisik'], 1, ',', '.') ?>%</h2>
+  <h2><?= esc($g['nama']) ?> — Nilai BOQ <?= rp($g['nilai_boq']) ?> · Realisasi saat ini <?= number_format((float) $g['persen_fisik'], 1, ',', '.') ?>%</h2>
   <?php endif; ?>
   <?= $svg ?>
   <table data-paginasi="20" data-cari="Cari minggu…">
@@ -48,7 +48,7 @@ $resmi = ($mode ?? 'perkiraan') === 'resmi';
       <td><?= ! empty($m['mulai']) ? $tgl($m['mulai']) . ' s/d ' . $tgl($m['tanggal']) : 's/d ' . $tgl($m['tanggal']) ?></td>
       <td class="angka"><?= number_format($m['rencana'], 1, ',', '.') ?>%</td>
       <td class="angka"><?= number_format($m['realisasi'], 1, ',', '.') ?>%</td>
-      <td class="angka"><?= $rp($m['nilai']) ?></td>
+      <td class="angka"><?= rp($m['nilai']) ?></td>
       <td class="angka"><span style="color:<?= $dev < -0.05 ? 'var(--ina-red-700,#a61e1e)' : 'var(--ina-green-700,#1e6b2a)' ?>"><?= number_format($dev, 1, ',', '.') ?>%</span></td>
     </tr>
     <?php endforeach; ?>

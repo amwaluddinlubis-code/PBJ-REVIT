@@ -1,5 +1,5 @@
 <?php
-$rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.');
+
 $num = static fn ($n) => number_format((float) $n, 2, ',', '.');
 $pct = static function ($n) {
     $s = rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0'), '.');
@@ -18,7 +18,7 @@ $pct = static function ($n) {
 <?php else: ?>
 <div class="panel">
   <h2 style="margin-top:0">Simulasi Mingguan — Cara Kerja</h2>
-  <p class="kecil-teks" style="margin:0">Isi <strong>bobot realisasi tiap minggu per gedung</strong> (persen terhadap total proyek <?= $rp($total_proyek) ?>, satuan yang sama dengan Kurva S), simpan, dan simulasi di bawah terhitung ulang: realisasi disebar ke bab mengikuti pola Kurva S minggu itu, sisa volume tiap bab dijadwalkan ulang ke minggu berikutnya mengikuti pola babnya, lalu kebutuhan bahan &amp; pekerja dihitung dengan mesin <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a>. Minggu terakhir yang terisi dianggap minggu berjalan (sekarang minggu ke-<strong><?= (int) $berjalan ?></strong>). Kosongkan sel untuk menganggap minggu itu belum ada realisasi.</p>
+  <p class="kecil-teks" style="margin:0">Isi <strong>bobot realisasi tiap minggu per gedung</strong> (persen terhadap total proyek <?= rp($total_proyek) ?>, satuan yang sama dengan Kurva S), simpan, dan simulasi di bawah terhitung ulang: realisasi disebar ke bab mengikuti pola Kurva S minggu itu, sisa volume tiap bab dijadwalkan ulang ke minggu berikutnya mengikuti pola babnya, lalu kebutuhan bahan &amp; pekerja dihitung dengan mesin <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a>. Minggu terakhir yang terisi dianggap minggu berjalan (sekarang minggu ke-<strong><?= (int) $berjalan ?></strong>). Kosongkan sel untuk menganggap minggu itu belum ada realisasi.</p>
 </div>
 
 <div class="panel">
@@ -74,8 +74,8 @@ $pct = static function ($n) {
       <td><?= esc(tgl($h['mulai'])) ?> – <?= esc(tgl($h['selesai'])) ?></td>
       <td><?= $h['lewat'] ? 'Sudah lewat (dari realisasi)' : 'Rencana sisa' ?></td>
       <td class="angka"><?= $pct($h['bobot_rencana']) ?>%</td>
-      <td class="angka"><?= $rp($nb) ?></td>
-      <td class="angka"><?= $rp($nu) ?></td>
+      <td class="angka"><?= rp($nb) ?></td>
+      <td class="angka"><?= rp($nu) ?></td>
       <td class="angka"><?= $org ?></td>
       <td><a class="tombol kecil" href="#minggu-<?= (int) $h['ke'] ?>">Lihat</a></td>
     </tr>
@@ -86,7 +86,7 @@ $pct = static function ($n) {
 
 <?php foreach ($hasil as $h): ?>
 <details class="panel" id="minggu-<?= (int) $h['ke'] ?>" <?= ((int) $h['ke'] === (int) $berjalan + 1) ? 'open' : '' ?>>
-  <summary><strong>Minggu <?= (int) $h['ke'] ?></strong> — <?= esc(tgl($h['mulai'])) ?> s.d. <?= esc(tgl($h['selesai'])) ?> · <?= $h['lewat'] ? 'sudah lewat (porsi dari realisasi yang dimasukkan)' : 'rencana sisa pekerjaan' ?> · belanja <?= $rp(array_sum(array_column($h['bahan'], 'nilai'))) ?></summary>
+  <summary><strong>Minggu <?= (int) $h['ke'] ?></strong> — <?= esc(tgl($h['mulai'])) ?> s.d. <?= esc(tgl($h['selesai'])) ?> · <?= $h['lewat'] ? 'sudah lewat (porsi dari realisasi yang dimasukkan)' : 'rencana sisa pekerjaan' ?> · belanja <?= rp(array_sum(array_column($h['bahan'], 'nilai'))) ?></summary>
 
   <h3>Jenis Pekerjaan <?= $h['lewat'] ? 'yang Terealisasi' : 'yang Berjalan' ?></h3>
   <?php if ($h['aktif'] === []): ?>
@@ -112,9 +112,9 @@ $pct = static function ($n) {
   <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari bahan…" data-paginasi="25">
     <tr><th>Kode</th><th>Bahan</th><th class="angka">Qty</th><th>Satuan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai</th></tr>
     <?php foreach ($h['bahan'] as $b): ?>
-    <tr><td><?= esc($b['kode']) ?></td><td><?= esc($b['nama']) ?></td><td class="angka"><?= $num($b['qty']) ?></td><td><?= esc($b['satuan']) ?></td><td class="angka"><?= $rp($b['harga']) ?></td><td class="angka"><?= $rp($b['nilai']) ?></td></tr>
+    <tr><td><?= esc($b['kode']) ?></td><td><?= esc($b['nama']) ?></td><td class="angka"><?= $num($b['qty']) ?></td><td><?= esc($b['satuan']) ?></td><td class="angka"><?= rp($b['harga']) ?></td><td class="angka"><?= rp($b['nilai']) ?></td></tr>
     <?php endforeach; ?>
-    <tr class="total"><td colspan="5"><strong>Total belanja minggu ini</strong></td><td class="angka"><strong><?= $rp(array_sum(array_column($h['bahan'], 'nilai'))) ?></strong></td></tr>
+    <tr class="total"><td colspan="5"><strong>Total belanja minggu ini</strong></td><td class="angka"><strong><?= rp(array_sum(array_column($h['bahan'], 'nilai'))) ?></strong></td></tr>
   </table></div>
   <?php endif; ?>
 
@@ -125,7 +125,7 @@ $pct = static function ($n) {
   <div class="bungkus-tabel"><table>
     <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Perkiraan Orang (6 hari)</th><th class="angka">Nilai Upah</th></tr>
     <?php foreach ($h['upah'] as $u): ?>
-    <tr><td><?= esc($u['jenis']) ?></td><td class="angka"><?= $num($u['orang_hari']) ?></td><td class="angka"><?= (int) $u['jumlah_pekerja'] ?></td><td class="angka"><?= $rp($u['nilai']) ?></td></tr>
+    <tr><td><?= esc($u['jenis']) ?></td><td class="angka"><?= $num($u['orang_hari']) ?></td><td class="angka"><?= (int) $u['jumlah_pekerja'] ?></td><td class="angka"><?= rp($u['nilai']) ?></td></tr>
     <?php endforeach; ?>
   </table></div>
   <?php endif; ?>
@@ -133,7 +133,7 @@ $pct = static function ($n) {
   <?php if ($h['non_boq'] !== []): ?>
   <h3>Biaya &amp; Belanja Non-BOQ Terjadwal (dari Kurva S)</h3>
   <ul>
-    <?php foreach ($h['non_boq'] as $x): ?><li><?= esc($x['label']) ?>: <?= $rp($x['nilai']) ?></li><?php endforeach; ?>
+    <?php foreach ($h['non_boq'] as $x): ?><li><?= esc($x['label']) ?>: <?= rp($x['nilai']) ?></li><?php endforeach; ?>
   </ul>
   <?php endif; ?>
 </details>

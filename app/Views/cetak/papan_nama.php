@@ -10,7 +10,6 @@
   .papan .sumber{font-size:20px;font-weight:bold;margin-top:16px}
   @media print{body{margin:0}.papan{border-width:3px}}
 </style></head><body>
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <div class="papan">
   <h2><?= esc($idn['kop_pemerintah'] ?? 'PEMERINTAH KABUPATEN') ?></h2>
   <h1><?= esc($idn['kop_dinas'] ?? 'DINAS PENDIDIKAN') ?></h1>
@@ -21,7 +20,7 @@
     <tr><td>Alamat</td><td>: <?= esc(trim(($idn['alamat'] ?? '') . ' ' . ($idn['desa'] ?? '') . ' Kec. ' . ($idn['kecamatan'] ?? '') . ' Kab. ' . ($idn['kabupaten'] ?? ''))) ?></td></tr>
     <tr><td>Pelaksana</td><td>: Panitia Pembangunan Satuan Pendidikan (P2SP) <?= esc($idn['nama_sekolah'] ?? '') ?></td></tr>
     <tr><td>Ketua P2SP</td><td>: <?= esc($idn['ketua_nama'] ?? '') ?></td></tr>
-    <tr><td>Jumlah Dana Bantuan</td><td>: <?= $rp($idn['total_anggaran'] ?? 0) ?></td></tr>
+    <tr><td>Jumlah Dana Bantuan</td><td>: <?= rp($idn['total_anggaran'] ?? 0) ?></td></tr>
     <tr><td>Waktu Pelaksanaan</td><td>: Tahun Anggaran <?= esc($idn['tahun_anggaran'] ?? '2026') ?></td></tr>
   </table>
   <div class="sumber">SUMBER DANA : APBN — BANTUAN PEMERINTAH PROGRAM REVITALISASI SATUAN PENDIDIKAN<br>DIREKTORAT SEKOLAH MENENGAH PERTAMA, KEMENTERIAN PENDIDIKAN</div>

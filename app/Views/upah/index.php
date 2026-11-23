@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <div class="panel" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
   <form method="get" action="<?= base_url('upah/cetak-daftar') ?>" target="_blank" style="display:flex;gap:8px;align-items:end">
     <label>Bulan daftar upah <input type="month" name="bulan" value="<?= date('Y-m') ?>"></label>
@@ -24,7 +23,7 @@
       <label>Jenis tenaga
         <input type="text" name="jenis_tenaga" list="daftar-jenis" required placeholder="mis. Pekerja / Tukang">
         <datalist id="daftar-jenis">
-          <?php foreach ($master as $m): ?><option value="<?= esc($m['jenis']) ?>"><?= esc($m['jenis']) ?> — <?= $rp($m['tarif']) ?>/OH</option><?php endforeach; ?>
+          <?php foreach ($master as $m): ?><option value="<?= esc($m['jenis']) ?>"><?= esc($m['jenis']) ?> — <?= rp($m['tarif']) ?>/OH</option><?php endforeach; ?>
         </datalist>
       </label>
       <label>Nama penerima<input type="text" name="penerima" placeholder="mis. Sarmin"></label>
@@ -38,7 +37,7 @@
 </div>
 
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-upah','ids-upahbayar')">
-  <h2>Riwayat Pembayaran Upah — Total <?= $rp($total) ?> · PPh 21 <?= $rp($total_pph21) ?> · Bersih <?= $rp($total - $total_pph21) ?></h2>
+  <h2>Riwayat Pembayaran Upah — Total <?= rp($total) ?> · PPh 21 <?= rp($total_pph21) ?> · Bersih <?= rp($total - $total_pph21) ?></h2>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
     <form id="form-bulk-upah" method="post" action="<?= base_url('upah/hapus-massal') ?>" data-konfirmasi-judul="Hapus Catatan Upah Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
       <?= csrf_field() ?>

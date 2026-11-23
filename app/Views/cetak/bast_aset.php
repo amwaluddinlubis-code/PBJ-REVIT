@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>Berita Acara Serah Terima Aset</title></head><body>
 <?= view('cetak/_gaya') ?>
 <?= view('cetak/_kop', ['idn' => $idn]) ?>
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <h1>BERITA ACARA SERAH TERIMA ASET</h1>
 <div class="nomor">Nomor : 422/BAST-ASET/<?= (int) $g['id'] ?>/<?= esc($idn['tahun_anggaran'] ?? '2026') ?></div>
 <p>Pada <?= esc($hariTanggal) ?>, kami yang bertanda tangan di bawah ini:</p>
@@ -17,7 +16,7 @@
     <td><?= esc($g['nama']) ?></td>
     <td><?= esc(trim(($idn['alamat'] ?? '') . ' ' . ($idn['desa'] ?? '') . ' ' . ($idn['kecamatan'] ?? ''))) ?></td>
     <td class="angka"><?= number_format((float) $g['persen_fisik'], 1, ',', '.') ?>%</td>
-    <td class="angka"><?= $rp($g['nilai_realisasi']) ?></td>
+    <td class="angka"><?= rp($g['nilai_realisasi']) ?></td>
   </tr>
 </table>
 <p>Aset tersebut merupakan hasil pembangunan/revitalisasi yang dibiayai dari Bantuan Pemerintah Program Revitalisasi Satuan Pendidikan dan selanjutnya dicatat sebagai barang milik daerah sesuai ketentuan pengelolaan barang milik daerah. Nilai aset mengikuti nilai realisasi pekerjaan (BOQ) pada aplikasi; penyesuaian nilai perolehan akhir mengikuti hasil pemeriksaan dan ketentuan pencatatan aset yang berlaku.</p>

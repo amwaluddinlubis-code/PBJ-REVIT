@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <div class="panel">
   <h2 style="margin-top:0">Mesin Laporan dari Template Excel</h2>
   <p style="margin-top:0">Mengikuti mesin template SPJ BOSP: buat dokumen/laporan dalam format bebas di Excel dengan menaruh <strong>penanda <code>{{NAMA_PLACEHOLDER}}</code></strong> pada sel, unggah berkasnya di sini, lalu render dari data nyata aplikasi (satu SPK, satu gedung, atau rekap sekolah). Baris contoh yang penandanya berawalan <code>RINCIAN_</code>, <code>TENAGA_</code>, <code>KERJA_</code>, atau <code>REKAP_</code> digandakan otomatis mengikuti jumlah baris data. Render <strong>dibatalkan</strong> bila masih ada penanda yang tidak terisi — dokumen setengah jadi tidak akan terunduh.</p>

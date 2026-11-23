@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <div class="panel">
   <h2>Pembersihan Hasil Impor — Langkah 3 dari 3: Bahan Yatim &amp; Eksekusi</h2>
   <p style="margin-top:0;color:var(--ta-teks-2)">Sesudah <?= (int) $jumlahPekerjaan ?> pekerjaan dan <?= (int) $jumlahAnalisa ?> analisa dibuang, bahan berikut kehilangan seluruh rujukannya. <strong>Kelompok A</strong> (tercentang bawaan) hanya dipakai analisa yang akan dibuang. <strong>Kelompok B</strong> tidak dirujuk apa pun sama sekali — tidak tercentang bawaan karena bisa saja daftar harga cadangan; periksa dulu. Bahan lain sejumlah <strong><?= (int) $terlindungi ?> bahan terlindungi</strong> (masih dirujuk analisa aktif, SPK, survei, negosiasi, atau buku material) dan tidak ditawarkan untuk dihapus.</p>
@@ -6,9 +5,9 @@
   <table>
     <tr><th>Gedung</th><th class="angka">BOQ Sekarang</th><th class="angka">Pekerjaan Dibuang</th></tr>
     <?php foreach ($ringkasan['gedung'] as $g): ?>
-    <tr><td><?= esc($g['nama']) ?></td><td class="angka"><?= $rp($g['nilai_boq']) ?></td><td class="angka"><?= (int) $g['c'] ?></td></tr>
+    <tr><td><?= esc($g['nama']) ?></td><td class="angka"><?= rp($g['nilai_boq']) ?></td><td class="angka"><?= (int) $g['c'] ?></td></tr>
     <?php endforeach; ?>
-    <tr><th style="text-align:right">Nilai pekerjaan yang dibuang</th><th class="angka"><?= $rp($ringkasan['nilai_pekerjaan']) ?></th><th></th></tr>
+    <tr><th style="text-align:right">Nilai pekerjaan yang dibuang</th><th class="angka"><?= rp($ringkasan['nilai_pekerjaan']) ?></th><th></th></tr>
   </table>
   <p class="kecil-teks">Nilai BOQ tiap gedung dihitung ulang dari pekerjaan yang tersisa sesudah eksekusi. Semua penghapusan bersifat lunak — data dapat dipulihkan dari basis data bila ternyata keliru.</p>
 </div>
@@ -23,7 +22,7 @@
       <tr>
         <td><input type="checkbox" name="bahan[]" value="<?= (int) $b['id'] ?>" checked></td>
         <td><?= esc($b['kode']) ?></td><td><?= esc($b['nama']) ?></td><td><?= esc($b['satuan'] ?? '') ?></td>
-        <td class="angka"><?= $rp($b['harga_rab']) ?></td>
+        <td class="angka"><?= rp($b['harga_rab']) ?></td>
       </tr>
       <?php endforeach; ?>
       <?php if ($grupA === []): ?><tr><td colspan="5">Tidak ada bahan kelompok A.</td></tr><?php endif; ?>
@@ -37,7 +36,7 @@
       <tr>
         <td><input type="checkbox" name="bahan[]" value="<?= (int) $b['id'] ?>"></td>
         <td><?= esc($b['kode']) ?></td><td><?= esc($b['nama']) ?></td><td><?= esc($b['satuan'] ?? '') ?></td>
-        <td class="angka"><?= $rp($b['harga_rab']) ?></td>
+        <td class="angka"><?= rp($b['harga_rab']) ?></td>
       </tr>
       <?php endforeach; ?>
       <?php if ($grupB === []): ?><tr><td colspan="5">Tidak ada bahan kelompok B.</td></tr><?php endif; ?>

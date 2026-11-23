@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <?php $angka = static fn ($n) => rtrim(rtrim(number_format((float) $n, 2, ',', '.'), '0'), ','); ?>
 <div class="panel">
   <h2>RAB Gabungan Beberapa Gedung</h2>
@@ -23,13 +22,13 @@
     <?php $totBoq = 0; foreach ($perGedung as $g): $totBoq += (float) $g['nilai_boq']; ?>
     <tr>
       <td><?= esc($g['nama']) ?></td>
-      <td class="angka"><?= $rp($g['nilai_boq']) ?></td>
-      <td class="angka"><?= $rp($g['nilai_realisasi']) ?></td>
+      <td class="angka"><?= rp($g['nilai_boq']) ?></td>
+      <td class="angka"><?= rp($g['nilai_realisasi']) ?></td>
       <td class="angka"><?= number_format((float) $g['persen_fisik'], 1, ',', '.') ?>%</td>
       <td><a href="<?= base_url('lpj/gedung/' . $g['id']) ?>">RAB per Gedung</a></td>
     </tr>
     <?php endforeach; ?>
-    <tr><th style="text-align:right">Total BOQ terpilih</th><th class="angka"><?= $rp($totBoq) ?></th><th colspan="3"></th></tr>
+    <tr><th style="text-align:right">Total BOQ terpilih</th><th class="angka"><?= rp($totBoq) ?></th><th colspan="3"></th></tr>
   </table>
 </div>
 
@@ -41,14 +40,14 @@
     <tr>
       <td><?= esc($p['nama']) ?></td>
       <td><?= esc($p['satuan'] ?? '') ?></td>
-      <td class="angka"><?= $rp($p['harga_satuan']) ?></td>
+      <td class="angka"><?= rp($p['harga_satuan']) ?></td>
       <td class="angka"><?= $angka($p['volume']) ?></td>
-      <td class="angka"><?= $rp($p['jumlah']) ?></td>
+      <td class="angka"><?= rp($p['jumlah']) ?></td>
       <td class="angka"><?= (int) $p['jumlah_gedung'] ?></td>
     </tr>
     <?php endforeach; ?>
     <?php if ($gabungan === []): ?><tr><td colspan="6">Belum ada pekerjaan pada gedung terpilih.</td></tr><?php endif; ?>
-    <tr><th colspan="4" style="text-align:right">TOTAL RAB GABUNGAN</th><th class="angka"><?= $rp($total) ?></th><th></th></tr>
+    <tr><th colspan="4" style="text-align:right">TOTAL RAB GABUNGAN</th><th class="angka"><?= rp($total) ?></th><th></th></tr>
   </table>
   <p class="kecil-teks">Total RAB gabungan dihitung dari pekerjaan yang digabung menurut nama + harga satuan; total BOQ per gedung pada ringkasan di atas adalah angka resmi per gedung dari dokumen perencana.</p>
 </div>

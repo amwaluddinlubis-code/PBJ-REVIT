@@ -1,9 +1,8 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <?php $polos = static fn ($n) => rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0'), '.'); ?>
 <div class="kartu-kpi">
-  <div class="kpi"><div class="label">Total Anggaran (Pagu)</div><div class="nilai"><?= $anggaran > 0 ? $rp($anggaran) : 'Belum diatur' ?></div></div>
-  <div class="kpi"><div class="label">Belanja Terbayar</div><div class="nilai"><?= $rp($terbayar) ?></div></div>
-  <div class="kpi"><div class="label">Sisa Pagu</div><div class="nilai"><?= $sisa_pagu !== null ? $rp($sisa_pagu) : '—' ?></div></div>
+  <div class="kpi"><div class="label">Total Anggaran (Pagu)</div><div class="nilai"><?= $anggaran > 0 ? rp($anggaran) : 'Belum diatur' ?></div></div>
+  <div class="kpi"><div class="label">Belanja Terbayar</div><div class="nilai"><?= rp($terbayar) ?></div></div>
+  <div class="kpi"><div class="label">Sisa Pagu</div><div class="nilai"><?= $sisa_pagu !== null ? rp($sisa_pagu) : '—' ?></div></div>
   <div class="kpi"><div class="label">Gedung Tercakup</div><div class="nilai"><?= count($semuaGedung ?? []) ?> gedung</div></div>
 </div>
 <?php if ($anggaran > 0): $persen = min(100, $terbayar / $anggaran * 100); ?>

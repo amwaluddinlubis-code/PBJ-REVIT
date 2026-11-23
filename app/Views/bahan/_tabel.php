@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <table data-paginasi="10">
   <tr>
     <th style="width:34px"><input type="checkbox" title="Pilih semua bahan pada tabel ini" @change="pilihSemua($event)"></th>
@@ -10,7 +9,7 @@
     <td><?= esc($b['kode']) ?></td>
     <td><?= esc($b['nama']) ?></td>
     <td><?= esc($b['satuan'] ?? '') ?></td>
-    <td class="angka"><?= $rp($b['harga_rab']) ?></td>
+    <td class="angka"><?= rp($b['harga_rab']) ?></td>
     <td>
       <?php if (($b['tarif_gedung'] ?? []) === []): ?>
         <span style="color:var(--ta-teks-3)">—</span>
@@ -19,16 +18,16 @@
         <?php elseif (($b['status_harga'] ?? null) === 'beda'): ?><span class="lencana kuning">Beda dengan Bahan</span>
         <?php else: ?><span class="lencana abu">Harga Bahan Masih 0</span><?php endif; ?>
         <?php if (! empty($b['tarif_seragam'])): $n = $b['tarif_seragam']['nilai']; ?>
-          <div style="font-size:.92em;white-space:nowrap">Semua Gedung (<?= (int) $b['tarif_seragam']['jumlah'] ?>): <span<?= $n['sama'] ? '' : ' style="font-weight:700"' ?>><?= $rp($n['tarif']) ?><?= $n['satuan'] !== '' && $n['satuan'] !== ($b['satuan'] ?? '') ? '/' . esc($n['satuan']) : '' ?></span></div>
+          <div style="font-size:.92em;white-space:nowrap">Semua Gedung (<?= (int) $b['tarif_seragam']['jumlah'] ?>): <span<?= $n['sama'] ? '' : ' style="font-weight:700"' ?>><?= rp($n['tarif']) ?><?= $n['satuan'] !== '' && $n['satuan'] !== ($b['satuan'] ?? '') ? '/' . esc($n['satuan']) : '' ?></span></div>
         <?php else: ?>
         <?php foreach ($b['tarif_gedung'] as $tg): ?>
-          <div style="font-size:.92em;white-space:nowrap"><?= esc($tg['gedung']) ?>: <?php foreach ($tg['nilai'] as $i => $n): ?><?= $i > 0 ? ' · ' : '' ?><span<?= $n['sama'] ? '' : ' style="font-weight:700"' ?>><?= $rp($n['tarif']) ?><?= $n['satuan'] !== '' && $n['satuan'] !== ($b['satuan'] ?? '') ? '/' . esc($n['satuan']) : '' ?></span><?php endforeach; ?></div>
+          <div style="font-size:.92em;white-space:nowrap"><?= esc($tg['gedung']) ?>: <?php foreach ($tg['nilai'] as $i => $n): ?><?= $i > 0 ? ' · ' : '' ?><span<?= $n['sama'] ? '' : ' style="font-weight:700"' ?>><?= rp($n['tarif']) ?><?= $n['satuan'] !== '' && $n['satuan'] !== ($b['satuan'] ?? '') ? '/' . esc($n['satuan']) : '' ?></span><?php endforeach; ?></div>
         <?php endforeach; ?>
         <?php endif; ?>
       <?php endif; ?>
     </td>
     <td class="angka"><?= number_format((float) $b['qty_total'], 2, ',', '.') ?></td>
-    <td class="angka"><?= $rp($b['anggaran']) ?></td>
+    <td class="angka"><?= rp($b['anggaran']) ?></td>
     <td class="angka"><?= number_format((float) $b['terpakai'], 2, ',', '.') ?></td>
     <td class="angka"><?= number_format($sisa, 2, ',', '.') ?></td>
     <td><button type="button" class="kecil" @click="bukaUbah($event.currentTarget.dataset)"

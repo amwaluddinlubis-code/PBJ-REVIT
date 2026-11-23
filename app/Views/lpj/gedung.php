@@ -1,9 +1,8 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <div style="margin-bottom:12px">
-  <span class="lencana biru">Nilai BOQ <b>&nbsp;<?= $rp($g['nilai_boq']) ?></b></span>
+  <span class="lencana biru">Nilai BOQ <b>&nbsp;<?= rp($g['nilai_boq']) ?></b></span>
   <span class="lencana hijau">Fisik <b>&nbsp;<?= number_format($g['persen_fisik'], 1, ',', '.') ?>%</b></span>
-  <span class="lencana abu">Kebutuhan Bahan <b>&nbsp;<?= $rp($g['nilai_kebutuhan_bahan']) ?></b></span>
-  <span class="lencana abu">SPK Dipesan <b>&nbsp;<?= $rp($g['nilai_spk']) ?></b></span>
+  <span class="lencana abu">Kebutuhan Bahan <b>&nbsp;<?= rp($g['nilai_kebutuhan_bahan']) ?></b></span>
+  <span class="lencana abu">SPK Dipesan <b>&nbsp;<?= rp($g['nilai_spk']) ?></b></span>
   <a class="tombol kecil" style="float:right" href="<?= base_url('lpj/cetak/gedung/' . $g['id']) ?>" target="_blank">Cetak LPJ Gedung</a>
   <a class="tombol kecil abu" style="float:right;margin-right:6px" href="<?= base_url('dokumen/cetak-bast-aset/' . $g['id']) ?>" target="_blank">Cetak BAST Aset</a>
   <a class="tombol kecil abu" style="float:right;margin-right:6px" href="<?= base_url('gedung/' . $g['id']) ?>">Ke Menu Gedung</a>
@@ -54,6 +53,6 @@
     <?php $tot = 0; foreach ($kebutuhan_upah as $u): $n = (float) $u['orang_hari'] * (float) $u['tarif']; $tot += $n; ?>
     <tr><td><?= esc($u['jenis']) ?></td><td class="angka"><?= number_format((float) $u['orang_hari'], 2, ',', '.') ?></td><td class="angka"><?= number_format((float) $u['tarif'], 0, ',', '.') ?></td><td class="angka"><?= number_format($n, 0, ',', '.') ?></td></tr>
     <?php endforeach; ?>
-    <tr class="total"><td colspan="3">Total kebutuhan upah · sudah dibayar <?= $rp($g['upah_dibayar']) ?></td><td class="angka"><?= number_format($tot, 0, ',', '.') ?></td></tr>
+    <tr class="total"><td colspan="3">Total kebutuhan upah · sudah dibayar <?= rp($g['upah_dibayar']) ?></td><td class="angka"><?= number_format($tot, 0, ',', '.') ?></td></tr>
   </table>
 </div>

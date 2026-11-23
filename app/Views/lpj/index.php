@@ -1,14 +1,13 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <div class="kartu-kpi">
-  <div class="kpi"><div class="label">Total Anggaran</div><div class="nilai"><?= $anggaran > 0 ? $rp($anggaran) : 'Belum diatur' ?></div></div>
-  <div class="kpi"><div class="label">Total BOQ Gedung</div><div class="nilai"><?= $rp(array_sum(array_column($rekap, 'nilai_boq'))) ?></div></div>
-  <div class="kpi"><div class="label">Belanja Terbayar</div><div class="nilai"><?= $rp($terbayar) ?></div></div>
-  <div class="kpi"><div class="label">Sisa Pagu</div><div class="nilai"><?= $sisa_pagu !== null ? $rp($sisa_pagu) : '—' ?></div></div>
+  <div class="kpi"><div class="label">Total Anggaran</div><div class="nilai"><?= $anggaran > 0 ? rp($anggaran) : 'Belum diatur' ?></div></div>
+  <div class="kpi"><div class="label">Total BOQ Gedung</div><div class="nilai"><?= rp(array_sum(array_column($rekap, 'nilai_boq'))) ?></div></div>
+  <div class="kpi"><div class="label">Belanja Terbayar</div><div class="nilai"><?= rp($terbayar) ?></div></div>
+  <div class="kpi"><div class="label">Sisa Pagu</div><div class="nilai"><?= $sisa_pagu !== null ? rp($sisa_pagu) : '—' ?></div></div>
 </div>
 <?php if ($tanpa_gedung_nilai > 0): ?>
 <div class="peringatan">
   <h2>Belanja tanpa tautan gedung</h2>
-  <p style="margin:0"><?= (int) $tanpa_gedung_spk ?> SPK senilai <b><?= $rp($tanpa_gedung_nilai) ?></b> belum tertaut ke gedung mana pun (termasuk SPK lama sebelum modul gedung ada). Tautkan lewat Ubah SPK agar LPJ per gedung lengkap.</p>
+  <p style="margin:0"><?= (int) $tanpa_gedung_spk ?> SPK senilai <b><?= rp($tanpa_gedung_nilai) ?></b> belum tertaut ke gedung mana pun (termasuk SPK lama sebelum modul gedung ada). Tautkan lewat Ubah SPK agar LPJ per gedung lengkap.</p>
 </div>
 <?php endif; ?>
 <div class="panel">

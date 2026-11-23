@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <section class="dashboard-hero">
   <div>
     <span class="dashboard-kicker">Ringkasan aktivitas</span>
@@ -11,10 +10,10 @@
   </div>
 </section>
 <div class="kartu-kpi">
-  <div class="kpi"><div class="label">Total RAB</div><div class="nilai"><?= $rp($totalRab) ?></div></div>
-  <div class="kpi"><div class="label">Total SPK Terdaftar</div><div class="nilai"><?= $rp($totalSpk) ?></div></div>
-  <div class="kpi"><div class="label">Realisasi Dibayar (bersih PPh 22)</div><div class="nilai"><?= $rp($realisasi) ?></div></div>
-  <div class="kpi"><div class="label">Sisa Anggaran</div><div class="nilai"><?= $rp($sisa) ?></div></div>
+  <div class="kpi"><div class="label">Total RAB</div><div class="nilai"><?= rp($totalRab) ?></div></div>
+  <div class="kpi"><div class="label">Total SPK Terdaftar</div><div class="nilai"><?= rp($totalSpk) ?></div></div>
+  <div class="kpi"><div class="label">Realisasi Dibayar (bersih PPh 22)</div><div class="nilai"><?= rp($realisasi) ?></div></div>
+  <div class="kpi"><div class="label">Sisa Anggaran</div><div class="nilai"><?= rp($sisa) ?></div></div>
 </div>
 
 <?php if ($tanpaSpk->j > 0 || $invoiceCek || $sisaNegatif || ! empty($tahap2JatuhTempo) || ! empty($pecahCek) || ! empty($masterKonflik) || ($tanpaHarga ?? 0) > 0 || ($tanpaTarif ?? 0) > 0): ?>
@@ -26,11 +25,11 @@
         siapkan Laporan Kemajuan dan ajukan pencairan tahap 2 lewat menu <a href="<?= base_url('penerimaan-dana') ?>">Penerimaan Dana</a>.</li>
     <?php endif; ?>
     <?php if ($tanpaSpk->j > 0): ?>
-      <li><strong><?= (int) $tanpaSpk->j ?> baris detail</strong> senilai <strong><?= $rp($tanpaSpk->t) ?></strong> belum bernomor SPK —
+      <li><strong><?= (int) $tanpaSpk->j ?> baris detail</strong> senilai <strong><?= rp($tanpaSpk->t) ?></strong> belum bernomor SPK —
         <a href="<?= base_url('belum-bernomor') ?>">pasangkan nomornya</a>.</li>
     <?php endif; ?>
     <?php foreach ($invoiceCek as $c): ?>
-      <li>Invoice No. <?= (int) $c['nomor_urut'] ?>: nilai <?= $rp($c['nilai']) ?> tidak sama dengan total SPK <?= (int) $c['spk_nomor'] ?> (<?= $rp($c['total_spk']) ?>) — <a href="<?= base_url('invoice') ?>">periksa di Register Invoice</a>.</li>
+      <li>Invoice No. <?= (int) $c['nomor_urut'] ?>: nilai <?= rp($c['nilai']) ?> tidak sama dengan total SPK <?= (int) $c['spk_nomor'] ?> (<?= rp($c['total_spk']) ?>) — <a href="<?= base_url('invoice') ?>">periksa di Register Invoice</a>.</li>
     <?php endforeach; ?>
     <?php foreach ($sisaNegatif as $n): ?>
       <li>Sisa bahan negatif: <strong><?= esc($n['kode']) ?> <?= esc($n['nama']) ?></strong> — terpakai <?= rtrim(rtrim(number_format((float) $n['terpakai'], 2, ',', '.'), '0'), ',') ?> dari RAB <?= rtrim(rtrim(number_format((float) $n['qty_rab'], 2, ',', '.'), '0'), ',') ?> — <a href="<?= base_url('sisa-bahan') ?>">lihat di Sisa Bahan</a>.</li>
@@ -61,24 +60,24 @@
     <?php foreach ($panelGedung as $gd): ?>
     <tr>
       <td><b><?= esc($gd['nama']) ?></b></td>
-      <td class="angka"><?= $rp($gd['boq_asli']) ?></td>
-      <td class="angka"><?= $rp($gd['nilai_analisa']) ?></td>
-      <td class="angka"><?php if (abs($gd['perubahan']) < 0.5): ?><span class="kecil-teks">—</span><?php else: ?><span class="<?= $gd['perubahan'] > 0 ? 'perubahan-buruk' : 'perubahan-baik' ?>"><?= $gd['perubahan'] > 0 ? '+' : '−' ?><?= $rp(abs($gd['perubahan'])) ?></span><?php if ($gd['boq_asli'] > 0): ?> <span class="kecil-teks">(<?= number_format(abs($gd['perubahan']) / $gd['boq_asli'] * 100, 1, ',', '.') ?>%)</span><?php endif; ?><?php endif; ?></td>
+      <td class="angka"><?= rp($gd['boq_asli']) ?></td>
+      <td class="angka"><?= rp($gd['nilai_analisa']) ?></td>
+      <td class="angka"><?php if (abs($gd['perubahan']) < 0.5): ?><span class="kecil-teks">—</span><?php else: ?><span class="<?= $gd['perubahan'] > 0 ? 'perubahan-buruk' : 'perubahan-baik' ?>"><?= $gd['perubahan'] > 0 ? '+' : '−' ?><?= rp(abs($gd['perubahan'])) ?></span><?php if ($gd['boq_asli'] > 0): ?> <span class="kecil-teks">(<?= number_format(abs($gd['perubahan']) / $gd['boq_asli'] * 100, 1, ',', '.') ?>%)</span><?php endif; ?><?php endif; ?></td>
       <td><div class="bar<?= $gd['persen_fisik'] >= 99.5 ? ' hijau' : '' ?>"><div style="width:<?= min(100, $gd['persen_fisik']) ?>%"></div></div><span class="kecil-teks"><?= number_format($gd['persen_fisik'], 1, ',', '.') ?>%</span></td>
       <td><a class="tombol kecil" href="<?= base_url('gedung/' . $gd['id']) ?>">Buka</a></td>
     </tr>
     <?php endforeach; ?>
     <tr class="total">
       <td><b>Total <?= count($panelGedung) ?> gedung</b></td>
-      <td class="angka"><b><?= $rp($panelTotal['asli']) ?></b></td>
-      <td class="angka"><b><?= $rp($panelTotal['analisa']) ?></b></td>
-      <td class="angka"><b><?php if (abs($panelTotal['perubahan']) < 0.5): ?>—<?php else: ?><span class="<?= $panelTotal['perubahan'] > 0 ? 'perubahan-buruk' : 'perubahan-baik' ?>"><?= $panelTotal['perubahan'] > 0 ? '+' : '−' ?><?= $rp(abs($panelTotal['perubahan'])) ?></span><?php endif; ?></b></td>
+      <td class="angka"><b><?= rp($panelTotal['asli']) ?></b></td>
+      <td class="angka"><b><?= rp($panelTotal['analisa']) ?></b></td>
+      <td class="angka"><b><?php if (abs($panelTotal['perubahan']) < 0.5): ?>—<?php else: ?><span class="<?= $panelTotal['perubahan'] > 0 ? 'perubahan-buruk' : 'perubahan-baik' ?>"><?= $panelTotal['perubahan'] > 0 ? '+' : '−' ?><?= rp(abs($panelTotal['perubahan'])) ?></span><?php endif; ?></b></td>
       <td></td>
       <td></td>
     </tr>
   </table>
   <?php if (isset($verifikasi)): ?>
-  <p class="kecil-teks" style="margin-bottom:0">Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung aktif</b>: <b><?= $rp($verifikasi['total_boq']) ?></b> + biaya non-gedung <b><?= $rp($verifikasi['biaya_lain']) ?></b> = <b><?= $rp($verifikasi['total_semua']) ?></b> · Pagu anggaran: <b><?= $rp($verifikasi['pagu']) ?></b> · Selisih: <b><?= $rp($verifikasi['selisih']) ?></b><?php if ($verifikasi['pagu'] > 0 && $verifikasi['selisih'] < 0): ?> <span class="perubahan-buruk"><b>(melebihi pagu)</b></span><?php elseif ($verifikasi['pagu'] > 0 && $verifikasi['selisih'] == 0): ?> <span class="perubahan-baik"><b>(sesuai pagu)</b></span><?php endif; ?> — pantau pemakaiannya di <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a> dan <a href="<?= base_url('lpj') ?>">LPJ &amp; Realisasi</a>.</p>
+  <p class="kecil-teks" style="margin-bottom:0">Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung aktif</b>: <b><?= rp($verifikasi['total_boq']) ?></b> + biaya non-gedung <b><?= rp($verifikasi['biaya_lain']) ?></b> = <b><?= rp($verifikasi['total_semua']) ?></b> · Pagu anggaran: <b><?= rp($verifikasi['pagu']) ?></b> · Selisih: <b><?= rp($verifikasi['selisih']) ?></b><?php if ($verifikasi['pagu'] > 0 && $verifikasi['selisih'] < 0): ?> <span class="perubahan-buruk"><b>(melebihi pagu)</b></span><?php elseif ($verifikasi['pagu'] > 0 && $verifikasi['selisih'] == 0): ?> <span class="perubahan-baik"><b>(sesuai pagu)</b></span><?php endif; ?> — pantau pemakaiannya di <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a> dan <a href="<?= base_url('lpj') ?>">LPJ &amp; Realisasi</a>.</p>
   <?php endif; ?>
 </details>
 <?php endif; ?>
@@ -94,7 +93,7 @@
       <td><?= esc($s['penyedia'] ?? '—') ?></td>
       <td><?= esc($s['paket'] ?? '—') ?></td>
       <td class="angka"><?= (int) $s['jumlah'] ?></td>
-      <td class="angka"><?= $rp($s['nilai']) ?></td>
+      <td class="angka"><?= rp($s['nilai']) ?></td>
       <td><?= esc($s['status']) ?></td>
     </tr>
     <?php endforeach; ?>

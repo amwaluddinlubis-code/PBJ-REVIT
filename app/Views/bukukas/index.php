@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <?php $namaBulan = static fn ($ym) => date('F Y', strtotime($ym . '-01')); ?>
 <div class="panel">
   <h2><?= esc($nama_buku) ?> — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></h2>
@@ -20,18 +19,18 @@
   <h2><?= esc($nama_buku) ?> — Bulan <?= esc($namaBulan($bulan)) ?></h2>
   <table data-paginasi="25" data-cari="Cari transaksi…">
     <tr><th>Tanggal</th><th>Uraian</th><th class="angka">Penerimaan</th><th class="angka">Pengeluaran</th><th class="angka">Saldo</th></tr>
-    <tr><td colspan="2"><b>Saldo awal bulan</b></td><td></td><td></td><td class="angka"><b><?= $rp($saldo_awal) ?></b></td></tr>
+    <tr><td colspan="2"><b>Saldo awal bulan</b></td><td></td><td></td><td class="angka"><b><?= rp($saldo_awal) ?></b></td></tr>
     <?php foreach ($baris as $e): ?>
     <tr>
       <td><?= esc(tgl($e['tanggal'] ?? null)) ?></td>
       <td><?= esc($e['uraian']) ?> <span class="kecil-teks">(<?= $e['sumber'] === 'manual' ? 'manual' : ($e['sumber'] === 'invoice' ? 'jurnal pembayaran' : ($e['sumber'] === 'upah' ? 'upah' : 'bukti setor')) ?>)</span></td>
-      <td class="angka"><?= $e['masuk'] > 0 ? $rp($e['masuk']) : '—' ?></td>
-      <td class="angka"><?= $e['keluar'] > 0 ? $rp($e['keluar']) : '—' ?></td>
-      <td class="angka"><?= $rp($e['saldo']) ?></td>
+      <td class="angka"><?= $e['masuk'] > 0 ? rp($e['masuk']) : '—' ?></td>
+      <td class="angka"><?= $e['keluar'] > 0 ? rp($e['keluar']) : '—' ?></td>
+      <td class="angka"><?= rp($e['saldo']) ?></td>
     </tr>
     <?php endforeach; ?>
     <?php if ($baris === []): ?><tr><td colspan="5">Tidak ada transaksi pada bulan ini.</td></tr><?php endif; ?>
-    <tr><td colspan="2"><b>Saldo akhir bulan (penutupan buku)</b></td><td></td><td></td><td class="angka"><b><?= $rp($saldo_akhir) ?></b></td></tr>
+    <tr><td colspan="2"><b>Saldo akhir bulan (penutupan buku)</b></td><td></td><td></td><td class="angka"><b><?= rp($saldo_akhir) ?></b></td></tr>
   </table>
 </div>
 
@@ -90,7 +89,7 @@
       <td><?= esc($m['uraian']) ?></td>
       <td><?= esc($m['kategori']) ?><?= $m['tahap'] ? ' · tahap ' . (int) $m['tahap'] : '' ?></td>
       <td><?= esc($m['kanal']) ?> · <?= esc($m['jenis']) ?></td>
-      <td class="angka"><?= $rp($m['jumlah']) ?></td>
+      <td class="angka"><?= rp($m['jumlah']) ?></td>
       <td><form class="inline" method="post" action="<?= base_url('buku-kas/hapus/' . $m['id']) ?>" data-konfirmasi="Hapus transaksi kas ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
     </tr>
     <?php endforeach; ?>

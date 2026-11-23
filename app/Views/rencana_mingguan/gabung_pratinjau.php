@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <?php $num = static fn ($n) => number_format((float) $n, 2, ',', '.'); ?>
 <div class="panel">
   <h2 style="margin-top:0">Pratinjau SPK Gabungan</h2>
@@ -17,11 +16,11 @@
         <td class="angka"><?= $num($b['kotor']) ?></td>
         <td class="angka"><?= $num($b['stok'] + $b['berjalan']) ?></td>
         <td class="angka"><input type="text" name="qty[<?= (int) $b['bahan_id'] ?>][<?= (int) $b['gedung_id'] ?>]" value="<?= esc(number_format((float) $b['qty'], 2, '.', '')) ?>" style="width:100px;text-align:right" inputmode="decimal" aria-label="Jumlah beli <?= esc($b['nama']) ?> untuk <?= esc($gedung_nama[$b['gedung_id']] ?? '') ?>"></td>
-        <td class="angka"><?= $rp($b['harga']) ?></td>
-        <td class="angka"><?= $rp($b['nilai']) ?></td>
+        <td class="angka"><?= rp($b['harga']) ?></td>
+        <td class="angka"><?= rp($b['nilai']) ?></td>
       </tr>
       <?php endforeach; ?>
-      <tr class="total"><td colspan="6"><strong>Total nilai SPK gabungan</strong></td><td class="angka"><strong><?= $rp($total) ?></strong></td></tr>
+      <tr class="total"><td colspan="6"><strong>Total nilai SPK gabungan</strong></td><td class="angka"><strong><?= rp($total) ?></strong></td></tr>
     </table></div>
     <p style="margin:10px 0 0"><button type="submit" class="tombol">Buat 1 SPK dari Gabungan Ini</button>
     <a class="tombol abu" href="<?= base_url('rencana-mingguan/gabung') ?>">Ubah Pilihan Rencana</a></p>

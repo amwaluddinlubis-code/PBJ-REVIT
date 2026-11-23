@@ -1,5 +1,5 @@
 <?php
-$rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.');
+
 $pilihSekolah = static function () use ($semuaSekolah, $sekolahAktif) {
     $html = '<label>Sekolah tujuan impor<select data-select-cari name="sekolah_id">';
     foreach ($semuaSekolah ?? [] as $sk) {
@@ -89,11 +89,11 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
   <h2>Verifikasi Anggaran — <?= esc($sekolahAktif['nama_sekolah'] ?? 'Sekolah Aktif') ?></h2>
   <table>
     <tr><th>Uraian</th><th class="angka">Nilai</th></tr>
-    <tr><td>Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung didanai</b> (dari <?= (int) ($verifikasi['gedung_semua'] ?? $verifikasi['gedung']) ?> gedung aktif — hanya yang didanai yang dihitung; tandai di <a href="<?= base_url('gedung') ?>">Kelola Gedung</a>)</td><td class="angka"><b><?= $rp($verifikasi['total_boq']) ?></b></td></tr>
-    <tr><td>Biaya non-gedung (perencanaan, pengawasan, pengelolaan — menu <a href="<?= base_url('biaya-non-gedung') ?>">Biaya Non-Gedung</a>)</td><td class="angka"><b><?= $rp($verifikasi['biaya_lain']) ?></b></td></tr>
-    <tr><td><b>Total keseluruhan (BOQ + biaya non-gedung)</b></td><td class="angka"><b><?= $rp($verifikasi['total_semua']) ?></b></td></tr>
-    <tr><td>Pagu anggaran (diisi di <a href="<?= base_url('pengaturan') ?>">Pengaturan</a>)</td><td class="angka"><b><?= $rp($verifikasi['pagu']) ?></b></td></tr>
-    <tr><td>Selisih (pagu − total keseluruhan)</td><td class="angka"><b><?= $rp($verifikasi['selisih']) ?></b></td></tr>
+    <tr><td>Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung didanai</b> (dari <?= (int) ($verifikasi['gedung_semua'] ?? $verifikasi['gedung']) ?> gedung aktif — hanya yang didanai yang dihitung; tandai di <a href="<?= base_url('gedung') ?>">Kelola Gedung</a>)</td><td class="angka"><b><?= rp($verifikasi['total_boq']) ?></b></td></tr>
+    <tr><td>Biaya non-gedung (perencanaan, pengawasan, pengelolaan — menu <a href="<?= base_url('biaya-non-gedung') ?>">Biaya Non-Gedung</a>)</td><td class="angka"><b><?= rp($verifikasi['biaya_lain']) ?></b></td></tr>
+    <tr><td><b>Total keseluruhan (BOQ + biaya non-gedung)</b></td><td class="angka"><b><?= rp($verifikasi['total_semua']) ?></b></td></tr>
+    <tr><td>Pagu anggaran (diisi di <a href="<?= base_url('pengaturan') ?>">Pengaturan</a>)</td><td class="angka"><b><?= rp($verifikasi['pagu']) ?></b></td></tr>
+    <tr><td>Selisih (pagu − total keseluruhan)</td><td class="angka"><b><?= rp($verifikasi['selisih']) ?></b></td></tr>
   </table>
   <?php if (($verifikasi['pagu'] ?? 0) <= 0): ?>
     <p class="kecil-teks" style="margin-bottom:0;color:var(--ina-yellow-700,#a15c00)"><b>Pagu belum diatur</b> — isi total anggaran di Pengaturan agar perbandingan ini bermakna.</p>

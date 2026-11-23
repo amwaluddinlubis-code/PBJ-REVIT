@@ -1,4 +1,3 @@
-<?php $rp = static fn ($n) => 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <?php $angka = static fn ($n) => rtrim(rtrim(number_format((float) $n, 3, ',', '.'), '0'), ','); ?>
 <div class="panel">
   <h2>Pembersihan Hasil Impor — Langkah 1 dari 3: Pekerjaan Volume &lt; 1</h2>
@@ -22,7 +21,7 @@
   <?= csrf_field() ?>
   <?php foreach ($grupGedung as $g): $gid = (int) $g['gedung_id']; $terbuka = $buka === $gid; ?>
   <details class="panel panel-lipat" data-grup="<?= $gid ?>" <?= $terbuka ? 'open' : '' ?>>
-    <summary><?= esc($g['gedung_nama']) ?> <span class="kecil-teks">(<?= (int) $g['jumlah'] ?> pekerjaan volume &lt; 1 · <?= $rp($g['total']) ?>)</span></summary>
+    <summary><?= esc($g['gedung_nama']) ?> <span class="kecil-teks">(<?= (int) $g['jumlah'] ?> pekerjaan volume &lt; 1 · <?= rp($g['total']) ?>)</span></summary>
     <div class="isi-grup">
       <?php if ($terbuka): ?>
       <?= view('bersih/_grup_tabel', ['rows' => $barisBuka]) ?>
