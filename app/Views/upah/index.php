@@ -22,12 +22,12 @@
         <select data-select-cari name="pekerjaan_id" id="pilih-pekerjaan"><option value="">— tidak tertaut pekerjaan —</option></select>
       </label>
       <label>Jenis tenaga
-        <input type="text" name="jenis_tenaga" list="daftar-jenis" required placeholder="mis. Tukang Kayu">
+        <input type="text" name="jenis_tenaga" list="daftar-jenis" required placeholder="mis. Pekerja / Tukang">
         <datalist id="daftar-jenis">
           <?php foreach ($master as $m): ?><option value="<?= esc($m['jenis']) ?>"><?= esc($m['jenis']) ?> — <?= $rp($m['tarif']) ?>/OH</option><?php endforeach; ?>
         </datalist>
       </label>
-      <label>Nama penerima / mandor<input type="text" name="penerima" placeholder="mis. Sarmin (mandor)"></label>
+      <label>Nama penerima<input type="text" name="penerima" placeholder="mis. Sarmin"></label>
       <label>Orang-hari (OH)<input type="text" name="orang_hari" required placeholder="mis. 12,5"></label>
       <label>Tarif per OH (Rp) — kosongkan untuk tarif master<input type="text" inputmode="numeric" data-uang name="tarif" placeholder="mis. 93578"></label>
       <label>Keterangan<input type="text" name="keterangan" placeholder="mis. Upah pasang pondasi minggu ke-3"></label>
@@ -88,15 +88,30 @@
     </tr>
     <?php endforeach; ?>
   </table>
+  <?php
+  $jenisMaster = array_map(static fn ($m) => (string) $m['jenis'], $master);
+  $kanonKurang = array_values(array_filter(['Pekerja', 'Tukang'], static fn ($k) => ! in_array($k, $jenisMaster, true)));
+  $bukanKanon  = array_values(array_filter($master, static fn ($m) => ! in_array((string) $m['jenis'], ['Pekerja', 'Tukang'], true)));
+  ?>
+  <?php if ($kanonKurang !== []): ?>
   <form method="post" action="<?= base_url('upah/master') ?>" style="margin-top:12px">
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-      <label>Jenis tenaga baru<input type="text" name="jenis" placeholder="mis. Tukang Aluminium"></label>
+      <label>Jenis tenaga
+        <select name="jenis" required>
+          <?php foreach ($kanonKurang as $k): ?><option value="<?= esc($k) ?>"><?= esc($k) ?></option><?php endforeach; ?>
+        </select>
+      </label>
       <label>Tarif per OH (Rp)<input type="text" inputmode="numeric" data-uang name="tarif" placeholder="mis. 93578"></label>
       <div class="aksi md:col-span-2"><button type="submit">Tambah ke Master</button></div>
     </div>
   </form>
-  <p class="kecil-teks">Tarif bawaan berasal dari daftar upah dokumen perencana (berbasis UMK). Tarif Mandor &amp; Kepala Tukang pada salinan dokumen ini tersimpan 0 — silakan isi sesuai daftar upah yang berlaku.</p>
+  <?php endif; ?>
+  <?php if ($bukanKanon !== []): ?>
+  <p class="kecil-teks">Master upah hanya mengenal <strong>Pekerja</strong> dan <strong>Tukang</strong>. Masih ada <?= count($bukanKanon) ?> jenis lain (<?= esc(implode(', ', array_column($bukanKanon, 'jenis'))) ?>) — rapikan lewat tombol <strong>Rapikan ke 2 Jenis</strong> di <a href="<?= base_url('bahan') ?>">Master Bahan &amp; Upah</a>.</p>
+  <?php else: ?>
+  <p class="kecil-teks">Master upah hanya mengenal dua jenis kanonik: <strong>Pekerja</strong> dan <strong>Tukang</strong>, dengan tarif per OH. Tarif bawaan berasal dari daftar upah dokumen perencana (berbasis UMK); ubah pada kolom Tarif di tabel atau lewat tombol <strong>Rapikan ke 2 Jenis</strong> di <a href="<?= base_url('bahan') ?>">Master Bahan &amp; Upah</a> bila masih ada varian lain.</p>
+  <?php endif; ?>
 </div>
 
 <script>

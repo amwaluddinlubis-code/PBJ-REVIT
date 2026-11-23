@@ -3,6 +3,15 @@
 Konversi workbook `Aplikasi_PBJ_Sekolah` (Excel) menjadi aplikasi web CI4 + MariaDB.
 Data awal diimpor dari workbook v4 (master 95 bahan, 5 SPK, 169 baris detail, 1 invoice).
 
+README ini adalah **indeks singkat**. Dokumentasi lengkap ada di folder `docs/`:
+lihat [`docs/Panduan_Penggunaan.md`](docs/Panduan_Penggunaan.md) (panduan pengguna),
+[`docs/Panduan_Instalasi_Upgrade.md`](docs/Panduan_Instalasi_Upgrade.md) (instalasi/upgrade),
+[`docs/Arsitektur_Data.md`](docs/Arsitektur_Data.md) (skema data),
+[`docs/Matriks_Hak_Akses.md`](docs/Matriks_Hak_Akses.md) (peran & akses),
+[`docs/Kontribusi_dan_Pengujian.md`](docs/Kontribusi_dan_Pengujian.md) (kontribusi/uji),
+[`docs/CHANGELOG.md`](docs/CHANGELOG.md) (riwayat migrasi), dan
+[`AGENTS.md`](AGENTS.md) (aturan pengembangan wajib).
+
 ## Menjalankan di PC (XAMPP)
 
 1. Letakkan folder proyek di dalam `htdocs` XAMPP (contoh: `D:\xampp\htdocs\pbj-revit`).
@@ -42,6 +51,15 @@ Antarmuka memakai **INA Digital Design System (IDDS)** dikombinasikan dengan **T
 - `public/assets/app.css` — komponen aplikasi (sidebar, tombol, panel, tabel) ditulis di atas token `--ina-*`.
 - Form memakai grid Tailwind 2 kolom (`grid md:grid-cols-2`); tabel data memakai paginasi klien (`public/assets/paginasi.js`, atribut `data-paginasi` pada tabel; baris total beri kelas `baris-total`).
 
+## Dokumentasi
+
+- Panduan pengguna lengkap: [`docs/Panduan_Penggunaan.md`](docs/Panduan_Penggunaan.md)
+  (alur kerja per modul, konvensi antarmuka, FAQ, dan lampiran QA).
+- Rencana pengembangan dokumentasi: [`docs/Rencana_Pengembangan_Dokumentasi.md`](docs/Rencana_Pengembangan_Dokumentasi.md).
+- Aturan pengembangan wajib: [`AGENTS.md`](AGENTS.md).
+- Uji otomatis: `composer test` (PHPUnit, 9 tes fungsi dasar `BaseController`).
+  Cek sintaks PHP: `php -l <berkas>`; cek JavaScript: `node --check <berkas>`.
+
 ## Status
 
 - Fase 1 (selesai): login, Dashboard (KPI + peringatan otomatis), Master Bahan (CRUD),
@@ -62,8 +80,15 @@ Antarmuka memakai **INA Digital Design System (IDDS)** dikombinasikan dengan **T
   (PPh 22 1,5% otomatis), Buku Material (saldo berjalan) & Sisa Bahan,
   Identitas & Pengaturan + master Penyedia.
 
-Skema: 14 tabel (users, identitas, bahan, penyedia, spk, spk_detail, survei_harga,
-negosiasi, bap, bap_detail, bast, invoice, pembayaran, buku_material).
+Skema: 41 tabel aplikasi (42 termasuk tabel `migrations` yang dicatat CodeIgniter),
+dimulai dari 14 tabel inti di atas dan bertambah melalui migrasi 000002–000028:
+gedung, pekerjaan, analisa, analisa_komponen, upah_master, realisasi, upah_bayar,
+impor_log, sekolah, biaya_lain, kas_transaksi, bukti_setor, foto_progres,
+dokumen_spk, revisi_pekerjaan, bahan_konversi, audit_events, rencana_mingguan,
+rencana_mingguan_detail, aplikasi_pengaturan, kurva_minggu, kurva_rencana,
+akses_menu, ahsp_acuan, ahsp_acuan_komponen, spk_tenaga, simulasi_realisasi,
+laporan_template, dan lain-lain. Lihat `app/Database/Migrations/` untuk urutan
+dan detail kolom.
 
 ---
 
@@ -97,8 +122,8 @@ Catatan impor: konversi satuan mengikuti praktik AHSP — semen kg→zak (÷50),
 (÷1.400), kerikil/batu kg→m³ (÷1.600), keramik bh→ktk (menurut ukuran). Baris yang satuannya
 berbeda tanpa aturan konversi ditandai "satuan beda" agar diperiksa pengguna.
 
-Langkah sesudah `git pull` di PC: jalankan `php spark migrate` (migrasi 000003), lalu buka
-menu **Impor Dokumen Perencana** dan unggah workbook RAB perencana sekolah.
+Langkah sesudah `git pull`: jalankan `php spark migrate` (migrasi terakhir saat ini 000028),
+lalu buka menu **Impor Dokumen Perencana** dan unggah workbook RAB perencana sekolah.
 
 ## Kesesuaian dengan Juknis Revitalisasi SMP 2026
 
@@ -185,4 +210,5 @@ Pengembangan lanjutan berdasarkan Juknis (migrasi 000008–000011):
   nilai BOQ gedung dihitung ulang dari pekerjaan yang tersisa.
 
 Langkah sesudah `git pull` versi ini: jalankan `php spark migrate`
-(migrasi 000007–000011).
+(migrasi 000001–000028; semua migrasi bersifat idempoten dan menambahkan kolom
+bila belum ada).

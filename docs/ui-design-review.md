@@ -1,8 +1,17 @@
 # Tinjauan Desain — Aplikasi "Analisa Perencana"
 
-- Tanggal: 2026-11-21 (pull `66ab742..7b5b10d`)
+> **Catatan status (24 November 2026):** dokumen ini adalah tinjauan 21 November 2026. Sebagian pernyataannya sudah tidak berlaku karena perubahan CSS sejak itu. Perubahan penting:
+> - Sidebar sekarang berlatar **gradasi hijau** (bukan biru TailAdmin) dan memakai **7 grup menu** (Perencanaan, Pembangunan Gedung, Belanja, Material, Keuangan, Laporan, Pengaturan) — bukan 6 grup "Bahan & Laporan".
+> - `.panel` dan `table` kini memakai **`overflow: clip`**, bukan `overflow-x: auto` (lihat AGENTS.md — `overflow: auto/hidden/scroll` mematikan `position: sticky` pada header tabel). Scroll horizontal tabel tetap tersedia lewat pembungkus `.bungkus-tabel`/`.panel` yang memang bergulir, bukan lewat `overflow-x: auto` global.
+> - Zoom A−/A+ memasang `zoom` pada `<html>`; `.samping .logo` dan `.samping .profil` memakai `zoom: var(--ap-zoom-balik, 1)` (1/zoom aktif) agar ukurannya statis.
+> - Panel select-cari dirender sebagai lapisan `fixed` di `<body>` (portal, z-index 500); koordinatnya dibagi dengan zoom dokumen.
+>
+> Untuk aturan desain mutakhir, rujuk `AGENTS.md` (bagian Aturan UI Wajib) dan `docs/Panduan_Penggunaan.md` Bab 2a.
+
+- Tanggal tinjauan asli: 2026-11-21 (pull `66ab742..7b5b10d`); catatan status di atas diperbarui 24 November 2026
+- Terakhir diverifikasi: 24 November 2026
 - Tema: TailAdmin + IDDS, tema gelap (CSS var), zoom font 80–130%, scroll & overlay global
-- Struktur utama: sidebar utama (6 grup menu + daftar gedung) → topbar utama → konten (panel/tabel/kartu)
+- Struktur utama: sidebar utama (7 grup menu + daftar gedung) → topbar utama → konten (panel/tabel/kartu)
 
 ## Kesimpulan Singkat
 
@@ -11,7 +20,7 @@ Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** di
 ## Kekuatan
 
 1. **Sistem desain konsisten & profesional.** IDDS (biru utama `#0049b8`, palet warna semantik terpisah), tema gelap via `html.gelap` + CSS var tanpa `!important`, transisi hover ~200–300ms, icon SVG stroke inline.
-2. **Struktur informasi jelas.** Sidebar berlapis: pengguna, pemilih sekolah aktif, 5 grup menu parent>child (Perencanaan, Gedung, Belanja, Bahan & Laporan, Pengaturan) + daftar gedung dengan badge persen fisik. Topbar: pencarian, A−/A+, tema, dropdown user (nama, username, peran, sekolah).
+2. **Struktur informasi jelas.** Sidebar berlapis: blok logo statis (logo + "Analisa Perencana" + Sekolah aktif + pemilih sekolah), 7 grup menu parent>child (Perencanaan, Pembangunan Gedung, Belanja, Material, Keuangan, Laporan, Pengaturan) + daftar gedung dengan badge persen fisik. Topbar: pencarian, A−/A+, tema, dropdown user (nama, username, peran, sekolah). Blok logo/profil statis terhadap zoom (zoom balik).
 3. **Dashboard yang bertindak.** KPI 4 kartu ikon berbeda (Total RAB, SPK Terdaftar, Realisasi PPh 22, Sisa Anggaran) + `peringatan` otomatis daftar masalah yang disesaikan klik (baris detail belum bernomor, invoice ≠ total SPK, sisa negatif).
 4. **Lebih dari cukup rinci UX kecil.** Paginasi klien, `lencana` warna (kuning "dikonversi", abu "satuan beda"), baris total netral, flash messages, tombol zoom font, preferensi di `localStorage`, fokus visible, `aria-label`.
 
@@ -36,10 +45,10 @@ Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** di
 - `html.gelap` tidak mengubah `--ina-neutral-50/100` (terlihat pada hover `.tombol.abu`, `--ina-neutral-100` pada beberapa border).
 - **Saran**: tambah variabel gelap (`--ina-neutral-50:#16263f; --ina-neutral-100:#22334f; ...`) atau overrides khusus `html.gelap .tombol.abu`.
 
-### P3 — Tabel melebar di mobile tanpa scroll — sudah selesai & diverifikasi (2026-11-21)
+### P3 — Tabel melebar di mobile tanpa scroll — diperbarui 24 Nov 2026
 - Rencana Belanja, SPK Detail, LPJ, Dashboard Gedung (5–9 kolom).
-- **Saran**: `.panel { overflow-x:auto; }` atau `table { display:block; overflow-x:auto; }` — mulai dari tabel impor baru (panel tak tertaut, riwayat).
-- **Terlakukan**: `.panel { overflow-x: auto; }` — tabel di dalam panel kini mempunyai *scroll horizontal* — cocok untuk Rencana Belanja, SPK Detail, LPJ, Dashboard Gedung, tabel impor.
+- **Saran lama**: `.panel { overflow-x:auto; }` — **tidak lagi dipakai**, karena `overflow: auto/hidden/scroll` pada `.panel` mematikan `position: sticky` pada header tabel.
+- **Keadaan sekarang**: `.panel` dan `table` memakai `overflow: clip` (memotong sudut tanpa konteks gulir); scroll horizontal tabel disediakan oleh pembungkus yang memang bergulir (`.bungkus-tabel`/`.panel` tertentu) dan `paginasi.js` hanya memberi kelas `kepala-tempel` pada tabel tinggi yang tidak berada di dalam wadah bergulir mana pun (diperiksa dari computed style semua leluhur).
 
 ### P4 — Touch & teks terlalu kecil di genggaman — sudah selesai & diverifikasi (2026-11-21)
 - Sidebar: `padding:8px 10px; font:11.2px` → tinggi ~31px.

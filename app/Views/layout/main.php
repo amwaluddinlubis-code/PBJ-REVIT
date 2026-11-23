@@ -69,22 +69,22 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       <?php
       $uriPenuh = uri_string();
       $indukAktif = [
-        'perencanaan' => in_array($seg, ['impor', 'analisa', 'acuan', 'validasi-harga', 'bersih', 'rencana-belanja', 'rencana-mingguan', 'biaya-non-gedung'], true),
+        'perencanaan' => in_array($seg, ['impor', 'analisa', 'acuan', 'validasi-harga', 'bersih', 'rencana-belanja', 'rencana-mingguan', 'simulasi', 'biaya-non-gedung'], true),
         'gedung'      => in_array($seg, ['gedung', 'foto-progres', 'kurva-s', 'laporan-kemajuan', 'revisi-pekerjaan'], true),
         'belanja'     => in_array($seg, ['spk', 'belum-bernomor', 'survei', 'negosiasi', 'dokumen'], true),
         'material'    => in_array($seg, ['bahan', 'material', 'sisa-bahan'], true),
         'keuangan'    => in_array($seg, ['invoice', 'buku-kas', 'penerimaan-dana', 'bukti-setor', 'upah'], true),
-        'laporan'     => in_array($seg, ['lpj', 'laporan'], true),
+        'laporan'     => in_array($seg, ['lpj', 'laporan', 'template-laporan'], true),
         'pengaturan'  => in_array($seg, ['pengaturan', 'sekolah', 'pengguna', 'profil', 'pemeliharaan-db', 'audit'], true),
       ];
       $bolehMenu = static fn (string $k): bool => ($aksesMenu[$k] ?? true) !== false;
       $grupAda = [
-        'perencanaan' => $bolehMenu('impor') || $bolehMenu('analisa') || $bolehMenu('acuan') || $bolehMenu('validasi-harga') || $bolehMenu('bersih') || $bolehMenu('rencana-belanja') || $bolehMenu('rencana-mingguan') || $bolehMenu('biaya-non-gedung'),
+        'perencanaan' => $bolehMenu('impor') || $bolehMenu('analisa') || $bolehMenu('acuan') || $bolehMenu('validasi-harga') || $bolehMenu('bersih') || $bolehMenu('rencana-belanja') || $bolehMenu('rencana-mingguan') || $bolehMenu('simulasi') || $bolehMenu('biaya-non-gedung'),
         'gedung'      => $bolehMenu('gedung') || $bolehMenu('foto-progres') || $bolehMenu('kurva-s') || $bolehMenu('laporan-kemajuan') || $bolehMenu('revisi-pekerjaan'),
         'belanja'     => $bolehMenu('spk') || $bolehMenu('belum-bernomor') || $bolehMenu('survei') || $bolehMenu('negosiasi') || $bolehMenu('dokumen'),
         'material'    => $bolehMenu('bahan') || $bolehMenu('material') || $bolehMenu('sisa-bahan'),
         'keuangan'    => $bolehMenu('penerimaan-dana') || $bolehMenu('invoice') || $bolehMenu('buku-kas') || $bolehMenu('bukti-setor') || $bolehMenu('upah'),
-        'laporan'     => $bolehMenu('lpj') || $bolehMenu('laporan'),
+        'laporan'     => $bolehMenu('lpj') || $bolehMenu('laporan') || $bolehMenu('template-laporan'),
         'pengaturan'  => $bolehMenu('pengaturan') || $bolehMenu('sekolah') || (($pengguna['peran'] ?? '') === 'admin'),
       ];
       $induk = static function (string $kunci, string $ikonNama, string $label) use ($indukAktif, $svg): void {
@@ -104,6 +104,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
         <?php if ($bolehMenu('bersih')): ?><a href="<?= base_url('bersih') ?>"<?= $aktif('bersih') ?>>Pembersihan Hasil Impor</a><?php endif; ?>
         <?php if ($bolehMenu('rencana-belanja')): ?><a href="<?= base_url('rencana-belanja') ?>"<?= $aktif('rencana-belanja') ?>>Rencana Belanja</a><?php endif; ?>
         <?php if ($bolehMenu('rencana-mingguan')): ?><a href="<?= base_url('rencana-mingguan') ?>"<?= $aktif('rencana-mingguan') ?>>Rencana Mingguan</a><?php endif; ?>
+        <?php if ($bolehMenu('simulasi')): ?><a href="<?= base_url('simulasi') ?>"<?= $aktif('simulasi') ?>>Simulasi Mingguan</a><?php endif; ?>
         <?php if ($bolehMenu('biaya-non-gedung')): ?><a href="<?= base_url('biaya-non-gedung') ?>"<?= $aktif('biaya-non-gedung') ?>>Biaya Non-Gedung</a><?php endif; ?>
       <?= $tutupInduk() ?>
       <?php endif; ?>
@@ -152,6 +153,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
         <?php if ($bolehMenu('lpj')): ?><a href="<?= base_url('lpj') ?>"<?= $aktif('lpj') ?>>LPJ &amp; Realisasi</a><?php endif; ?>
         <?php if ($bolehMenu('lpj')): ?><a href="<?= base_url('lpj/rab-gabungan') ?>"<?= $aktif('lpj') ?>>RAB Gabungan</a><?php endif; ?>
         <?php if ($bolehMenu('laporan')): ?><a href="<?= base_url('laporan') ?>"<?= $aktif('laporan') ?>>Laporan &amp; Ekspor</a><?php endif; ?>
+        <?php if ($bolehMenu('template-laporan')): ?><a href="<?= base_url('template-laporan') ?>"<?= $aktif('template-laporan') ?>>Template Laporan</a><?php endif; ?>
       <?= $tutupInduk() ?>
       <?php endif; ?>
       <?php if ($grupAda['pengaturan']): ?>

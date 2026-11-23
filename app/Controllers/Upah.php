@@ -161,13 +161,20 @@ class Upah extends BaseController
         return redirect()->to('/upah')->with('sukses', 'Tarif upah diperbarui.');
     }
 
-    /** Tambah jenis tenaga baru ke master upah. */
+    /** Tambah jenis tenaga kanonik (Pekerja/Tukang) ke master upah. */
     public function masterSimpan()
     {
-        $jenis = trim((string) $this->request->getPost('jenis'));
+        $jenis = $this->upahKanon((string) $this->request->getPost('jenis'));
         $tarif = (float) str_replace(['.', ','], ['', '.'], (string) $this->request->getPost('tarif'));
-        if ($jenis === '') {
-            return redirect()->to('/upah')->with('galat', 'Nama jenis tenaga wajib diisi.');
+        if ($jenis === null) {
+            return redirect()->to('/upah')->with('galat',
+                'Master upah hanya mengenal dua jenis: Pekerja dan Tukang. Varian lain dirapikan lewat tombol "Rapikan ke 2 Jenis" di Master Bahan & Upah.');
+        }
+        $ada = $this->db()->table('upah_master')
+            ->where(['sekolah_id' => $this->sid(), 'jenis' => $jenis, 'is_deleted' => 0])
+            ->countAllResults();
+        if ($ada > 0) {
+            return redirect()->to('/upah')->with('galat', 'Jenis tenaga "' . $jenis . '" sudah ada di master upah; ubah tarifnya pada baris tabel.');
         }
         $this->db()->table('upah_master')->ignore(true)->insert([
             'sekolah_id' => $this->sid(), 'jenis' => $jenis, 'satuan' => 'OH', 'tarif' => $tarif,
