@@ -278,6 +278,16 @@ Menu **Perencanaan → Rencana Mingguan** memecah pekerjaan menjadi target per m
 3. Aplikasi menghitung **daftar belanja bersih minggu itu**: kebutuhan kotor (target × koefisien analisa) dikurangi **stok tersedia** (barang sudah diterima/BAST dan saldo Buku Material) dan **pesanan berjalan** (SPK aktif yang belum di-BAST) — jadi yang dibeli hanya kekurangannya. Kebutuhan upah minggu itu tampil dalam OH.
 4. Dari daftar belanja bersih itu, SPK mingguannya dapat dibuat langsung dari halaman ini.
 
+### Simulasi Mingguan
+
+Menu **Perencanaan → Simulasi Mingguan** adalah mesin simulasi satu proyek penuh mengikuti Kurva S resmi (syarat: rencana Kurva S sudah diimpor di halaman Kurva S):
+
+1. **Isi realisasi mingguan**: pada tabel masukan, isi bobot realisasi tiap minggu per gedung — persen terhadap total proyek, satuan yang sama dengan bobot Kurva S (lihat Laporan Kemajuan). Minggu terakhir yang terisi dianggap minggu berjalan.
+2. **Simpan & Generate Ulang**: realisasi disebar ke bab mengikuti porsi bobot rencana minggu itu; sisa volume tiap bab dijadwalkan ulang ke minggu-minggu berikutnya mengikuti pola Kurva S bab itu (bab yang tertinggal dikejar pada minggu berikutnya).
+3. **Baca hasilnya**: panel kedudukan per gedung (rencana kumulatif vs realisasi kumulatif), ringkasan mingguan, dan rincian per minggu — jenis pekerjaan yang berjalan beserta volume targetnya, rencana belanja bahan (kebutuhan kotor pada harga acuan), dan kebutuhan pekerja (OH + perkiraan orang pada 6 hari kerja). Baris Perabot/Persiapan/Biaya Manajemen tampil sebagai biaya non-BOQ terjadwal.
+
+Simulasi ini memakai realisasi mingguan yang diisi di halaman ini — terpisah dari catatan Realisasi per pekerjaan. Ubah masukannya kapan pun, simpan, dan seluruh minggu terhitung ulang. Untuk daftar belanja bersih (sesudah stok & SPK berjalan) tetap gunakan Rencana Mingguan.
+
 ## 9. Pembayaran Upah
 
 Menu **Pembangunan Gedung → Pembayaran Upah** mencatat pembayaran tenaga kerja: tanggal, gedung (dan pekerjaan bila tertaut), jenis tenaga, nama penerima/mandor, orang-hari, dan tarif per OH (kosongkan untuk memakai tarif master). Jumlah bayar = orang-hari × tarif, dan **diperiksa ke pagu sebelum disimpan** — pembayaran yang membuat total belanja melewati pagu ditolak.

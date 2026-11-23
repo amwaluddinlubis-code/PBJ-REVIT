@@ -31,6 +31,7 @@ class AksesMenu
                 'bersih'          => 'Pembersihan Hasil Impor',
                 'rencana-belanja' => 'Rencana Belanja',
                 'rencana-mingguan' => 'Rencana Mingguan',
+                'simulasi'        => 'Simulasi Mingguan',
                 'biaya-non-gedung' => 'Biaya Non-Gedung',
             ],
             'Pembangunan Gedung' => [

@@ -83,7 +83,7 @@ class Rencana extends BaseController
      * bersih (kotor dari volume rencana − sudah dipesan di SPK), dan kebutuhan
      * tenaga (OH + perkiraan jumlah pekerja dari target hari kerja).
      */
-    private function hitungPilihan(array $volRencana, array $daftarPekerjaan, int $hari): array
+    protected function hitungPilihan(array $volRencana, array $daftarPekerjaan, int $hari): array
     {
         $db = $this->db();
         $ids = array_keys($volRencana);
