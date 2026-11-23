@@ -42,6 +42,16 @@ Aturan ini berlaku untuk semua perubahan dan kode baru di aplikasi Analisa Peren
 
 Sebelum mengubah tampilan, baca view, CSS, JavaScript, helper, dan dokumentasi desain yang terkait. Ikuti pola TailAdmin + token IDDS yang sudah digunakan; jangan menambah sistem visual kedua.
 
+### Komponen View (pola TALL di CI4)
+
+Sejak 2026-11-24 tampilan mengikuti pola komponen ala TALL tanpa mengganti framework: Tailwind + Alpine.js untuk interaksi di tempat, dan komponen server berupa partial view.
+
+- View halaman yang panjang WAJIB dipecah menjadi partial di folder yang sama dengan nama `_<nama>.php` (mis. `bahan/_panel_upah.php`, `layout/_sidebar.php`). Halaman induk hanya merangkai partial dan menyimpan logika komponen Alpine-nya.
+- Partial dirangkai dengan `$this->include('folder/_nama')`. Partial mewarisi DATA view dari controller (`tampil()`/`view()`), BUKAN variabel lokal yang dibuat di dalam berkas view induk — closure/agregat lokal yang dibutuhkan partial harus dihitung di dalam partial itu sendiri dari data controller, atau didefinisikan lokal di partial (pola `bahan/_tabel.php`).
+- Argumen kedua `$this->include()` adalah opsi render CI4, bukan data — jangan memakainya untuk mengoper variabel.
+- Formatter tampilan bersama tinggal di `app/Common.php` sebagai fungsi global: `tgl()`, `tglWaktu()`, `rp()` (rupiah), dan `ikonSvg()` (peta ikon SVG). Jangan menyalin closure formatter lokal baru; varian yang memang berbeda (mis. null → '—', tanpa awalan 'Rp') boleh tetap lokal di berkasnya.
+- Layout utama `layout/main.php` hanya merangkai `layout/_kepala`, `_sidebar`, `_atas`, `_skrip`, dan `_modal_konfirmasi`.
+
 ### Form Compact
 
 - Form adalah alat kerja, bukan halaman penjelasan. Tampilkan field, nilai, dan aksi yang dibutuhkan tanpa paragraf pengantar panjang.

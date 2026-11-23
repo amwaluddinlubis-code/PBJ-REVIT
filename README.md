@@ -78,6 +78,7 @@ Antarmuka memakai **INA Digital Design System (IDDS)** dikombinasikan dengan **T
 - `public/assets/tailwind.css` — Tailwind v4 hasil build (preflight + utilitas yang dipakai view + palet IDDS sebagai utilitas, mis. `bg-blue-600` = biru IDDS `#0049b8`). Membangun ulang: `npx @tailwindcss/cli -i input.css -o public/assets/tailwind.css` dengan `@source` menunjuk `app/Views` dan tema dari `@idds/styles/tailwind/css/idds.css`.
 - `public/assets/app.css` — komponen aplikasi (sidebar, tombol, panel, tabel) ditulis di atas token `--ina-*`.
 - Form memakai grid Tailwind 2 kolom (`grid md:grid-cols-2`); tabel data memakai paginasi klien (`public/assets/paginasi.js`, atribut `data-paginasi` pada tabel; baris total beri kelas `baris-total`).
+- Struktur view mengikuti pola komponen ala TALL di CI4 (Tailwind + Alpine.js + partial server): view panjang dipecah menjadi partial `_<nama>.php` di folder yang sama dan dirangkai dengan `$this->include()`; layout utama dirangkai dari `app/Views/layout/_*.php`. Formatter bersama (`rp()`, `tgl()`, `ikonSvg()`) ada di `app/Common.php`. Aturan lengkapnya di AGENTS.md bagian "Komponen View".
 
 ## Dokumentasi
 
