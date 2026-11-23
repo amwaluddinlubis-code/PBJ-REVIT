@@ -38,7 +38,7 @@ class Laporan extends BaseController
         }
 
         $perSpk = $db->query(
-            'SELECT s.nomor, s.tanggal, s.paket, s.status, p.nama AS penyedia,
+            'SELECT s.nomor, s.tanggal, s.paket, s.status, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia,
                     (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS nilai_spk,
                     (SELECT COALESCE(SUM(i.nilai),0) FROM invoice i WHERE i.spk_id = s.id AND i.is_deleted = 0) AS nilai_invoice,
                     (SELECT COUNT(*) FROM invoice i JOIN pembayaran pb ON pb.invoice_id = i.id AND pb.is_deleted = 0 WHERE i.spk_id = s.id AND i.is_deleted = 0) AS jumlah_bayar
@@ -90,7 +90,7 @@ class Laporan extends BaseController
     {
         $sid = $this->sid();
         $baris = $this->db()->query(
-            'SELECT s.nomor, s.tanggal, s.paket, s.status, p.nama AS penyedia,
+            'SELECT s.nomor, s.tanggal, s.paket, s.status, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia,
                     (SELECT COUNT(*) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS jumlah,
                     (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS nilai
              FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.sekolah_id = ? AND s.is_deleted = 0 ORDER BY s.nomor',

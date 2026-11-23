@@ -13,7 +13,7 @@ class Invoice extends BaseController
     public function index()
     {
         $inv = $this->db()->query(
-            'SELECT i.*, s.nomor AS spk_nomor, p.nama AS penyedia,
+            'SELECT i.*, s.nomor AS spk_nomor, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia,
                     (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS total_spk
              FROM invoice i JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0
              LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.sekolah_id = ? AND i.is_deleted = 0 ORDER BY i.nomor_urut',
@@ -191,8 +191,8 @@ class Invoice extends BaseController
     {
         $db = $this->db();
         $i = $db->query(
-            'SELECT i.*, s.nomor AS spk_nomor, s.tanggal AS spk_tanggal, s.paket, s.ttd_penyedia,
-                    p.nama AS penyedia, p.alamat AS penyedia_alamat
+            'SELECT i.*, s.nomor AS spk_nomor, s.tanggal AS spk_tanggal, s.paket, COALESCE(NULLIF(TRIM(s.ttd_penyedia), ""), NULLIF(TRIM(s.penerima_manual), "")) AS ttd_penyedia,
+                    COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia, p.alamat AS penyedia_alamat
              FROM invoice i JOIN spk s ON s.id = i.spk_id
              LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE i.id = ? AND s.sekolah_id = ? AND i.is_deleted = 0 AND s.is_deleted = 0',
             [(int) $id, $this->sid()]

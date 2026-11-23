@@ -7,7 +7,7 @@ class Spk extends BaseController
     public function index()
     {
         $spk = $this->db()->query(
-            'SELECT s.*, p.nama AS penyedia, COUNT(d.id) AS jumlah, COALESCE(SUM(d.qty*d.harga),0) AS nilai
+            'SELECT s.*, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia, COUNT(d.id) AS jumlah, COALESCE(SUM(d.qty*d.harga),0) AS nilai
              FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id
              LEFT JOIN spk_detail d ON d.spk_id = s.id AND d.is_deleted = 0
              WHERE s.sekolah_id = ? AND s.is_deleted = 0
@@ -19,6 +19,7 @@ class Spk extends BaseController
 
     public function baru()
     {
+        $this->penyediaMasyarakatId();
         $row = $this->db()->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ?', [$this->sid()])->getRow();
         return $this->tampil('spk/form', [
             's' => ['nomor' => ((int) $row->m) + 1, 'status' => 'Aktif'],
@@ -41,6 +42,7 @@ class Spk extends BaseController
 
     public function ubah($id)
     {
+        $this->penyediaMasyarakatId();
         $s = $this->db()->table('spk')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         if (! $s) {
             return redirect()->to('spk')->with('galat', 'SPK tidak ditemukan.');
@@ -118,7 +120,7 @@ class Spk extends BaseController
     {
         $db = $this->db();
         $s = $db->query(
-            'SELECT s.*, p.nama AS penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ? AND s.is_deleted = 0',
+            'SELECT s.*, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia, COALESCE(NULLIF(TRIM(s.ttd_penyedia), ""), NULLIF(TRIM(s.penerima_manual), "")) AS ttd_penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ? AND s.is_deleted = 0',
             [(int) $id]
         )->getRowArray();
         if (! $s || (int) $s['sekolah_id'] !== $this->sid()) {
@@ -277,6 +279,7 @@ class Spk extends BaseController
             'tgl_mulai' => $tgl($r->getPost('tgl_mulai')),
             'tgl_selesai' => $tgl($r->getPost('tgl_selesai')),
             'penyedia_id' => $penyediaId,
+            'penerima_manual' => trim((string) $r->getPost('penerima_manual')) ?: null,
             'gedung_id' => (int) $r->getPost('gedung_id') ?: null,
             'ttd_penyedia' => trim((string) $r->getPost('ttd_penyedia')) ?: null,
             'paket' => trim((string) $r->getPost('paket')) ?: null,

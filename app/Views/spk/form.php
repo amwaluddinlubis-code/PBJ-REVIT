@@ -12,7 +12,10 @@
     </select>
   </label>
   <label>Penyedia Baru (bila belum ada) <input name="penyedia_baru" value=""></label>
-  <label>Nama Penandatangan Penyedia <input name="ttd_penyedia" value="<?= esc(old('ttd_penyedia', $s['ttd_penyedia'] ?? '')) ?>"></label>
+  <label>Nama Penerima (khusus penyedia "Masyarakat") <input name="penerima_manual" value="<?= esc(old('penerima_manual', $s['penerima_manual'] ?? '')) ?>" placeholder="mis. nama warga penjual pasir/batu/kayu">
+    <span class="kecil-teks">Bila penyedia dipilih "Masyarakat", isi nama orangnya di sini — nama ini yang tampil menggantikan nama penyedia di SPK, BAP, BAST, invoice, dan cetakan turunannya.</span>
+  </label>
+  <label>Nama Penandatangan Penyedia <input name="ttd_penyedia" value="<?= esc(old('ttd_penyedia', $s['ttd_penyedia'] ?? '')) ?>" placeholder="kosongkan = memakai Nama Penerima"></label>
   <label>Gedung Tujuan
     <select data-select-cari name="gedung_id">
       <option value="">— umum / belum ditentukan —</option>

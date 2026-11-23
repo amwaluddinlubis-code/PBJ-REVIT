@@ -921,6 +921,31 @@ abstract class BaseController extends Controller
     }
 
     /** Harga acuan sebuah bahan: negosiasi -> penawaran -> pembanding terpilih -> RAB. */
+    /**
+     * Penyedia khusus "Masyarakat" untuk sekolah aktif: pembelian dari warga
+     * (pasir, batu, kayu, dsb.) tidak didaftarkan satu per satu — cukup satu
+     * record ini, nama penerimanya diisi manual per SPK (spk.penerima_manual).
+     * Dibuat otomatis bila belum ada; record terhapus lunak dihidupkan lagi.
+     */
+    protected function penyediaMasyarakatId(): int
+    {
+        $db = $this->db();
+        $ada = $db->table('penyedia')->where(['sekolah_id' => $this->sid(), 'nama' => 'Masyarakat', 'is_deleted' => 0])->get()->getRowArray();
+        if ($ada) {
+            return (int) $ada['id'];
+        }
+        $lama = $db->table('penyedia')->where(['sekolah_id' => $this->sid(), 'nama' => 'Masyarakat', 'is_deleted' => 1])->get()->getRowArray();
+        if ($lama) {
+            $db->table('penyedia')->where('id', (int) $lama['id'])->update(['is_deleted' => 0, 'deleted_at' => null, 'updated_at' => date('Y-m-d H:i:s')]);
+            return (int) $lama['id'];
+        }
+        $db->table('penyedia')->insert([
+            'sekolah_id' => $this->sid(), 'nama' => 'Masyarakat',
+            'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+        return (int) $db->insertID();
+    }
+
     protected function hargaAcuan(int $bahanId): int
     {
         $db = $this->db();

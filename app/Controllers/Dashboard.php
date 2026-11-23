@@ -63,7 +63,7 @@ class Dashboard extends BaseController
         usort($sisaNegatif, static fn ($a, $b) => ($b['terpakai'] - $b['qty_rab']) <=> ($a['terpakai'] - $a['qty_rab']));
 
         $perSpk = $db->query(
-            'SELECT s.nomor, s.tanggal, s.paket, s.status, p.nama AS penyedia,
+            'SELECT s.nomor, s.tanggal, s.paket, s.status, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia,
                     COUNT(d.id) AS jumlah, COALESCE(SUM(d.qty*d.harga),0) AS nilai
              FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id
              LEFT JOIN spk_detail d ON d.spk_id = s.id AND d.is_deleted = 0

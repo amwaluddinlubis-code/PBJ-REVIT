@@ -3,7 +3,7 @@
 <div class="panel">
   <h2>SPK Nomor <?= (int) $s['nomor'] ?> — <?= esc($s['paket'] ?? '') ?></h2>
   <div class="kecil-teks">
-    Tanggal <?= esc($s['tanggal'] ?? '—') ?> · Penyedia <?= esc($s['penyedia'] ?? '—') ?> (ttd: <?= esc($s['ttd_penyedia'] ?? '—') ?>) ·
+    Tanggal <?= esc($s['tanggal'] ?? '—') ?> · Penyedia <?= esc($s['penyedia'] ?? '—') ?><?php if (! empty($s['penerima_manual'])): ?> <span class="lencana abu">penyedia Masyarakat</span><?php endif; ?> (ttd: <?= esc($s['ttd_penyedia'] ?? '—') ?>) ·
     Periode <?= esc($s['tgl_mulai'] ?? '—') ?> s.d. <?= esc($s['tgl_selesai'] ?? '—') ?> · Status <?= esc($s['status']) ?> ·
     <a href="<?= base_url('spk/ubah/' . $s['id']) ?>">Ubah kepala SPK</a>
   </div>

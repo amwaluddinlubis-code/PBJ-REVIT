@@ -26,7 +26,7 @@ class Dokumen extends BaseController
     {
         $db = $this->db();
         $spk = $db->query(
-            'SELECT s.id, s.nomor, s.paket, p.nama AS penyedia FROM spk s
+            'SELECT s.id, s.nomor, s.paket, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia FROM spk s
              LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.sekolah_id = ? AND s.is_deleted = 0 ORDER BY s.nomor',
             [$this->sid()]
         )->getResultArray();
@@ -125,7 +125,7 @@ class Dokumen extends BaseController
     public function cetakSpk($spkId)
     {
         $db = $this->db();
-        $s = $db->query('SELECT s.*, p.nama AS penyedia, p.alamat AS penyedia_alamat FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ? AND s.is_deleted = 0', [(int) $spkId])->getRowArray();
+        $s = $db->query('SELECT s.*, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia, p.alamat AS penyedia_alamat, COALESCE(NULLIF(TRIM(s.ttd_penyedia), ""), NULLIF(TRIM(s.penerima_manual), "")) AS ttd_penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ? AND s.is_deleted = 0', [(int) $spkId])->getRowArray();
         if (! $s) {
             return redirect()->to('dokumen')->with('galat', 'SPK tidak ditemukan.');
         }
@@ -150,7 +150,7 @@ class Dokumen extends BaseController
         if (! $bap) {
             return redirect()->to('dokumen')->with('galat', 'BAP tidak ditemukan.');
         }
-        $s = $db->query('SELECT s.*, p.nama AS penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ? AND s.is_deleted = 0', [(int) $bap['spk_id']])->getRowArray();
+        $s = $db->query('SELECT s.*, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia, COALESCE(NULLIF(TRIM(s.ttd_penyedia), ""), NULLIF(TRIM(s.penerima_manual), "")) AS ttd_penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ? AND s.is_deleted = 0', [(int) $bap['spk_id']])->getRowArray();
         $items = $db->query(
             'SELECT bd.kondisi, bd.keterangan, d.qty, COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan
              FROM bap_detail bd JOIN spk_detail d ON d.id = bd.detail_id
@@ -172,7 +172,7 @@ class Dokumen extends BaseController
         if (! $bast) {
             return redirect()->to('dokumen')->with('galat', 'BAST tidak ditemukan.');
         }
-        $s = $db->query('SELECT s.*, p.nama AS penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ? AND s.is_deleted = 0', [(int) $bast['spk_id']])->getRowArray();
+        $s = $db->query('SELECT s.*, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia, COALESCE(NULLIF(TRIM(s.ttd_penyedia), ""), NULLIF(TRIM(s.penerima_manual), "")) AS ttd_penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ? AND s.is_deleted = 0', [(int) $bast['spk_id']])->getRowArray();
         $items = $db->query(
             'SELECT COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan, d.qty
              FROM spk_detail d LEFT JOIN bahan b ON b.id = d.bahan_id WHERE d.spk_id = ? AND d.is_deleted = 0 ORDER BY d.id',
