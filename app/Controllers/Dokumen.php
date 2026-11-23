@@ -70,7 +70,8 @@ class Dokumen extends BaseController
              LEFT JOIN bahan b ON b.id = d.bahan_id WHERE bd.bap_id = ? AND bd.is_deleted = 0 ORDER BY bd.id',
             [(int) $bapId]
         )->getResultArray();
-        return $this->tampil('dokumen/bap_form', ['bap' => $bap, 'items' => $items], 'BAP ' . $this->nomorSurat('BAP', (int) $bap['nomor_urut']));
+        $spk = $db->query('SELECT nomor, tanggal, tgl_mulai, tgl_selesai FROM spk WHERE id = ?', [(int) $bap['spk_id']])->getRowArray();
+        return $this->tampil('dokumen/bap_form', ['bap' => $bap, 'items' => $items, 'spk' => $spk], 'BAP ' . $this->nomorSurat('BAP', (int) $bap['nomor_urut']));
     }
 
     public function bapSimpan($bapId)
