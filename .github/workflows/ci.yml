@@ -15,6 +15,7 @@ jobs:
         image: mariadb:11
         env:
           MARIADB_ROOT_PASSWORD: root
+          MARIADB_ROOT_HOST: '%'
         ports:
           - 3306:3306
         options: >-
@@ -43,7 +44,7 @@ jobs:
 
       - name: Buat database & pengguna tes
         run: |
-          mariadb -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS pbj_test; CREATE USER IF NOT EXISTS 'pbj_test'@'%' IDENTIFIED BY 'pbj_test'; GRANT ALL PRIVILEGES ON pbj_test.* TO 'pbj_test'@'%'; FLUSH PRIVILEGES;"
+          php -r '$pdo = new PDO("mysql:host=127.0.0.1;port=3306", "root", "root"); $pdo->exec("CREATE DATABASE IF NOT EXISTS pbj_test"); $pdo->exec("CREATE USER IF NOT EXISTS '"'"'pbj_test'"'"'@'"'"'%'"'"' IDENTIFIED BY '"'"'pbj_test'"'"'"); $pdo->exec("GRANT ALL PRIVILEGES ON pbj_test.* TO '"'"'pbj_test'"'"'@'"'"'%'"'"'"); $pdo->exec("FLUSH PRIVILEGES"); echo "database tes siap\n";'
 
       - name: Lint semua berkas PHP aplikasi
         run: find app tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
