@@ -179,7 +179,7 @@ $svg = static fn (string $k): string => '<svg viewBox="0 0 24 24">' . ($ikon[$k]
       </button>
       <form class="cari" method="get" action="<?= base_url('bahan') ?>">
         <span aria-hidden="true">⌕</span>
-        <input type="text" name="q" aria-label="Cari bahan" placeholder="Cari bahan…" value="<?= esc($q ?? '') ?>">
+        <input type="text" name="q" aria-label="Cari bahan" placeholder="Cari bahan di master…" value="<?= esc($q ?? '') ?>">
       </form>
       <div class="topbar-kanan">
         <span class="cip-top"><?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></span>

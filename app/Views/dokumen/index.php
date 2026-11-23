@@ -5,7 +5,7 @@ $tutupModal = static fn (string $id) => "document.getElementById('{$id}').hidden
 ?>
 <div class="panel">
   <p>Aturan: BAP dibuat dari rincian SPK dan tombol Buat BAP hilang bila semua rincian sudah ter-BAP; <b>satu BAP hanya mempunyai satu BAST</b>. Form BAP &amp; BAST dibuka sebagai modal lewat tombol Ubah. Nomor surat mengikuti pola 422/&lt;JENIS&gt;/&lt;urut&gt;/&lt;tahun&gt;.</p>
-  <p><a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-papan-nama') ?>" target="_blank">Cetak Papan Nama Kegiatan</a> <span class="kecil-teks">Papan nama kegiatan sesuai format Juknis, dicetak dari identitas sekolah. BAST Aset per gedung tersedia di halaman LPJ Gedung.</span></p>
+  <p><a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-papan-nama') ?>" target="_blank">Cetak Papan Nama Kegiatan</a> <a class="tombol kecil abu" href="<?= base_url('invoice') ?>">Register Invoice →</a> <span class="kecil-teks">Papan nama kegiatan sesuai format Juknis, dicetak dari identitas sekolah. BAST Aset per gedung tersedia di halaman LPJ Gedung. Sesudah BAST, tagihan dicatat di Register Invoice.</span></p>
   <table data-paginasi="10" data-cari="Cari SPK / paket / penyedia…">
     <tr><th>SPK</th><th>Paket / Penyedia</th><th>BAP &amp; BAST</th><th>Cetak SPK</th></tr>
     <?php foreach ($spk as $s): ?>
@@ -16,11 +16,11 @@ $tutupModal = static fn (string $id) => "document.getElementById('{$id}').hidden
         <?php $pisah = false; ?>
         <?php foreach ($bap[$s['id']] ?? [] as $b): ?>
           <?= $pisah ? ' <span class="kecil-teks">|</span> ' : '' ?>
-          BAP urut <?= (int) $b['nomor_urut'] ?> · <?= esc(tgl($b['tanggal'] ?? null, 'tgl?')) ?>
-          <button type="button" class="tombol kecil abu" onclick="<?= $bukaModal('modal-bap-' . $b['id']) ?>">Ubah</button><a class="tombol-cetak tc-bap" href="<?= base_url('dokumen/cetak-bap/' . $b['id']) ?>" target="_blank" title="Cetak BAP"><?= $ikonCetak ?></a>
+          BAP urut <?= (int) $b['nomor_urut'] ?> · <?= esc(tgl($b['tanggal'] ?? null, '(tanggal belum diisi)')) ?>
+          <button type="button" class="tombol kecil abu" onclick="<?= $bukaModal('modal-bap-' . $b['id']) ?>">Ubah</button><a class="tombol-cetak tc-bap" href="<?= base_url('dokumen/cetak-bap/' . $b['id']) ?>" target="_blank" title="Cetak BAP"><?= $ikonCetak ?> Cetak</a>
           <?php foreach ($bast_per_bap[$b['id']] ?? [] as $bs): ?>
-            → BAST urut <?= (int) $bs['nomor_urut'] ?> · <?= esc(tgl($bs['tanggal'] ?? null, 'tgl?')) ?>
-            <button type="button" class="tombol kecil abu" onclick="<?= $bukaModal('modal-bast-' . $bs['id']) ?>">Ubah</button><a class="tombol-cetak tc-bast" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank" title="Cetak BAST"><?= $ikonCetak ?></a>
+            → BAST urut <?= (int) $bs['nomor_urut'] ?> · <?= esc(tgl($bs['tanggal'] ?? null, '(tanggal belum diisi)')) ?>
+            <button type="button" class="tombol kecil abu" onclick="<?= $bukaModal('modal-bast-' . $bs['id']) ?>">Ubah</button><a class="tombol-cetak tc-bast" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank" title="Cetak BAST"><?= $ikonCetak ?> Cetak</a>
           <?php endforeach; ?>
           <?php if (empty($bast_per_bap[$b['id']])): ?>
             <form class="inline" method="post" action="<?= base_url('dokumen/bast-buat/' . $b['id']) ?>"><?= csrf_field() ?><button class="kecil" type="submit">+ Buat BAST</button></form>
@@ -29,8 +29,8 @@ $tutupModal = static fn (string $id) => "document.getElementById('{$id}').hidden
         <?php endforeach; ?>
         <?php foreach ($bast_umum[$s['id']] ?? [] as $bs): ?>
           <?= $pisah ? ' <span class="kecil-teks">|</span> ' : '' ?>
-          BAST urut <?= (int) $bs['nomor_urut'] ?> · <?= esc(tgl($bs['tanggal'] ?? null, 'tgl?')) ?> <span class="kecil-teks">(belum tertaut BAP)</span>
-          <button type="button" class="tombol kecil abu" onclick="<?= $bukaModal('modal-bast-' . $bs['id']) ?>">Ubah</button><a class="tombol-cetak tc-bast" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank" title="Cetak BAST"><?= $ikonCetak ?></a>
+          BAST urut <?= (int) $bs['nomor_urut'] ?> · <?= esc(tgl($bs['tanggal'] ?? null, '(tanggal belum diisi)')) ?> <span class="kecil-teks">(belum tertaut BAP)</span>
+          <button type="button" class="tombol kecil abu" onclick="<?= $bukaModal('modal-bast-' . $bs['id']) ?>">Ubah</button><a class="tombol-cetak tc-bast" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank" title="Cetak BAST"><?= $ikonCetak ?> Cetak</a>
           <?php $pisah = true; ?>
         <?php endforeach; ?>
         <?php if ((int) $s['jumlah_terbap'] < (int) $s['jumlah_detail']): ?>
@@ -38,7 +38,7 @@ $tutupModal = static fn (string $id) => "document.getElementById('{$id}').hidden
           <form class="inline" method="post" action="<?= base_url('dokumen/bap-buat/' . $s['id']) ?>"><?= csrf_field() ?><button class="kecil" type="submit">+ Buat BAP</button></form>
         <?php endif; ?>
       </td>
-      <td><a class="tombol-cetak tc-spk" href="<?= base_url('dokumen/cetak-spk/' . $s['id']) ?>" target="_blank" title="Cetak SPK"><?= $ikonCetak ?></a></td>
+      <td><a class="tombol-cetak tc-spk" href="<?= base_url('dokumen/cetak-spk/' . $s['id']) ?>" target="_blank" title="Cetak SPK"><?= $ikonCetak ?> Cetak</a></td>
     </tr>
     <?php endforeach; ?>
   </table>

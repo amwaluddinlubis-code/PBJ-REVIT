@@ -16,5 +16,9 @@
   p { text-align: justify; line-height: 1.45; }
   .takcetak { text-align: center; margin-bottom: 14px; }
   @media print { .takcetak { display: none; } }
+  @media screen {
+    html { background: #dcdcdc; }
+    body { max-width: 186mm; margin: 18px auto; padding: 16mm 14mm; background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.25); }
+  }
 </style>
 <div class="takcetak"><button onclick="window.print()">Cetak / Simpan PDF</button></div>
