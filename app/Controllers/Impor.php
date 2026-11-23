@@ -331,7 +331,7 @@ class Impor extends BaseController
         $boq = $db->query(
             'SELECT g.nama AS gedung, p.bab, p.nama, p.kode_analisa, p.volume, p.satuan, p.harga_satuan
              FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
-             WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 ORDER BY g.urutan, p.urutan',
+             WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0 ORDER BY g.urutan, g.id, p.urutan, p.id',
             [$sid]
         )->getResultArray();
         $biayaLain = $db->table('biaya_lain')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->orderBy('kelompok')->orderBy('id')->get()->getResultArray();

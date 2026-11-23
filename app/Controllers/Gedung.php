@@ -140,7 +140,7 @@ class Gedung extends BaseController
         $data['persen_fisik'] = $g['nilai_boq'] > 0 ? min(100, $data['nilai_realisasi'] / $g['nilai_boq'] * 100) : 0;
 
         if ($tab === 'boq') {
-            $data['pekerjaan'] = $db->table('pekerjaan')->where(['gedung_id' => $g['id'], 'is_deleted' => 0])->orderBy('urutan')->get()->getResultArray();
+            $data['pekerjaan'] = $db->table('pekerjaan')->where(['gedung_id' => $g['id'], 'is_deleted' => 0])->orderBy('urutan')->orderBy('id')->get()->getResultArray();
             foreach ($data['pekerjaan'] as &$pk) {
                 $pk['harga_berjalan'] = $this->hargaBerjalan($pk);
             }
@@ -215,7 +215,7 @@ class Gedung extends BaseController
             $data['pekerjaan'] = $db->query(
                 'SELECT p.*, COALESCE(SUM(r.volume), 0) AS volume_terealisasi
                  FROM pekerjaan p LEFT JOIN realisasi r ON r.pekerjaan_id = p.id AND r.is_deleted = 0
-                 WHERE p.gedung_id = ? AND p.is_deleted = 0 GROUP BY p.id ORDER BY p.urutan',
+                 WHERE p.gedung_id = ? AND p.is_deleted = 0 GROUP BY p.id ORDER BY p.urutan, p.id',
                 [$g['id']]
             )->getResultArray();
             $data['riwayat'] = $db->query(

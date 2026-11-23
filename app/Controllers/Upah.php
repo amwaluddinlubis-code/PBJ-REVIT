@@ -38,7 +38,7 @@ class Upah extends BaseController
     {
         $hasil = [];
         foreach ($this->db()->query(
-            'SELECT p.id, p.nama, p.gedung_id FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id AND g.is_deleted = 0 WHERE g.sekolah_id = ? AND p.is_deleted = 0 ORDER BY p.gedung_id, p.urutan',
+            'SELECT p.id, p.nama, p.gedung_id FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id AND g.is_deleted = 0 WHERE g.sekolah_id = ? AND p.is_deleted = 0 ORDER BY p.gedung_id, p.urutan, p.id',
             [$this->sid()]
         )->getResultArray() as $p) {
             $hasil[(int) $p['gedung_id']][] = $p;

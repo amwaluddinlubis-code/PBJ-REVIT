@@ -77,7 +77,7 @@ class Lpj extends BaseController
         $pekerjaan = $db->query(
             'SELECT p.*, COALESCE(SUM(r.volume), 0) AS volume_terealisasi
              FROM pekerjaan p LEFT JOIN realisasi r ON r.pekerjaan_id = p.id AND r.is_deleted = 0
-             WHERE p.gedung_id = ? AND p.is_deleted = 0 GROUP BY p.id ORDER BY p.urutan',
+             WHERE p.gedung_id = ? AND p.is_deleted = 0 GROUP BY p.id ORDER BY p.urutan, p.id',
             [$g['id']]
         )->getResultArray();
         $kb = $this->kebutuhanBahan((int) $g['id']);
@@ -186,7 +186,7 @@ class Lpj extends BaseController
         $pekerjaan = $db->query(
             'SELECT p.*, COALESCE(SUM(r.volume), 0) AS volume_terealisasi
              FROM pekerjaan p LEFT JOIN realisasi r ON r.pekerjaan_id = p.id AND r.is_deleted = 0
-             WHERE p.gedung_id = ? AND p.is_deleted = 0 GROUP BY p.id ORDER BY p.urutan',
+             WHERE p.gedung_id = ? AND p.is_deleted = 0 GROUP BY p.id ORDER BY p.urutan, p.id',
             [$g['id']]
         )->getResultArray();
         return view('lpj/cetak_gedung', [
