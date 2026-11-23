@@ -21,8 +21,13 @@ class DocsConsistencyTest extends CIUnitTestCase
 
     public function testSidebarMencakupSemuaKunciAksesMenu(): void
     {
-        $sidebar = file_get_contents($this->root . 'app/Views/layout/main.php');
-        $this->assertNotFalse($sidebar);
+        // Layout utama kini dirangkai dari partial (layout/_*.php) —
+        // sidebar dinilai dari gabungan seluruh berkas layout.
+        $sidebar = '';
+        foreach (glob($this->root . 'app/Views/layout/*.php') ?: [] as $f) {
+            $sidebar .= (string) file_get_contents($f);
+        }
+        $this->assertNotSame('', $sidebar);
 
         foreach (AksesMenu::semuaKunci() as $kunci) {
             $this->assertMatchesRegularExpression(
