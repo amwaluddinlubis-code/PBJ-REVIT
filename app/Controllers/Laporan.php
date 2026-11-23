@@ -137,13 +137,22 @@ class Laporan extends BaseController
     {
         $sid = $this->sid();
         $baris = $this->db()->query(
-            'SELECT b.kode, b.nama, b.satuan, (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_rab,
+            'SELECT b.id, b.kode, b.nama, b.satuan, (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_warisan,
                     (SELECT COALESCE(SUM(d.qty),0) FROM spk_detail d WHERE d.bahan_id = b.id AND d.is_deleted = 0) AS masuk_spk,
                     (SELECT COALESCE(SUM(m.masuk),0) FROM buku_material m WHERE m.bahan_id = b.id AND m.is_deleted = 0) AS gudang_masuk,
                     (SELECT COALESCE(SUM(m.keluar),0) FROM buku_material m WHERE m.bahan_id = b.id AND m.is_deleted = 0) AS gudang_keluar
              FROM bahan b WHERE b.sekolah_id = ? AND b.is_deleted = 0 ORDER BY b.kode',
             [$sid]
         )->getResultArray();
+        // Qty RAB mengikuti patokan Master Bahan (lihat Material::sisa).
+        $petaButuh = [];
+        foreach ($this->kebutuhanBahanSekolah()['tertaut'] as $b) {
+            $petaButuh[(int) $b['bahan_id']] = (float) $b['qty_butuh'];
+        }
+        foreach ($baris as &$b) {
+            $b['qty_rab'] = $petaButuh[(int) $b['id']] ?? (float) $b['qty_warisan'];
+        }
+        unset($b);
         $ss = new Spreadsheet();
         $sh = $ss->getActiveSheet();
         $sh->setTitle('Sisa Bahan');
@@ -151,7 +160,7 @@ class Laporan extends BaseController
         $r = 2;
         foreach ($baris as $b) {
             $sisa = (float) $b['qty_rab'] - (float) $b['masuk_spk'];
-            $status = $sisa < 0 ? 'Melebihi RAB' : ($sisa == 0 ? 'Sudah penuh' : ($b['masuk_spk'] > 0 ? 'Sebagian' : 'Belum masuk SPK'));
+            $status = $sisa < 0 ? 'Melebihi RAB' : (((float) $b['qty_rab'] == 0 && (float) $b['masuk_spk'] == 0) ? 'Tidak ada kebutuhan' : ($sisa == 0 ? 'Sudah penuh' : ($b['masuk_spk'] > 0 ? 'Sebagian' : 'Belum masuk SPK')));
             $sh->fromArray([$b['kode'], $b['nama'], $b['satuan'], (float) $b['qty_rab'], (float) $b['masuk_spk'], $sisa, $status, (float) $b['gudang_masuk'] - (float) $b['gudang_keluar']], null, 'A' . $r++);
         }
         return $this->unduhXlsx($ss, 'sisa-bahan.xlsx');

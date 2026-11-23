@@ -77,14 +77,26 @@ class Material extends BaseController
     public function sisa()
     {
         $bahan = $this->db()->query(
-            'SELECT b.kode, b.nama, b.satuan,
-                    (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_rab,
+            'SELECT b.id, b.kode, b.nama, b.satuan,
+                    (b.qty_rkb+b.qty_adm+b.qty_toilet) AS qty_warisan,
                     (SELECT COALESCE(SUM(d.qty),0) FROM spk_detail d WHERE d.bahan_id = b.id AND d.is_deleted = 0) AS masuk_spk,
                     (SELECT COALESCE(SUM(m.masuk),0) FROM buku_material m WHERE m.bahan_id = b.id AND m.is_deleted = 0) AS gudang_masuk,
                     (SELECT COALESCE(SUM(m.keluar),0) FROM buku_material m WHERE m.bahan_id = b.id AND m.is_deleted = 0) AS gudang_keluar
              FROM bahan b WHERE b.sekolah_id = ? AND b.is_deleted = 0 ORDER BY b.kode',
             [$this->sid()]
         )->getResultArray();
+        // Patokan qty RAB sama persis dengan Master Bahan & Dashboard:
+        // kebutuhan BOQ x koefisien analisa untuk bahan tertaut pekerjaan
+        // gedung didanai; kolom warisan qty_rkb/adm/toilet (selalu 0 pada
+        // sekolah hasil impor perencana) hanya untuk bahan lainnya.
+        $petaButuh = [];
+        foreach ($this->kebutuhanBahanSekolah()['tertaut'] as $b) {
+            $petaButuh[(int) $b['bahan_id']] = (float) $b['qty_butuh'];
+        }
+        foreach ($bahan as &$b) {
+            $b['qty_rab'] = $petaButuh[(int) $b['id']] ?? (float) $b['qty_warisan'];
+        }
+        unset($b);
         return $this->tampil('material/sisa', ['bahan' => $bahan], 'Sisa Bahan — Aplikasi PBJ Sekolah');
     }
 }
