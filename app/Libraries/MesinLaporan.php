@@ -3,6 +3,7 @@
 namespace App\Libraries;
 
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -32,7 +33,7 @@ class MesinLaporan
     public static function jenis(): array
     {
         return [
-            'spk'     => ['label' => 'Dokumen SPK', 'konteks' => 'Satu SPK', 'berulang' => ['RINCIAN' => 'Baris rincian SPK', 'TENAGA' => 'Baris kebutuhan tenaga kerja']],
+            'spk'     => ['label' => 'Dokumen SPK', 'konteks' => 'Satu SPK', 'berulang' => ['RINCIAN' => 'Baris rincian SPK', 'TENAGA' => 'Baris kebutuhan tenaga kerja', 'RPT_BAP' => 'Baris daftar BAP SPK ini', 'RPT_BAST' => 'Baris daftar BAST SPK ini', 'RPT_INV' => 'Baris daftar Invoice SPK ini']],
             'gedung'  => ['label' => 'Laporan Gedung', 'konteks' => 'Satu gedung', 'berulang' => ['KERJA' => 'Baris pekerjaan BOQ']],
             'sekolah' => ['label' => 'Laporan Sekolah', 'konteks' => 'Rekap sekolah aktif', 'berulang' => ['REKAP' => 'Baris rekap per gedung']],
         ];
@@ -120,13 +121,28 @@ class MesinLaporan
                         'TENAGA_NO' => 'Nomor urut baris', 'TENAGA_JENIS' => 'Jenis tenaga (Pekerja/Tukang)',
                         'TENAGA_KEAHLIAN' => 'Keahlian', 'TENAGA_OH' => 'Kebutuhan OH (2 desimal)', 'TENAGA_ORANG' => 'Perkiraan jumlah orang',
                     ],
+                    'RPT_BAP' => [
+                        'RPT_BAP_NO' => 'Nomor urut baris', 'RPT_BAP_NOMOR_SURAT' => 'Nomor surat BAP',
+                        'RPT_BAP_TANGGAL' => 'Tanggal BAP', 'RPT_BAP_JUMLAH_RINCIAN' => 'Jumlah rincian yang diperiksa pada BAP ini',
+                    ],
+                    'RPT_BAST' => [
+                        'RPT_BAST_NO' => 'Nomor urut baris', 'RPT_BAST_NOMOR_SURAT' => 'Nomor surat BAST',
+                        'RPT_BAST_TANGGAL' => 'Tanggal BAST', 'RPT_BAST_BAP_NOMOR' => 'Nomor surat BAP yang diserahterimakan',
+                    ],
+                    'RPT_INV' => [
+                        'RPT_INV_NO' => 'Nomor urut baris', 'RPT_INV_NOMOR_SURAT' => 'Nomor surat invoice',
+                        'RPT_INV_TANGGAL' => 'Tanggal invoice', 'RPT_INV_NILAI' => 'Nilai invoice (angka polos)',
+                        'RPT_INV_NILAI_RP' => 'Nilai invoice (Rp terformat)', 'RPT_INV_STATUS' => 'Status bayar invoice',
+                    ],
                 ];
             case 'gedung':
                 return [
                     'KERJA' => [
                         'KERJA_NO' => 'Nomor urut baris', 'KERJA_KODE' => 'Kode analisa', 'KERJA_NAMA' => 'Nama pekerjaan',
                         'KERJA_VOLUME' => 'Volume berjalan (2 desimal)', 'KERJA_SATUAN' => 'Satuan',
-                        'KERJA_HARGA' => 'Harga satuan dokumen (angka polos)', 'KERJA_NILAI' => 'Nilai baris (angka polos)',
+                        'KERJA_HARGA' => 'Harga satuan berjalan: revisi disahkan/AHSP/dokumen (angka polos) — basis yang sama dengan Nilai Analisa, jadi total kolom KERJA_NILAI menyamai NILAI_ANALISA', 'KERJA_NILAI' => 'Nilai baris berjalan (angka polos)',
+                        'KERJA_HARGA_RP' => 'Harga satuan berjalan (Rp terformat)', 'KERJA_NILAI_RP' => 'Nilai baris berjalan (Rp terformat)',
+                        'KERJA_HARGA_DOKUMEN' => 'Harga satuan dokumen asli (angka polos)', 'KERJA_NILAI_DOKUMEN' => 'Nilai baris pada harga dokumen (angka polos)',
                         'KERJA_REALISASI' => 'Realisasi fisik baris (%)',
                     ],
                 ];
@@ -174,19 +190,32 @@ class MesinLaporan
         return $daftar;
     }
 
-    /** @return array<int,string> nilai semua sel bertipe string pada satu sheet */
+    /** @return array<int,string> teks semua sel string/rich text pada satu sheet */
     private static function selString(Worksheet $sheet): array
     {
         $nilai = [];
         foreach ($sheet->getRowIterator() as $row) {
             foreach ($row->getCellIterator() as $cell) {
-                $v = $cell->getValue();
-                if (is_string($v) && $v !== '') {
-                    $nilai[] = $v;
+                $t = self::teksSel($cell);
+                if ($t !== null && $t !== '') {
+                    $nilai[] = $t;
                 }
             }
         }
         return $nilai;
+    }
+
+    /** Teks polos satu sel: string biasa, atau rich text (sel berformat sebagian). */
+    private static function teksSel($cell): ?string
+    {
+        $v = $cell->getValue();
+        if (is_string($v)) {
+            return $v;
+        }
+        if ($v instanceof RichText) {
+            return $v->getPlainText();
+        }
+        return null;
     }
 
     /**
@@ -205,8 +234,8 @@ class MesinLaporan
         foreach ($ss->getAllSheets() as $sheet) {
             foreach ($sheet->getRowIterator() as $row) {
                 foreach ($row->getCellIterator() as $cell) {
-                    $v = $cell->getValue();
-                    if (! is_string($v) || ! str_contains($v, '{{')) {
+                    $v = self::teksSel($cell);
+                    if ($v === null || ! str_contains($v, '{{')) {
                         continue;
                     }
                     $baru = $v;
@@ -301,63 +330,106 @@ class MesinLaporan
         return $ss;
     }
 
-    /** Gandakan baris contoh tiap awalan mengikuti jumlah baris data. */
+    /**
+     * Gandakan blok contoh tiap awalan mengikuti jumlah baris data.
+     * Baris-baris berurutan yang memuat penanda awalan yang sama membentuk
+     * SATU blok contoh (boleh multi-baris); satu sheet boleh memuat banyak
+     * blok, termasuk awalan yang sama di tempat terpisah. Blok diproses
+     * dari bawah ke atas agar nomor baris blok lain tidak bergeser oleh
+     * sisipan/penghapusan. Seluruh sel baris contoh (nilai + gaya) tersalin
+     * ke baris sisipan — bukan hanya sel berpenanda. Sel rich text ikut
+     * terbaca (hasil gantinya teks polos). Batasan: baris yang memuat dua
+     * awalan berbeda mengikuti awalan pertama yang ditemukan; sel gabung
+     * (merge) yang melintasi blok tidak ikut digandakan.
+     */
     private static function renderBerulang(Worksheet $sheet, array $berulang): void
     {
-        foreach ($berulang as $awalan => $barisData) {
-            // Cari baris contoh: baris pertama yang selnya memuat {{AWALAN_...}}.
-            $barisContoh = null;
-            $selContoh = [];
-            foreach ($sheet->getRowIterator() as $row) {
-                $ketemu = false;
-                foreach ($row->getCellIterator() as $cell) {
-                    $v = $cell->getValue();
-                    if (is_string($v) && str_contains($v, '{{' . $awalan . '_')) {
-                        $selContoh[$cell->getColumn()] = $v;
-                        $ketemu = true;
+        $barisAwalan = [];
+        foreach ($sheet->getRowIterator() as $row) {
+            foreach ($row->getCellIterator() as $cell) {
+                $t = self::teksSel($cell);
+                if ($t === null || ! str_contains($t, '{{')) {
+                    continue;
+                }
+                foreach (array_keys($berulang) as $awalan) {
+                    if (str_contains($t, '{{' . $awalan . '_')) {
+                        $barisAwalan[$row->getRowIndex()] = $awalan;
+                        break;
                     }
                 }
-                if ($ketemu) {
-                    $barisContoh = $row->getRowIndex();
+                if (isset($barisAwalan[$row->getRowIndex()])) {
                     break;
                 }
             }
-            if ($barisContoh === null) {
-                continue; // template memang tidak memakai blok ini
+        }
+        if ($barisAwalan === []) {
+            return;
+        }
+        ksort($barisAwalan);
+        $nomorBaris = array_keys($barisAwalan);
+        $blok = [];
+        $i = 0;
+        while ($i < count($nomorBaris)) {
+            $awalan = $barisAwalan[$nomorBaris[$i]];
+            $mulai = $nomorBaris[$i];
+            $tinggi = 1;
+            while ($i + $tinggi < count($nomorBaris) && $nomorBaris[$i + $tinggi] === $mulai + $tinggi && $barisAwalan[$nomorBaris[$i + $tinggi]] === $awalan) {
+                $tinggi++;
             }
+            $blok[] = [$awalan, $mulai, $tinggi];
+            $i += $tinggi;
+        }
+        usort($blok, static fn ($a, $b) => $b[1] <=> $a[1]);
+        $kolomAkhir = $sheet->getHighestColumn();
+        foreach ($blok as [$awalan, $mulai, $tinggi]) {
+            $barisData = $berulang[$awalan] ?? [];
             $jumlah = count($barisData);
             if ($jumlah === 0) {
-                $sheet->removeRow($barisContoh, 1);
+                $sheet->removeRow($mulai, $tinggi);
                 continue;
             }
             if ($jumlah > 1) {
-                $sheet->insertNewRowBefore($barisContoh + 1, $jumlah - 1);
-                // Salin nilai contoh + gaya ke baris sisipan.
-                $tinggi = $sheet->getRowDimension($barisContoh)->getRowHeight();
-                for ($i = 1; $i < $jumlah; $i++) {
-                    $target = $barisContoh + $i;
-                    if ($tinggi !== null) {
-                        $sheet->getRowDimension($target)->setRowHeight($tinggi);
-                    }
-                    foreach ($selContoh as $kolom => $v) {
-                        $sheet->setCellValue($kolom . $target, $v);
-                        try {
-                            $sheet->duplicateStyle($sheet->getStyle($kolom . $barisContoh), $kolom . $target);
-                        } catch (\Throwable $e) {
-                            // gaya gagal disalin tidak menggagalkan render
+                $sheet->insertNewRowBefore($mulai + $tinggi, ($jumlah - 1) * $tinggi);
+                for ($k = 1; $k < $jumlah; $k++) {
+                    for ($r = 0; $r < $tinggi; $r++) {
+                        $src = $mulai + $r;
+                        $dst = $mulai + $k * $tinggi + $r;
+                        $h = $sheet->getRowDimension($src)->getRowHeight();
+                        if ($h !== null) {
+                            $sheet->getRowDimension($dst)->setRowHeight($h);
+                        }
+                        foreach ($sheet->getRowIterator($src, $src) as $rowSrc) {
+                            foreach ($rowSrc->getCellIterator('A', $kolomAkhir) as $cell) {
+                                $v = $cell->getValue();
+                                if ($v !== null) {
+                                    $sheet->getCell($cell->getColumn() . $dst)->setValue($v);
+                                }
+                                try {
+                                    $sheet->duplicateStyle($sheet->getStyle($cell->getCoordinate()), $cell->getColumn() . $dst);
+                                } catch (\Throwable $e) {
+                                    // gaya gagal disalin tidak menggagalkan render
+                                }
+                            }
                         }
                     }
                 }
             }
-            // Isi tiap baris dengan data barisnya.
-            foreach ($barisData as $i => $data) {
-                $baris = $barisContoh + $i;
-                foreach ($selContoh as $kolom => $v) {
-                    $baru = $v;
-                    foreach ($data as $kunci => $nilai) {
-                        $baru = str_replace('{{' . $kunci . '}}', (string) $nilai, $baru);
+            foreach ($barisData as $k => $data) {
+                for ($r = 0; $r < $tinggi; $r++) {
+                    $baris = $mulai + $k * $tinggi + $r;
+                    foreach ($sheet->getRowIterator($baris, $baris) as $rowIsi) {
+                        foreach ($rowIsi->getCellIterator('A', $kolomAkhir) as $cell) {
+                            $t = self::teksSel($cell);
+                            if ($t === null || ! str_contains($t, '{{' . $awalan . '_')) {
+                                continue;
+                            }
+                            $baru = $t;
+                            foreach ($data as $kunci => $nilai) {
+                                $baru = str_replace('{{' . $kunci . '}}', (string) $nilai, $baru);
+                            }
+                            $cell->setValueExplicit($baru, DataType::TYPE_STRING);
+                        }
                     }
-                    $sheet->setCellValueExplicit($kolom . $baris, $baru, DataType::TYPE_STRING);
                 }
             }
         }

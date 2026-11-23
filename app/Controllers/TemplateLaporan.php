@@ -55,6 +55,9 @@ class TemplateLaporan extends BaseController
         if ($berkas === null || ! $berkas->isValid() || strtolower($berkas->getExtension()) !== 'xlsx') {
             return redirect()->to('template-laporan')->with('galat', 'Pilih berkas template .xlsx yang valid.');
         }
+        if ($berkas->getSize() > 5 * 1024 * 1024) {
+            return redirect()->to('template-laporan')->with('galat', 'Ukuran template melebihi 5 MB — kecilkan dulu (hapus gambar/lembar yang tidak perlu).');
+        }
         $namaFile = bin2hex(random_bytes(8)) . '.xlsx';
         $berkas->move($this->dir, $namaFile);
         $path = $this->dir . '/' . $namaFile;
@@ -257,7 +260,38 @@ class TemplateLaporan extends BaseController
                 'TENAGA_ORANG' => $t['jumlah_orang'] === null ? '' : (string) (int) $t['jumlah_orang'],
             ];
         }
-        return [$skalar, ['RINCIAN' => $rincian, 'TENAGA' => $tenaga]];
+        $rptBap = [];
+        $no = 1;
+        foreach ($db->query('SELECT * FROM bap WHERE spk_id = ? AND is_deleted = 0 ORDER BY nomor_urut', [$spkId])->getResultArray() as $b) {
+            $jml = (int) ($db->query('SELECT COUNT(*) AS j FROM bap_detail WHERE bap_id = ? AND is_deleted = 0', [(int) $b['id']])->getRow()->j ?? 0);
+            $rptBap[] = [
+                'RPT_BAP_NO' => (string) $no++, 'RPT_BAP_NOMOR_SURAT' => $this->nomorSurat('BAP', (int) $b['nomor_urut']),
+                'RPT_BAP_TANGGAL' => ! empty($b['tanggal']) ? tgl($b['tanggal']) : '-',
+                'RPT_BAP_JUMLAH_RINCIAN' => (string) $jml,
+            ];
+        }
+        $rptBast = [];
+        $no = 1;
+        foreach ($db->query('SELECT * FROM bast WHERE spk_id = ? AND is_deleted = 0 ORDER BY nomor_urut', [$spkId])->getResultArray() as $b) {
+            $bapInduk = ! empty($b['bap_id']) ? $db->table('bap')->where('id', (int) $b['bap_id'])->get()->getRowArray() : null;
+            $rptBast[] = [
+                'RPT_BAST_NO' => (string) $no++, 'RPT_BAST_NOMOR_SURAT' => $this->nomorSurat('BAST', (int) $b['nomor_urut']),
+                'RPT_BAST_TANGGAL' => ! empty($b['tanggal']) ? tgl($b['tanggal']) : '-',
+                'RPT_BAST_BAP_NOMOR' => $bapInduk ? $this->nomorSurat('BAP', (int) $bapInduk['nomor_urut']) : '-',
+            ];
+        }
+        $rptInv = [];
+        $no = 1;
+        foreach ($db->query('SELECT * FROM invoice WHERE spk_id = ? AND is_deleted = 0 ORDER BY nomor_urut', [$spkId])->getResultArray() as $b) {
+            $lunas = (int) ($db->query('SELECT COUNT(*) AS j FROM pembayaran WHERE invoice_id = ? AND is_deleted = 0', [(int) $b['id']])->getRow()->j ?? 0) > 0;
+            $rptInv[] = [
+                'RPT_INV_NO' => (string) $no++, 'RPT_INV_NOMOR_SURAT' => $this->nomorSurat('INV', (int) $b['nomor_urut']),
+                'RPT_INV_TANGGAL' => ! empty($b['tanggal']) ? tgl($b['tanggal']) : '-',
+                'RPT_INV_NILAI' => MesinLaporan::angka($b['nilai']), 'RPT_INV_NILAI_RP' => 'Rp ' . number_format((float) $b['nilai'], 0, ',', '.'),
+                'RPT_INV_STATUS' => $lunas ? 'Sudah Bayar' : 'Belum Bayar',
+            ];
+        }
+        return [$skalar, ['RINCIAN' => $rincian, 'TENAGA' => $tenaga, 'RPT_BAP' => $rptBap, 'RPT_BAST' => $rptBast, 'RPT_INV' => $rptInv]];
     }
 
     /** Konteks satu gedung: [skalar, berulang]. Null bila gedung tak ditemukan. */
@@ -293,11 +327,16 @@ class TemplateLaporan extends BaseController
         foreach ($pekerjaan as $p) {
             $vol = (float) ($p['volume_revisi'] ?? $p['volume']);
             $real = $realisasiPerKerja[(int) $p['id']] ?? 0.0;
+            $berjalan = $this->hargaBerjalan($p);
             $kerja[] = [
                 'KERJA_NO' => (string) $no++, 'KERJA_KODE' => (string) ($p['kode_analisa'] ?? ''),
                 'KERJA_NAMA' => (string) ($p['nama'] ?? ''), 'KERJA_VOLUME' => MesinLaporan::qty($vol),
-                'KERJA_SATUAN' => (string) ($p['satuan'] ?? ''), 'KERJA_HARGA' => MesinLaporan::angka($p['harga_satuan']),
-                'KERJA_NILAI' => MesinLaporan::angka($vol * (float) $p['harga_satuan']),
+                'KERJA_SATUAN' => (string) ($p['satuan'] ?? ''), 'KERJA_HARGA' => MesinLaporan::angka($berjalan),
+                'KERJA_HARGA_RP' => 'Rp ' . number_format($berjalan, 0, ',', '.'),
+                'KERJA_NILAI' => MesinLaporan::angka($vol * $berjalan),
+                'KERJA_NILAI_RP' => 'Rp ' . number_format($vol * $berjalan, 0, ',', '.'),
+                'KERJA_HARGA_DOKUMEN' => MesinLaporan::angka($p['harga_satuan']),
+                'KERJA_NILAI_DOKUMEN' => MesinLaporan::angka($vol * (float) $p['harga_satuan']),
                 'KERJA_REALISASI' => number_format($vol > 0 ? min(100, $real / $vol * 100) : 0.0, 1, ',', '.'),
             ];
         }

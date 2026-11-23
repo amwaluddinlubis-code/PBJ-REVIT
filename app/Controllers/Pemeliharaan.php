@@ -28,6 +28,41 @@ class Pemeliharaan extends BaseController
         return $dir;
     }
 
+    private function folderTemplate(): string
+    {
+        $dir = (new \Config\Paths())->writableDirectory . '/template-laporan';
+        if (! is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+        return $dir;
+    }
+
+    /**
+     * Backup lengkap: dump .sql database + berkas Template Laporan dalam
+     * satu paket .zip (di dalamnya: data.sql + template-laporan/*.xlsx).
+     * Bila belum ada berkas template, hasilnya berkas .sql biasa.
+     */
+    private function buatPaketBackup(string $label): string
+    {
+        $sqlNama = $this->buatBerkasBackup($label);
+        $tpl = glob($this->folderTemplate() . '/*.xlsx') ?: [];
+        if ($tpl === []) {
+            return $sqlNama;
+        }
+        $zipNama = str_replace('.sql', '.zip', $sqlNama);
+        $zip = new \ZipArchive();
+        if ($zip->open($this->folderBackup() . '/' . $zipNama, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return $sqlNama;
+        }
+        $zip->addFile($this->folderBackup() . '/' . $sqlNama, 'data.sql');
+        foreach ($tpl as $f) {
+            $zip->addFile($f, 'template-laporan/' . basename($f));
+        }
+        $zip->close();
+        @unlink($this->folderBackup() . '/' . $sqlNama);
+        return $zipNama;
+    }
+
     private function formatUkuran(float $b): string
     {
         if ($b >= 1048576) {
@@ -84,9 +119,10 @@ class Pemeliharaan extends BaseController
         $totalUkuran = array_sum(array_map(static fn ($t) => (float) $t['ukuran'], $tabel));
 
         $backups = [];
-        foreach (glob($this->folderBackup() . '/*.sql') ?: [] as $f) {
+        foreach (array_merge(glob($this->folderBackup() . '/*.sql') ?: [], glob($this->folderBackup() . '/*.zip') ?: []) as $f) {
             $backups[] = [
                 'nama'    => basename($f),
+                'jenis'   => str_ends_with($f, '.zip') ? 'Paket lengkap (database + template laporan)' : 'Database saja (.sql)',
                 'ukuran'  => $this->formatUkuran((float) filesize($f)),
                 'tanggal' => date('d/m/Y H:i', filemtime($f)),
                 'mtime'   => filemtime($f),
@@ -149,9 +185,10 @@ class Pemeliharaan extends BaseController
         if (! $this->admin()) {
             return $this->tolak();
         }
-        $nama = $this->buatBerkasBackup('backup');
+        $nama = $this->buatPaketBackup('backup');
         $this->catatAudit('pemeliharaan', null, 'backup', 'Backup dibuat: ' . $nama);
-        return redirect()->to('/pemeliharaan-db')->with('sukses', 'Backup dibuat: ' . $nama . ' — unduh dari daftar Backup Tersimpan.');
+        $ket = str_ends_with($nama, '.zip') ? ' (paket lengkap: database + berkas template laporan)' : '';
+        return redirect()->to('/pemeliharaan-db')->with('sukses', 'Backup dibuat: ' . $nama . $ket . ' — unduh dari daftar Backup Tersimpan.');
     }
 
     public function unduh($nama)
@@ -161,7 +198,7 @@ class Pemeliharaan extends BaseController
         }
         $aman = basename((string) $nama);
         $path = $this->folderBackup() . '/' . $aman;
-        if (! str_ends_with($aman, '.sql') || ! is_file($path)) {
+        if (! (str_ends_with($aman, '.sql') || str_ends_with($aman, '.zip')) || ! is_file($path)) {
             return redirect()->to('/pemeliharaan-db')->with('galat', 'Berkas backup tidak ditemukan.');
         }
         return $this->response->download($path, null);
@@ -174,7 +211,7 @@ class Pemeliharaan extends BaseController
         }
         $aman = basename((string) $this->request->getPost('nama'));
         $path = $this->folderBackup() . '/' . $aman;
-        if (str_ends_with($aman, '.sql') && is_file($path)) {
+        if ((str_ends_with($aman, '.sql') || str_ends_with($aman, '.zip')) && is_file($path)) {
             unlink($path);
             return redirect()->to('/pemeliharaan-db')->with('sukses', 'Berkas backup ' . $aman . ' dihapus.');
         }
@@ -189,24 +226,58 @@ class Pemeliharaan extends BaseController
         $dariBackup = basename((string) $this->request->getPost('dari_backup'));
         $path = null;
         $asal = '';
-        if ($dariBackup !== '' && str_ends_with($dariBackup, '.sql') && is_file($this->folderBackup() . '/' . $dariBackup)) {
+        if ($dariBackup !== '' && (str_ends_with($dariBackup, '.sql') || str_ends_with($dariBackup, '.zip')) && is_file($this->folderBackup() . '/' . $dariBackup)) {
             $path = $this->folderBackup() . '/' . $dariBackup;
             $asal = $dariBackup;
         } else {
             $berkas = $this->request->getFile('berkas');
-            if ($berkas !== null && $berkas->isValid() && strtolower($berkas->getExtension()) === 'sql') {
+            if ($berkas !== null && $berkas->isValid() && in_array(strtolower($berkas->getExtension()), ['sql', 'zip'], true)) {
                 $path = $berkas->getTempName();
                 $asal = $berkas->getClientName();
             }
         }
         if ($path === null) {
-            return redirect()->to('/pemeliharaan-db')->with('galat', 'Pilih berkas .sql yang akan dipulihkan (unggah atau dari backup tersimpan).');
+            return redirect()->to('/pemeliharaan-db')->with('galat', 'Pilih berkas .sql atau paket .zip yang akan dipulihkan (unggah atau dari backup tersimpan).');
+        }
+
+        // Paket .zip (backup lengkap): pisahkan dump database + berkas template.
+        $sql = null;
+        $templateSet = null;
+        if (str_ends_with(strtolower((string) $path), '.zip')) {
+            $zip = new \ZipArchive();
+            if ($zip->open($path) !== true) {
+                return redirect()->to('/pemeliharaan-db')->with('galat', 'Berkas .zip tidak dapat dibuka.');
+            }
+            $namaSql = $zip->locateName('data.sql') !== false ? 'data.sql' : null;
+            if ($namaSql === null) {
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    $nm = (string) $zip->getNameIndex($i);
+                    if (str_ends_with(strtolower($nm), '.sql')) {
+                        $namaSql = $nm;
+                        break;
+                    }
+                }
+            }
+            if ($namaSql !== null) {
+                $sql = (string) $zip->getFromName($namaSql);
+            }
+            $templateSet = [];
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $nm = (string) $zip->getNameIndex($i);
+                if (str_starts_with($nm, 'template-laporan/') && str_ends_with(strtolower($nm), '.xlsx')) {
+                    $templateSet[basename($nm)] = (string) $zip->getFromIndex($i);
+                }
+            }
+            $zip->close();
+            if ($sql === null) {
+                return redirect()->to('/pemeliharaan-db')->with('galat', 'Di dalam paket .zip tidak ditemukan berkas .sql database.');
+            }
+        } else {
+            $sql = (string) file_get_contents($path);
         }
 
         // Keadaan saat ini selalu dibackup dulu agar pemulihan bisa dibatalkan.
         $praNama = $this->buatBerkasBackup('pra-pulih');
-
-        $sql = (string) file_get_contents($path);
         // Pulihkan selalu ke database yang sedang aktif: buang perintah ganti database dari dump.
         $sql = preg_replace('/^\s*CREATE DATABASE.*?;\s*$/mi', '', $sql);
         $sql = preg_replace('/^\s*USE\s+`?\w+`?\s*;\s*$/mi', '', $sql);
@@ -231,8 +302,24 @@ class Pemeliharaan extends BaseController
         if ($galat !== null) {
             return redirect()->to('/pemeliharaan-db')->with('galat', 'Pemulihan berhenti karena galat: ' . $galat . ' — keadaan sebelum pemulihan tersimpan sebagai ' . $praNama . ', pulihkan berkas itu untuk mengembalikan.');
         }
-        $this->catatAudit('pemeliharaan', null, 'pulih', 'Database dipulihkan dari ' . $asal . '; backup pra-pulih: ' . $praNama);
-        return redirect()->to('/pemeliharaan-db')->with('sukses', 'Database dipulihkan dari ' . $asal . '. Backup keadaan sebelumnya tersimpan sebagai ' . $praNama . '.');
+        $catatanTemplate = '';
+        if ($templateSet !== null && $templateSet !== []) {
+            $dirTpl = $this->folderTemplate();
+            $snap = $this->folderBackup() . '/template-pulih-' . date('Ymd-His');
+            if (! is_dir($snap)) {
+                mkdir($snap, 0775, true);
+            }
+            foreach (glob($dirTpl . '/*.xlsx') ?: [] as $f) {
+                @copy($f, $snap . '/' . basename($f));
+                @unlink($f);
+            }
+            foreach ($templateSet as $namaTpl => $isiTpl) {
+                file_put_contents($dirTpl . '/' . $namaTpl, $isiTpl);
+            }
+            $catatanTemplate = ' Berkas template laporan ikut dipulihkan (' . count($templateSet) . ' berkas); template sebelumnya disalin ke folder backup/' . basename($snap) . ' di writable.';
+        }
+        $this->catatAudit('pemeliharaan', null, 'pulih', 'Database dipulihkan dari ' . $asal . '; backup pra-pulih: ' . $praNama . $catatanTemplate);
+        return redirect()->to('/pemeliharaan-db')->with('sukses', 'Database dipulihkan dari ' . $asal . '. Backup keadaan sebelumnya tersimpan sebagai ' . $praNama . '.' . $catatanTemplate);
     }
 
     public function optimasi()

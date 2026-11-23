@@ -17,7 +17,7 @@
 
 <div class="panel">
   <h2>Backup Database</h2>
-  <p style="margin-top:0;color:var(--ta-teks-2)">Backup berisi seluruh struktur dan data database dalam satu berkas .sql. Simpan berkasnya di tempat aman di luar komputer ini.</p>
+  <p style="margin-top:0;color:var(--ta-teks-2)">Backup berisi seluruh struktur dan data database; bila ada berkas Template Laporan, backup menjadi satu paket .zip (database + template). Simpan berkasnya di tempat aman di luar komputer ini.</p>
   <form method="post" action="<?= base_url('pemeliharaan-db/backup') ?>">
     <?= csrf_field() ?>
     <button type="submit">Buat Backup Sekarang</button>
@@ -28,7 +28,7 @@
     <tr><th>Berkas</th><th>Tanggal</th><th class="angka">Ukuran</th><th style="width:190px">Aksi</th></tr>
     <?php foreach ($backups as $b): ?>
     <tr>
-      <td><?= esc($b['nama']) ?></td>
+      <td><?= esc($b['nama']) ?><div class="kecil-teks"><?= esc($b['jenis'] ?? '') ?></div></td>
       <td><?= esc($b['tanggal']) ?></td>
       <td class="angka"><?= esc($b['ukuran']) ?></td>
       <td>
@@ -53,8 +53,8 @@
   <p style="margin-top:0;color:var(--ta-teks-2)"><strong>Perhatian:</strong> pemulihan MENIMPA seluruh data saat ini dengan isi berkas backup. Sebelum memulihkan, aplikasi otomatis membuat backup keadaan saat ini (berawalan <em>pra-pulih-</em>) sehingga pemulihan masih bisa dibatalkan.</p>
   <form method="post" action="<?= base_url('pemeliharaan-db/pulih') ?>" enctype="multipart/form-data" data-konfirmasi="Pulihkan database dari berkas ini? SELURUH data saat ini akan ditimpa. Backup keadaan saat ini dibuat otomatis sebelum pemulihan.">
     <?= csrf_field() ?>
-    <label>Unggah berkas .sql
-      <input type="file" name="berkas" accept=".sql">
+    <label>Unggah berkas .sql / paket .zip
+      <input type="file" name="berkas" accept=".sql,.zip">
     </label>
     <label>atau pilih dari backup tersimpan
       <?= select_cari('dari_backup', array_merge([['value' => '', 'label' => '— tidak dipilih —']], array_map(static fn ($b) => ['value' => $b['nama'], 'label' => $b['nama'] . ' (' . $b['tanggal'] . ')'], $backups))) ?>
