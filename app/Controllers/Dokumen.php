@@ -26,7 +26,11 @@ class Dokumen extends BaseController
     {
         $db = $this->db();
         $spk = $db->query(
-            'SELECT s.id, s.nomor, s.paket, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia FROM spk s
+            'SELECT s.id, s.nomor, s.paket, s.tanggal, s.tgl_mulai, s.tgl_selesai, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia,
+                    (SELECT COUNT(*) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS jumlah_detail,
+                    (SELECT COUNT(*) FROM bap_detail bd JOIN bap bp ON bp.id = bd.bap_id AND bp.is_deleted = 0
+                      WHERE bp.spk_id = s.id AND bd.is_deleted = 0) AS jumlah_terbap
+             FROM spk s
              LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.sekolah_id = ? AND s.is_deleted = 0 ORDER BY s.nomor',
             [$this->sid()]
         )->getResultArray();
@@ -34,16 +38,43 @@ class Dokumen extends BaseController
         foreach ($db->table('bap')->where('is_deleted', 0)->get()->getResultArray() as $r) {
             $bap[$r['spk_id']][] = $r;
         }
-        $bast = [];
-        foreach ($db->table('bast')->where('is_deleted', 0)->get()->getResultArray() as $r) {
-            $bast[$r['spk_id']][] = $r;
+        $bapItems = [];
+        foreach ($db->query(
+            'SELECT bd.bap_id, bd.id AS bd_id, bd.kondisi, bd.keterangan, d.qty,
+                    COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan
+             FROM bap_detail bd JOIN spk_detail d ON d.id = bd.detail_id
+             LEFT JOIN bahan b ON b.id = d.bahan_id WHERE bd.is_deleted = 0 ORDER BY bd.id'
+        )->getResultArray() as $r) {
+            $bapItems[$r['bap_id']][] = $r;
         }
-        return $this->tampil('dokumen/index', ['spk' => $spk, 'bap' => $bap, 'bast' => $bast], 'BAP & BAST — Aplikasi PBJ Sekolah');
+        $bastPerBap = [];
+        $bastUmum = [];
+        foreach ($db->table('bast')->where('is_deleted', 0)->get()->getResultArray() as $r) {
+            if (! empty($r['bap_id'])) {
+                $bastPerBap[$r['bap_id']][] = $r;
+            } else {
+                $bastUmum[$r['spk_id']][] = $r;
+            }
+        }
+        return $this->tampil('dokumen/index', [
+            'spk' => $spk, 'bap' => $bap, 'bap_items' => $bapItems,
+            'bast_per_bap' => $bastPerBap, 'bast_umum' => $bastUmum,
+        ], 'BAP & BAST — Aplikasi PBJ Sekolah');
     }
 
     public function bapBuat($spkId)
     {
         $db = $this->db();
+        // Aturan ketat: BAP baru hanya bila masih ada rincian SPK yang belum
+        // ter-BAP — jumlah item BAP tidak boleh melebihi jumlah rincian SPK.
+        $total = (int) $db->query('SELECT COUNT(*) AS j FROM spk_detail WHERE spk_id = ? AND is_deleted = 0', [(int) $spkId])->getRow()->j;
+        $terbap = (int) $db->query(
+            'SELECT COUNT(*) AS j FROM bap_detail bd JOIN bap bp ON bp.id = bd.bap_id AND bp.is_deleted = 0 WHERE bp.spk_id = ? AND bd.is_deleted = 0',
+            [(int) $spkId]
+        )->getRow()->j;
+        if ($terbap >= $total) {
+            return redirect()->to('dokumen')->with('galat', 'Semua rincian SPK ini sudah ter-BAP (' . $terbap . ' dari ' . $total . ' barang) — BAP baru tidak diperlukan.');
+        }
         $row = $db->query('SELECT MAX(nomor_urut) m FROM bap')->getRow();
         $db->table('bap')->insert([
             'spk_id' => (int) $spkId, 'nomor_urut' => ((int) $row->m) + 1,
@@ -53,7 +84,7 @@ class Dokumen extends BaseController
         foreach ($db->table('spk_detail')->where(['spk_id' => (int) $spkId, 'is_deleted' => 0])->get()->getResultArray() as $d) {
             $db->table('bap_detail')->insert(['bap_id' => $bapId, 'detail_id' => $d['id'], 'kondisi' => 'Cukup']);
         }
-        return redirect()->to('dokumen/bap-ubah/' . $bapId)->with('sukses', 'BAP dibuat dari rincian SPK — lengkapi tanggal dan kondisi pemeriksaan.');
+        return redirect()->to('dokumen')->with('sukses', 'BAP dibuat dari rincian SPK — lengkapi tanggal dan kondisi pemeriksaan lewat tombol Ubah pada BAP-nya.');
     }
 
     public function bapUbah($bapId)
@@ -91,15 +122,23 @@ class Dokumen extends BaseController
         return redirect()->to('dokumen')->with('sukses', 'BAP disimpan.');
     }
 
-    public function bastBuat($spkId)
+    /** BAST dibuat per BAP (aturan 1 BAP = 1 BAST); parameternya id BAP. */
+    public function bastBuat($bapId)
     {
         $db = $this->db();
+        $bap = $db->table('bap')->where(['id' => (int) $bapId, 'is_deleted' => 0])->get()->getRowArray();
+        if (! $bap) {
+            return redirect()->to('dokumen')->with('galat', 'BAP tidak ditemukan.');
+        }
+        if ($db->table('bast')->where(['bap_id' => (int) $bapId, 'is_deleted' => 0])->countAllResults() > 0) {
+            return redirect()->to('dokumen')->with('galat', 'BAP ini sudah mempunyai BAST — satu BAP hanya boleh satu BAST.');
+        }
         $row = $db->query('SELECT MAX(nomor_urut) m FROM bast')->getRow();
         $db->table('bast')->insert([
-            'spk_id' => (int) $spkId, 'nomor_urut' => ((int) $row->m) + 1,
+            'spk_id' => (int) $bap['spk_id'], 'bap_id' => (int) $bapId, 'nomor_urut' => ((int) $row->m) + 1,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
-        return redirect()->to('dokumen/bast-ubah/' . $db->insertID())->with('sukses', 'BAST dibuat — lengkapi tanggalnya.');
+        return redirect()->to('dokumen')->with('sukses', 'BAST dibuat untuk BAP urut ' . (int) $bap['nomor_urut'] . ' — lengkapi tanggalnya lewat tombol Ubah.');
     }
 
     public function bastUbah($bastId)

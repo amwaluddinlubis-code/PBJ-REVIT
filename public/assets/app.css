@@ -3861,3 +3861,20 @@ body:not(.login) .dashboard-hero { min-height: 118px; }
 .tabel-acuan { table-layout: fixed; width: 100%; }
 .tabel-acuan th, .tabel-acuan td { white-space: normal; overflow-wrap: break-word; }
 .tabel-acuan th.angka, .tabel-acuan td.angka { white-space: nowrap; }
+
+/* Tombol cetak ikon (XS) per jenis dokumen di halaman BAP & BAST. */
+.tombol-cetak {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: #fff;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+.tombol-cetak:hover { filter: brightness(1.15); color: #fff; }
+.tc-bap { background: #2563eb; }
+.tc-bast { background: #059669; }
+.tc-spk { background: #7c3aed; }
