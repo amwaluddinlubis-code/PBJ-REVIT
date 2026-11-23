@@ -288,6 +288,16 @@ Menu **Perencanaan → Simulasi Mingguan** adalah mesin simulasi satu proyek pen
 
 Simulasi ini memakai realisasi mingguan yang diisi di halaman ini — terpisah dari catatan Realisasi per pekerjaan. Ubah masukannya kapan pun, simpan, dan seluruh minggu terhitung ulang. Untuk daftar belanja bersih (sesudah stok & SPK berjalan) tetap gunakan Rencana Mingguan.
 
+### SPK Gabungan Beberapa Gedung
+
+Bila rencana mingguan beberapa gedung sudah dibuat dan belanjanya mau disatukan (satu toko, satu pengiriman), gunakan tombol **Gabungkan Beberapa Rencana Jadi 1 SPK** di halaman Rencana Mingguan:
+
+1. Centang dua rencana atau lebih (boleh beda gedung), klik **Lihat Pratinjau Gabungan**.
+2. Di pratinjau, kebutuhan bahan semua rencana dijumlahkan; **stok tersedia & pesanan berjalan dikurangkan satu kali** dari gabungan (bukan sekali per gedung), lalu sisanya dibagi ke tiap gedung menurut porsi kebutuhannya. Jumlah beli masih bisa disesuaikan per baris.
+3. Klik **Buat 1 SPK dari Gabungan Ini**. SPK terbentuk sebagai SPK gabungan: rincian di dalamnya **terpisah per gedung tujuan** — Detail SPK menampilkan kolom Gedung Tujuan dan cetakan SPK mengelompokkan rincian menurut gedungnya.
+
+Keluar–masuk material per gedung dicatat di **Buku Material**: kolom **Gedung Tujuan** pada formulir catatan (boleh dikosongkan untuk gudang bersama). Halaman Buku Material menampilkan **Rekap Keluar–Masuk per Gedung** — dari situlah terlihat berapa bahan yang diterima dan dipakai masing-masing gedung, termasuk bahan yang dibeli lewat SPK gabungan. Saldo stok utama tetap gabungan se-sekolah.
+
 ## 9. Pembayaran Upah
 
 Menu **Pembangunan Gedung → Pembayaran Upah** mencatat pembayaran tenaga kerja: tanggal, gedung (dan pekerjaan bila tertaut), jenis tenaga, nama penerima/mandor, orang-hari, dan tarif per OH (kosongkan untuk memakai tarif master). Jumlah bayar = orang-hari × tarif, dan **diperiksa ke pagu sebelum disimpan** — pembayaran yang membuat total belanja melewati pagu ditolak.

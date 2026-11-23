@@ -387,6 +387,7 @@ class RencanaMingguan extends BaseController
         foreach ($baris as $b) {
             $db->table('spk_detail')->insert([
                 'spk_id' => $spkId, 'bahan_id' => (int) $b['bahan']['id'], 'sekolah_id' => $this->sid(),
+                'gedung_id' => (int) $r['gedung_id'],
                 'qty' => $b['qty'], 'harga' => $b['harga'],
                 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
             ]);
@@ -394,5 +395,171 @@ class RencanaMingguan extends BaseController
         $db->transComplete();
         $this->catatAudit('spk', $spkId, 'buat', 'SPK ' . $nomor . ' dibuat dari rencana mingguan #' . $id . ' (' . count($baris) . ' bahan).');
         return redirect()->to('/spk/detail/' . $spkId)->with('sukses', 'SPK ' . $nomor . ' dibuat dari rencana mingguan (' . count($baris) . ' bahan). Lengkapi penyedia & tanggalnya bila perlu.');
+    }
+
+    /** Daftar rencana bertarget untuk dipilih pada alur SPK gabungan. */
+    private function daftarBertarget(): array
+    {
+        return $this->db()->query(
+            'SELECT r.*, g.nama AS gedung_nama,
+                    (SELECT COUNT(*) FROM rencana_mingguan_detail d WHERE d.rencana_id = r.id AND d.is_deleted = 0 AND d.volume_target > 0) AS jml_target
+             FROM rencana_mingguan r JOIN gedung g ON g.id = r.gedung_id
+             WHERE r.sekolah_id = ? AND r.is_deleted = 0 AND g.is_deleted = 0
+             ORDER BY r.minggu_mulai DESC, r.id DESC',
+            [$this->sid()]
+        )->getResultArray();
+    }
+
+    public function gabung()
+    {
+        $daftar = array_values(array_filter($this->daftarBertarget(), static fn ($r) => (int) $r['jml_target'] > 0));
+        return $this->tampil('rencana_mingguan/gabung', ['daftar' => $daftar], 'Gabungkan Rencana Mingguan — Aplikasi PBJ Sekolah');
+    }
+
+    /**
+     * Hitungan gabungan beberapa rencana: kebutuhan kotor per bahan per
+     * gedung dijumlahkan, lalu stok tersedia & pesanan berjalan (yang
+     * sifatnya se-sekolah) dikurangkan SATU KALI dari gabungan dan
+     * sisanya dialokasikan ke gedung menurut porsi kebutuhan kotornya.
+     */
+    private function hitungGabungan(array $rencanaList): array
+    {
+        $perBahan = [];
+        foreach ($rencanaList as $r) {
+            $h = $this->hitung($r);
+            foreach ($h['bahan'] as $b) {
+                $bid = (int) $b['bahan_id'];
+                if (! isset($perBahan[$bid])) {
+                    $perBahan[$bid] = [
+                        'id' => $bid, 'kode' => $b['kode'], 'nama' => $b['nama'], 'satuan' => $b['satuan'],
+                        'harga' => (float) $b['harga'], 'stok' => (float) $b['stok'], 'berjalan' => (float) $b['berjalan'],
+                        'per_gedung' => [],
+                    ];
+                }
+                $perBahan[$bid]['per_gedung'][(int) $r['gedung_id']] = ($perBahan[$bid]['per_gedung'][(int) $r['gedung_id']] ?? 0.0) + (float) $b['kotor'];
+            }
+        }
+        $baris = [];
+        $total = 0.0;
+        foreach ($perBahan as $pb) {
+            $totalKotor = array_sum($pb['per_gedung']);
+            $totalBersih = max(0.0, $totalKotor - $pb['stok'] - $pb['berjalan']);
+            $alokasi = [];
+            $teralokasi = 0.0;
+            $gedungTerbesar = null;
+            foreach ($pb['per_gedung'] as $gid => $kotor) {
+                $a = $totalKotor > 0 ? round($totalBersih * $kotor / $totalKotor, 2) : 0.0;
+                $alokasi[$gid] = $a;
+                $teralokasi += $a;
+                if ($gedungTerbesar === null || $kotor > $pb['per_gedung'][$gedungTerbesar]) {
+                    $gedungTerbesar = $gid;
+                }
+            }
+            if ($gedungTerbesar !== null && abs($totalBersih - $teralokasi) >= 0.005) {
+                $alokasi[$gedungTerbesar] = round($alokasi[$gedungTerbesar] + ($totalBersih - $teralokasi), 2);
+            }
+            foreach ($alokasi as $gid => $a) {
+                if ($a > 0) {
+                    $baris[] = [
+                        'bahan_id' => $pb['id'], 'kode' => $pb['kode'], 'nama' => $pb['nama'], 'satuan' => $pb['satuan'],
+                        'gedung_id' => $gid, 'kotor' => $pb['per_gedung'][$gid], 'qty' => $a,
+                        'harga' => $pb['harga'], 'nilai' => $a * $pb['harga'],
+                        'stok' => $pb['stok'], 'berjalan' => $pb['berjalan'],
+                    ];
+                    $total += $a * $pb['harga'];
+                }
+            }
+        }
+        usort($baris, static fn ($a, $b) => $b['nilai'] <=> $a['nilai']);
+        return ['baris' => $baris, 'total' => $total];
+    }
+
+    /** Ambil baris rencana dari daftar id POST, terverifikasi milik sekolah. */
+    private function rencanaDariIds(array $ids): array
+    {
+        $keluar = [];
+        foreach ($this->daftarBertarget() as $r) {
+            if (in_array((int) $r['id'], $ids, true) && (int) $r['jml_target'] > 0) {
+                $keluar[] = $r;
+            }
+        }
+        return $keluar;
+    }
+
+    public function gabungPratinjau()
+    {
+        $ids = array_map('intval', (array) $this->request->getPost('ids'));
+        $rencanaList = $this->rencanaDariIds($ids);
+        if (count($rencanaList) < 2) {
+            return redirect()->to('rencana-mingguan/gabung')->with('galat', 'Pilih minimal dua rencana mingguan yang sudah punya target untuk digabungkan.');
+        }
+        $gab = $this->hitungGabungan($rencanaList);
+        if ($gab['baris'] === []) {
+            return redirect()->to('rencana-mingguan/gabung')->with('galat', 'Tidak ada kebutuhan bersih dari rencana terpilih — semua kebutuhan tertutup stok tersedia atau pesanan berjalan.');
+        }
+        $gedungNama = [];
+        foreach ($rencanaList as $r) {
+            $gedungNama[(int) $r['gedung_id']] = (string) $r['gedung_nama'];
+        }
+        return $this->tampil('rencana_mingguan/gabung_pratinjau', [
+            'rencana' => $rencanaList, 'baris' => $gab['baris'], 'total' => $gab['total'], 'gedung_nama' => $gedungNama,
+        ], 'Pratinjau SPK Gabungan — Aplikasi PBJ Sekolah');
+    }
+
+    public function gabungBuat()
+    {
+        $db = $this->db();
+        $ids = array_map('intval', (array) $this->request->getPost('ids'));
+        $rencanaList = $this->rencanaDariIds($ids);
+        if (count($rencanaList) < 2) {
+            return redirect()->to('rencana-mingguan/gabung')->with('galat', 'Pilih minimal dua rencana mingguan yang sudah punya target untuk digabungkan.');
+        }
+        $qtyPost = (array) $this->request->getPost('qty');
+        $baris = [];
+        foreach ($qtyPost as $bahanId => $perGedung) {
+            foreach ((array) $perGedung as $gedungId => $q) {
+                $qty = (float) str_replace(',', '.', (string) $q);
+                if ($qty <= 0) {
+                    continue;
+                }
+                $b = $db->table('bahan')->where(['id' => (int) $bahanId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+                $g = $this->ambilGedung((int) $gedungId);
+                if ($b !== null && $g !== null) {
+                    $baris[] = ['bahan' => $b, 'gedung_id' => (int) $gedungId, 'qty' => $qty, 'harga' => $this->hargaAcuan((int) $bahanId)];
+                }
+            }
+        }
+        if ($baris === []) {
+            return redirect()->to('rencana-mingguan/gabung')->with('galat', 'Tidak ada baris dengan jumlah beli lebih dari 0.');
+        }
+        $gedungIds = array_values(array_unique(array_column($baris, 'gedung_id')));
+        $namaGedung = [];
+        $minggu = [];
+        foreach ($rencanaList as $r) {
+            $namaGedung[(int) $r['gedung_id']] = (string) $r['gedung_nama'];
+            $minggu[] = date('d/m/Y', strtotime($r['minggu_mulai']));
+        }
+        $row = $db->query('SELECT MAX(nomor) m FROM spk WHERE sekolah_id = ?', [$this->sid()])->getRow();
+        $nomor = ((int) ($row->m ?? 0)) + 1;
+        $db->transStart();
+        $db->table('spk')->insert([
+            'sekolah_id' => $this->sid(), 'nomor' => $nomor, 'tanggal' => date('Y-m-d'),
+            'gedung_id' => count($gedungIds) === 1 ? $gedungIds[0] : null,
+            'paket' => 'Gabungan rencana mingguan ' . implode(', ', array_unique($minggu)) . ' — ' . implode(', ', array_map(static fn ($gid) => $namaGedung[$gid] ?? '', $gedungIds)),
+            'status' => 'Aktif', 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+        $spkId = (int) $db->insertID();
+        foreach ($baris as $b) {
+            $db->table('spk_detail')->insert([
+                'spk_id' => $spkId, 'bahan_id' => (int) $b['bahan']['id'], 'sekolah_id' => $this->sid(),
+                'gedung_id' => $b['gedung_id'],
+                'qty' => $b['qty'], 'harga' => $b['harga'],
+                'keterangan' => 'Untuk ' . ($namaGedung[$b['gedung_id']] ?? ''),
+                'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+        $db->transComplete();
+        $this->catatAudit('spk', $spkId, 'buat_gabungan', 'SPK ' . $nomor . ' gabungan dari ' . count($rencanaList) . ' rencana mingguan (' . count($baris) . ' baris rincian, ' . count($gedungIds) . ' gedung).');
+        return redirect()->to('/spk/detail/' . $spkId)->with('sukses', 'SPK ' . $nomor . ' gabungan dibuat dari ' . count($rencanaList) . ' rencana mingguan (' . count($baris) . ' baris rincian untuk ' . count($gedungIds) . ' gedung). Lengkapi penyedia & tanggalnya bila perlu.');
     }
 }

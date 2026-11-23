@@ -304,6 +304,7 @@ class Rencana extends BaseController
         foreach ($baris as $b) {
             $db->table('spk_detail')->insert([
                 'spk_id' => $spkId, 'bahan_id' => (int) $b['bahan']['id'], 'sekolah_id' => $this->sid(),
+                'gedung_id' => $gedungId,
                 'qty' => $b['qty'], 'harga' => $b['harga'],
                 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
             ]);

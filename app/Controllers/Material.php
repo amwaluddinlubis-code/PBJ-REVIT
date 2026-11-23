@@ -8,8 +8,9 @@ class Material extends BaseController
     {
         $db = $this->db();
         $baris = $db->query(
-            'SELECT m.*, b.kode, b.nama, b.satuan FROM buku_material m
-             JOIN bahan b ON b.id = m.bahan_id WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0 ORDER BY m.tanggal IS NULL, m.tanggal, m.id',
+            'SELECT m.*, b.kode, b.nama, b.satuan, g.nama AS gedung_nama FROM buku_material m
+             JOIN bahan b ON b.id = m.bahan_id LEFT JOIN gedung g ON g.id = m.gedung_id
+             WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0 ORDER BY m.tanggal IS NULL, m.tanggal, m.id',
             [$this->sid()]
         )->getResultArray();
         // Saldo berjalan per bahan
@@ -18,18 +19,34 @@ class Material extends BaseController
             $saldo[$r['bahan_id']] = ($saldo[$r['bahan_id']] ?? 0) + (float) $r['masuk'] - (float) $r['keluar'];
             $r['sisa'] = $saldo[$r['bahan_id']];
         }
+        unset($r);
+        // Rekap keluar/masuk per gedung (hanya baris yang gedungnya terisi)
+        $rekapGedung = $db->query(
+            'SELECT g.nama AS gedung_nama, b.kode, b.nama, b.satuan,
+                    SUM(m.masuk) AS masuk, SUM(m.keluar) AS keluar, SUM(m.masuk - m.keluar) AS saldo
+             FROM buku_material m JOIN bahan b ON b.id = m.bahan_id JOIN gedung g ON g.id = m.gedung_id
+             WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0
+             GROUP BY g.nama, b.kode, b.nama, b.satuan ORDER BY g.nama, b.kode',
+            [$this->sid()]
+        )->getResultArray();
         $bahan = $db->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('kode')->get()->getResultArray();
-        return $this->tampil('material/index', ['baris' => $baris, 'bahan' => $bahan], 'Buku Material — Aplikasi PBJ Sekolah');
+        $gedung = $db->table('gedung')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray();
+        return $this->tampil('material/index', ['baris' => $baris, 'bahan' => $bahan, 'gedung' => $gedung, 'rekap_gedung' => $rekapGedung], 'Buku Material — Aplikasi PBJ Sekolah');
     }
 
     public function simpan()
     {
+        $gedungId = (int) $this->request->getPost('gedung_id') ?: null;
+        if ($gedungId !== null && $this->ambilGedung($gedungId) === null) {
+            $gedungId = null;
+        }
         $this->db()->table('buku_material')->insert([
             'tanggal' => $this->request->getPost('tanggal') ?: null,
             'no_bpb' => trim((string) $this->request->getPost('no_bpb')) ?: null,
             'bahan_id' => (int) $this->request->getPost('bahan_id'),
-            'masuk' => (float) $this->request->getPost('masuk'),
-            'keluar' => (float) $this->request->getPost('keluar'),
+            'gedung_id' => $gedungId,
+            'masuk' => (float) str_replace(',', '.', (string) $this->request->getPost('masuk')),
+            'keluar' => (float) str_replace(',', '.', (string) $this->request->getPost('keluar')),
             'keterangan' => trim((string) $this->request->getPost('keterangan')) ?: null,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);

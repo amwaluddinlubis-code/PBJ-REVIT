@@ -19,6 +19,7 @@
 
 <div class="panel">
   <h2 style="margin-top:0">Daftar Rencana Mingguan</h2>
+  <p style="margin:0 0 10px"><a class="tombol kecil" href="<?= base_url('rencana-mingguan/gabung') ?>">Gabungkan Beberapa Rencana Jadi 1 SPK</a> <span class="kecil-teks">— belanja beberapa gedung disatukan dalam satu SPK, rincian tetap terpisah per gedung.</span></p>
   <?php if ($daftar === []): ?>
   <p class="kecil-teks">Belum ada rencana mingguan. Buat yang pertama lewat formulir di atas.</p>
   <?php else: ?>

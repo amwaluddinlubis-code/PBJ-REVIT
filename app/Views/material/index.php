@@ -8,6 +8,9 @@
     <label>Bahan
       <?= select_cari('bahan_id', array_map(static fn ($b) => ['value' => (int) $b['id'], 'label' => $b['kode'] . ' — ' . $b['nama']], $bahan), null, ['required' => true, 'placeholder' => '— pilih bahan —']) ?>
     </label>
+    <label>Gedung Tujuan
+      <?= select_cari('gedung_id', array_map(static fn ($g) => ['value' => (int) $g['id'], 'label' => $g['nama']], $gedung ?? []), null, ['placeholder' => '— gudang bersama / belum ditentukan —']) ?>
+    </label>
     <label>Masuk <input type="number" name="masuk" step="0.001" value="0"></label>
     <label>Keluar <input type="number" name="keluar" step="0.001" value="0"></label>
     <label>Keterangan <input name="keterangan"></label>
@@ -27,17 +30,35 @@
     </form>
   </div>
   <table data-paginasi="10" data-cari="Cari catatan material…">
-    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua baris" @change="pilihSemua($event)"></th><th>Tanggal</th><th>No. BPB</th><th>Bahan</th><th class="angka">Masuk</th><th class="angka">Keluar</th><th class="angka">Sisa Stok</th><th>Keterangan</th><th></th></tr>
+    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua baris" @change="pilihSemua($event)"></th><th>Tanggal</th><th>No. BPB</th><th>Bahan</th><th>Gedung</th><th class="angka">Masuk</th><th class="angka">Keluar</th><th class="angka">Sisa Stok</th><th>Keterangan</th><th></th></tr>
     <?php foreach ($baris as $r): ?>
     <tr>
       <td><input type="checkbox" data-pilih value="<?= (int) $r['id'] ?>" x-model="terpilih"></td>
       <td><?= esc(tgl($r['tanggal'] ?? null)) ?></td><td><?= esc($r['no_bpb'] ?? '') ?></td>
       <td><?= esc($r['kode']) ?> — <?= esc($r['nama']) ?> (<?= esc($r['satuan'] ?? '') ?>)</td>
+      <td><?= esc($r['gedung_nama'] ?? '—') ?></td>
       <td class="angka"><?= $fmt($r['masuk']) ?></td><td class="angka"><?= $fmt($r['keluar']) ?></td>
       <td class="angka"><?= $fmt($r['sisa']) ?></td><td><?= esc($r['keterangan'] ?? '') ?></td>
       <td><form class="inline" method="post" action="<?= base_url('material/hapus/' . $r['id']) ?>" data-konfirmasi="Hapus baris ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
     </tr>
     <?php endforeach; ?>
-    <?php if (! $baris): ?><tr><td colspan="9">Belum ada catatan — sama seperti di workbook, buku material baru berjalan bila mulai dicatat dari sini.</td></tr><?php endif; ?>
+    <?php if (! $baris): ?><tr><td colspan="10">Belum ada catatan — sama seperti di workbook, buku material baru berjalan bila mulai dicatat dari sini.</td></tr><?php endif; ?>
   </table>
 </div>
+<?php if (! empty($rekap_gedung)): ?>
+<div class="panel">
+  <h2>Rekap Keluar–Masuk per Gedung</h2>
+  <p class="kecil-teks">Hanya dari catatan yang gedung tujuannya diisi. Saldo utama di tabel atas tetap gabungan se-sekolah; rekap ini menunjukkan bagian tiap gedung — mis. bahan yang dibeli lewat satu SPK gabungan lalu dipakai masing-masing gedung.</p>
+  <table data-cari="Cari gedung / bahan…">
+    <tr><th>Gedung</th><th>Bahan</th><th class="angka">Masuk</th><th class="angka">Keluar</th><th class="angka">Saldo Gedung</th></tr>
+    <?php foreach ($rekap_gedung as $r): ?>
+    <tr>
+      <td><strong><?= esc($r['gedung_nama']) ?></strong></td>
+      <td><?= esc($r['kode']) ?> — <?= esc($r['nama']) ?> (<?= esc($r['satuan'] ?? '') ?>)</td>
+      <td class="angka"><?= $fmt($r['masuk']) ?></td><td class="angka"><?= $fmt($r['keluar']) ?></td>
+      <td class="angka"><?= $fmt($r['saldo']) ?></td>
+    </tr>
+    <?php endforeach; ?>
+  </table>
+</div>
+<?php endif; ?>

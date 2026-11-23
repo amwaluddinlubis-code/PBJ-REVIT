@@ -20,7 +20,10 @@
 <p>PIHAK KESATU memerintahkan PIHAK KEDUA untuk melaksanakan pekerjaan <strong><?= esc($s['paket'] ?? '') ?></strong> pada paket <?= esc($idn['paket_pekerjaan'] ?? '') ?> Tahun Anggaran <?= esc($idn['tahun_anggaran'] ?? '') ?>, dengan rincian:</p>
 <table class="baris">
   <tr><th>No</th><th>Nama Bahan</th><th class="angka">Qty</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah</th></tr>
-  <?php $no = 1; foreach ($detail as $d): ?>
+  <?php $no = 1; $multiGedung = count(array_unique(array_filter(array_map(static fn ($x) => $x['gedung_rincian'] ?? null, $detail)))) > 1; $gedungLalu = null; foreach ($detail as $d): ?>
+  <?php if ($multiGedung && ($d['gedung_rincian'] ?? null) !== $gedungLalu): $gedungLalu = $d['gedung_rincian'] ?? null; ?>
+  <tr><th colspan="6" style="text-align:left">Untuk Gedung: <?= esc($gedungLalu ?? '—') ?></th></tr>
+  <?php endif; ?>
   <tr><td><?= $no++ ?></td><td><?= esc($d['nama']) ?></td><td class="angka"><?= number_format((float) $d['qty'], 2, ',', '.') ?></td><td><?= esc($d['satuan'] ?? '') ?></td><td class="angka"><?= $rp($d['harga']) ?></td><td class="angka"><?= $rp($d['total']) ?></td></tr>
   <?php endforeach; ?>
   <tr><th colspan="5" style="text-align:right">Nilai Kontrak</th><th class="angka"><?= $rp($total) ?></th></tr>

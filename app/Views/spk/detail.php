@@ -20,11 +20,12 @@
 </div>
 <div class="panel">
 <table data-paginasi="10">
-  <tr><th>Kode</th><th>Nama Bahan</th><th class="angka">Qty</th><th>Satuan</th><th class="angka">Harga</th><th class="angka">Total</th><th class="angka">PPN</th><th>Ubah Qty/Harga</th><th></th></tr>
+  <tr><th>Kode</th><th>Nama Bahan</th><?php if (! empty($gabungan)): ?><th>Gedung Tujuan</th><?php endif; ?><th class="angka">Qty</th><th>Satuan</th><th class="angka">Harga</th><th class="angka">Total</th><th class="angka">PPN</th><th>Ubah Qty/Harga</th><th></th></tr>
   <?php $grand = 0; $grandPpn = 0; foreach ($detail as $d): $grand += (float) $d['total']; $grandPpn += (float) $d['ppn']; ?>
   <tr>
     <td><?= esc($d['kode']) ?></td>
     <td><?= esc($d['nama']) ?></td>
+    <?php if (! empty($gabungan)): ?><td><?= esc($d['gedung_rincian'] ?? '—') ?></td><?php endif; ?>
     <td class="angka"><?= number_format((float) $d['qty'], 2, ',', '.') ?></td>
     <td><?= esc($d['satuan'] ?? '') ?></td>
     <td class="angka"><?= $rp($d['harga']) ?></td>

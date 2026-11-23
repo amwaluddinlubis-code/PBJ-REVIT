@@ -129,11 +129,14 @@ class Spk extends BaseController
         $detail = $db->query(
             'SELECT d.*, COALESCE(b.kode, "") AS kode, COALESCE(b.nama, d.nama_manual) AS nama,
                     COALESCE(b.satuan, d.satuan_manual) AS satuan, d.qty*d.harga AS total,
-                    CASE WHEN d.pajak = 1 THEN ROUND(0.11 * d.qty * d.harga / 1.11) ELSE 0 END AS ppn
+                    CASE WHEN d.pajak = 1 THEN ROUND(0.11 * d.qty * d.harga / 1.11) ELSE 0 END AS ppn,
+                    gd.nama AS gedung_rincian
              FROM spk_detail d LEFT JOIN bahan b ON b.id = d.bahan_id
+             LEFT JOIN gedung gd ON gd.id = COALESCE(d.gedung_id, (SELECT s2.gedung_id FROM spk s2 WHERE s2.id = d.spk_id))
              WHERE d.spk_id = ? AND d.is_deleted = 0 ORDER BY d.id',
             [(int) $id]
         )->getResultArray();
+        $gabungan = count(array_unique(array_filter(array_map(static fn ($d) => $d['gedung_rincian'] ?? null, $detail)))) > 1;
         $bahan = $db->query('SELECT id, kode, nama, satuan, harga_rab FROM bahan WHERE sekolah_id = ? AND is_deleted = 0 ORDER BY kode', [$this->sid()])->getResultArray();
         foreach ($bahan as &$b) {
             $b['harga_acuan'] = $this->hargaAcuan((int) $b['id']);
@@ -189,7 +192,7 @@ class Spk extends BaseController
             // tabel spk_tenaga belum dimigrasi
         }
         return $this->tampil('spk/detail', [
-            's' => $s, 'detail' => $detail, 'bahan' => $bahan,
+            's' => $s, 'detail' => $detail, 'gabungan' => $gabungan, 'bahan' => $bahan,
             'nilai_paket' => $nilaiPaket,
             'ketentuan' => $this->ketentuanPbj($nilaiPaket),
             'pembanding' => $pembanding,

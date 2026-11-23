@@ -170,8 +170,11 @@ class Dokumen extends BaseController
             return redirect()->to('dokumen')->with('galat', 'SPK tidak ditemukan.');
         }
         $detail = $db->query(
-            'SELECT COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan, d.qty, d.harga, d.qty*d.harga AS total
-             FROM spk_detail d LEFT JOIN bahan b ON b.id = d.bahan_id WHERE d.spk_id = ? AND d.is_deleted = 0 ORDER BY d.id',
+            'SELECT COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan, d.qty, d.harga, d.qty*d.harga AS total,
+                    gd.nama AS gedung_rincian
+             FROM spk_detail d LEFT JOIN bahan b ON b.id = d.bahan_id
+             LEFT JOIN gedung gd ON gd.id = COALESCE(d.gedung_id, (SELECT s2.gedung_id FROM spk s2 WHERE s2.id = d.spk_id))
+             WHERE d.spk_id = ? AND d.is_deleted = 0 ORDER BY COALESCE(d.gedung_id, (SELECT s2.gedung_id FROM spk s2 WHERE s2.id = d.spk_id)), d.id',
             [(int) $spkId]
         )->getResultArray();
         $total = array_sum(array_column($detail, 'total'));
