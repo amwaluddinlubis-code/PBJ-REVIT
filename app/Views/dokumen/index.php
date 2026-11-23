@@ -36,8 +36,6 @@ $tutupModal = static fn (string $id) => "document.getElementById('{$id}').hidden
         <?php endforeach; ?>
         <?php if ((int) $s['jumlah_terbap'] < (int) $s['jumlah_detail']): ?>
           <form class="inline" method="post" action="<?= base_url('dokumen/bap-buat/' . $s['id']) ?>"><?= csrf_field() ?><button class="kecil" type="submit">+ Buat BAP</button></form>
-        <?php else: ?>
-          <span class="kecil-teks">Semua rincian sudah ter-BAP (<?= (int) $s['jumlah_terbap'] ?>/<?= (int) $s['jumlah_detail'] ?>)</span>
         <?php endif; ?>
       </td>
       <td><a class="tombol-cetak tc-spk" href="<?= base_url('dokumen/cetak-spk/' . $s['id']) ?>" target="_blank" title="Cetak SPK"><?= $ikonCetak ?></a></td>
