@@ -19,7 +19,14 @@ class Invoice extends BaseController
              LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.sekolah_id = ? AND i.is_deleted = 0 ORDER BY i.nomor_urut',
             [$this->sid()]
         )->getResultArray();
-        return $this->tampil('invoice/index', ['inv' => $inv], 'Register Invoice — Aplikasi PBJ Sekolah');
+        // Data untuk modal form invoice (baru & ubah) di halaman register —
+        // daftar SPK/BAP/BAST + nomor urut berikutnya, sama seperti baru().
+        $row = $this->db()->query('SELECT MAX(nomor_urut) m FROM invoice')->getRow();
+        return $this->tampil('invoice/index', [
+            'inv'        => $inv,
+            'spk'        => $this->daftarSpk(),
+            'nomor_baru' => ((int) $row->m) + 1,
+        ], 'Register Invoice — Aplikasi PBJ Sekolah');
     }
 
     public function baru()

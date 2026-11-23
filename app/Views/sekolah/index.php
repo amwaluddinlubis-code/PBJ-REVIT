@@ -1,4 +1,4 @@
-<div class="aksi md:col-span-2" style="margin:0 0 12px"><a class="tombol" href="<?= base_url('sekolah/baru') ?>">+ Tambah Sekolah</a></div>
+<div class="aksi md:col-span-2" style="margin:0 0 12px"><button type="button" class="tombol" onclick="bukaSekolahBaru()">+ Tambah Sekolah</button></div>
 <div class="panel">
   <p>Setiap sekolah mempunyai data sendiri yang terpisah penuh: bahan/RAB, penyedia, SPK, survei, invoice, dan buku material. Yang tampil di seluruh aplikasi adalah <strong>sekolah aktif</strong> — ganti lewat daftar ini atau pengalih di menu samping.</p>
   <table data-paginasi="10" data-cari="Cari sekolah…">
@@ -20,3 +20,4 @@
     <?php endforeach; ?>
   </table>
 </div>
+<?= $this->include('sekolah/_modal_form') ?>

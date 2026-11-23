@@ -14,7 +14,14 @@ class Spk extends BaseController
              GROUP BY s.id ORDER BY s.nomor',
             [$this->sid()]
         )->getResultArray();
-        return $this->tampil('spk/index', ['spk' => $spk], 'Register SPK — Aplikasi PBJ Sekolah');
+        // Data untuk modal form SPK (baru & ubah) di halaman register —
+        // daftar penyedia + nomor berikutnya, sama seperti Spk::baru().
+        $this->penyediaMasyarakatId();
+        return $this->tampil('spk/index', [
+            'spk'         => $spk,
+            'penyedia'    => $this->db()->table('penyedia')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray(),
+            'nomor_baru'  => $this->nomorSpkBerikutnya(),
+        ], 'Register SPK — Aplikasi PBJ Sekolah');
     }
 
     public function baru()

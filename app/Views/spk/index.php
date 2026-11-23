@@ -1,4 +1,4 @@
-<div class="aksi md:col-span-2" style="margin:0 0 12px"><a class="tombol" href="<?= base_url('spk/baru') ?>">+ SPK Baru</a></div>
+<div class="aksi md:col-span-2" style="margin:0 0 12px"><button type="button" class="tombol" onclick="bukaSpkBaru()">+ SPK Baru</button></div>
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-spk','ids-spk')">
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
     <form id="form-bulk-spk" method="post" action="<?= base_url('spk/hapus-massal') ?>" data-konfirmasi-judul="Hapus SPK Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
@@ -24,8 +24,9 @@
     <td class="angka"><?= (int) $s['jumlah'] ?></td>
     <td class="angka"><?= rp($s['nilai']) ?></td>
     <td><?= esc($s['status']) ?></td>
-    <td><a class="tombol kecil abu" href="<?= base_url('spk/ubah/' . $s['id']) ?>">Ubah</a> <a class="tombol kecil" href="<?= base_url('spk/detail/' . $s['id']) ?>">Detail</a></td>
+    <td><button type="button" class="tombol kecil abu" onclick="bukaSpkUbah(<?= (int) $s['id'] ?>)">Ubah</button> <a class="tombol kecil" href="<?= base_url('spk/detail/' . $s['id']) ?>">Detail</a></td>
   </tr>
   <?php endforeach; ?>
 </table>
 </div>
+<?= $this->include('spk/_modal_form') ?>
