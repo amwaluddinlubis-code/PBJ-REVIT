@@ -202,9 +202,15 @@ if (! function_exists('form_modal')) {
      * modal form pola .mk-lapik/.mk-kartu dari konfigurasi saja — modul
      * tidak lagi menulis markup + skrip modalnya sendiri. Perilaku
      * (buka/isi/tutup, kirim AJAX berbalasan JSON {ok, pesan}, hapus
-     * lewat modal konfirmasi standar) ada di public/assets/form-modal.js:
-     * bukaFormModal(id) untuk Tambah, bukaFormModal(id, data) untuk Ubah
-     * (data = nilai field menurut nama, termasuk 'id').
+     * lewat modal konfirmasi standar, validasi wajib via tooltip) ada
+     * di public/assets/form-modal.js: bukaFormModal(id) untuk Tambah,
+     * bukaFormModal(id, data) untuk Ubah (data = nilai field menurut
+     * nama, termasuk 'id').
+     *
+     * Tampilan (koreksi AMWAL 25 Nov 2026): judul RATA KIRI pada pita
+     * kepala yang sedikit lebih gelap, kaki tombol juga sedikit lebih
+     * gelap, dan LABEL FIELD DUDUK DI BORDER isian (gaya label-on-border)
+     * dengan tanda * merah untuk field wajib.
      *
      * Konfig:
      * - 'id' (wajib), 'aksi' (URL simpan, wajib)
@@ -233,56 +239,61 @@ if (! function_exists('form_modal')) {
             . ' data-judul-tambah="' . esc($judul, 'attr') . '" data-judul-ubah="' . esc($judulUbah, 'attr') . '"'
             . (! empty($konfig['aksi_hapus']) ? ' data-aksi-hapus="' . esc((string) $konfig['aksi_hapus'], 'attr') . '"' : '')
             . (! empty($konfig['konfirmasi_hapus']) ? ' data-konfirmasi-hapus="' . esc((string) $konfig['konfirmasi_hapus'], 'attr') . '"' : '')
-            . '><div class="mk-kartu" role="dialog" aria-modal="true" style="max-width:' . $lebar . 'px;width:94vw">'
-            . '<h3 data-fm-judul style="margin-top:0">' . esc($judul) . '</h3>'
-            . '<div class="galat" data-fm-galat hidden style="margin-bottom:10px"></div>'
-            . '<form data-fm-form method="post" action="' . esc((string) ($konfig['aksi'] ?? ''), 'attr') . '">'
+            . '><div class="mk-kartu fm-kartu" role="dialog" aria-modal="true" style="max-width:' . $lebar . 'px;width:94vw">'
+            . '<div class="fm-kepala"><h3 data-fm-judul>' . esc($judul) . '</h3></div>'
+            . '<form data-fm-form method="post" novalidate action="' . esc((string) ($konfig['aksi'] ?? ''), 'attr') . '">'
             . csrf_field()
             . '<input type="hidden" name="id" value="">'
-            . '<div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">';
+            . '<div class="fm-isi">'
+            . '<div class="galat" data-fm-galat hidden style="margin-bottom:12px"></div>'
+            . '<div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">';
         foreach ($konfig['kolom'] ?? [] as $f) {
             $nama = (string) ($f['nama'] ?? '');
             $jenis = (string) ($f['jenis'] ?? 'teks');
+            $label = (string) ($f['label'] ?? $nama);
+            $idField = $id . '-' . $nama;
             $wajib = ! empty($f['wajib']) ? ' required' : '';
             $ph = isset($f['placeholder']) ? ' placeholder="' . esc((string) $f['placeholder'], 'attr') . '"' : '';
-            $h .= '<label' . (! empty($f['penuh']) ? ' class="md:col-span-2"' : '') . '>' . esc((string) ($f['label'] ?? $nama));
+            $h .= '<div class="fm-field' . (! empty($f['penuh']) ? ' md:col-span-2' : '') . '"><div class="fm-kotak-field">';
             if ($jenis === 'pilihan') {
-                $h .= '<select data-select-cari name="' . esc($nama, 'attr') . '"' . $wajib . '>';
-                foreach ($f['opsi'] ?? [] as $nilai => $label) {
-                    $h .= '<option value="' . esc((string) $nilai, 'attr') . '">' . esc((string) $label) . '</option>';
+                $h .= '<select data-select-cari id="' . esc($idField, 'attr') . '" name="' . esc($nama, 'attr') . '" data-label="' . esc($label, 'attr') . '"' . $wajib . '>';
+                foreach ($f['opsi'] ?? [] as $nilai => $labelOpsi) {
+                    $h .= '<option value="' . esc((string) $nilai, 'attr') . '">' . esc((string) $labelOpsi) . '</option>';
                 }
                 $h .= '</select>';
             } elseif ($jenis === 'area') {
-                $h .= '<textarea name="' . esc($nama, 'attr') . '" rows="' . (int) ($f['baris'] ?? 3) . '"' . $wajib . $ph . '></textarea>';
+                $h .= '<textarea id="' . esc($idField, 'attr') . '" name="' . esc($nama, 'attr') . '" data-label="' . esc($label, 'attr') . '" rows="' . (int) ($f['baris'] ?? 3) . '"' . $wajib . $ph . '></textarea>';
             } else {
-                $h .= '<input type="' . ($jenis === 'tanggal' ? 'date' : 'text') . '" name="' . esc($nama, 'attr') . '"' . $wajib . $ph;
+                $h .= '<input type="' . ($jenis === 'tanggal' ? 'date' : 'text') . '" id="' . esc($idField, 'attr') . '" name="' . esc($nama, 'attr') . '" data-label="' . esc($label, 'attr') . '"' . $wajib . $ph;
                 if ($jenis === 'uang') {
                     $h .= ' data-uang inputmode="numeric"';
                 } elseif ($jenis === 'angka') {
                     $h .= ' inputmode="decimal"';
                 }
                 if (! empty($f['saran'])) {
-                    $h .= ' list="' . esc($id . '-' . $nama . '-saran', 'attr') . '"';
+                    $h .= ' list="' . esc($idField . '-saran', 'attr') . '"';
                 }
                 $h .= '>';
                 if (! empty($f['saran'])) {
-                    $h .= '<datalist id="' . esc($id . '-' . $nama . '-saran', 'attr') . '">';
+                    $h .= '<datalist id="' . esc($idField . '-saran', 'attr') . '">';
                     foreach ($f['saran'] as $s) {
                         $h .= '<option value="' . esc((string) $s, 'attr') . '">';
                     }
                     $h .= '</datalist>';
                 }
             }
+            $h .= '<label class="fm-label" for="' . esc($idField, 'attr') . '">' . esc($label)
+                . (! empty($f['wajib']) ? ' <span class="fm-wajib" aria-hidden="true">*</span>' : '') . '</label></div>';
             if (! empty($f['petunjuk'])) {
-                $h .= '<span class="kecil-teks" style="display:block;margin-top:2px">' . esc((string) $f['petunjuk']) . '</span>';
+                $h .= '<span class="kecil-teks" style="display:block;margin-top:3px">' . esc((string) $f['petunjuk']) . '</span>';
             }
-            $h .= '</label>';
+            $h .= '</div>';
         }
         $h .= '</div>';
         if (! empty($konfig['catatan'])) {
-            $h .= '<p class="kecil-teks" style="margin:12px 0 0">' . esc((string) $konfig['catatan']) . '</p>';
+            $h .= '<p class="kecil-teks" style="margin:12px 0 2px">' . esc((string) $konfig['catatan']) . '</p>';
         }
-        $h .= '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">';
+        $h .= '</div><div class="fm-kaki">';
         if ($tombol['hapus'] && ! empty($konfig['aksi_hapus'])) {
             $h .= '<button type="button" class="tombol bahaya" data-fm-hapus hidden style="margin-right:auto">' . esc((string) ($tombol['hapus_teks'] ?? 'Hapus')) . '</button>';
         }

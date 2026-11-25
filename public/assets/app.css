@@ -3915,3 +3915,25 @@ table.tabel-acuan th.angka, table.tabel-acuan td.angka { white-space: nowrap; }
 .tc-bap { background: #2563eb; }
 .tc-bast { background: #059669; }
 .tc-spk { background: #7c3aed; }
+
+/* ===== Form modal helper (form_modal()) — koreksi AMWAL 25 Nov 2026 =====
+   Judul rata kiri di pita kepala yang sedikit lebih gelap; kaki tombol
+   juga sedikit lebih gelap; label field duduk DI BORDER isian
+   (label-on-border); validasi wajib tampil sebagai tooltip merah. */
+.fm-kartu { padding: 0; overflow: hidden; --fm-latar: #fff; }
+html.gelap .fm-kartu { --fm-latar: #1c2534; }
+.fm-kepala { padding: 13px 20px; background: rgba(16, 24, 40, .055); border-bottom: 1px solid var(--ta-garis); }
+html.gelap .fm-kepala { background: rgba(255, 255, 255, .07); }
+.fm-kepala h3 { margin: 0; text-align: left; }
+.fm-isi { padding: 20px 20px 8px; }
+.fm-kaki { display: flex; gap: 8px; justify-content: flex-end; align-items: center; padding: 12px 20px; margin-top: 10px; background: rgba(16, 24, 40, .055); border-top: 1px solid var(--ta-garis); }
+html.gelap .fm-kaki { background: rgba(255, 255, 255, .07); }
+.fm-kotak-field { position: relative; }
+.fm-kotak-field input, .fm-kotak-field select, .fm-kotak-field textarea { width: 100%; }
+.fm-label { position: absolute; top: 0; left: 10px; transform: translateY(-50%); background: var(--fm-latar); padding: 0 5px; font-size: 11px; font-weight: 600; line-height: 1.4; color: var(--ta-teks-2); pointer-events: none; z-index: 2; white-space: nowrap; }
+.fm-kotak-field:focus-within .fm-label { color: var(--ta-biru); }
+.fm-wajib { color: #d92d20; }
+.fm-salah { border-color: #d92d20 !important; box-shadow: 0 0 0 3px rgba(217, 45, 32, .15); }
+.fm-tooltip { position: fixed; z-index: 500; max-width: 260px; background: #b42318; color: #fff; font-size: 11.5px; font-weight: 600; line-height: 1.35; padding: 6px 10px; border-radius: 8px; box-shadow: 0 8px 24px rgba(16, 24, 40, .25); pointer-events: none; }
+.fm-tooltip::after { content: ''; position: absolute; left: 16px; bottom: -5px; border: 5px solid transparent; border-top-color: #b42318; border-bottom: 0; }
+.fm-tooltip.bawah::after { bottom: auto; top: -5px; border-top: 0; border-bottom: 5px solid #b42318; }

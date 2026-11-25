@@ -6,6 +6,28 @@
 // ulang. Hapus berjalan lewat form data-konfirmasi standar aplikasi
 // (modal konfirmasi #mk-ya), bukan modal baru.
 (function () {
+  var tooltipEl = null;
+  var tooltipTimer = null;
+  function sembunyiTooltip() {
+    if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
+    if (tooltipTimer) { clearTimeout(tooltipTimer); tooltipTimer = null; }
+  }
+  function tampilTooltip(inp) {
+    sembunyiTooltip();
+    var kotak = inp.closest('.fm-kotak-field') || inp;
+    var r = kotak.getBoundingClientRect();
+    tooltipEl = document.createElement('div');
+    tooltipEl.className = 'fm-tooltip';
+    tooltipEl.textContent = (inp.dataset.label || 'Kolom ini') + ' wajib diisi.';
+    document.body.appendChild(tooltipEl);
+    var tinggi = tooltipEl.offsetHeight;
+    var diBawah = r.top < tinggi + 56;
+    tooltipEl.classList.toggle('bawah', diBawah);
+    tooltipEl.style.left = Math.max(8, r.left + 4) + 'px';
+    tooltipEl.style.top = (diBawah ? r.bottom + 8 : r.top - tinggi - 8) + 'px';
+    tooltipTimer = setTimeout(sembunyiTooltip, 4000);
+  }
+
   window.tutupFormModal = function (id) {
     var el = document.getElementById(id);
     if (el) el.hidden = true;
@@ -20,6 +42,8 @@
     var btnSimpan = el.querySelector('[data-fm-simpan]');
     var btnHapus = el.querySelector('[data-fm-hapus]');
     form.reset();
+    form.querySelectorAll('.fm-salah').forEach(function (el) { el.classList.remove('fm-salah'); });
+    sembunyiTooltip();
     if (galat) { galat.hidden = true; galat.textContent = ''; }
     var ubah = !!(data && data.id);
     if (data) {
@@ -73,6 +97,14 @@
     }
   });
 
+  document.addEventListener('input', function (e) {
+    var inp = e.target;
+    if (inp.classList && inp.classList.contains('fm-salah') && String(inp.value || '').trim()) {
+      inp.classList.remove('fm-salah');
+      sembunyiTooltip();
+    }
+  });
+
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     document.querySelectorAll('[data-form-modal]:not([hidden])').forEach(function (el) { el.hidden = true; });
@@ -84,6 +116,20 @@
     e.preventDefault();
     var el = form.closest('[data-form-modal]');
     var galat = el.querySelector('[data-fm-galat]');
+    // Validasi wajib via tooltip (form bernovalidate; gelembung bawaan
+    // peramban tidak dipakai).
+    var tidakValid = null;
+    form.querySelectorAll('[required]').forEach(function (inp) {
+      var kosong = !String(inp.value || '').trim();
+      inp.classList.toggle('fm-salah', kosong);
+      if (kosong && !tidakValid) tidakValid = inp;
+    });
+    if (tidakValid) {
+      tampilTooltip(tidakValid);
+      tidakValid.focus();
+      return;
+    }
+    sembunyiTooltip();
     form.querySelectorAll('input[data-uang]').forEach(function (inp) {
       inp.value = String(inp.value).replace(/[^0-9]/g, '');
     });
