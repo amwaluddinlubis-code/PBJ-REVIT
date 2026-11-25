@@ -25,12 +25,24 @@
 </div>
 <div class="panel">
   <h2>Kebutuhan Bahan per Gedung</h2>
-  <p class="kecil-teks">Kebutuhan dihitung dari BOQ tiap gedung (volume × koefisien analisa). Bandingkan dengan yang sudah keluar ke gedung itu sebelum mencatat. Baris merah = keluar ke gedung itu sudah melebihi kebutuhannya (atau bahan itu bukan kebutuhan gedung tersebut).</p>
+  <p class="kecil-teks">Kebutuhan dihitung dari BOQ tiap gedung (volume × koefisien analisa). Bandingkan dengan yang sudah keluar ke gedung itu sebelum mencatat. Baris merah = keluar ke gedung itu sudah melebihi kebutuhannya (atau bahan itu bukan kebutuhan gedung tersebut). Gedung diurutkan dari persentase sisa kebutuhan terbesar — yang paling belum terpenuhi tampil lebih dulu.</p>
+  <?php if (! empty($semua_kebutuhan_gedung)): ?>
+  <form method="get" action="<?= base_url('material') ?>" style="margin:0 0 10px">
+    <label>Saring gedung
+      <select name="f_gedung" onchange="this.form.submit()">
+        <option value="0"<?= ($f_gedung ?? 0) === 0 ? ' selected' : '' ?>>— semua gedung —</option>
+        <?php foreach ($semua_kebutuhan_gedung as $kg): ?>
+        <option value="<?= (int) $kg['gedung']['id'] ?>"<?= ($f_gedung ?? 0) === (int) $kg['gedung']['id'] ? ' selected' : '' ?>><?= esc($kg['gedung']['nama']) ?></option>
+        <?php endforeach; ?>
+      </select>
+    </label>
+  </form>
+  <?php endif; ?>
   <?php if (! empty($kebutuhan_gedung)): ?>
   <table data-cari="Cari gedung / bahan…">
     <tr><th>Bahan</th><th class="angka">Kebutuhan</th><th class="angka">Sudah Keluar</th><th class="angka">Sisa Kebutuhan</th></tr>
     <?php foreach ($kebutuhan_gedung as $kg): ?>
-    <tr class="baris-grup"><td colspan="4"><strong><?= esc($kg['gedung']['nama']) ?></strong></td></tr>
+    <tr class="baris-grup"><td colspan="4"><strong><?= esc($kg['gedung']['nama']) ?></strong><?php if (($kg['persen_sisa'] ?? -1) >= 0): ?> <span class="kecil-teks">· sisa kebutuhan <?= number_format((float) $kg['persen_sisa'], 1, ',', '.') ?>%</span><?php endif; ?></td></tr>
     <?php foreach ($kg['baris'] as $r): ?>
     <tr<?= $r['sisa'] < -0.0005 ? ' class="negatif"' : '' ?>>
       <td><?= esc($r['kode']) ?> — <?= esc($r['nama']) ?> (<?= esc($r['satuan'] ?? '') ?>)</td>

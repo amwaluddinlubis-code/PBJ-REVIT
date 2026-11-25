@@ -82,14 +82,33 @@ class Material extends BaseController
                 }
             }
             if ($barisButuh) {
-                $kebutuhanGedung[] = ['gedung' => $g, 'baris' => $barisButuh];
+                $totButuh = 0.0;
+                $totSisa = 0.0;
+                foreach ($barisButuh as $r) {
+                    $totButuh += $r['butuh'];
+                    $totSisa += $r['sisa'];
+                }
+                // Persentase sisa kebutuhan gedung ini — dasar urutan
+                // panel (sisa terbesar lebih dulu) dan label pada grup.
+                $persen = $totButuh > 0 ? $totSisa / $totButuh * 100 : -1.0;
+                $kebutuhanGedung[] = ['gedung' => $g, 'baris' => $barisButuh, 'persen_sisa' => $persen];
                 foreach ($barisButuh as $r) {
                     $petaInfo[$gid][$r['bahan_id']] = ['butuh' => $r['butuh'], 'keluar' => $r['keluar'], 'sisa' => $r['sisa'], 'satuan' => (string) ($r['satuan'] ?? '')];
                 }
             }
         }
+        // Urutan panel: gedung dengan persentase sisa kebutuhan TERBESAR
+        // lebih dulu (yang paling belum terpenuhi pekerjaannya).
+        usort($kebutuhanGedung, static fn ($a, $b) => $b['persen_sisa'] <=> $a['persen_sisa']);
+        // Saringan panel kebutuhan per gedung (GET f_gedung); peta petunjuk
+        // form catat tetap memakai daftar lengkap.
+        $fGedung = (int) ($this->request->getGet('f_gedung') ?? 0);
+        $kebutuhanTampil = $fGedung > 0
+            ? array_values(array_filter($kebutuhanGedung, static fn ($kg) => (int) $kg['gedung']['id'] === $fGedung))
+            : $kebutuhanGedung;
         return $this->tampil('material/index', ['baris' => $baris, 'bahan' => $bahan, 'gedung' => $gedung, 'rekap_gedung' => $rekapGedung,
-            'bahan_pilih' => $bahanPilih, 'kebutuhan_gedung' => $kebutuhanGedung, 'peta_info' => $petaInfo], 'Buku Material — Aplikasi PBJ Sekolah');
+            'bahan_pilih' => $bahanPilih, 'kebutuhan_gedung' => $kebutuhanTampil, 'semua_kebutuhan_gedung' => $kebutuhanGedung,
+            'f_gedung' => $fGedung, 'peta_info' => $petaInfo], 'Buku Material — Aplikasi PBJ Sekolah');
     }
 
     /**
