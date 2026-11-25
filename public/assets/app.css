@@ -3886,10 +3886,14 @@ html:not(.gelap) body:not(.login) .isi .kecil-teks { color: #5b6b82; }
    jadi pemadatan padding saja tidak menurunkannya. */
 body:not(.login) .dashboard-hero { min-height: 118px; }
 
-/* Tabel Acuan AHSP: lebar pas wadah/layar, teks membungkus (tidak melebar) */
+/* Tabel Acuan AHSP: lebar pas wadah/layar, teks membungkus (tidak melebar).
+   Selektor WAJIB berbentuk table.tabel-acuan: tabelnya juga memakai kelas
+   satu-baris (white-space: nowrap) dan aturan ini harus MENANG atasnya —
+   spesifisitas setara + urutan sesudahnya. Bila selektor disederhanakan,
+   nama panjang kembali meluber menimpa kolom berikutnya. */
 .tabel-acuan { table-layout: fixed; width: 100%; }
-.tabel-acuan th, .tabel-acuan td { white-space: normal; overflow-wrap: break-word; }
-.tabel-acuan th.angka, .tabel-acuan td.angka { white-space: nowrap; }
+table.tabel-acuan th, table.tabel-acuan td { white-space: normal; overflow-wrap: break-word; }
+table.tabel-acuan th.angka, table.tabel-acuan td.angka { white-space: nowrap; }
 
 /* Tombol cetak ikon (XS) per jenis dokumen di halaman BAP & BAST. */
 .tombol-cetak {
