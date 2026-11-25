@@ -1,25 +1,19 @@
-<?php /* Partial analisa/detail: modal Ubah Komponen. */ ?><div class="mk-lapik" id="modal-ubah-komp" hidden>
-  <div class="mk-kartu" role="dialog" aria-modal="true" aria-labelledby="judul-ubah-komp" style="max-width:440px;text-align:left">
-    <h3 id="judul-ubah-komp" style="text-align:left">Ubah Komponen</h3>
-    <p class="kecil-teks" style="text-align:left"><span id="fu-jenis"></span> · <strong id="fu-nama"></strong></p>
-    <form id="form-ubah-komp" method="post" action="<?= base_url('analisa/' . $a['id'] . '/komponen-ubah') ?>">
-      <?= csrf_field() ?>
-      <input type="hidden" name="komponen_id" id="fu-id">
-      <label style="display:block;text-align:left;margin-bottom:8px">Koefisien
-        <input type="text" name="koefisien" id="fu-koef" style="width:100%">
-      </label>
-      <label style="display:block;text-align:left;margin-bottom:8px">Satuan
-        <input type="text" name="satuan" id="fu-satuan" style="width:100%">
-      </label>
-      <label style="display:block;text-align:left;margin-bottom:8px">Tarif (Rp)
-        <input type="text" inputmode="numeric" data-uang name="tarif" id="fu-tarif" style="width:100%">
-      </label>
-      <p class="kecil-teks" style="text-align:left">Nilai per satuan analisa: <strong id="nilai-ubah">Rp 0</strong> <span style="opacity:.75">(terhitung langsung saat mengetik)</span></p>
-      <p class="kecil-teks" id="fu-acuan" style="text-align:left" hidden>Koefisien acuan AHSP Nasional untuk komponen ini: <strong id="fu-koef-acuan"></strong> — samakan bila memang ingin mengikuti acuan.</p>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-        <button type="button" class="tombol abu" data-tutup-modal>Batal</button>
-        <button type="submit" class="tombol">Simpan Komponen</button>
-      </div>
-    </form>
-  </div>
-</div>
+<?php /* Partial analisa/detail: modal Ubah Komponen — dirender helper form_modal() (Hapus komponen ada di modal ini); keterangan baris + pratinjau di _skrip (jembatan). */ ?>
+<?= form_modal([
+    'id' => 'modal-ubah-komp',
+    'judul' => 'Ubah Komponen',
+    'aksi' => base_url('analisa/' . $a['id'] . '/komponen-ubah'),
+    'aksi_hapus' => base_url('analisa/' . $a['id'] . '/komponen-hapus/__ID__'),
+    'konfirmasi_hapus' => 'Hapus komponen ini dari analisa?',
+    'lebar' => 440,
+    'tersembunyi' => ['komponen_id'],
+    'info_html' => '<p class="kecil-teks" style="margin:0 0 12px"><span id="fu-jenis"></span> · <strong id="fu-nama"></strong></p>',
+    'kolom' => [
+        ['nama' => 'koefisien', 'label' => 'Koefisien', 'penuh' => true],
+        ['nama' => 'satuan', 'label' => 'Satuan', 'penuh' => true],
+        ['nama' => 'tarif', 'label' => 'Tarif (Rp)', 'jenis' => 'uang', 'penuh' => true],
+    ],
+    'catatan_html' => '<p class="kecil-teks" style="margin:12px 0 0">Nilai per satuan analisa: <strong id="nilai-ubah">Rp 0</strong> <span style="opacity:.75">(terhitung langsung saat mengetik)</span></p><p class="kecil-teks" id="fu-acuan" style="margin:6px 0 0" hidden>Koefisien acuan AHSP Nasional untuk komponen ini: <strong id="fu-koef-acuan"></strong> — samakan bila memang ingin mengikuti acuan.</p>',
+    'segarkan' => ['#wadah-komponen', '#ringkas-analisa'],
+    'tombol' => ['simpan_teks' => 'Simpan Komponen'],
+]) ?>

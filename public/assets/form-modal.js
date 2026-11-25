@@ -148,7 +148,31 @@
       if (j && j.ok) {
         el.hidden = true;
         if (window.tampilToast && j.pesan) window.tampilToast(j.pesan, 'sukses');
-        setTimeout(function () { location.reload(); }, j.pesan ? 500 : 0);
+        var segar = el.dataset.fmSegar;
+        if (segar) {
+          // Segarkan sebagian: ganti isi elemen target dari muatan segar
+          // halaman ini, tanpa memuat ulang seluruh halaman.
+          fetch(location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.text(); })
+            .then(function (html) {
+              var doc = new DOMParser().parseFromString(html, 'text/html');
+              segar.split(',').forEach(function (pemilih) {
+                pemilih = pemilih.trim();
+                if (!pemilih) return;
+                var baru = doc.querySelector(pemilih);
+                var lama = document.querySelector(pemilih);
+                if (!baru || !lama) return;
+                var terbuka = lama.tagName === 'DETAILS' ? lama.open : null;
+                lama.innerHTML = baru.innerHTML;
+                if (terbuka !== null) lama.open = terbuka;
+                if (window.inisiasiPaginasi) window.inisiasiPaginasi(lama);
+                if (window.inisiasiUang) window.inisiasiUang(lama);
+              });
+            })
+            .catch(function () { location.reload(); });
+        } else {
+          setTimeout(function () { location.reload(); }, j.pesan ? 500 : 0);
+        }
       } else {
         if (window.inisiasiUang) window.inisiasiUang(form);
         if (galat) { galat.textContent = (j && j.pesan) || 'Gagal menyimpan.'; galat.hidden = false; }

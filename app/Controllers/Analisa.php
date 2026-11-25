@@ -286,7 +286,7 @@ class Analisa extends BaseController
             }
         }
         if ($nama === '') {
-            return redirect()->to('analisa/' . $a['id'])->with('galat', 'Nama komponen wajib diisi (atau pilih bahan dari master).');
+            return $this->balasKomponen(false, 'Nama komponen wajib diisi (atau pilih bahan dari master).');
         }
         $db->table('analisa_komponen')->insert([
             'analisa_id' => $a['id'], 'jenis' => $jenis, 'nama' => $nama, 'satuan' => $satuan ?: null,

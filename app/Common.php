@@ -121,6 +121,9 @@ if (! function_exists('sel_tabel_html')) {
         if (! empty($sel['gaya'])) {
             $atribut .= ' style="' . esc((string) $sel['gaya'], 'attr') . '"';
         }
+        if (! empty($sel['title'])) {
+            $atribut .= ' title="' . esc((string) $sel['title'], 'attr') . '"';
+        }
         return '<td' . $atribut . '>' . $isi . '</td>';
     }
 }
@@ -153,10 +156,10 @@ if (! function_exists('tabel_bantu')) {
         if (! empty($konfig['id'])) {
             $atribut .= ' id="' . esc((string) $konfig['id'], 'attr') . '"';
         }
-        if (! empty($konfig['cari'])) {
+        if (isset($konfig['cari']) && $konfig['cari'] !== false) {
             $atribut .= ' data-cari="' . esc((string) $konfig['cari'], 'attr') . '"';
         }
-        if (! empty($konfig['paginasi'])) {
+        if (isset($konfig['paginasi']) && $konfig['paginasi'] !== false) {
             $atribut .= ' data-paginasi="' . (int) $konfig['paginasi'] . '"';
         }
         if (! empty($konfig['class'])) {
@@ -171,6 +174,9 @@ if (! function_exists('tabel_bantu')) {
             }
             if (! empty($k['lebar'])) {
                 $ka .= ' style="width:' . esc((string) $k['lebar'], 'attr') . '"';
+            }
+            if (! empty($k['atribut'])) {
+                $ka .= ' ' . $k['atribut'];
             }
             $h .= '<th' . $ka . '>' . (isset($k['judul_html']) ? (string) $k['judul_html'] : esc((string) ($k['judul'] ?? ''))) . '</th>';
         }
@@ -226,6 +232,16 @@ if (! function_exists('form_modal')) {
      *   'simpan' => true, 'simpan_teks', 'simpan_teks_ubah', 'hapus_teks'];
      *   nonaktifkan dengan false. Hapus hanya tampil pada mode Ubah dan
      *   bila 'aksi_hapus' terisi.
+     * - 'tersembunyi': daftar nama input hidden tambahan (selain 'id')
+     *   yang ikut terisi oleh data bukaFormModal — mis. kunci ganda.
+     * - 'info_html': HTML mentah di puncak isi modal (mis. keterangan
+     *   baris yang sedang diubah); 'catatan_html': HTML mentah di bawah
+     *   field (mis. pratinjau hitungan langsung yang diperbarui skrip
+     *   modul). 'opsi' pilihan boleh berbentuk ['label' => ..., 'data'
+     *   => [kunci => nilai]] untuk atribut data-* pada <option>.
+     * - 'segarkan': daftar pemilih elemen (mis. ['#panel-x']) yang isi
+     *   HTML-nya diganti dari muatan segar halaman sesudah simpan
+     *   berhasil — TANPA memuat ulang seluruh halaman.
      * - 'catatan': teks kecil di bawah field; 'lebar': max-width (px, 640)
      */
     function form_modal(array $konfig): string
@@ -239,13 +255,16 @@ if (! function_exists('form_modal')) {
             . ' data-judul-tambah="' . esc($judul, 'attr') . '" data-judul-ubah="' . esc($judulUbah, 'attr') . '"'
             . (! empty($konfig['aksi_hapus']) ? ' data-aksi-hapus="' . esc((string) $konfig['aksi_hapus'], 'attr') . '"' : '')
             . (! empty($konfig['konfirmasi_hapus']) ? ' data-konfirmasi-hapus="' . esc((string) $konfig['konfirmasi_hapus'], 'attr') . '"' : '')
+            . (! empty($konfig['segarkan']) ? ' data-fm-segar="' . esc(implode(',', (array) $konfig['segarkan']), 'attr') . '"' : '')
             . '><div class="mk-kartu fm-kartu" role="dialog" aria-modal="true" style="max-width:' . $lebar . 'px;width:94vw">'
             . '<div class="fm-kepala"><h3 data-fm-judul>' . esc($judul) . '</h3></div>'
             . '<form data-fm-form method="post" novalidate action="' . esc((string) ($konfig['aksi'] ?? ''), 'attr') . '">'
             . csrf_field()
             . '<input type="hidden" name="id" value="">'
+            . implode('', array_map(static fn ($n) => '<input type="hidden" name="' . esc((string) $n, 'attr') . '" value="">', (array) ($konfig['tersembunyi'] ?? [])))
             . '<div class="fm-isi">'
             . '<div class="galat" data-fm-galat hidden style="margin-bottom:12px"></div>'
+            . (! empty($konfig['info_html']) ? (string) $konfig['info_html'] : '')
             . '<div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">';
         foreach ($konfig['kolom'] ?? [] as $f) {
             $nama = (string) ($f['nama'] ?? '');
@@ -258,7 +277,14 @@ if (! function_exists('form_modal')) {
             if ($jenis === 'pilihan') {
                 $h .= '<select data-select-cari id="' . esc($idField, 'attr') . '" name="' . esc($nama, 'attr') . '" data-label="' . esc($label, 'attr') . '"' . $wajib . '>';
                 foreach ($f['opsi'] ?? [] as $nilai => $labelOpsi) {
-                    $h .= '<option value="' . esc((string) $nilai, 'attr') . '">' . esc((string) $labelOpsi) . '</option>';
+                    $dataOpsi = '';
+                    if (is_array($labelOpsi)) {
+                        foreach ($labelOpsi['data'] ?? [] as $kd => $vd) {
+                            $dataOpsi .= ' data-' . esc((string) $kd, 'attr') . '="' . esc((string) $vd, 'attr') . '"';
+                        }
+                        $labelOpsi = (string) ($labelOpsi['label'] ?? '');
+                    }
+                    $h .= '<option value="' . esc((string) $nilai, 'attr') . '"' . $dataOpsi . '>' . esc((string) $labelOpsi) . '</option>';
                 }
                 $h .= '</select>';
             } elseif ($jenis === 'area') {
@@ -292,6 +318,9 @@ if (! function_exists('form_modal')) {
         $h .= '</div>';
         if (! empty($konfig['catatan'])) {
             $h .= '<p class="kecil-teks" style="margin:12px 0 2px">' . esc((string) $konfig['catatan']) . '</p>';
+        }
+        if (! empty($konfig['catatan_html'])) {
+            $h .= (string) $konfig['catatan_html'];
         }
         $h .= '</div><div class="fm-kaki">';
         if ($tombol['hapus'] && ! empty($konfig['aksi_hapus'])) {
