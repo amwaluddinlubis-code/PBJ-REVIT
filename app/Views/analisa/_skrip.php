@@ -48,6 +48,20 @@
     document.getElementById('nilai-ubah').textContent = rp(angka(document.getElementById('fu-koef').value) * uang(document.getElementById('fu-tarif').value));
   }
   ['fu-koef', 'fu-tarif'].forEach(function (i) { document.getElementById(i).addEventListener('input', nilaiUbah); });
+  var selBahan = document.querySelector('#form-tambah-komp select[name="bahan_id"]');
+  if (selBahan) selBahan.addEventListener('change', function () {
+    var op = selBahan.options[selBahan.selectedIndex];
+    if (!op || !selBahan.value) return;
+    var jenis = document.querySelector('#form-tambah-komp select[name="jenis"]');
+    if (jenis && jenis.value !== 'bahan') { jenis.value = 'bahan'; jenis.dispatchEvent(new Event('change', { bubbles: true })); }
+    if (op.dataset.nama) document.getElementById('ft-nama').value = op.dataset.nama;
+    if (op.dataset.satuan) document.getElementById('ft-satuan').value = op.dataset.satuan;
+    if (op.dataset.tarif) {
+      document.getElementById('ft-tarif').value = op.dataset.tarif;
+      if (window.inisiasiUang) window.inisiasiUang(document.getElementById('modal-tambah-komp'));
+      nilaiTambah();
+    }
+  });
   function nilaiTambah() {
     document.getElementById('nilai-tambah').textContent = rp(angka(document.getElementById('ft-koef').value) * uang(document.getElementById('ft-tarif').value));
   }

@@ -12,14 +12,14 @@
           </select>
         </label>
         <label>Bahan dari master (jenis Bahan)
-          <?= select_cari('bahan_id', array_merge([['value' => '', 'label' => '— ketik nama manual —']], array_map(static fn ($b) => ['value' => (int) $b['id'], 'label' => $b['kode'] . ' — ' . $b['nama']], $bahan))) ?>
+          <?= select_cari('bahan_id', array_merge([['value' => '', 'label' => '— ketik nama manual —']], array_map(static fn ($b) => ['value' => (int) $b['id'], 'label' => $b['kode'] . ' — ' . $b['nama'], 'data' => ['nama' => (string) $b['nama'], 'satuan' => (string) ($b['satuan'] ?? ''), 'tarif' => (int) ($acuanBahan[(int) $b['id']] ?? 0)]], $bahan))) ?>
         </label>
-        <label>Nama komponen <input type="text" name="nama" placeholder="nama komponen"></label>
+        <label>Nama komponen <input type="text" name="nama" id="ft-nama" placeholder="nama komponen"></label>
         <label>Koefisien <input type="text" name="koefisien" id="ft-koef" placeholder="0,0000"></label>
-        <label>Satuan <input type="text" name="satuan" placeholder="m3 / OH / zak"></label>
+        <label>Satuan <input type="text" name="satuan" id="ft-satuan" placeholder="m3 / OH / zak"></label>
         <label>Tarif (Rp) <input type="text" inputmode="numeric" data-uang name="tarif" id="ft-tarif" placeholder="otomatis bila dari master"></label>
       </div>
-      <p class="kecil-teks" style="text-align:left">Nilai per satuan dari isian ini: <strong id="nilai-tambah">Rp 0</strong>. Untuk jenis Upah, isi Nama persis seperti jenis di Master Upah agar tarif master berlaku; untuk Bahan dari master, tarif kosong memakai harga acuan bahan.</p>
+      <p class="kecil-teks" style="text-align:left">Nilai per satuan dari isian ini: <strong id="nilai-tambah">Rp 0</strong>. Untuk jenis Upah, isi Nama persis seperti jenis di Master Upah agar tarif master berlaku. Memilih Bahan dari master mengisi otomatis nama, satuan, dan tarif (harga acuan bahan) — ketiganya tetap bisa diubah sebelum disimpan.</p>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
         <button type="button" class="tombol abu" data-tutup-modal>Batal</button>
         <button type="submit" class="tombol">+ Tambah Komponen</button>

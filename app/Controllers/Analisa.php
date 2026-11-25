@@ -162,6 +162,20 @@ class Analisa extends BaseController
             }
         }
         $bahan = $db->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray();
+        // Harga acuan per bahan (meniru hargaAcuan(): nego -> penawaran ->
+        // harga_rab), dihitung batch untuk isian otomatis modal Tambah
+        // Komponen — memilih bahan dari master mengisi nama, satuan, tarif.
+        $negoMap = [];
+        foreach ($db->table('negosiasi')->where('is_deleted', 0)->get()->getResultArray() as $n) {
+            $negoMap[(int) $n['bahan_id']] = $n;
+        }
+        $acuanBahan = [];
+        foreach ($bahan as $b) {
+            $n = $negoMap[(int) $b['id']] ?? null;
+            $acuanBahan[(int) $b['id']] = $n && ! empty($n['harga_nego'])
+                ? (int) $n['harga_nego']
+                : ($n && ! empty($n['harga_penawaran']) ? (int) $n['harga_penawaran'] : (int) $b['harga_rab']);
+        }
         $upah = $db->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray();
         $pemakai = $db->query(
             "SELECT p.id AS pekerjaan_id, p.nama, p.volume, p.volume_revisi, p.satuan,
@@ -173,7 +187,7 @@ class Analisa extends BaseController
             [$a['id'], $a['kode'], $this->sid()]
         )->getResultArray();
         return $this->tampil('analisa/detail', [
-            'a' => $a, 'komponen' => $komponen, 'bahan' => $bahan, 'upah' => $upah, 'pemakai' => $pemakai,
+            'a' => $a, 'komponen' => $komponen, 'bahan' => $bahan, 'acuanBahan' => $acuanBahan, 'upah' => $upah, 'pemakai' => $pemakai,
             'acuanInfo' => $acuanInfo, 'acuanPerKomp' => $acuanPerKomp,
         ], 'Analisa ' . $a['kode'] . ' — Aplikasi PBJ Sekolah');
     }
