@@ -52,11 +52,11 @@
         if (!inp) return;
         if (inp.type === 'checkbox') inp.checked = !!data[k];
         else if (inp.classList.contains('isian-tanggal') && /^\d{4}-\d{2}-\d{2}$/.test(String(data[k] == null ? '' : data[k]))) {
-          // Isian tanggal aplikasi tampil dd/mm/yyyy (kelas isian-tanggal,
+          // Isian tanggal aplikasi tampil dd-mm-yyyy (kelas isian-tanggal,
           // dikonversi balik ke ISO saat submit oleh skrip layout) — data
-          // dari server berformat ISO, jadi tampilkan sebagai dd/mm/yyyy.
+          // dari server berformat ISO, jadi tampilkan sebagai dd-mm-yyyy.
           var p = String(data[k]).split('-');
-          inp.value = p[2] + '/' + p[1] + '/' + p[0];
+          inp.value = p[2] + '-' + p[1] + '-' + p[0];
         }
         else inp.value = data[k] == null ? '' : data[k];
         inp.dispatchEvent(new Event('change', { bubbles: true }));

@@ -60,7 +60,7 @@
   try { dataInv = JSON.parse(document.getElementById('data-invoice').textContent || '{}'); } catch (e) {}
   var isoKeDmy = function (v) {
     var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v || '');
-    return m ? m[3] + '/' + m[2] + '/' + m[1] : '';
+    return m ? m[3] + '-' + m[2] + '-' + m[1] : '';
   };
   var isi = function (nama, nilai) {
     var el = form.elements[nama];

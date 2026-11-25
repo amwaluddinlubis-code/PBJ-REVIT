@@ -3927,6 +3927,10 @@ html.gelap .fm-kepala { background: rgba(255, 255, 255, .07); }
 .fm-kepala h3 { margin: 0; text-align: left; }
 .fm-isi { padding: 20px 20px 8px; }
 .fm-isi .grid { row-gap: 23px; }
+.tanggal-bungkus { display: inline-flex; gap: 4px; align-items: stretch; width: 100%; position: relative; }
+.tanggal-bungkus .isian-tanggal { flex: 1 1 auto; min-width: 0; }
+.tanggal-bungkus .tanggal-pilih { position: absolute; right: 40px; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.tmbl-kalender { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; padding: 0 9px; cursor: pointer; }
 .fm-kaki { display: flex; gap: 8px; justify-content: flex-end; align-items: center; padding: 12px 20px; margin-top: 10px; background: rgba(16, 24, 40, .055); border-top: 1px solid var(--ta-garis); }
 html.gelap .fm-kaki { background: rgba(255, 255, 255, .07); }
 .fm-kotak-field { position: relative; }
