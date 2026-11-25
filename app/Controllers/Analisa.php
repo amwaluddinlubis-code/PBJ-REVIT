@@ -142,7 +142,7 @@ class Analisa extends BaseController
         // koefisien acuan per komponen + nilainya dengan tarif komponen ini.
         $acuanInfo = null;
         $acuanPerKomp = [];
-        $ac = \App\Libraries\BandingAcuan::acuanUntukKode($db, (string) $a['kode']);
+        $ac = \App\Libraries\BandingAcuan::acuanUntukKode($db, (string) $a['kode'], $this->sid());
         if ($ac) {
             $acuanInfo = $ac;
             $kompAcuan = \App\Libraries\BandingAcuan::komponenAcuan($db, (int) $ac['id']);

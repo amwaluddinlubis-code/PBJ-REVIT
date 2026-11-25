@@ -5,9 +5,12 @@ namespace App\Controllers;
 use App\Libraries\BandingAcuan;
 
 /**
- * Master Acuan AHSP Nasional — perbandingan koefisien analisa sekolah aktif
- * (dokumen perencana) terhadap acuan nasional (SE Dirjen Bina Konstruksi
- * 68/SE/Dk/2024, Lampiran VI; dasar Permen PUPR 8/2023).
+ * Acuan AHSP per sekolah — perbandingan koefisien analisa sekolah aktif
+ * (dokumen perencana) terhadap set acuan MILIK sekolah itu (migrasi
+ * 000029; disalin dari acuan nasional SE Dirjen Bina Konstruksi
+ * 68/SE/Dk/2024, Lampiran VI; dasar Permen PUPR 8/2023). Setiap sekolah
+ * punya salinannya sendiri; baris sekolah_id NULL adalah templat nasional
+ * sumber kloning dan tidak ditampilkan di sini.
  *
  * Pemetaan lewat kode analisa: baris ahsp_acuan.kode_kita dicocokkan dengan
  * analisa.kode pada sekolah aktif. Yang dibandingkan adalah KOEFISIEN;
@@ -22,13 +25,42 @@ class Acuan extends BaseController
         return $this->db()->tableExists('ahsp_acuan');
     }
 
+    /** Kolom sekolah_id tersedia sesudah migrasi 000029 dijalankan. */
+    private function perSekolah(): bool
+    {
+        return $this->acuanAda()
+            && in_array('sekolah_id', $this->db()->getFieldNames('ahsp_acuan'), true);
+    }
+
+    /** Siapkan set acuan sekolah aktif dari templat nasional (kloning). */
+    public function siapkan()
+    {
+        if ($d = $this->penjagaPeran(['operator'])) {
+            return $d;
+        }
+        if (! $this->perSekolah()) {
+            return redirect()->to('acuan')->with('galat', 'Acuan per sekolah belum tersedia — jalankan php spark migrate lebih dulu.');
+        }
+        $n = \App\Libraries\PengimporAcuan::kloningKeSekolah($this->db(), $this->sid());
+        $this->catatAudit('ahsp_acuan', null, 'siapkan_dari_nasional', $n . ' item acuan dikloning dari templat nasional ke sekolah aktif.');
+        return redirect()->to('acuan')->with('sukses', $n > 0
+            ? 'Set acuan sekolah ini disiapkan dari acuan nasional: ' . $n . ' item terkloning.'
+            : 'Set acuan sekolah ini sudah lengkap — tidak ada item baru dari templat nasional.');
+    }
+
     public function index()
     {
         $db = $this->db();
         $daftar = [];
+        $adaTemplat = false;
         if ($this->acuanAda()) {
             $sid = $this->sid();
-            foreach ($db->table('ahsp_acuan')->where('is_deleted', 0)->orderBy('kode_kita')->get()->getResultArray() as $ac) {
+            $q = $db->table('ahsp_acuan')->where('is_deleted', 0);
+            if ($this->perSekolah()) {
+                $q->where('sekolah_id', $sid);
+                $adaTemplat = $db->table('ahsp_acuan')->where('sekolah_id', null)->where('is_deleted', 0)->countAllResults() > 0;
+            }
+            foreach ($q->orderBy('kode_kita')->get()->getResultArray() as $ac) {
                 $analisa = $db->table('analisa')->where('sekolah_id', $sid)->where('kode', $ac['kode_kita'])
                     ->where('is_deleted', 0)->get()->getRowArray();
                 $ringkas = null;
@@ -38,7 +70,10 @@ class Acuan extends BaseController
                 $daftar[] = ['acuan' => $ac, 'analisa' => $analisa, 'ringkas' => $ringkas];
             }
         }
-        return $this->tampil('acuan/index', ['daftar' => $daftar, 'ada' => $this->acuanAda()], 'Master Acuan AHSP Nasional');
+        return $this->tampil('acuan/index', [
+            'daftar' => $daftar, 'ada' => $this->acuanAda(), 'perSekolah' => $this->perSekolah(),
+            'adaTemplat' => $adaTemplat, 'sekolah' => $this->sekolahAktif(),
+        ], 'Acuan AHSP');
     }
 
     public function detail($id)
@@ -47,15 +82,19 @@ class Acuan extends BaseController
             return redirect()->to('acuan')->with('galat', 'Master acuan belum dimuat.');
         }
         $db = $this->db();
-        $ac = $db->table('ahsp_acuan')->where('id', (int) $id)->where('is_deleted', 0)->get()->getRowArray();
+        $q = $db->table('ahsp_acuan')->where('id', (int) $id)->where('is_deleted', 0);
+        if ($this->perSekolah()) {
+            $q->where('sekolah_id', $this->sid());
+        }
+        $ac = $q->get()->getRowArray();
         if (! $ac) {
-            return redirect()->to('acuan')->with('galat', 'Item acuan tidak ditemukan.');
+            return redirect()->to('acuan')->with('galat', 'Item acuan tidak ditemukan di set acuan sekolah aktif.');
         }
         $analisa = $db->table('analisa')->where('sekolah_id', $this->sid())->where('kode', $ac['kode_kita'])
             ->where('is_deleted', 0)->get()->getRowArray();
         $banding = $analisa && ! $ac['tanpa_padanan'] ? $this->susunBanding($ac, $analisa) : null;
         return $this->tampil('acuan/detail', ['acuan' => $ac, 'analisa' => $analisa, 'banding' => $banding],
-            'Acuan ' . $ac['kode_kita'] . ' vs AHSP Nasional');
+            'Acuan ' . $ac['kode_kita'] . ' — Acuan AHSP');
     }
 
     /**

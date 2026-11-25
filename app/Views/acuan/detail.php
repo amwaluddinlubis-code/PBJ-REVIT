@@ -1,5 +1,5 @@
-<h1>Acuan <?= esc($acuan['kode_kita']) ?> — Banding AHSP Nasional</h1>
-<p class="kecil-teks"><a href="<?= base_url('acuan') ?>">&larr; Master Acuan AHSP Nasional</a></p>
+<h1>Acuan <?= esc($acuan['kode_kita']) ?> — Banding Acuan Sekolah</h1>
+<p class="kecil-teks"><a href="<?= base_url('acuan') ?>">&larr; Acuan AHSP</a></p>
 
 <div class="panel">
   <table class="satu-baris">

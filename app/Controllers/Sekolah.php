@@ -30,6 +30,12 @@ class Sekolah extends BaseController
         $data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('sekolah')->insert($data);
         $id = (int) $this->db()->insertID();
+        // Acuan AHSP per sekolah: sekolah baru langsung menerima salinan
+        // templat nasional agar halaman Acuan & perbandingan Analisa
+        // sekolah itu segera berfungsi.
+        if ($this->db()->tableExists('ahsp_acuan')) {
+            \App\Libraries\PengimporAcuan::kloningKeSekolah($this->db(), $id);
+        }
         session()->set('sekolah_id', $id);
         return redirect()->to('pengaturan')->with('sukses', 'Sekolah "' . $data['nama_sekolah'] . '" dibuat dan langsung aktif — lengkapi identitasnya di halaman ini, lalu isi Master Bahan.');
     }

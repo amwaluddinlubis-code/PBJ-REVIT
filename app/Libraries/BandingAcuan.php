@@ -12,13 +12,32 @@ use CodeIgniter\Database\BaseConnection;
  */
 class BandingAcuan
 {
-    /** Baris acuan untuk satu kode analisa kita; null bila tidak ada / tanpa padanan / tabel belum ada. */
-    public static function acuanUntukKode(BaseConnection $db, string $kode): ?array
+    /**
+     * Baris acuan untuk satu kode analisa kita; null bila tidak ada /
+     * tanpa padanan / tabel belum ada. Sejak acuan per sekolah (migrasi
+     * 000029) pemanggil WAJIB meneruskan sekolah_id: yang dipakai adalah
+     * set milik sekolah itu; bila kode itu belum ada di set sekolah,
+     * templat nasional (sekolah_id NULL) menjadi cadangan agar
+     * perbandingan tetap jalan sebelum set sekolah disiapkan.
+     */
+    public static function acuanUntukKode(BaseConnection $db, string $kode, ?int $sekolahId = null): ?array
     {
         if (! $db->tableExists('ahsp_acuan')) {
             return null;
         }
-        $ac = $db->table('ahsp_acuan')->where('kode_kita', $kode)->where('is_deleted', 0)->get()->getRowArray();
+        $perSekolah = in_array('sekolah_id', $db->getFieldNames('ahsp_acuan'), true);
+        $ac = null;
+        if ($perSekolah && $sekolahId !== null) {
+            $ac = $db->table('ahsp_acuan')->where('kode_kita', $kode)->where('sekolah_id', $sekolahId)
+                ->where('is_deleted', 0)->get()->getRowArray();
+        }
+        if (! $ac) {
+            $q = $db->table('ahsp_acuan')->where('kode_kita', $kode)->where('is_deleted', 0);
+            if ($perSekolah) {
+                $q->where('sekolah_id', null);
+            }
+            $ac = $q->get()->getRowArray();
+        }
         return ($ac && ! $ac['tanpa_padanan']) ? $ac : null;
     }
 

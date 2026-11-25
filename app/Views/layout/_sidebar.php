@@ -58,7 +58,7 @@ $svg = static fn (string $k): string => ikonSvg($k);
       <?php $induk('perencanaan', 'rencana', 'Perencanaan'); ?>
         <?php if ($bolehMenu('impor')): ?><a href="<?= base_url('impor') ?>"<?= $aktif('impor') ?>>Impor Dokumen Perencana</a><?php endif; ?>
         <?php if ($bolehMenu('analisa')): ?><a href="<?= base_url('analisa') ?>"<?= $aktif('analisa') ?>>Analisa Pekerjaan</a><?php endif; ?>
-        <?php if ($bolehMenu('acuan')): ?><a href="<?= base_url('acuan') ?>"<?= $aktif('acuan') ?>>Acuan AHSP Nasional</a><?php endif; ?>
+        <?php if ($bolehMenu('acuan')): ?><a href="<?= base_url('acuan') ?>"<?= $aktif('acuan') ?>>Acuan AHSP</a><?php endif; ?>
         <?php if ($bolehMenu('validasi-harga')): ?><a href="<?= base_url('validasi-harga') ?>"<?= $aktif('validasi-harga') ?>>Validasi Harga Satuan</a><?php endif; ?>
         <?php if ($bolehMenu('bersih')): ?><a href="<?= base_url('bersih') ?>"<?= $aktif('bersih') ?>>Pembersihan Hasil Impor</a><?php endif; ?>
         <?php if ($bolehMenu('rencana-belanja')): ?><a href="<?= base_url('rencana-belanja') ?>"<?= $aktif('rencana-belanja') ?>>Rencana Belanja</a><?php endif; ?>

@@ -222,6 +222,7 @@ $routes->post('kurva-s/impor', 'Kurva::impor', ['filter' => 'auth']);
 $routes->post('kurva-s/buat-rencana', 'Kurva::buatRencana', ['filter' => 'auth']);
 $routes->post('kurva-s/simpan-realisasi', 'Kurva::simpanRealisasi', ['filter' => 'auth']);
 $routes->get('acuan', 'Acuan::index', ['filter' => 'auth']);
+$routes->post('acuan/siapkan', 'Acuan::siapkan', ['filter' => 'auth']);
 $routes->get('acuan/(:num)', 'Acuan::detail/$1', ['filter' => 'auth']);
 $routes->get('validasi-harga', 'ValidasiHarga::index', ['filter' => 'auth']);
 $routes->post('validasi-harga/samakan-pekerjaan', 'ValidasiHarga::samakanPekerjaan', ['filter' => 'auth']);
