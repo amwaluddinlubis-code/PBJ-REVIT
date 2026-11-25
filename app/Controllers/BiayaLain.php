@@ -38,6 +38,15 @@ class BiayaLain extends BaseController
         ], 'Biaya Non-Gedung');
     }
 
+    /** Balasan ganda seperti Bahan::balasForm: AJAX -> JSON {ok, pesan}; biasa -> redirect flash. */
+    private function balas(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return redirect()->to('/biaya-non-gedung')->with($ok ? 'sukses' : 'galat', $pesan);
+    }
+
     public function simpan()
     {
         $id = (int) $this->request->getPost('id');
@@ -48,7 +57,7 @@ class BiayaLain extends BaseController
         $periode = $periodeRaw === '' ? null : (float) str_replace(',', '.', $periodeRaw);
         $harga = (float) preg_replace('/[^0-9]/', '', (string) $this->request->getPost('harga_satuan'));
         if ($kelompok === '' || $uraian === '' || $volume <= 0) {
-            return redirect()->to('/biaya-non-gedung')->with('galat', 'Kelompok, uraian, dan volume wajib diisi.');
+            return $this->balas(false, 'Kelompok, uraian, dan volume wajib diisi.');
         }
         $pajak = trim((string) $this->request->getPost('pajak'));
         if (! array_key_exists($pajak, $this->opsiPajakBiayaLain())) {
@@ -71,16 +80,16 @@ class BiayaLain extends BaseController
         if ($id > 0) {
             $lama = $db->table('biaya_lain')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
             if ($lama === null) {
-                return redirect()->to('/biaya-non-gedung')->with('galat', 'Baris tidak ditemukan.');
+                return $this->balas(false, 'Baris tidak ditemukan.');
             }
             $db->table('biaya_lain')->where('id', $id)->update($data);
-            return redirect()->to('/biaya-non-gedung')->with('sukses', 'Baris biaya "' . $uraian . '" diperbarui.');
+            return $this->balas(true, 'Baris biaya "' . $uraian . '" diperbarui.');
         }
         $data['sekolah_id'] = $this->sid();
         $data['sumber'] = 'manual';
         $data['created_at'] = date('Y-m-d H:i:s');
         $db->table('biaya_lain')->insert($data);
-        return redirect()->to('/biaya-non-gedung')->with('sukses', 'Baris biaya "' . $uraian . '" ditambahkan.');
+        return $this->balas(true, 'Baris biaya "' . $uraian . '" ditambahkan.');
     }
 
     public function hapus(int $id)
@@ -88,10 +97,10 @@ class BiayaLain extends BaseController
         $baris = $this->db()->table('biaya_lain')
             ->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         if ($baris === null) {
-            return redirect()->to('/biaya-non-gedung')->with('galat', 'Baris tidak ditemukan.');
+            return $this->balas(false, 'Baris tidak ditemukan.');
         }
         $this->hapusLunak('biaya_lain', ['id' => $id]);
-        return redirect()->to('/biaya-non-gedung')->with('sukses', 'Baris biaya "' . $baris['uraian'] . '" dihapus.');
+        return $this->balas(true, 'Baris biaya "' . $baris['uraian'] . '" dihapus.');
     }
 
     public function hapusMassal()

@@ -93,6 +93,7 @@ Agar panduan ini tidak mengulang hal yang sama di setiap bab, berikut konvensi y
 - **Tabel Standar v2.** Setiap tabel daftar mendapat: pencarian langsung, paginasi, pengurutan klik-header (sadar angka format Indonesia, tanggal, teks; kolom berisi kontrol formulir tidak bisa diurutkan atau ditandai `data-tanpa-urut`), empty state seragam saat saringan kosong, baris judul grup mengikuti baris anaknya, baris total selalu tampil dan tidak dihitung, baris rincian tersinkron dengan pemiliknya, "pilih semua" hanya mencentang baris yang terlihat, dan semua baris tercetak saat print. Status tabel (kata cari, urutan, ukuran halaman, halaman) tersimpan per sesi; tombol Ekspor CSV mengunduh baris yang sedang tersaring; header urut membawa `aria-sort`; kotak cari berlabel aksesibel.
 - **Tabel lebar** boleh memiliki scroll horizontal pada pembungkusnya; jangan membuat seluruh halaman ikut melebar. Header tabel menempel (sticky) bila tabel cukup tinggi.
 - **Modal konfirmasi.** Setiap tombol Hapus membuka modal konfirmasi gaya TailAdmin; data tidak terhapus sebelum menekan **Ya, Hapus**. Esc atau klik di luar menutup.
+- **Formulir modal CRUD.** Tambah/Ubah pada modul yang sudah memakai pola ini (pertama: Biaya Non-Gedung) terbuka sebagai modal berisi tombol **Batal**, **Simpan**, dan — pada mode Ubah — **Hapus**; menyimpan tidak memuat ulang seluruh halaman secara kasar, dan pesan galat tampil di dalam modal.
 - **Tema terang/gelap** (tombol bulan di topbar) dan **ukuran huruf** (A−/A+) diingat oleh peramban. Saat zoom in/out, ukuran logo dan blok profil di sidebar tetap (zoom balik).
 - **Tautan lintas modul.** Setiap peringatan/keadaan kosong menyertakan tautan langsung ke halaman tempat kekurangan itu dilengkapi (mis. bahan tanpa harga → Master Bahan, SPK tanpa rincian → Detail SPK, invoice tak cocok → Register Invoice).
 
@@ -275,7 +276,7 @@ Menu **Perencanaan → Biaya Non-Gedung** menampung biaya tingkat sekolah yang b
 Hal yang perlu diketahui:
 
 1. Baris bersumber **Impor** diganti segar setiap impor ulang (workbook maupun template); baris **Manual** yang Anda tambahkan sendiri tidak ikut terhapus.
-2. Menambah baris manual: isi formulir — jumlah dihitung otomatis sebagai **volume × periode (bila ada) × harga satuan**. Tombol **Ubah** memuat baris ke formulir yang sama; **Hapus** memakai modal konfirmasi dan bersifat hapus aman (Bab 19).
+2. Menambah baris manual: tombol **Tambah Baris Biaya** membuka formulir modal — jumlah dihitung otomatis sebagai **volume × periode (bila ada) × harga satuan**. Tombol **Ubah** membuka modal yang sama berisi baris itu; tombol **Hapus** ada di dalam modal Ubah, memakai modal konfirmasi, dan bersifat hapus aman (Bab 19).
 3. Total biaya non-gedung ikut dihitung dalam **verifikasi anggaran**: total keseluruhan = total BOQ gedung aktif + biaya non-gedung, dibandingkan dengan pagu.
 4. Pada template manual, biaya ini berada di sheet **BiayaLain** dan ikut diekspor/terimpor kembali.
 

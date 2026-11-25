@@ -1,0 +1,116 @@
+// Helper FORM MODAL CRUD — perilaku untuk modal yang dirender
+// form_modal() (app/Common.php). bukaFormModal(id) membuka mode Tambah;
+// bukaFormModal(id, data) mode Ubah (data = nilai field menurut nama,
+// termasuk 'id'). Simpan dikirim via fetch (AJAX) dan server membalas
+// JSON {ok, pesan} (pola balasForm); sesudah berhasil halaman dimuat
+// ulang. Hapus berjalan lewat form data-konfirmasi standar aplikasi
+// (modal konfirmasi #mk-ya), bukan modal baru.
+(function () {
+  window.tutupFormModal = function (id) {
+    var el = document.getElementById(id);
+    if (el) el.hidden = true;
+  };
+
+  window.bukaFormModal = function (id, data) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var form = el.querySelector('[data-fm-form]');
+    var galat = el.querySelector('[data-fm-galat]');
+    var judul = el.querySelector('[data-fm-judul]');
+    var btnSimpan = el.querySelector('[data-fm-simpan]');
+    var btnHapus = el.querySelector('[data-fm-hapus]');
+    form.reset();
+    if (galat) { galat.hidden = true; galat.textContent = ''; }
+    var ubah = !!(data && data.id);
+    if (data) {
+      Object.keys(data).forEach(function (k) {
+        var inp = form.querySelector('[name="' + k + '"]');
+        if (!inp) return;
+        if (inp.type === 'checkbox') inp.checked = !!data[k];
+        else inp.value = data[k] == null ? '' : data[k];
+        inp.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+    if (window.inisiasiUang) window.inisiasiUang(form);
+    if (judul) judul.textContent = ubah ? (el.dataset.judulUbah || '') : (el.dataset.judulTambah || '');
+    if (btnSimpan) btnSimpan.textContent = ubah ? (btnSimpan.dataset.teksUbah || 'Simpan Perubahan') : (btnSimpan.dataset.teksTambah || 'Simpan');
+    if (btnHapus) btnHapus.hidden = !ubah;
+    form.dataset.fmId = ubah ? String(data.id) : '';
+    el.hidden = false;
+    var pertama = form.querySelector('input:not([type=hidden]), select, textarea');
+    if (pertama) pertama.focus();
+  };
+
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t.matches && t.matches('[data-form-modal]')) { t.hidden = true; return; }
+    var tutup = t.closest ? t.closest('[data-fm-tutup]') : null;
+    if (tutup) {
+      var el1 = tutup.closest('[data-form-modal]');
+      if (el1) el1.hidden = true;
+      return;
+    }
+    var hapus = t.closest ? t.closest('[data-fm-hapus]') : null;
+    if (hapus) {
+      var el2 = hapus.closest('[data-form-modal]');
+      var form2 = el2.querySelector('[data-fm-form]');
+      var idBaris = form2.dataset.fmId || '';
+      var pola = el2.dataset.aksiHapus || '';
+      if (!idBaris || !pola) return;
+      var f = document.createElement('form');
+      f.method = 'post';
+      f.action = pola.replace('__ID__', idBaris).replace('{id}', idBaris);
+      f.setAttribute('data-konfirmasi', el2.dataset.konfirmasiHapus || 'Hapus baris ini?');
+      var csrf = form2.querySelector('input[name="csrf_test_name"]');
+      if (csrf) {
+        var h = document.createElement('input');
+        h.type = 'hidden'; h.name = csrf.name; h.value = csrf.value;
+        f.appendChild(h);
+      }
+      document.body.appendChild(f);
+      el2.hidden = true;
+      f.requestSubmit();
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('[data-form-modal]:not([hidden])').forEach(function (el) { el.hidden = true; });
+  });
+
+  document.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (!form.matches || !form.matches('[data-fm-form]')) return;
+    e.preventDefault();
+    var el = form.closest('[data-form-modal]');
+    var galat = el.querySelector('[data-fm-galat]');
+    form.querySelectorAll('input[data-uang]').forEach(function (inp) {
+      inp.value = String(inp.value).replace(/[^0-9]/g, '');
+    });
+    var btn = el.querySelector('[data-fm-simpan]');
+    if (btn) btn.disabled = true;
+    fetch(form.action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(function (r) {
+      var ct = r.headers.get('content-type') || '';
+      if (ct.indexOf('application/json') >= 0) return r.json();
+      return { ok: true, pesan: '' };
+    }).then(function (j) {
+      if (btn) btn.disabled = false;
+      if (j && j.ok) {
+        el.hidden = true;
+        if (window.tampilToast && j.pesan) window.tampilToast(j.pesan, 'sukses');
+        setTimeout(function () { location.reload(); }, j.pesan ? 500 : 0);
+      } else {
+        if (window.inisiasiUang) window.inisiasiUang(form);
+        if (galat) { galat.textContent = (j && j.pesan) || 'Gagal menyimpan.'; galat.hidden = false; }
+      }
+    }).catch(function () {
+      if (btn) btn.disabled = false;
+      if (window.inisiasiUang) window.inisiasiUang(form);
+      if (galat) { galat.textContent = 'Gagal menghubungi server.'; galat.hidden = false; }
+    });
+  });
+})();

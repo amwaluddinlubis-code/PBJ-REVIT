@@ -97,3 +97,203 @@ if (! function_exists('rp')) {
         return 'Rp ' . number_format((float) $n, 0, ',', '.');
     }
 }
+
+if (! function_exists('sel_tabel_html')) {
+    /**
+     * Render satu sel untuk tabel_bantu(): string -> diescape; array
+     * berkunci 'html' -> mentah; 'teks' -> diescape, dengan opsi 'angka'
+     * (rata kanan), 'class', 'colspan', 'gaya'.
+     */
+    function sel_tabel_html($sel): string
+    {
+        if (! is_array($sel)) {
+            return '<td>' . esc((string) $sel) . '</td>';
+        }
+        $isi = array_key_exists('html', $sel) ? (string) $sel['html'] : esc((string) ($sel['teks'] ?? ''));
+        $atribut = '';
+        $kelas = trim((string) ($sel['class'] ?? '') . (! empty($sel['angka']) ? ' angka' : ''));
+        if ($kelas !== '') {
+            $atribut .= ' class="' . esc($kelas, 'attr') . '"';
+        }
+        if (! empty($sel['colspan'])) {
+            $atribut .= ' colspan="' . (int) $sel['colspan'] . '"';
+        }
+        if (! empty($sel['gaya'])) {
+            $atribut .= ' style="' . esc((string) $sel['gaya'], 'attr') . '"';
+        }
+        return '<td' . $atribut . '>' . $isi . '</td>';
+    }
+}
+
+if (! function_exists('tabel_bantu')) {
+    /**
+     * Helper TABEL standar PBJ (keputusan AMWAL 25 Nov 2026): merender
+     * tabel Tabel Standar v2 (atribut data-cari / data-paginasi untuk
+     * paginasi.js, baris grup kelas baris-grup, baris total kelas
+     * baris-total) dari konfigurasi — perubahan pola tabel cukup diubah
+     * di sini, bukan di tiap view. Modul berpindah ke helper ini
+     * bertahap; contoh pemakaian: biayalain/_kelompok.
+     *
+     * Konfig:
+     * - 'kolom': daftar ['judul' => teks, 'judul_html' => mentah,
+     *   'angka' => bool, 'lebar' => '110px', 'class' => ...]
+     * - 'baris': daftar baris; tiap baris salah satu dari:
+     *     ['sel' => [sel, ...], 'class' => ..., 'atribut' => 'data-...']
+     *     ['grup' => 'Teks grup'] (atau 'grup_html') -> baris-grup
+     *     ['total' => [sel, ...], 'class' => tambahan] -> baris-total
+     *   Sel: lihat sel_tabel_html().
+     * - 'cari': petunjuk pencarian (string) atau false (bawaan false)
+     * - 'paginasi': baris per halaman (int) atau false (bawaan false)
+     * - 'class': kelas tambahan tabel; 'id': id tabel
+     */
+    function tabel_bantu(array $konfig): string
+    {
+        $kolom = $konfig['kolom'] ?? [];
+        $atribut = '';
+        if (! empty($konfig['id'])) {
+            $atribut .= ' id="' . esc((string) $konfig['id'], 'attr') . '"';
+        }
+        if (! empty($konfig['cari'])) {
+            $atribut .= ' data-cari="' . esc((string) $konfig['cari'], 'attr') . '"';
+        }
+        if (! empty($konfig['paginasi'])) {
+            $atribut .= ' data-paginasi="' . (int) $konfig['paginasi'] . '"';
+        }
+        if (! empty($konfig['class'])) {
+            $atribut .= ' class="' . esc((string) $konfig['class'], 'attr') . '"';
+        }
+        $h = '<table' . $atribut . '><thead><tr>';
+        foreach ($kolom as $k) {
+            $ka = '';
+            $kelas = trim((string) ($k['class'] ?? '') . (! empty($k['angka']) ? ' angka' : ''));
+            if ($kelas !== '') {
+                $ka .= ' class="' . esc($kelas, 'attr') . '"';
+            }
+            if (! empty($k['lebar'])) {
+                $ka .= ' style="width:' . esc((string) $k['lebar'], 'attr') . '"';
+            }
+            $h .= '<th' . $ka . '>' . (isset($k['judul_html']) ? (string) $k['judul_html'] : esc((string) ($k['judul'] ?? ''))) . '</th>';
+        }
+        $h .= '</tr></thead><tbody>';
+        $jmlKolom = max(1, count($kolom));
+        foreach ($konfig['baris'] ?? [] as $b) {
+            if (isset($b['grup']) || isset($b['grup_html'])) {
+                $h .= '<tr class="baris-grup"><td colspan="' . $jmlKolom . '">'
+                    . (isset($b['grup_html']) ? (string) $b['grup_html'] : esc((string) $b['grup'])) . '</td></tr>';
+                continue;
+            }
+            $adalahTotal = isset($b['total']);
+            $sel = $adalahTotal ? $b['total'] : ($b['sel'] ?? []);
+            $kelas = trim(($adalahTotal ? 'baris-total ' : '') . (string) ($b['class'] ?? ''));
+            $h .= '<tr' . ($kelas !== '' ? ' class="' . esc($kelas, 'attr') . '"' : '')
+                . (! empty($b['atribut']) ? ' ' . $b['atribut'] : '') . '>';
+            foreach ($sel as $s) {
+                $h .= sel_tabel_html($s);
+            }
+            $h .= '</tr>';
+        }
+        return $h . '</tbody></table>';
+    }
+}
+
+if (! function_exists('form_modal')) {
+    /**
+     * Helper FORM MODAL CRUD (keputusan AMWAL 25 Nov 2026): merender
+     * modal form pola .mk-lapik/.mk-kartu dari konfigurasi saja — modul
+     * tidak lagi menulis markup + skrip modalnya sendiri. Perilaku
+     * (buka/isi/tutup, kirim AJAX berbalasan JSON {ok, pesan}, hapus
+     * lewat modal konfirmasi standar) ada di public/assets/form-modal.js:
+     * bukaFormModal(id) untuk Tambah, bukaFormModal(id, data) untuk Ubah
+     * (data = nilai field menurut nama, termasuk 'id').
+     *
+     * Konfig:
+     * - 'id' (wajib), 'aksi' (URL simpan, wajib)
+     * - 'judul' (bawaan 'Tambah'), 'judul_ubah' (bawaan = judul)
+     * - 'aksi_hapus': URL hapus berpenanda __ID__ (BUKAN {id} — kurung
+     *   kurawal ter-encode oleh pembangun URL); 'konfirmasi_hapus': teks
+     * - 'kolom': daftar field: ['nama', 'label', 'jenis' => teks|angka|
+     *   uang|tanggal|pilihan|area, 'opsi' => [nilai => label] (pilihan),
+     *   'saran' => [nilai, ...] (datalist untuk teks), 'wajib' => bool,
+     *   'petunjuk', 'placeholder', 'penuh' => bool (rentang 2 kolom),
+     *   'baris' => jumlah baris (area)]
+     * - 'tombol': sakelar bawaan — ['batal' => true, 'hapus' => true,
+     *   'simpan' => true, 'simpan_teks', 'simpan_teks_ubah', 'hapus_teks'];
+     *   nonaktifkan dengan false. Hapus hanya tampil pada mode Ubah dan
+     *   bila 'aksi_hapus' terisi.
+     * - 'catatan': teks kecil di bawah field; 'lebar': max-width (px, 640)
+     */
+    function form_modal(array $konfig): string
+    {
+        $id = (string) ($konfig['id'] ?? '');
+        $tombol = array_merge(['batal' => true, 'hapus' => true, 'simpan' => true], $konfig['tombol'] ?? []);
+        $judul = (string) ($konfig['judul'] ?? 'Tambah');
+        $judulUbah = (string) ($konfig['judul_ubah'] ?? $judul);
+        $lebar = (int) ($konfig['lebar'] ?? 640);
+        $h = '<div id="' . esc($id, 'attr') . '" class="mk-lapik" hidden data-form-modal'
+            . ' data-judul-tambah="' . esc($judul, 'attr') . '" data-judul-ubah="' . esc($judulUbah, 'attr') . '"'
+            . (! empty($konfig['aksi_hapus']) ? ' data-aksi-hapus="' . esc((string) $konfig['aksi_hapus'], 'attr') . '"' : '')
+            . (! empty($konfig['konfirmasi_hapus']) ? ' data-konfirmasi-hapus="' . esc((string) $konfig['konfirmasi_hapus'], 'attr') . '"' : '')
+            . '><div class="mk-kartu" role="dialog" aria-modal="true" style="max-width:' . $lebar . 'px;width:94vw">'
+            . '<h3 data-fm-judul style="margin-top:0">' . esc($judul) . '</h3>'
+            . '<div class="galat" data-fm-galat hidden style="margin-bottom:10px"></div>'
+            . '<form data-fm-form method="post" action="' . esc((string) ($konfig['aksi'] ?? ''), 'attr') . '">'
+            . csrf_field()
+            . '<input type="hidden" name="id" value="">'
+            . '<div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">';
+        foreach ($konfig['kolom'] ?? [] as $f) {
+            $nama = (string) ($f['nama'] ?? '');
+            $jenis = (string) ($f['jenis'] ?? 'teks');
+            $wajib = ! empty($f['wajib']) ? ' required' : '';
+            $ph = isset($f['placeholder']) ? ' placeholder="' . esc((string) $f['placeholder'], 'attr') . '"' : '';
+            $h .= '<label' . (! empty($f['penuh']) ? ' class="md:col-span-2"' : '') . '>' . esc((string) ($f['label'] ?? $nama));
+            if ($jenis === 'pilihan') {
+                $h .= '<select data-select-cari name="' . esc($nama, 'attr') . '"' . $wajib . '>';
+                foreach ($f['opsi'] ?? [] as $nilai => $label) {
+                    $h .= '<option value="' . esc((string) $nilai, 'attr') . '">' . esc((string) $label) . '</option>';
+                }
+                $h .= '</select>';
+            } elseif ($jenis === 'area') {
+                $h .= '<textarea name="' . esc($nama, 'attr') . '" rows="' . (int) ($f['baris'] ?? 3) . '"' . $wajib . $ph . '></textarea>';
+            } else {
+                $h .= '<input type="' . ($jenis === 'tanggal' ? 'date' : 'text') . '" name="' . esc($nama, 'attr') . '"' . $wajib . $ph;
+                if ($jenis === 'uang') {
+                    $h .= ' data-uang inputmode="numeric"';
+                } elseif ($jenis === 'angka') {
+                    $h .= ' inputmode="decimal"';
+                }
+                if (! empty($f['saran'])) {
+                    $h .= ' list="' . esc($id . '-' . $nama . '-saran', 'attr') . '"';
+                }
+                $h .= '>';
+                if (! empty($f['saran'])) {
+                    $h .= '<datalist id="' . esc($id . '-' . $nama . '-saran', 'attr') . '">';
+                    foreach ($f['saran'] as $s) {
+                        $h .= '<option value="' . esc((string) $s, 'attr') . '">';
+                    }
+                    $h .= '</datalist>';
+                }
+            }
+            if (! empty($f['petunjuk'])) {
+                $h .= '<span class="kecil-teks" style="display:block;margin-top:2px">' . esc((string) $f['petunjuk']) . '</span>';
+            }
+            $h .= '</label>';
+        }
+        $h .= '</div>';
+        if (! empty($konfig['catatan'])) {
+            $h .= '<p class="kecil-teks" style="margin:12px 0 0">' . esc((string) $konfig['catatan']) . '</p>';
+        }
+        $h .= '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">';
+        if ($tombol['hapus'] && ! empty($konfig['aksi_hapus'])) {
+            $h .= '<button type="button" class="tombol bahaya" data-fm-hapus hidden style="margin-right:auto">' . esc((string) ($tombol['hapus_teks'] ?? 'Hapus')) . '</button>';
+        }
+        if ($tombol['batal']) {
+            $h .= '<button type="button" data-fm-tutup>Batal</button>';
+        }
+        if ($tombol['simpan']) {
+            $h .= '<button type="submit" class="tombol" data-fm-simpan data-teks-tambah="' . esc((string) ($tombol['simpan_teks'] ?? 'Simpan'), 'attr')
+                . '" data-teks-ubah="' . esc((string) ($tombol['simpan_teks_ubah'] ?? 'Simpan Perubahan'), 'attr') . '">'
+                . esc((string) ($tombol['simpan_teks'] ?? 'Simpan')) . '</button>';
+        }
+        return $h . '</div></form></div></div>';
+    }
+}
