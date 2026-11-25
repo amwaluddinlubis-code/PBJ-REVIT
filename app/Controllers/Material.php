@@ -243,6 +243,21 @@ class Material extends BaseController
             $b['qty_rab'] = $petaButuh[(int) $b['id']] ?? (float) $b['qty_warisan'];
         }
         unset($b);
-        return $this->tampil('material/sisa', ['bahan' => $bahan], 'Sisa Bahan — Aplikasi PBJ Sekolah');
+        // Bahan tanpa kebutuhan (Qty RAB 0 dan belum pernah masuk SPK)
+        // disembunyikan secara bawaan supaya daftar fokus ke bahan yang
+        // benar-benar dipakai gedung didanai; ?semua=1 membukanya kembali.
+        // Bahan ber-Qty RAB 0 yang sudah terlanjur masuk SPK (status
+        // Melebihi RAB) TIDAK ikut disembunyikan.
+        $tampilSemua = $this->request->getGet('semua') === '1';
+        $jmlSembunyi = 0;
+        foreach ($bahan as $b) {
+            if ((float) $b['qty_rab'] == 0.0 && (float) $b['masuk_spk'] == 0.0) {
+                $jmlSembunyi++;
+            }
+        }
+        if (! $tampilSemua && $jmlSembunyi > 0) {
+            $bahan = array_values(array_filter($bahan, static fn ($b) => ! ((float) $b['qty_rab'] == 0.0 && (float) $b['masuk_spk'] == 0.0)));
+        }
+        return $this->tampil('material/sisa', ['bahan' => $bahan, 'jmlSembunyi' => $jmlSembunyi, 'tampilSemua' => $tampilSemua], 'Sisa Bahan — Aplikasi PBJ Sekolah');
     }
 }
