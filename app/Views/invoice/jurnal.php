@@ -11,7 +11,7 @@
         <?php endforeach; ?>
       </select>
     </label>
-    <label>Tanggal Bayar <input type="date" name="tanggal"></label>
+    <label>Tanggal Bayar <input type="date" name="tanggal" value="<?= esc($tgl_bayar_default ?? date('Y-m-d')) ?>"></label>
     <label>Keterangan <input name="keterangan"></label>
     <div class="aksi md:col-span-2"><button type="submit">Catat Bayar</button></div>
   </form>

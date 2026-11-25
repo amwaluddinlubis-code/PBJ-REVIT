@@ -42,7 +42,7 @@
   <form method="post" action="<?= base_url('buku-kas/simpan') ?>">
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
-      <label>Tanggal <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required></label>
+      <label>Tanggal <input type="date" name="tanggal" value="<?= esc($tgl_bayar_default ?? date('Y-m-d')) ?>" required></label>
       <label class="md:col-span-2">Uraian <input type="text" name="uraian" required placeholder="cth. Penerimaan dana bantuan tahap 1"></label>
       <label>Kategori
         <select data-select-cari name="kategori">

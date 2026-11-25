@@ -107,11 +107,15 @@ Menu **Pengaturan → Kelola Sekolah**: daftar semua sekolah, tombol tambah seko
 
 Menu **Pengaturan → Identitas & Pengaturan** berisi lima kelompok untuk sekolah yang sedang aktif:
 
-1. **Identitas Sekolah** — nama, NPSN, alamat, desa/kecamatan/kabupaten/provinsi, tahun anggaran, paket pekerjaan.
+1. **Identitas Sekolah** — nama, NPSN, alamat, desa/kecamatan/kabupaten/provinsi, tahun anggaran, paket pekerjaan, dan **Bulan Bekerja** (lihat di bawah).
 2. **Pagu Anggaran** — total anggaran (pagu) sekolah; ditampilkan juga belanja terbayar dan sisa pagu. Pagu ini yang menjadi kunci kontrol total belanja. Angka boleh diketik berformat ribuan (mis. `2.540.292.000`).
 3. **Kop Surat** — baris kop pemerintah dan dinas untuk dokumen cetak.
 4. **Panitia & Penandatangan** — kepala sekolah, ketua, sekretaris, pelaksana, dan nama-nama yang menandatangani dokumen.
 5. **Pengaturan Lanjutan** (terlipat) — pemeriksa, toko/penyedia bawaan, tanggal survei.
+
+### Bulan Bekerja (kunci pencatatan)
+
+**Bulan Bekerja** adalah bulan dalam tahun anggaran yang sedang terbuka untuk pencatatan uang, diatur di kelompok Identitas Sekolah (di samping Tahun Anggaran). Selama bulan bekerja diatur, semua pencatatan arus kas — **pembayaran invoice** (Jurnal Pembayaran maupun Catat Bayar di rincian SPK), **pembayaran upah**, **transaksi kas manual**, dan **bukti setor** — hanya diterima bila **tanggalnya jatuh di bulan bekerja**; tanggal di bulan lain ditolak dengan pesan yang menyebut bulan bekerja yang berlaku. Formulir pembayaran otomatis menyarankan tanggal di dalam bulan bekerja. Bila periode berganti, pindahkan Bulan Bekerja di Pengaturan — perpindahannya tercatat di Jejak Audit. Tanggal dokumen operasional (SPK, BAP, BAST, invoice) tidak ikut dikunci; yang dikunci adalah pencatatan uangnya. Kosongkan pilihan Bulan Bekerja (belum diatur) bila kunci belum ingin diberlakukan.
 
 Di halaman yang sama ada **Master Penyedia**: tambah, **Ubah**, dan hapus toko/rekanan yang dipakai pada SPK dan invoice.
 
@@ -417,6 +421,8 @@ Menu **Keuangan → Invoice**: catat tagihan penyedia (nomor urut, toko, tanggal
 Menu **Keuangan → Jurnal Pembayaran** mencatat pembayaran invoice: pilih invoice, tanggal bayar, dan cara bayar. Aplikasi menghitung **PPh 22 sebesar 1,5%** secara otomatis, menandai invoice **Sudah Bayar**, dan memeriksa total terhadap pagu — jurnal yang menembus pagu ditolak. Baris jurnal dapat dihapus bila keliru catat (invoice kembali Belum Bayar). Pencatatan jurnal hanya untuk peran **bendahara** atau **admin**.
 
 Pembayaran invoice sebuah SPK juga dapat dicatat langsung dari panel **Tuntaskan SPK** di rincian SPK (Bab 13) — hasil dan aturannya sama, panel hanya menghemat perpindahan menu.
+
+> **Kunci Bulan Bekerja.** Bila Bulan Bekerja diatur di Pengaturan (Bab 3), tanggal bayar harus jatuh di bulan bekerja — ini berlaku untuk jurnal pembayaran, pembayaran upah, transaksi kas manual, dan bukti setor. Pencatatan bertanggal di luar bulan bekerja ditolak aplikasi.
 
 ### Penerimaan Dana Bantuan
 

@@ -246,7 +246,7 @@ class Invoice extends BaseController
              JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE i.status = 'Belum Bayar' AND s.sekolah_id = ? AND i.is_deleted = 0 ORDER BY i.nomor_urut",
             [$this->sid()]
         )->getResultArray();
-        return $this->tampil('invoice/jurnal', ['baris' => $baris, 'belum' => $belum], 'Jurnal Pembayaran — Aplikasi PBJ Sekolah');
+        return $this->tampil('invoice/jurnal', ['baris' => $baris, 'belum' => $belum, 'tgl_bayar_default' => $this->tanggalBulanBekerja()], 'Jurnal Pembayaran — Aplikasi PBJ Sekolah');
     }
 
     public function jurnalTambah()
@@ -264,6 +264,9 @@ class Invoice extends BaseController
         )->getRowArray();
         if ($inv === null) {
             return redirect()->to('invoice/jurnal')->with('galat', 'Invoice tidak ditemukan.');
+        }
+        if ($g = $this->galatBulanBekerja($this->request->getPost('tanggal') ?: null)) {
+            return redirect()->to('invoice/jurnal')->with('galat', $g);
         }
         // Kontrol pagu: total belanja terbayar tidak boleh melewati total anggaran
         [$boleh, $sisaPagu, $anggaran] = $this->cekPagu((float) $inv['nilai']);

@@ -31,6 +31,7 @@ class Upah extends BaseController
             'daftar' => $daftar, 'total' => $total, 'total_pph21' => $totalPph21,
             'master' => $db->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray(),
             'pekerjaan_per_gedung' => $this->pekerjaanPerGedung(),
+            'tgl_bayar_default' => $this->tanggalBulanBekerja(),
         ], 'Pembayaran Upah');
     }
 
@@ -67,6 +68,10 @@ class Upah extends BaseController
         if ($jenis === '' || $oh <= 0 || $jumlah <= 0) {
             return redirect()->to('/upah')->with('galat', 'Jenis tenaga, orang-hari, dan tarif wajib terisi benar.');
         }
+        $tanggalUpah = (string) ($r->getPost('tanggal') ?: date('Y-m-d'));
+        if ($g = $this->galatBulanBekerja($tanggalUpah)) {
+            return redirect()->to('/upah')->with('galat', $g);
+        }
         [$boleh, $sisaPagu, $anggaran] = $this->cekPagu($jumlah);
         if (! $boleh) {
             return redirect()->to('/upah')->with('galat', sprintf(
@@ -79,7 +84,7 @@ class Upah extends BaseController
         $this->db()->table('upah_bayar')->insert([
             'sekolah_id' => $this->sid(), 'gedung_id' => $gedungId,
             'pekerjaan_id' => (int) $r->getPost('pekerjaan_id') ?: null,
-            'tanggal' => (string) ($r->getPost('tanggal') ?: date('Y-m-d')),
+            'tanggal' => $tanggalUpah,
             'jenis_tenaga' => $jenis,
             'penerima' => trim((string) $r->getPost('penerima')) ?: null,
             'orang_hari' => $oh, 'tarif' => $tarif, 'jumlah' => $jumlah,

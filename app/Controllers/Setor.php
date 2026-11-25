@@ -91,6 +91,7 @@ class Setor extends BaseController
         return $this->tampil('setor/index', [
             'baris' => $baris, 'setor' => $setor,
             'sisa' => $sisa, 'setor_sisa' => $setorSisa,
+            'tgl_bayar_default' => $this->tanggalBulanBekerja(),
         ], 'Bukti Setor & Pajak — Aplikasi PBJ Sekolah');
     }
 
@@ -105,6 +106,9 @@ class Setor extends BaseController
         if (! in_array($jenis, ['pph22', 'ppn', 'pph21', 'pph23', 'pph42', 'sisa_dana'], true)
             || $jumlah <= 0 || ! $r->getPost('tanggal_setor')) {
             return redirect()->to('/bukti-setor')->with('galat', 'Jenis setoran, tanggal setor, dan jumlah wajib diisi.');
+        }
+        if ($g = $this->galatBulanBekerja((string) $r->getPost('tanggal_setor'))) {
+            return redirect()->to('/bukti-setor')->with('galat', $g);
         }
         $masa = trim((string) $r->getPost('masa'));
         $this->db()->table('bukti_setor')->insert([

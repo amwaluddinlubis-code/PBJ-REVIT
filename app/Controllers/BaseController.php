@@ -801,6 +801,55 @@ abstract class BaseController extends Controller
      * Kontrol pagu (Aturan 4): total belanja tidak boleh melebihi total anggaran.
      * Mengembalikan [boleh, sisa_sebelum, total_anggaran].
      */
+    /**
+     * Bulan Bekerja sekolah aktif (keputusan AMWAL 26 Nov 2026): bulan
+     * dalam tahun_anggaran yang terbuka untuk pencatatan uang, diatur di
+     * Pengaturan. null bila belum diatur (kunci belum berlaku).
+     *
+     * @return array{bulan:int, tahun:int, ym:string, label:string}|null
+     */
+    protected function bulanBekerja(): ?array
+    {
+        $idn = $this->sekolahAktif();
+        $b = (int) ($idn['bulan_bekerja'] ?? 0);
+        if ($b < 1 || $b > 12) {
+            return null;
+        }
+        $tahun = (int) ($idn['tahun_anggaran'] ?? date('Y'));
+        $nama = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        return ['bulan' => $b, 'tahun' => $tahun, 'ym' => sprintf('%04d-%02d', $tahun, $b), 'label' => $nama[$b] . ' ' . $tahun];
+    }
+
+    /**
+     * Penjaga Bulan Bekerja: kembalikan pesan galat bila tanggal (ISO;
+     * kosong = hari ini) berada di luar bulan bekerja, null bila lolos
+     * atau bulan bekerja belum diatur. Dipakai semua pencatatan arus kas.
+     */
+    protected function galatBulanBekerja(?string $tanggal): ?string
+    {
+        $bb = $this->bulanBekerja();
+        if ($bb === null) {
+            return null;
+        }
+        $t = $tanggal ?: date('Y-m-d');
+        if (substr((string) $t, 0, 7) !== $bb['ym']) {
+            return 'Tanggal ' . tgl($t) . ' berada di luar Bulan Bekerja ' . $bb['label']
+                . ' — pencatatan uang dikunci pada bulan bekerja. Ubah tanggalnya, atau pindah Bulan Bekerja lewat Pengaturan.';
+        }
+        return null;
+    }
+
+    /** Tanggal bawaan formulir pembayaran: hari ini bila di dalam bulan bekerja, selain itu hari terakhir bulan bekerja. */
+    protected function tanggalBulanBekerja(): string
+    {
+        $bb = $this->bulanBekerja();
+        $hariIni = date('Y-m-d');
+        if ($bb === null || substr($hariIni, 0, 7) === $bb['ym']) {
+            return $hariIni;
+        }
+        return date('Y-m-t', strtotime($bb['ym'] . '-01'));
+    }
+
     protected function cekPagu(float $tambahan): array
     {
         $anggaran = (float) ($this->sekolahAktif()['total_anggaran'] ?? 0);

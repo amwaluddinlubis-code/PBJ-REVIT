@@ -61,6 +61,7 @@ class BukuKas extends BaseController
             'buku' => $buku, 'nama_buku' => $this->namaBuku($buku), 'bulan' => $bulan,
             'saldo_awal' => $saldoAwal, 'baris' => $baris, 'saldo_akhir' => $saldoAkhir,
             'manual' => $manual,
+            'tgl_bayar_default' => $this->tanggalBulanBekerja(),
         ], $this->namaBuku($buku) . ' — Aplikasi PBJ Sekolah');
     }
 
@@ -81,6 +82,9 @@ class BukuKas extends BaseController
         $tahap = $kategori === 'penerimaan' ? ((int) $r->getPost('tahap') ?: null) : null;
         if ($uraian === '' || $jumlah <= 0 || ! $r->getPost('tanggal')) {
             return redirect()->to('/buku-kas')->with('galat', 'Tanggal, uraian, dan jumlah wajib diisi.');
+        }
+        if ($g = $this->galatBulanBekerja((string) $r->getPost('tanggal'))) {
+            return redirect()->to('/buku-kas')->with('galat', $g);
         }
         $this->db()->table('kas_transaksi')->insert([
             'sekolah_id' => $this->sid(),

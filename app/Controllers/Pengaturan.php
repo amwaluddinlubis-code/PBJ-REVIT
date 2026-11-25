@@ -115,8 +115,19 @@ class Pengaturan extends BaseController
         // Pagu anggaran: terima ketikan berformat ribuan ("2.540.292.000").
         $pagu = (string) $this->request->getPost('total_anggaran');
         $data['total_anggaran'] = (float) str_replace(['.', ','], ['', '.'], preg_replace('/[^0-9.,]/', '', $pagu) ?? '0');
+        // Bulan Bekerja (kunci pencatatan arus kas): '' = belum diatur.
+        $bbLama = (int) ($this->sekolahAktif()['bulan_bekerja'] ?? 0);
+        $bbBaru = (int) $this->request->getPost('bulan_bekerja');
+        $data['bulan_bekerja'] = ($bbBaru >= 1 && $bbBaru <= 12) ? $bbBaru : null;
         $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('sekolah')->where('id', $this->sid())->update($data);
+        if ($bbBaru !== $bbLama) {
+            $namaBulan = [0 => '(belum diatur)', 1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            $tahun = (string) ($data['tahun_anggaran'] ?? $this->sekolahAktif()['tahun_anggaran'] ?? date('Y'));
+            $this->catatAudit('sekolah', $this->sid(), 'bulan-bekerja', 'Bulan bekerja diubah dari '
+                . $namaBulan[$bbLama] . ($bbLama > 0 ? ' ' . $tahun : '') . ' menjadi '
+                . $namaBulan[$bbBaru] . ($bbBaru > 0 ? ' ' . $tahun : '') . '.');
+        }
         return redirect()->to('pengaturan')->with('sukses', 'Identitas disimpan — kop surat dan dokumen mengikuti otomatis.');
     }
 
