@@ -3926,6 +3926,7 @@ html.gelap .fm-kartu { --fm-latar: #1c2534; }
 html.gelap .fm-kepala { background: rgba(255, 255, 255, .07); }
 .fm-kepala h3 { margin: 0; text-align: left; }
 .fm-isi { padding: 20px 20px 8px; }
+.fm-isi .grid { row-gap: 28px; }
 .fm-kaki { display: flex; gap: 8px; justify-content: flex-end; align-items: center; padding: 12px 20px; margin-top: 10px; background: rgba(16, 24, 40, .055); border-top: 1px solid var(--ta-garis); }
 html.gelap .fm-kaki { background: rgba(255, 255, 255, .07); }
 .fm-kotak-field { position: relative; }
