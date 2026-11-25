@@ -1,7 +1,7 @@
 <?php $fmt = static fn ($n) => number_format((float) $n, 2, ',', '.'); ?>
 <div class="panel">
-  <h2>Catat Barang Masuk / Keluar</h2>
-  <p class="kecil-teks">Pilih gedung tujuan dan bahan — petunjuk di bawah form menunjukkan kebutuhan gedung itu dan stok tersedia bahan ini, agar tidak salah catat. Pilihan bahan hanya menampilkan bahan yang masih berstok (sudah di-BAST + saldo buku).</p>
+  <h2>Catat Barang Keluar</h2>
+  <p class="kecil-teks">Barang <strong>masuk tercatat otomatis dari BAST</strong> — tanggalnya mengikuti tanggal BAST — jadi di sini Bapak/Ibu hanya mencatat barang <strong>keluar</strong>. Pilih gedung tujuan dan bahan; petunjuk di bawah form menunjukkan kebutuhan gedung itu dan stok tersedia bahan ini, agar tidak salah catat. Pilihan bahan hanya menampilkan bahan yang masih berstok (penerimaan BAST dikurangi yang sudah keluar).</p>
   <form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('material/simpan') ?>">
     <?= csrf_field() ?>
     <label>Tanggal <input type="date" name="tanggal"></label>
@@ -16,8 +16,7 @@
       <span class="kecil-teks">Belum ada bahan yang berstok. Pilihan bahan tampil sesudah ada SPK yang di-BAST — periksa di <a href="<?= base_url('dokumen') ?>">Dokumen</a>.</span>
       <?php endif; ?>
     </label>
-    <label>Masuk <input type="number" name="masuk" step="0.001" value="0"></label>
-    <label>Keluar <input type="number" name="keluar" step="0.001" value="0"></label>
+    <label>Jumlah Keluar <input type="number" name="keluar" step="0.001" value="0"></label>
     <label>Keterangan <input name="keterangan"></label>
     <p class="kecil-teks md:col-span-2" id="info-catatan" hidden style="margin:0"></p>
     <div class="aksi md:col-span-2"><button type="submit">Catat</button></div>
@@ -64,39 +63,39 @@
       <span id="ids-material"></span>
       <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} baris buku material terpilih? Sisa stok akan berubah.')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
     </form>
-    <form method="post" action="<?= base_url('material/kosongkan') ?>" data-konfirmasi="Kosongkan buku material sekolah ini? Semua catatan masuk/keluar akan dihapus (hapus lunak) dan sisa stok kembali ke hitungan SPK saja." data-konfirmasi-judul="Kosongkan Buku Material" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+    <form method="post" action="<?= base_url('material/kosongkan') ?>" data-konfirmasi="Kosongkan buku material sekolah ini? Semua catatan KELUAR akan dihapus (hapus lunak); catatan masuk dari BAST tidak terpengaruh dan stok kembali sebesar penerimaan BAST." data-konfirmasi-judul="Kosongkan Buku Material" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
       <?= csrf_field() ?>
       <button type="submit" class="bahaya">Kosongkan Buku Material</button>
     </form>
   </div>
+  <p class="kecil-teks" style="margin:0 0 10px">Baris bertanda <strong>Otomatis</strong> berasal dari BAST (tanggal = tanggal BAST) dan tidak dapat dihapus dari sini. Catatan masuk manual lama tidak lagi ditampilkan dan tidak dihitung — stok murni penerimaan BAST dikurangi catatan keluar.</p>
   <table data-paginasi="10" data-cari="Cari catatan material…">
     <tr><th style="width:34px"><input type="checkbox" title="Pilih semua baris" @change="pilihSemua($event)"></th><th>Tanggal</th><th>No. BPB</th><th>Bahan</th><th>Gedung</th><th class="angka">Masuk</th><th class="angka">Keluar</th><th class="angka">Sisa Stok</th><th>Keterangan</th><th></th></tr>
     <?php foreach ($baris as $r): ?>
     <tr>
-      <td><input type="checkbox" data-pilih value="<?= (int) $r['id'] ?>" x-model="terpilih"></td>
+      <td><?php if (! empty($r['otomatis'])): ?><span class="kecil-teks">Otomatis</span><?php else: ?><input type="checkbox" data-pilih value="<?= (int) $r['id'] ?>" x-model="terpilih"><?php endif; ?></td>
       <td><?= esc(tgl($r['tanggal'] ?? null)) ?></td><td><?= esc($r['no_bpb'] ?? '') ?></td>
       <td><?= esc($r['kode']) ?> — <?= esc($r['nama']) ?> (<?= esc($r['satuan'] ?? '') ?>)</td>
       <td><?= esc($r['gedung_nama'] ?? '—') ?></td>
       <td class="angka"><?= $fmt($r['masuk']) ?></td><td class="angka"><?= $fmt($r['keluar']) ?></td>
       <td class="angka"><?= $fmt($r['sisa']) ?></td><td><?= esc($r['keterangan'] ?? '') ?></td>
-      <td><form class="inline" method="post" action="<?= base_url('material/hapus/' . $r['id']) ?>" data-konfirmasi="Hapus baris ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
+      <td><?php if (empty($r['otomatis'])): ?><form class="inline" method="post" action="<?= base_url('material/hapus/' . $r['id']) ?>" data-konfirmasi="Hapus baris ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form><?php endif; ?></td>
     </tr>
     <?php endforeach; ?>
-    <?php if (! $baris): ?><tr><td colspan="10">Belum ada catatan — sama seperti di workbook, buku material baru berjalan bila mulai dicatat dari sini.</td></tr><?php endif; ?>
+    <?php if (! $baris): ?><tr><td colspan="10">Belum ada catatan — catatan masuk muncul otomatis sesudah ada BAST, catatan keluar dicatat dari form di atas.</td></tr><?php endif; ?>
   </table>
 </div>
 <?php if (! empty($rekap_gedung)): ?>
 <div class="panel">
-  <h2>Rekap Keluar–Masuk per Gedung</h2>
-  <p class="kecil-teks">Hanya dari catatan yang gedung tujuannya diisi. Saldo utama di tabel atas tetap gabungan se-sekolah; rekap ini menunjukkan bagian tiap gedung — mis. bahan yang dibeli lewat satu SPK gabungan lalu dipakai masing-masing gedung.</p>
+  <h2>Rekap Keluar per Gedung</h2>
+  <p class="kecil-teks">Hanya dari catatan keluar yang gedung tujuannya diisi — menunjukkan pemakaian tiap gedung, mis. bahan dari satu SPK gabungan yang dipakai masing-masing gedung. Stok utama tetap gabungan se-sekolah (penerimaan BAST dikurangi total keluar).</p>
   <table data-cari="Cari gedung / bahan…">
-    <tr><th>Gedung</th><th>Bahan</th><th class="angka">Masuk</th><th class="angka">Keluar</th><th class="angka">Saldo Gedung</th></tr>
+    <tr><th>Gedung</th><th>Bahan</th><th class="angka">Sudah Keluar</th></tr>
     <?php foreach ($rekap_gedung as $r): ?>
     <tr>
       <td><strong><?= esc($r['gedung_nama']) ?></strong></td>
       <td><?= esc($r['kode']) ?> — <?= esc($r['nama']) ?> (<?= esc($r['satuan'] ?? '') ?>)</td>
-      <td class="angka"><?= $fmt($r['masuk']) ?></td><td class="angka"><?= $fmt($r['keluar']) ?></td>
-      <td class="angka"><?= $fmt($r['saldo']) ?></td>
+      <td class="angka"><?= $fmt($r['keluar']) ?></td>
     </tr>
     <?php endforeach; ?>
   </table>
@@ -116,7 +115,7 @@
   function segarkan() {
     if (!selB.value) { info.hidden = true; return; }
     var op = selB.options[selB.selectedIndex];
-    var teks = 'Stok tersedia bahan ini: ' + fmt(parseFloat(op.dataset.stok || '0')) + ' ' + (op.dataset.satuan || '') + ' (sudah di-BAST + saldo buku).';
+    var teks = 'Stok tersedia bahan ini: ' + fmt(parseFloat(op.dataset.stok || '0')) + ' ' + (op.dataset.satuan || '') + ' (penerimaan BAST dikurangi yang sudah keluar).';
     if (selG && selG.value) {
       var namaG = selG.options[selG.selectedIndex].textContent;
       var e = (peta[selG.value] || {})[selB.value];

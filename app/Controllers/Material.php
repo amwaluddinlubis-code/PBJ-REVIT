@@ -7,12 +7,36 @@ class Material extends BaseController
     public function index()
     {
         $db = $this->db();
-        $baris = $db->query(
+        // Buku besar gabungan: catatan KELUAR manual (buku_material dengan
+        // keluar > 0; kolom masuk manual lama diabaikan) + catatan MASUK
+        // otomatis dari BAST (barisMasukBast). Digabung kronologis, lalu
+        // saldo berjalan per bahan dihitung atas gabungan itu.
+        $baris = [];
+        foreach ($db->query(
             'SELECT m.*, b.kode, b.nama, b.satuan, g.nama AS gedung_nama FROM buku_material m
              JOIN bahan b ON b.id = m.bahan_id LEFT JOIN gedung g ON g.id = m.gedung_id
-             WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0 ORDER BY m.tanggal IS NULL, m.tanggal, m.id',
+             WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0 AND m.keluar > 0',
             [$this->sid()]
-        )->getResultArray();
+        )->getResultArray() as $r) {
+            $r['masuk'] = 0.0;
+            $r['otomatis'] = false;
+            $baris[] = $r;
+        }
+        foreach ($this->barisMasukBast() as $r) {
+            $baris[] = ['id' => null, 'tanggal' => $r['tanggal'], 'no_bpb' => 'BAST ' . $r['bast_urut'],
+                'bahan_id' => (int) $r['bahan_id'], 'kode' => $r['kode'], 'nama' => $r['nama'], 'satuan' => $r['satuan'],
+                'gedung_id' => null, 'gedung_nama' => null, 'masuk' => (float) $r['masuk'], 'keluar' => 0.0,
+                'keterangan' => 'Otomatis dari BAST ' . $r['bast_urut'] . ' — SPK No. ' . $r['spk_nomor'], 'otomatis' => true];
+        }
+        usort($baris, static function ($a, $b) {
+            $ta = $a['tanggal'] ?? '9999-12-31';
+            $tb = $b['tanggal'] ?? '9999-12-31';
+            if ($ta !== $tb) {
+                return strcmp((string) $ta, (string) $tb);
+            }
+            return ((int) ($a['otomatis'] ?? false) <=> (int) ($b['otomatis'] ?? false))
+                ?: ((int) ($a['id'] ?? 0) <=> (int) ($b['id'] ?? 0));
+        });
         // Saldo berjalan per bahan
         $saldo = [];
         foreach ($baris as &$r) {
@@ -20,18 +44,17 @@ class Material extends BaseController
             $r['sisa'] = $saldo[$r['bahan_id']];
         }
         unset($r);
-        // Rekap keluar/masuk per gedung (hanya baris yang gedungnya terisi)
+        // Rekap KELUAR per gedung (hanya catatan keluar yang gedungnya terisi)
         $rekapGedung = $db->query(
-            'SELECT g.nama AS gedung_nama, b.kode, b.nama, b.satuan,
-                    SUM(m.masuk) AS masuk, SUM(m.keluar) AS keluar, SUM(m.masuk - m.keluar) AS saldo
+            'SELECT g.nama AS gedung_nama, b.kode, b.nama, b.satuan, SUM(m.keluar) AS keluar
              FROM buku_material m JOIN bahan b ON b.id = m.bahan_id JOIN gedung g ON g.id = m.gedung_id
-             WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0
+             WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0 AND m.keluar > 0
              GROUP BY g.nama, b.kode, b.nama, b.satuan ORDER BY g.nama, b.kode',
             [$this->sid()]
         )->getResultArray();
         $bahan = $db->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('kode')->get()->getResultArray();
         $gedung = $db->table('gedung')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray();
-        // Stok tersedia per bahan (sudah di-BAST + saldo neto buku) —
+        // Stok tersedia per bahan (penerimaan BAST − catatan keluar) —
         // pilihan bahan pada form catat HANYA menampilkan bahan berstok,
         // beserta sisa stoknya, agar pencatatan tidak salah bahan.
         $stok = $this->stokPerBahan();
@@ -112,32 +135,22 @@ class Material extends BaseController
     }
 
     /**
-     * Stok tersedia per bahan — definisi sama dengan Rencana Mingguan:
-     * qty SPK yang SPK-nya sudah di-BAST + saldo neto Buku Material
-     * (masuk − keluar). Kunci: bahan_id.
+     * Stok tersedia per bahan — definisi sama dengan Rencana Mingguan
+     * (keputusan AMWAL 25 Nov 2026): penerimaan OTOMATIS dari BAST
+     * (masukBastPerBahan) dikurangi catatan KELUAR Buku Material.
+     * Catatan masuk manual TIDAK dihitung. Kunci: bahan_id.
      */
     private function stokPerBahan(): array
     {
         $db = $this->db();
-        $stok = [];
+        $stok = $this->masukBastPerBahan();
         foreach ($db->query(
-            'SELECT d.bahan_id, SUM(d.qty) AS qty FROM spk_detail d
-             JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0
-             JOIN bahan b ON b.id = d.bahan_id
-             WHERE b.sekolah_id = ? AND d.is_deleted = 0
-               AND EXISTS (SELECT 1 FROM bast x WHERE x.spk_id = s.id AND x.is_deleted = 0)
-             GROUP BY d.bahan_id',
-            [$this->sid()]
-        )->getResultArray() as $r) {
-            $stok[(int) $r['bahan_id']] = (float) $r['qty'];
-        }
-        foreach ($db->query(
-            'SELECT m.bahan_id, SUM(m.masuk - m.keluar) AS neto FROM buku_material m
+            'SELECT m.bahan_id, SUM(m.keluar) AS keluar FROM buku_material m
              JOIN bahan b ON b.id = m.bahan_id
              WHERE b.sekolah_id = ? AND m.is_deleted = 0 GROUP BY m.bahan_id',
             [$this->sid()]
         )->getResultArray() as $r) {
-            $stok[(int) $r['bahan_id']] = ($stok[(int) $r['bahan_id']] ?? 0.0) + (float) $r['neto'];
+            $stok[(int) $r['bahan_id']] = ($stok[(int) $r['bahan_id']] ?? 0.0) - (float) $r['keluar'];
         }
         return $stok;
     }
@@ -150,20 +163,19 @@ class Material extends BaseController
         if (! $bahan) {
             return redirect()->to('material')->with('galat', 'Bahan tidak ditemukan pada sekolah aktif.');
         }
-        $masuk = (float) str_replace(',', '.', (string) $this->request->getPost('masuk'));
+        // Sejak 25 Nov 2026 form ini HANYA mencatat barang KELUAR; barang
+        // masuk tercatat otomatis dari BAST (tanggal BAST).
         $keluar = (float) str_replace(',', '.', (string) $this->request->getPost('keluar'));
-        if ($masuk <= 0 && $keluar <= 0) {
-            return redirect()->to('material')->with('galat', 'Isi jumlah Masuk atau Keluar terlebih dahulu.');
+        if ($keluar <= 0) {
+            return redirect()->to('material')->with('galat', 'Isi jumlah Keluar terlebih dahulu — barang masuk kini tercatat otomatis dari BAST.');
         }
         // Validasi stok: yang keluar tidak boleh melebihi stok tersedia
-        // (sudah di-BAST + saldo buku) bahan itu.
-        if ($keluar > 0) {
-            $stok = $this->stokPerBahan()[$bahanId] ?? 0.0;
-            if ($keluar > $stok + 0.0005) {
-                return redirect()->to('material')->with('galat', 'Keluar ' . number_format($keluar, 2, ',', '.') . ' ' . ($bahan['satuan'] ?? '')
-                    . ' melebihi stok tersedia ' . number_format(max($stok, 0), 2, ',', '.') . ' ' . ($bahan['satuan'] ?? '')
-                    . ' untuk ' . $bahan['kode'] . ' — ' . $bahan['nama'] . '. Stok tersedia = bahan yang sudah di-BAST dikurangi yang sudah keluar.');
-            }
+        // (penerimaan BAST − yang sudah keluar) bahan itu.
+        $stok = $this->stokPerBahan()[$bahanId] ?? 0.0;
+        if ($keluar > $stok + 0.0005) {
+            return redirect()->to('material')->with('galat', 'Keluar ' . number_format($keluar, 2, ',', '.') . ' ' . ($bahan['satuan'] ?? '')
+                . ' melebihi stok tersedia ' . number_format(max($stok, 0), 2, ',', '.') . ' ' . ($bahan['satuan'] ?? '')
+                . ' untuk ' . $bahan['kode'] . ' — ' . $bahan['nama'] . '. Stok tersedia = penerimaan BAST dikurangi yang sudah keluar.');
         }
         $gedungId = (int) $this->request->getPost('gedung_id') ?: null;
         if ($gedungId !== null && $this->ambilGedung($gedungId) === null) {
@@ -174,7 +186,7 @@ class Material extends BaseController
             'no_bpb' => trim((string) $this->request->getPost('no_bpb')) ?: null,
             'bahan_id' => $bahanId,
             'gedung_id' => $gedungId,
-            'masuk' => $masuk,
+            'masuk' => 0,
             'keluar' => $keluar,
             'keterangan' => trim((string) $this->request->getPost('keterangan')) ?: null,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
@@ -239,8 +251,12 @@ class Material extends BaseController
         foreach ($this->kebutuhanBahanSekolah()['tertaut'] as $b) {
             $petaButuh[(int) $b['bahan_id']] = (float) $b['qty_butuh'];
         }
+        // Stok gudang = penerimaan BAST − catatan keluar (masuk manual
+        // Buku Material tidak dihitung lagi — keputusan AMWAL 25 Nov 2026).
+        $petaMasukBast = $this->masukBastPerBahan();
         foreach ($bahan as &$b) {
             $b['qty_rab'] = $petaButuh[(int) $b['id']] ?? (float) $b['qty_warisan'];
+            $b['gudang_masuk'] = $petaMasukBast[(int) $b['id']] ?? 0.0;
         }
         unset($b);
         // Bahan tanpa kebutuhan (Qty RAB 0 dan belum pernah masuk SPK)

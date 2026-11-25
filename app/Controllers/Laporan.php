@@ -113,12 +113,28 @@ class Laporan extends BaseController
     public function eksporMaterial()
     {
         $sid = $this->sid();
-        $baris = $this->db()->query(
-            'SELECT m.tanggal, m.no_bpb, b.kode, b.nama, b.satuan, m.masuk, m.keluar, m.keterangan
+        // Buku besar yang sama dengan halaman Buku Material: catatan
+        // KELUAR manual + catatan MASUK otomatis dari BAST (masuk manual
+        // lama diabaikan — keputusan AMWAL 25 Nov 2026).
+        $baris = [];
+        foreach ($this->db()->query(
+            'SELECT m.tanggal, m.no_bpb, b.kode, b.nama, b.satuan, m.keluar, m.keterangan
              FROM buku_material m JOIN bahan b ON b.id = m.bahan_id
-             WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0 ORDER BY m.tanggal IS NULL, m.tanggal, m.id',
+             WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0 AND m.keluar > 0',
             [$sid]
-        )->getResultArray();
+        )->getResultArray() as $r) {
+            $baris[] = $r + ['masuk' => 0.0];
+        }
+        foreach ($this->barisMasukBast() as $r) {
+            $baris[] = ['tanggal' => $r['tanggal'], 'no_bpb' => 'BAST ' . $r['bast_urut'], 'kode' => $r['kode'],
+                'nama' => $r['nama'], 'satuan' => $r['satuan'], 'masuk' => (float) $r['masuk'], 'keluar' => 0.0,
+                'keterangan' => 'Otomatis dari BAST — SPK No. ' . $r['spk_nomor']];
+        }
+        usort($baris, static function ($a, $b) {
+            $ta = $a['tanggal'] ?? '9999-12-31';
+            $tb = $b['tanggal'] ?? '9999-12-31';
+            return $ta !== $tb ? strcmp((string) $ta, (string) $tb) : strcmp((string) $a['kode'], (string) $b['kode']);
+        });
         $ss = new Spreadsheet();
         $sh = $ss->getActiveSheet();
         $sh->setTitle('Buku Material');
@@ -149,8 +165,12 @@ class Laporan extends BaseController
         foreach ($this->kebutuhanBahanSekolah()['tertaut'] as $b) {
             $petaButuh[(int) $b['bahan_id']] = (float) $b['qty_butuh'];
         }
+        // Stok gudang = penerimaan BAST − catatan keluar (sama dengan
+        // halaman Sisa Bahan; masuk manual tidak dihitung lagi).
+        $petaMasukBast = $this->masukBastPerBahan();
         foreach ($baris as &$b) {
             $b['qty_rab'] = $petaButuh[(int) $b['id']] ?? (float) $b['qty_warisan'];
+            $b['gudang_masuk'] = $petaMasukBast[(int) $b['id']] ?? 0.0;
         }
         unset($b);
         $ss = new Spreadsheet();

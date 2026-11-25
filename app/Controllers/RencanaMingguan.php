@@ -293,12 +293,19 @@ class RencanaMingguan extends BaseController
             $bahan[$bid]['kotor'] += (float) $m['volume_target'] * (float) $m['koefisien'] * $this->faktorSatuan($m['satuan_komponen'] ?? null, $m);
         }
 
-        // Stok & pesanan berjalan per bahan (seluruh sekolah).
-        $diterima = $dalamPesanan = $bukuNet = [];
+        // Stok & pesanan berjalan per bahan (seluruh sekolah). Diterima =
+        // rincian SPK yang tercakup BAST (lewat BAP-nya; BAST lama tanpa
+        // bap_id mencakup seluruh SPK) — definisi yang sama dengan
+        // Material::stokPerBahan / BaseController::masukBastPerBahan.
+        // Stok akhir = diterima − catatan KELUAR Buku Material (catatan
+        // masuk manual diabaikan, keputusan AMWAL 25 Nov 2026).
+        $diterima = $dalamPesanan = $bukuKeluar = [];
+        $syaratBast = '(EXISTS (SELECT 1 FROM bap_detail bd JOIN bap bp ON bp.id = bd.bap_id AND bp.is_deleted = 0 JOIN bast x ON x.bap_id = bd.bap_id AND x.is_deleted = 0 WHERE bd.detail_id = d.id AND bd.is_deleted = 0)'
+            . ' OR EXISTS (SELECT 1 FROM bast y WHERE y.spk_id = s.id AND y.bap_id IS NULL AND y.is_deleted = 0))';
         foreach ($db->query(
             'SELECT d.bahan_id,
-                    SUM(CASE WHEN EXISTS (SELECT 1 FROM bast x WHERE x.spk_id = s.id AND x.is_deleted = 0) THEN d.qty ELSE 0 END) AS diterima,
-                    SUM(CASE WHEN EXISTS (SELECT 1 FROM bast x WHERE x.spk_id = s.id AND x.is_deleted = 0) THEN 0 ELSE d.qty END) AS berjalan
+                    SUM(CASE WHEN ' . $syaratBast . ' THEN d.qty ELSE 0 END) AS diterima,
+                    SUM(CASE WHEN ' . $syaratBast . ' THEN 0 ELSE d.qty END) AS berjalan
              FROM spk_detail d JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0
              WHERE s.sekolah_id = ? AND d.bahan_id IS NOT NULL AND d.is_deleted = 0 GROUP BY d.bahan_id',
             [$this->sid()]
@@ -307,15 +314,15 @@ class RencanaMingguan extends BaseController
             $dalamPesanan[(int) $s['bahan_id']] = (float) $s['berjalan'];
         }
         foreach ($db->query(
-            'SELECT m.bahan_id, SUM(m.masuk - m.keluar) AS net FROM buku_material m
+            'SELECT m.bahan_id, SUM(m.keluar) AS keluar FROM buku_material m
              JOIN bahan b ON b.id = m.bahan_id WHERE b.sekolah_id = ? AND m.is_deleted = 0 GROUP BY m.bahan_id',
             [$this->sid()]
         )->getResultArray() as $s) {
-            $bukuNet[(int) $s['bahan_id']] = (float) $s['net'];
+            $bukuKeluar[(int) $s['bahan_id']] = (float) $s['keluar'];
         }
         $totalBersih = 0.0;
         foreach ($bahan as $bid => &$b) {
-            $b['stok'] = ($diterima[$bid] ?? 0) + ($bukuNet[$bid] ?? 0);
+            $b['stok'] = ($diterima[$bid] ?? 0) - ($bukuKeluar[$bid] ?? 0);
             $b['berjalan'] = $dalamPesanan[$bid] ?? 0;
             $b['bersih'] = max(0.0, $b['kotor'] - $b['stok'] - $b['berjalan']);
             $b['harga'] = $this->hargaAcuan($bid);

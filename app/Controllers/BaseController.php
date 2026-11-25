@@ -303,6 +303,88 @@ abstract class BaseController extends Controller
         return 1.0;
     }
 
+    /**
+     * Penerimaan bahan OTOMATIS dari BAST (keputusan AMWAL 25 Nov 2026):
+     * barang masuk stok pada tanggal BAST, sebesar qty baris rincian SPK
+     * yang tercakup BAP dari BAST itu (bast.bap_id). BAST lama tanpa
+     * bap_id mencakup seluruh rincian SPK-nya. Catatan masuk manual di
+     * Buku Material TIDAK dihitung lagi — stok murni dari BAST dikurangi
+     * catatan keluar. Kunci hasil: bahan_id => qty diterima.
+     */
+    protected function masukBastPerBahan(): array
+    {
+        $peta = [];
+        foreach ($this->db()->query(
+            'SELECT d.bahan_id, SUM(d.qty) AS qty FROM spk_detail d
+             JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0
+             JOIN bahan b ON b.id = d.bahan_id
+             WHERE b.sekolah_id = ? AND d.bahan_id IS NOT NULL AND d.is_deleted = 0
+               AND (
+                 EXISTS (SELECT 1 FROM bap_detail bd
+                         JOIN bap bp ON bp.id = bd.bap_id AND bp.is_deleted = 0
+                         JOIN bast x ON x.bap_id = bd.bap_id AND x.is_deleted = 0
+                         WHERE bd.detail_id = d.id AND bd.is_deleted = 0)
+                 OR EXISTS (SELECT 1 FROM bast y WHERE y.spk_id = s.id AND y.bap_id IS NULL AND y.is_deleted = 0)
+               )
+             GROUP BY d.bahan_id',
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $peta[(int) $r['bahan_id']] = (float) $r['qty'];
+        }
+        return $peta;
+    }
+
+    /**
+     * Baris catatan MASUK otomatis dari BAST untuk Buku Material dan
+     * ekspornya: satu baris per rincian SPK yang diterima (bila tercakup
+     * beberapa BAST, dipakai yang tanggalnya paling awal). Tanggal =
+     * tanggal BAST; kosong -> tanggal BAP -> tanggal pembuatan BAST.
+     * Kolom: detail_id, bahan_id, kode, nama, satuan, masuk, tanggal,
+     * spk_nomor, bast_urut.
+     */
+    protected function barisMasukBast(): array
+    {
+        $db = $this->db();
+        $perDetail = [];
+        $catat = static function (array $r) use (&$perDetail) {
+            $did = (int) $r['detail_id'];
+            $tgl = $r['tanggal'] ?? null;
+            if (! isset($perDetail[$did]) || ($tgl !== null && ($perDetail[$did]['tanggal'] === null || $tgl < $perDetail[$did]['tanggal']))) {
+                $perDetail[$did] = $r;
+            }
+        };
+        foreach ($db->query(
+            'SELECT d.id AS detail_id, d.bahan_id, b.kode, b.nama, b.satuan, d.qty AS masuk,
+                    COALESCE(x.tanggal, bp.tanggal, DATE(x.created_at)) AS tanggal,
+                    s.nomor AS spk_nomor, x.nomor_urut AS bast_urut
+             FROM spk_detail d
+             JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0
+             JOIN bahan b ON b.id = d.bahan_id
+             JOIN bap_detail bd ON bd.detail_id = d.id AND bd.is_deleted = 0
+             JOIN bap bp ON bp.id = bd.bap_id AND bp.is_deleted = 0
+             JOIN bast x ON x.bap_id = bd.bap_id AND x.is_deleted = 0
+             WHERE b.sekolah_id = ? AND d.bahan_id IS NOT NULL AND d.is_deleted = 0',
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $catat($r);
+        }
+        // BAST lama tanpa bap_id: mencakup seluruh rincian SPK-nya.
+        foreach ($db->query(
+            'SELECT d.id AS detail_id, d.bahan_id, b.kode, b.nama, b.satuan, d.qty AS masuk,
+                    COALESCE(y.tanggal, DATE(y.created_at)) AS tanggal,
+                    s.nomor AS spk_nomor, y.nomor_urut AS bast_urut
+             FROM spk_detail d
+             JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0
+             JOIN bahan b ON b.id = d.bahan_id
+             JOIN bast y ON y.spk_id = s.id AND y.bap_id IS NULL AND y.is_deleted = 0
+             WHERE b.sekolah_id = ? AND d.bahan_id IS NOT NULL AND d.is_deleted = 0',
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $catat($r);
+        }
+        return array_values($perDetail);
+    }
+
     protected function kebutuhanBahan(int $gedungId): array
     {
         $db = $this->db();
