@@ -60,7 +60,7 @@ Prinsip-prinsip penting:
 - **Harga satuan belanja boleh melebihi harga dokumen** (fluktuasi lapangan wajar; selisihnya ditampilkan), tetapi **total belanja keseluruhan tidak boleh melebihi pagu anggaran sekolah** — aplikasi menahan transaksi yang menembus pagu.
 - **Rencana belanja adalah turunan kebutuhan**, bukan daftar bebas: paket belanja dibuat dari hitungan kebutuhan bahan/upah per pekerjaan, dan terhitung ulang bila volume pekerjaan berubah.
 - **Alur SPK → SPJ bisa diselesaikan dari satu panel.** Sesudah barang diterima, panel **Tuntaskan SPK** di halaman rincian SPK membuat BAP, BAST, dan Invoice sekaligus dari satu tanggal terima, mencatat pembayarannya, dan mencetak keempat dokumen dalam satu berkas — lihat Bab 13.
-- **Setiap peringatan membawa jalan keluarnya.** Bila suatu halaman menyatakan ada yang kurang — SPK belum punya rincian, bahan belum punya harga, komponen belum tertaut, invoice belum cocok — kalimatnya selalu disertai tautan langsung ke halaman tempat kekurangan itu dilengkapi, jadi tidak perlu bolak-balik mencari menu. Ceklis dokumen di Detail SPK juga menaut ke modul pemilik tiap dokumen (Survei, Negosiasi, Dokumen, Invoice, Jurnal).
+- **Setiap peringatan membawa jalan keluarnya.** Bila suatu halaman menyatakan ada yang kurang — SPK belum punya rincian, bahan belum punya harga, komponen belum tertaut, invoice belum cocok — kalimatnya selalu disertai tautan langsung ke halaman tempat kekurangan itu dilengkapi, jadi tidak perlu bolak-balik mencari menu. Ceklis dokumen di Detail SPK juga menaut ke modul pemilik tiap dokumen (Survei, Negosiasi, Invoice, Jurnal); khusus BAP & BAST, tautannya menuju panel **BAP & BAST** di halaman Detail SPK itu sendiri karena pengisiannya kini lengkap di sana.
 
 ## 2. Memulai — masuk, tampilan, profil & sandi
 
@@ -358,7 +358,7 @@ Halaman Master Bahan terbagi dua tab: **Dipakai Gedung** (bahan yang dipakai ana
 
 ## 11. SPK & Rincian — termasuk Belum Bernomor
 
-Menu **Belanja → Register SPK**: register Surat Perintah Kerja. Tambah SPK (nomor, tanggal, masa mulai–selesai, penyedia, paket, gedung tertaut bila dari rencana), ubah, atau hapus (menghapus SPK membuat rinciannya kembali **belum bernomor**, bukan ikut terhapus).
+Menu **Belanja → Register SPK**: register Surat Perintah Kerja. Tambah SPK (nomor, tanggal, masa mulai–selesai, penyedia, paket, gedung tertaut bila dari rencana), ubah, atau hapus (menghapus SPK membuat rinciannya kembali **belum bernomor**, bukan ikut terhapus). Tambah dan ubah berjalan lewat jendela form di halaman register itu sendiri — tanpa berpindah halaman; sesudah SPK dibuat, isi rinciannya lewat tombol **Detail** pada barisnya.
 
 **Pembelian dari masyarakat.** Untuk belanja seperti pasir, batu, atau kayu yang dibeli dari warga, pilih penyedia khusus **"Masyarakat"**, lalu isi kolom **Nama Penerima** dengan nama orangnya. Nama itu **diwarisi ke semua dokumen turunan** SPK tersebut — cetak SPK, BAP, BAST, dan Invoice mencantumkan nama penerima itu sebagai pihak kedua, tanpa perlu membuat satu record penyedia per orang.
 
@@ -398,7 +398,7 @@ Syaratnya: SPK **belum mempunyai BAP maupun Invoice**. SPK yang rantainya sudah 
 
 ### Jalur manual lewat menu Dokumen
 
-Menu **Belanja → BAP & BAST / Cetak** (halaman Dokumen, satu baris per SPK): untuk setiap SPK, buat **BAP** (Berita Acara Pemeriksaan hasil pekerjaan), periksa/ubah isinya (termasuk rincian hasil pemeriksaan), lalu buat **BAST** (Berita Acara Serah Terima) dari BAP itu. Aturannya ketat: tombol Buat BAP hilang bila seluruh rincian sudah ter-BAP, dan **satu BAP hanya mempunyai satu BAST**. Dokumen yang dapat dicetak dari aplikasi (berkop sekolah, lengkap dengan terbilang dan blok tanda tangan):
+Pengisian BAP & BAST kini juga lengkap **langsung di halaman Detail SPK** (panel **BAP & BAST**): buat BAP, ubah tanggal + kondisi/keterangan tiap barang, buat BAST dari BAP-nya, dan ubah tanggal BAST — tanpa berpindah menu; kepala SPK pun diubah dari tombol **Ubah SPK** di panel ringkasannya. Menu **Belanja → BAP & BAST / Cetak** (halaman Dokumen, satu baris per SPK) tetap tersedia dengan isi yang sama: untuk setiap SPK, buat **BAP** (Berita Acara Pemeriksaan hasil pekerjaan), periksa/ubah isinya (termasuk rincian hasil pemeriksaan), lalu buat **BAST** (Berita Acara Serah Terima) dari BAP itu. Aturannya ketat: tombol Buat BAP hilang bila seluruh rincian sudah ter-BAP, dan **satu BAP hanya mempunyai satu BAST**. Dokumen yang dapat dicetak dari aplikasi (berkop sekolah, lengkap dengan terbilang dan blok tanda tangan):
 
 - **SPK**, **BAP**, **BAST** — dari halaman ini (nomor surat format `422/<JENIS>/<urut>/<tahun>`),
 - **Invoice** — dari halaman Invoice,

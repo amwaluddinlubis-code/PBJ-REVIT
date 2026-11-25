@@ -15,6 +15,8 @@
           <input type="hidden" name="item" value="<?= esc($c['kunci']) ?>">
           <label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" name="ada" value="1" <?= $c['ada'] ? 'checked' : '' ?> onchange="this.form.submit()"> Sudah ada (fisik)</label>
         </form>
+        <?php elseif (! empty($c['jangkar'])): ?>
+        <a class="kecil-teks" href="<?= esc($c['jangkar'], 'attr') ?>"><?= esc($c['label_tautan'] ?? 'Isi di panel') ?> ↓</a>
         <?php elseif (! empty($c['tautan'])): ?>
         <a class="kecil-teks" href="<?= base_url($c['tautan']) ?>"><?= esc($c['label_tautan'] ?? 'Buka modulnya') ?> →</a>
         <?php else: ?>

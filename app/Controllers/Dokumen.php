@@ -73,6 +73,9 @@ class Dokumen extends BaseController
             [(int) $spkId]
         )->getRow()->j;
         if ($terbap >= $total) {
+            if ($this->request->getPost('balik') === 'spk') {
+                return redirect()->to('spk/detail/' . (int) $spkId)->with('galat', 'Semua rincian SPK ini sudah ter-BAP (' . $terbap . ' dari ' . $total . ' barang) — BAP baru tidak diperlukan.');
+            }
             return redirect()->to('dokumen')->with('galat', 'Semua rincian SPK ini sudah ter-BAP (' . $terbap . ' dari ' . $total . ' barang) — BAP baru tidak diperlukan.');
         }
         $row = $db->query('SELECT MAX(nomor_urut) m FROM bap')->getRow();
@@ -83,6 +86,9 @@ class Dokumen extends BaseController
         $bapId = (int) $db->insertID();
         foreach ($db->table('spk_detail')->where(['spk_id' => (int) $spkId, 'is_deleted' => 0])->get()->getResultArray() as $d) {
             $db->table('bap_detail')->insert(['bap_id' => $bapId, 'detail_id' => $d['id'], 'kondisi' => 'Cukup']);
+        }
+        if ($this->request->getPost('balik') === 'spk') {
+            return redirect()->to('spk/detail/' . (int) $spkId)->with('sukses', 'BAP dibuat dari rincian SPK — lengkapi tanggal dan kondisi pemeriksaannya di panel BAP & BAST halaman ini.');
         }
         return redirect()->to('dokumen')->with('sukses', 'BAP dibuat dari rincian SPK — lengkapi tanggal dan kondisi pemeriksaan lewat tombol Ubah pada BAP-nya.');
     }
@@ -119,6 +125,9 @@ class Dokumen extends BaseController
                 'keterangan' => ($this->request->getPost('keterangan') ?? [])[$bdId] ?? null,
             ]);
         }
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => true, 'pesan' => 'BAP disimpan.']);
+        }
         return redirect()->to('dokumen')->with('sukses', 'BAP disimpan.');
     }
 
@@ -131,6 +140,9 @@ class Dokumen extends BaseController
             return redirect()->to('dokumen')->with('galat', 'BAP tidak ditemukan.');
         }
         if ($db->table('bast')->where(['bap_id' => (int) $bapId, 'is_deleted' => 0])->countAllResults() > 0) {
+            if ($this->request->getPost('balik') === 'spk') {
+                return redirect()->to('spk/detail/' . (int) $bap['spk_id'])->with('galat', 'BAP ini sudah mempunyai BAST — satu BAP hanya boleh satu BAST.');
+            }
             return redirect()->to('dokumen')->with('galat', 'BAP ini sudah mempunyai BAST — satu BAP hanya boleh satu BAST.');
         }
         $row = $db->query('SELECT MAX(nomor_urut) m FROM bast')->getRow();
@@ -138,6 +150,9 @@ class Dokumen extends BaseController
             'spk_id' => (int) $bap['spk_id'], 'bap_id' => (int) $bapId, 'nomor_urut' => ((int) $row->m) + 1,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
+        if ($this->request->getPost('balik') === 'spk') {
+            return redirect()->to('spk/detail/' . (int) $bap['spk_id'])->with('sukses', 'BAST dibuat untuk BAP urut ' . (int) $bap['nomor_urut'] . ' — lengkapi tanggalnya lewat tombol Ubah BAST di panel BAP & BAST halaman ini.');
+        }
         return redirect()->to('dokumen')->with('sukses', 'BAST dibuat untuk BAP urut ' . (int) $bap['nomor_urut'] . ' — lengkapi tanggalnya lewat tombol Ubah.');
     }
 
@@ -157,6 +172,9 @@ class Dokumen extends BaseController
             'tanggal' => $this->request->getPost('tanggal') ?: null,
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => true, 'pesan' => 'BAST disimpan.']);
+        }
         return redirect()->to('dokumen')->with('sukses', 'BAST disimpan.');
     }
 

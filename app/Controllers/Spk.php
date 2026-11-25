@@ -38,11 +38,17 @@ class Spk extends BaseController
     {
         $data = $this->ambilForm();
         if ($this->db()->table('spk')->where(['nomor' => $data['nomor'], 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults() > 0) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['ok' => false, 'pesan' => 'Nomor SPK ' . $data['nomor'] . ' sudah ada.']);
+            }
             return redirect()->back()->withInput()->with('galat', 'Nomor SPK ' . $data['nomor'] . ' sudah ada.');
         }
         $data['sekolah_id'] = $this->sid();
         $data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('spk')->insert($data);
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => true, 'pesan' => 'SPK ' . $data['nomor'] . ' dibuat — buka tombol Detail pada barisnya untuk mengisi rincian.']);
+        }
         return redirect()->to('spk/detail/' . $this->db()->insertID())->with('sukses', 'SPK ' . $data['nomor'] . ' dibuat — silakan isi rinciannya.');
     }
 
@@ -65,6 +71,12 @@ class Spk extends BaseController
         $data = $this->ambilForm();
         $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('spk')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->update($data);
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => true, 'pesan' => 'SPK diperbarui.']);
+        }
+        if ($this->request->getPost('balik') === 'detail') {
+            return redirect()->to('spk/detail/' . (int) $id)->with('sukses', 'SPK diperbarui.');
+        }
         return redirect()->to('spk')->with('sukses', 'SPK diperbarui.');
     }
 
@@ -126,7 +138,7 @@ class Spk extends BaseController
     {
         $db = $this->db();
         $s = $db->query(
-            'SELECT s.*, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia, COALESCE(NULLIF(TRIM(s.ttd_penyedia), ""), NULLIF(TRIM(s.penerima_manual), "")) AS ttd_penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ? AND s.is_deleted = 0',
+            'SELECT s.*, s.ttd_penyedia AS ttd_asli, COALESCE(NULLIF(TRIM(s.penerima_manual), ""), p.nama) AS penyedia, COALESCE(NULLIF(TRIM(s.ttd_penyedia), ""), NULLIF(TRIM(s.penerima_manual), "")) AS ttd_penyedia FROM spk s LEFT JOIN penyedia p ON p.id = s.penyedia_id WHERE s.id = ? AND s.is_deleted = 0',
             [(int) $id]
         )->getRowArray();
         if (! $s || (int) $s['sekolah_id'] !== $this->sid()) {
@@ -170,8 +182,8 @@ class Spk extends BaseController
             ['kunci' => 'pembandingan', 'label' => 'Hasil pembandingan harga (Survei Harga)', 'ada' => $pembanding > 0, 'manual' => false, 'tautan' => 'survei', 'label_tautan' => 'Buka Survei Harga'],
             ['kunci' => 'negosiasi', 'label' => 'Hasil negosiasi harga', 'ada' => $hitung('SELECT COUNT(*) AS j FROM negosiasi n JOIN spk_detail d ON d.bahan_id = n.bahan_id AND d.is_deleted = 0 WHERE d.spk_id = ? AND n.is_deleted = 0 AND n.harga_nego IS NOT NULL') > 0, 'manual' => false, 'tautan' => 'negosiasi', 'label_tautan' => 'Buka Negosiasi'],
             ['kunci' => 'pemesanan', 'label' => 'Surat pemesanan (SPK ini)', 'ada' => true, 'manual' => false],
-            ['kunci' => 'pemeriksaan', 'label' => 'Hasil pemeriksaan barang/jasa (BAP)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM bap WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false, 'tautan' => 'dokumen', 'label_tautan' => 'Buka Dokumen (BAP)'],
-            ['kunci' => 'bast', 'label' => 'Berita Acara Serah Terima (BAST)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM bast WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false, 'tautan' => 'dokumen', 'label_tautan' => 'Buka Dokumen (BAST)'],
+            ['kunci' => 'pemeriksaan', 'label' => 'Hasil pemeriksaan barang/jasa (BAP)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM bap WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false, 'jangkar' => '#panel-bap-bast', 'label_tautan' => 'Isi di panel BAP & BAST'],
+            ['kunci' => 'bast', 'label' => 'Berita Acara Serah Terima (BAST)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM bast WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false, 'jangkar' => '#panel-bap-bast', 'label_tautan' => 'Isi di panel BAP & BAST'],
             ['kunci' => 'invoice', 'label' => 'Invoice / tagihan penyedia', 'ada' => $hitung('SELECT COUNT(*) AS j FROM invoice WHERE spk_id = ? AND is_deleted = 0') > 0, 'manual' => false, 'tautan' => 'invoice', 'label_tautan' => 'Buka Register Invoice'],
             ['kunci' => 'pembayaran', 'label' => 'Bukti pembayaran (jurnal pembayaran)', 'ada' => $hitung('SELECT COUNT(*) AS j FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0 WHERE i.spk_id = ? AND p.is_deleted = 0') > 0, 'manual' => false, 'tautan' => 'invoice/jurnal', 'label_tautan' => 'Buka Jurnal Pembayaran'],
             ['kunci' => 'kuitansi', 'label' => 'Kuitansi/faktur fisik dari penyedia (ditandatangani + stempel; bermaterai bila nilai kuitansi ≥ Rp5 juta)', 'ada' => $manual['kuitansi'] ?? false, 'manual' => true],
@@ -197,6 +209,34 @@ class Spk extends BaseController
         } catch (\Throwable $e) {
             // tabel spk_tenaga belum dimigrasi
         }
+        // Panel BAP & BAST (pengisian lengkap di halaman ini): daftar BAP
+        // SPK ini beserta item pemeriksaannya dan BAST-nya.
+        $daftarBap = $db->table('bap')->where(['spk_id' => (int) $id, 'is_deleted' => 0])->orderBy('nomor_urut')->orderBy('id')->get()->getResultArray();
+        $itemsPerBap = [];
+        foreach ($daftarBap as &$b) {
+            $b['surat'] = $this->nomorSurat('BAP', (int) $b['nomor_urut']);
+            $itemsPerBap[(int) $b['id']] = $db->query(
+                'SELECT bd.id AS bd_id, bd.kondisi, bd.keterangan, d.qty,
+                        COALESCE(b.nama, d.nama_manual) AS nama, COALESCE(b.satuan, d.satuan_manual) AS satuan
+                 FROM bap_detail bd JOIN spk_detail d ON d.id = bd.detail_id
+                 LEFT JOIN bahan b ON b.id = d.bahan_id WHERE bd.bap_id = ? AND bd.is_deleted = 0 ORDER BY bd.id',
+                [(int) $b['id']]
+            )->getResultArray();
+        }
+        unset($b);
+        $bastPerBap = [];
+        $bastUmum = [];
+        foreach ($db->table('bast')->where(['spk_id' => (int) $id, 'is_deleted' => 0])->orderBy('nomor_urut')->orderBy('id')->get()->getResultArray() as $bs) {
+            $bs['surat'] = $this->nomorSurat('BAST', (int) $bs['nomor_urut']);
+            if (! empty($bs['bap_id'])) {
+                $bastPerBap[(int) $bs['bap_id']][] = $bs;
+            } else {
+                $bastUmum[] = $bs;
+            }
+        }
+        $jmlTerbap = $hitung('SELECT COUNT(*) AS j FROM bap_detail bd JOIN bap bp ON bp.id = bd.bap_id AND bp.is_deleted = 0 WHERE bp.spk_id = ? AND bd.is_deleted = 0');
+        $penyediaList = $db->table('penyedia')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray();
+        $gedungList = $db->table('gedung')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('urutan')->orderBy('id')->get()->getResultArray();
         // Template Laporan aktif untuk konteks SPK (tombol render di panel).
         try {
             $templateSpk = $db->table('laporan_template')->where(['sekolah_id' => $this->sid(), 'jenis' => 'spk', 'aktif' => 1, 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray();
@@ -211,6 +251,11 @@ class Spk extends BaseController
             'ceklis' => $ceklis,
             'tuntas' => $tuntas,
             'tenaga' => $tenaga,
+            'daftar_bap' => $daftarBap, 'items_per_bap' => $itemsPerBap,
+            'bast_per_bap' => $bastPerBap, 'bast_umum' => $bastUmum,
+            'jml_terbap' => $jmlTerbap,
+            'penyedia_list' => $penyediaList, 'gedung_list' => $gedungList,
+            'gedung_spk' => $s['gedung_id'] ? (array_column($gedungList, 'nama', 'id')[(int) $s['gedung_id']] ?? null) : null,
         ], 'SPK ' . $s['nomor']);
     }
 
