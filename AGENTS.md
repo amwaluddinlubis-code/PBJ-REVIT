@@ -151,6 +151,59 @@ Sejak 2026-11-24 tampilan mengikuti pola komponen ala TALL tanpa mengganti frame
 - **Buku Material: kebutuhan per gedung + pilihan bahan berstok** (keputusan AMWAL 25 Nov 2026): halaman `material` menampilkan panel **Kebutuhan Bahan per Gedung** (kebutuhan BOQ per gedung dari `kebutuhanBahan()` vs Σ `buku_material.keluar` per gedung; bahan keluar tanpa kebutuhan gedung ikut tampil dengan sisa negatif dan baris kelas `negatif`). Form catat memilih gedung lebih dulu, lalu bahan: **pilihan bahan HANYA bahan berstok** menurut `Material::stokPerBahan()` (= penerimaan BAST − catatan keluar, definisi yang sama dengan stok Rencana Mingguan), label opsi memuat sisa stok, dan petunjuk langsung di bawah form menampilkan stok tersedia + kebutuhan/sudah keluar/sisa kebutuhan gedung terpilih untuk bahan terpilih (atau peringatan bahan bukan kebutuhan gedung itu). Panel kebutuhan dapat disaring per gedung (GET `f_gedung`) dan gedung-gedungnya diurutkan menurut **persentase sisa kebutuhan terbesar lebih dulu** (Σ sisa ÷ Σ kebutuhan per gedung, tertulis pada baris grupnya); saringan hanya membatasi tampilan panel — peta petunjuk form selalu dari daftar lengkap. `Material::simpan()` memvalidasi: bahan milik sekolah aktif, masuk/keluar tidak keduanya nol, dan **keluar ≤ stok tersedia** (ditolak dengan pesan galat menyebut angka stoknya). Jangan melonggarkan validasi atau filter ini tanpa keputusan pengguna.
 - **Buku Material: masuk OTOMATIS dari BAST** (keputusan AMWAL 25 Nov 2026): barang masuk stok pada **tanggal BAST**, sebesar qty rincian SPK yang tercakup BAP dari BAST itu (`BaseController::masukBastPerBahan()` / `barisMasukBast()`; BAST lama tanpa `bap_id` mencakup seluruh rincian SPK-nya). Form Buku Material HANYA mencatat **keluar** (tanggal diisi manual); catatan **masuk manual lama diabaikan** — tidak ditampilkan di buku besar, tidak dihitung di stok, Sisa Bahan, Rencana Mingguan, maupun ekspor. Definisi stok tersedia di mana-mana: **penerimaan BAST − Σ keluar**. Baris BAST di buku besar bertanda Otomatis dan tidak bisa dihapus dari halaman Material. Jangan mengembalikan isian masuk manual atau definisi stok lama (EXISTS bast per SPK + neto buku) tanpa keputusan pengguna.
 - **Helper tampilan bersama: `tabel_bantu()` + `form_modal()`** (keputusan AMWAL 25 Nov 2026; di `app/Common.php`, perilaku modal di `public/assets/form-modal.js`, dimuat layout): tabel daftar dan form CRUD modal dirender dari KONFIGURASI agar pola cukup diubah di satu tempat. `tabel_bantu()` merender Tabel Standar v2 (data-cari/data-paginasi, baris-grup, baris-total; sel string diescape, sel `html` mentah). `form_modal()` merender modal `.mk-lapik/.mk-kartu` dengan tombol bawaan **Batal/Hapus/Simpan** (masing-masing bisa dinonaktifkan lewat konfig `tombol`; Hapus hanya pada mode Ubah dan memakai modal konfirmasi standar lewat form `data-konfirmasi`, BUKAN modal baru); simpan via AJAX berbalasan JSON `{ok, pesan}` (pola `balasForm` — controller modul wajib menyediakan cabang `isAJAX()`), lalu halaman dimuat ulang. Buka dengan `bukaFormModal(id)` / `bukaFormModal(id, data)` (data menurut nama field + `id`). Penanda id pada `aksi_hapus` adalah `__ID__` — `{id}` ter-percent-encode oleh pembangun URL CI4 sehingga penggantian di JS tidak pernah cocok (temuan QA 25 Nov). Tampilan modal (koreksi AMWAL 25 Nov): judul RATA KIRI di pita kepala yang sedikit lebih gelap, kaki tombol juga sedikit lebih gelap, label field duduk DI BORDER isian (label-on-border, tanda * merah untuk wajib), validasi wajib tampil sebagai TOOLTIP merah (form `novalidate`, bukan gelembung bawaan peramban) — semua terpusat di helper + `form-modal.js` + kelas `.fm-*` di app.css. **Percontohan pertama: Biaya Non-Gedung** (tabel per kelompok + modalnya; `BiayaLain::balas()`). Modul lain berpindah BERTAHAP saat disentuh — jangan bongkar semua view sekaligus, dan jangan menulis markup/skrip modal CRUD baru di luar helper ini tanpa keputusan pengguna.
+
+### Penggunaan Helper Tampilan (`tabel_bantu()` & `form_modal()`)
+
+**Wajib** untuk tabel daftar dan form CRUD modal baru; modul lama berpindah saat disentuh. Jangan menulis markup tabel daftar atau markup/skrip modal CRUD sendiri di luar kedua helper ini.
+
+**`tabel_bantu(array $konfig): string`** — merender Tabel Standar v2 lengkap (`data-cari`/`data-paginasi` untuk `paginasi.js`, `baris-grup`, `baris-total`):
+
+```php
+echo tabel_bantu([
+    'kolom' => [
+        ['judul' => 'Nama'],
+        ['judul' => 'Harga', 'angka' => true],          // 'lebar' => '110px', 'judul_html' => mentah
+    ],
+    'baris' => [
+        ['sel' => ['Semen', ['teks' => rp(50000), 'angka' => true]]],   // string diescape
+        ['sel' => [['html' => '<b>Portland</b>'], ['teks' => rp(52000), 'angka' => true]]], // 'html' mentah; sel juga terima 'class', 'colspan', 'gaya'
+        ['grup' => 'Judul Grup'],                                        // baris-grup sepenuh lebar
+        ['total' => [['teks' => 'Total', 'colspan' => 1], ['teks' => rp(102000), 'angka' => true]], 'class' => 'subtotal-baris'],
+    ],
+    'cari' => 'Cari bahan…',   // string = kotak cari aktif; false = mati
+    'paginasi' => 25,          // int = baris per halaman; false = mati
+    'class' => 'tabel-data',
+]);
+```
+
+**`form_modal(array $konfig): string`** — merender modal CRUD (judul rata kiri di pita kepala, kaki tombol, label di border isian, validasi tooltip):
+
+```php
+<?= form_modal([
+    'id' => 'modal-bahan',                          // unik per modal
+    'judul' => 'Tambah Bahan', 'judul_ubah' => 'Ubah Bahan',
+    'aksi' => base_url('bahan/simpan'),
+    'aksi_hapus' => base_url('bahan/hapus/__ID__'), // penanda WAJIB __ID__ (bukan {id})
+    'konfirmasi_hapus' => 'Hapus bahan ini?',
+    'kolom' => [
+        ['nama' => 'kode', 'label' => 'Kode', 'wajib' => true],
+        ['nama' => 'harga', 'label' => 'Harga (Rp)', 'jenis' => 'uang', 'wajib' => true],
+        ['nama' => 'jenis', 'label' => 'Jenis', 'jenis' => 'pilihan', 'opsi' => ['a' => 'A', 'b' => 'B']],
+        // jenis lain: teks (bawaan) | angka | tanggal | area ('baris' => n)
+        // opsi field lain: 'placeholder', 'petunjuk', 'penuh' => true (rentang 2 kolom),
+        // 'saran' => [...] (datalist saran untuk field teks)
+    ],
+    'catatan' => 'Teks kecil di bawah field.',
+    'tombol' => ['simpan_teks' => 'Simpan Bahan'],  // sakelar bawaan di bawah
+]) ?>
+```
+
+- **Tombol bawaan**: Batal, Hapus, Simpan — semua tampil secara bawaan; nonaktifkan per konfig: `'tombol' => ['hapus' => false]` (atau `'batal' => false`, `'simpan' => false`). Teks Simpan per mode: `'simpan_teks'` / `'simpan_teks_ubah'`; teks Hapus: `'hapus_teks'`. Tombol Hapus hanya muncul pada mode Ubah dan hanya bila `aksi_hapus` diisi.
+- **Membuka modal** (dari tombol di view): Tambah → `onclick="bukaFormModal('modal-bahan')"`; Ubah → `onclick="bukaFormModal('modal-bahan', <?= json data ?>)"` dengan data = nilai field **menurut nama field** + `'id'` baris (JSON diescape `ENT_QUOTES` seperti pola `_kelompok.php` BiayaLain). Field `uang` diisi angka polos — format ribuan diterapkan otomatis.
+- **Kewajiban controller**: method simpan/hapus modul yang memakai `form_modal()` WAJIB bercabang AJAX seperti `Bahan::balasForm()` / `BiayaLain::balas()` — `isAJAX()` → `setJSON(['ok' => bool, 'pesan' => string])`; non-AJAX → redirect + flash seperti biasa. Galat validasi dikembalikan sebagai `ok=false` + pesan (tampil di dalam modal), bukan redirect.
+- **Jangan** membuat modal konfirmasi baru untuk Hapus dari modal ini — helper menyerahkan Hapus ke form `data-konfirmasi` standar (`#mk-ya`).
+- Contoh hidup: `app/Views/biayalain/_kelompok.php` (tabel) dan `app/Views/biayalain/_modal_biaya.php` (modal).
+
 - **Tautan Lintas Modul (aturan tetap, 24 Nov 2026):** pengguna TIDAK BOLEH dibiarkan bolak-balik antar halaman untuk melengkapi prasyarat suatu alur. Setiap halaman yang menampilkan keadaan kosong/kurang yang datanya dimiliki modul lain WAJIB memberi tautan langsung ke modul pemilik data itu — bukan sekadar menyebut nama menunya dalam teks. Berlaku untuk: status/bendera peringatan (Dashboard, panel Ketentuan & Ceklis SPK), keadaan kosong (SPK tanpa rincian di halaman Dokumen & Detail SPK, bahan tanpa harga, komponen belum tertaut), dan langkah lanjutan suatu rantai (SPK → Dokumen → Invoice → Jurnal; Gedung → LPJ; Kurva S ↔ Realisasi/Laporan Kemajuan/Rencana Mingguan/Simulasi; Sisa Bahan ↔ Buku Material/Master Bahan). Tautan sedalam mungkin: formulir tujuan menerima konteks lewat query bila aman (contoh: `invoice/baru?spk=<id>` memilih SPK otomatis) dan baris entitas menaut ke halaman detail entitas itu, bukan hanya ke daftar modul. Saat menambah modul/panel/status baru, periksa dan tambahkan tautannya mengikuti aturan ini; saat mengubah nama rute, perbarui semua tautan yang menunjuk ke sana.
 - **Aksi per baris di halaman Kurva S** (sejak 25 Nov 2026): pada mode rencana resmi, setiap baris minggu punya tombol **Buat Rencana Belanja** (`Kurva::buatRencana`) — membuat Rencana Mingguan untuk minggu kalender itu (tampilan Total: semua gedung berencana sekaligus; per gedung: gedung itu) lalu mengisi target pekerjaannya, ATAU membuka rencana yang sudah ada; rencana yang sudah bertarget TIDAK ditimpa dan rencana baru yang targetnya gagal terisi dihapus lunak kembali. Pengisian target memakai `RencanaMingguan::intiTargetKurva()` yang sama dengan tombol "Ambil Target dari Kurva S" (Kurva mewarisi RencanaMingguan untuk itu) — jangan membuat jalur hitung target kedua; setiap rencana belanja hasil generate selalu tercatat kebutuhan pekerjaannya di `rencana_mingguan_detail`. Kolom **Realisasi Simulasi** (tampilan per gedung) menulis `simulasi_realisasi` lewat `BaseController::simpanRealisasiSimulasi()` — jalur tulis yang sama dengan formulir `Simulasi::simpan`, jangan menulis tabel itu dari tempat lain.
 - **Mesin Laporan / Template Dokumen** (menu Laporan → Template Laporan; `app/Libraries/MesinLaporan.php` + `TemplateLaporan`; tabel `laporan_template`, migrasi 000028; berkas di `writable/template-laporan/`): port konsep mesin template SPJ BOSP (raw-rkas). Template .xlsx memakai penanda `{{KUNCI}}` huruf besar dari katalog terdaftar per jenis (spk/gedung/sekolah); katalog & konteks dibangun MesinLaporan + konteks*() di controller — JANGAN menambah placeholder di luar katalog tanpa mendaftarkannya di kedua tempat. Baris berulang: baris-baris berurutan berpenanda awalan yang sama (RINCIAN_/TENAGA_/KERJA_/REKAP_/RPT_BAP/RPT_BAST/RPT_INV) membentuk SATU blok contoh (boleh multi-baris); satu sheet boleh memuat banyak blok termasuk awalan yang sama di tempat terpisah; seluruh sel baris contoh (nilai + gaya) tersalin ke baris sisipan; blok terhapus bila datanya kosong. Penggantian pada sel string DAN sel rich text (rich text ditulis ulang sebagai teks polos sesudah diganti — penanda yang ditebalkan sebagian tetap terbaca & tertangkap penjaga); uang = string angka bulat polos + varian _RP, qty 2 desimal titik (pola SpjPlaceholderValueFormatter). Blok KERJA memakai harga BERJALAN (hargaBerjalan: revisi disahkan > AHSP > dokumen) agar total kolomnya menyamai NILAI_ANALISA; harga dokumen tersedia terpisah sebagai KERJA_HARGA_DOKUMEN/KERJA_NILAI_DOKUMEN. Unggah template dibatasi 5 MB. Backup Pemeliharaan Database menyertakan berkas template: backup menjadi paket .zip (data.sql + template-laporan/*.xlsx) dan pulih mengembalikan keduanya (template lama disalin dulu ke folder backup/template-pulih-*). Render DIBATALKAN bila ada penanda tak terisi (penjaga ala SpjUnresolvedPlaceholderGuard) — jangan melonggarkan penjaga ini. Cetakan HTML bawaan (Dokumen/LPJ/dll.) tetap jalan seperti biasa; template adalah jalur tambahan berformat bebas, bukan pengganti.
