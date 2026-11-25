@@ -11,7 +11,7 @@ namespace App\Controllers;
  */
 class RencanaMingguan extends BaseController
 {
-    private function ambilRencana(int $id): ?array
+    protected function ambilRencana(int $id): ?array
     {
         $r = $this->db()->table('rencana_mingguan')
             ->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
@@ -81,7 +81,7 @@ class RencanaMingguan extends BaseController
     }
 
     /** Terapkan peta target volume per pekerjaan (tambah/ubah/hidupkan/hapus lunak). */
-    private function terapkanTarget(int $rencanaId, int $gedungId, array $map): void
+    protected function terapkanTarget(int $rencanaId, int $gedungId, array $map): void
     {
         $db = $this->db();
         $sah = [];
@@ -115,7 +115,7 @@ class RencanaMingguan extends BaseController
     }
 
     /** Normalisasi nama bab untuk pemetaan dokumen Kurva S ↔ BOQ aplikasi. */
-    private function normalBab(?string $bab): string
+    protected function normalBab(?string $bab): string
     {
         $s = strtoupper((string) $bab);
         $s = preg_replace('/[^A-Z0-9]+/', ' ', $s) ?? '';
@@ -139,15 +139,38 @@ class RencanaMingguan extends BaseController
         if ($r === null) {
             return redirect()->to('rencana-mingguan')->with('galat', 'Rencana tidak ditemukan.');
         }
+        $h = $this->intiTargetKurva($r);
+        if (! $h['ok']) {
+            return redirect()->to('rencana-mingguan/' . $id)->with('galat', $h['pesan']);
+        }
+        return redirect()->to('rencana-mingguan/' . $id)->with('sukses', 'Target terisi dari Kurva S (minggu kalender ke-' . $h['ke'] . ', pola kejar ketertinggalan): ' . $h['jumlah'] . ' pekerjaan senilai Rp ' . number_format($h['total'], 0, ',', '.') . '. Silakan sesuaikan bila perlu, lalu gunakan daftar belanja bersih di bawah.');
+    }
+
+    /**
+     * Inti perhitungan "Ambil Target dari Kurva S" — dipakai targetKurva()
+     * (tombol di Rencana Mingguan) dan Kurva::buatRencana() (tombol per
+     * baris di halaman Kurva S) agar hanya ada satu jalur hitung target.
+     * Mengisi target rencana dari rencana kumulatif Kurva S s.d. minggu
+     * kalender yang memuat minggu_mulai rencana, dikurangi realisasi
+     * tercatat (pola kejar ketertinggalan), dibagi ke pekerjaan menurut
+     * porsi sisa nilai babnya. Target tersimpan di rencana_mingguan_detail
+     * — dari sanalah daftar belanja rencana itu dihitung, jadi setiap
+     * rencana belanja selalu tercatat kebutuhan pekerjaannya.
+     *
+     * @return array{ok: bool, pesan: string, ke: int, jumlah: int, total: float}
+     */
+    protected function intiTargetKurva(array $r): array
+    {
+        $gagal = static fn (string $pesan, int $ke = 0) => ['ok' => false, 'pesan' => $pesan, 'ke' => $ke, 'jumlah' => 0, 'total' => 0.0];
         $db = $this->db();
         if (! $db->tableExists('kurva_rencana')) {
-            return redirect()->to('rencana-mingguan/' . $id)->with('galat', 'Rencana Kurva S belum tersedia (migrasi belum dijalankan).');
+            return $gagal('Rencana Kurva S belum tersedia (migrasi belum dijalankan).');
         }
         $barisKurva = $db->table('kurva_rencana')
             ->where(['sekolah_id' => $this->sid(), 'gedung_id' => (int) $r['gedung_id'], 'is_deleted' => 0])
             ->get()->getResultArray();
         if ($barisKurva === []) {
-            return redirect()->to('rencana-mingguan/' . $id)->with('galat', 'Gedung ini belum punya rencana Kurva S. Impor dulu rencana resmi di halaman Kurva S.');
+            return $gagal('Gedung ini belum punya rencana Kurva S. Impor dulu rencana resmi di halaman Kurva S.');
         }
         // Minggu kalender yang memuat tanggal mulai rencana; bila di luar
         // rentang, pakai minggu terdekat.
@@ -166,7 +189,7 @@ class RencanaMingguan extends BaseController
                 : (int) $kalender[count($kalender) - 1]['minggu_ke'];
         }
         if ($ke === null) {
-            return redirect()->to('rencana-mingguan/' . $id)->with('galat', 'Kalender minggu Kurva S belum terimpor.');
+            return $gagal('Kalender minggu Kurva S belum terimpor.');
         }
         // Total proyek dokumen = jumlah seluruh baris (grup, bab) sekolah.
         $totalProyek = 0.0;
@@ -227,13 +250,13 @@ class RencanaMingguan extends BaseController
             }
         }
         if ($map === []) {
-            return redirect()->to('rencana-mingguan/' . $id)->with('galat', 'Tidak ada target yang perlu diisi dari Kurva S minggu ke-' . $ke . ' — realisasi bab terpetakan sudah mencapai rencana kumulatifnya, atau bab dokumen tidak cocok dengan bab BOQ gedung ini.');
+            return $gagal('Tidak ada target yang perlu diisi dari Kurva S minggu ke-' . $ke . ' — realisasi bab terpetakan sudah mencapai rencana kumulatifnya, atau bab dokumen tidak cocok dengan bab BOQ gedung ini.', $ke);
         }
         $db->transStart();
-        $this->terapkanTarget((int) $id, (int) $r['gedung_id'], $map);
+        $this->terapkanTarget((int) $r['id'], (int) $r['gedung_id'], $map);
         $db->transComplete();
-        $this->catatAudit('rencana_mingguan', (int) $id, 'target_dari_kurva_s', 'Minggu kalender ke-' . $ke . '; ' . count($map) . ' pekerjaan; nilai target Rp ' . number_format($totalTarget, 0, ',', '.'));
-        return redirect()->to('rencana-mingguan/' . $id)->with('sukses', 'Target terisi dari Kurva S (minggu kalender ke-' . $ke . ', pola kejar ketertinggalan): ' . count($map) . ' pekerjaan senilai Rp ' . number_format($totalTarget, 0, ',', '.') . '. Silakan sesuaikan bila perlu, lalu gunakan daftar belanja bersih di bawah.');
+        $this->catatAudit('rencana_mingguan', (int) $r['id'], 'target_dari_kurva_s', 'Minggu kalender ke-' . $ke . '; ' . count($map) . ' pekerjaan; nilai target Rp ' . number_format($totalTarget, 0, ',', '.'));
+        return ['ok' => true, 'pesan' => '', 'ke' => $ke, 'jumlah' => count($map), 'total' => $totalTarget];
     }
 
     /** Hitungan belanja & upah dari target tersimpan pada satu rencana. */

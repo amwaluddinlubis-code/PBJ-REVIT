@@ -12,7 +12,12 @@ use App\Libraries\PengimporKurvaS;
  * per minggu kalender proyek; bila belum, rencana digambar sebagai
  * kurva S perkiraan (cosinus) mengikuti tanggal SPK gedung.
  */
-class Kurva extends BaseController
+/**
+ * Kurva mewarisi RencanaMingguan agar tombol "Buat Rencana Belanja" per
+ * baris minggu memakai intiTargetKurva() yang sama dengan tombol "Ambil
+ * Target dari Kurva S" di Rencana Mingguan — satu jalur hitung target.
+ */
+class Kurva extends RencanaMingguan
 {
     public function index()
     {
@@ -53,9 +58,47 @@ class Kurva extends BaseController
                 }
             }
         }
+        // Aksi per baris (mode resmi): rencana belanja minggu itu & realisasi simulasi.
+        $petaRencana = [];
+        $petaRealisasiSim = [];
+        $rencanaAda = [];
+        $jumlahGedungBerencana = 0;
+        if ($mode === 'resmi' && $db->tableExists('rencana_mingguan')) {
+            if (! $total && $g) {
+                foreach ($minggu as $m) {
+                    $r = $db->table('rencana_mingguan')
+                        ->where(['sekolah_id' => $this->sid(), 'gedung_id' => (int) $g['id'], 'minggu_mulai' => $m['mulai'], 'is_deleted' => 0])
+                        ->get()->getRowArray();
+                    $petaRencana[(int) $m['ke']] = $r ? (int) $r['id'] : null;
+                }
+                if ($db->tableExists('simulasi_realisasi')) {
+                    foreach ($db->table('simulasi_realisasi')->where(['sekolah_id' => $this->sid(), 'gedung_id' => (int) $g['id'], 'is_deleted' => 0])->get()->getResultArray() as $sr) {
+                        $petaRealisasiSim[(int) $sr['minggu_ke']] = (float) $sr['bobot'];
+                    }
+                }
+            } elseif ($total) {
+                $ids = [];
+                foreach ($db->table('kurva_rencana')->select('gedung_id')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->distinct()->get()->getResultArray() as $kr) {
+                    if ($kr['gedung_id'] !== null) {
+                        $ids[] = (int) $kr['gedung_id'];
+                    }
+                }
+                $jumlahGedungBerencana = count($ids);
+                if ($ids !== []) {
+                    foreach ($minggu as $m) {
+                        $rencanaAda[(int) $m['ke']] = (int) $db->table('rencana_mingguan')
+                            ->whereIn('gedung_id', $ids)
+                            ->where(['sekolah_id' => $this->sid(), 'minggu_mulai' => $m['mulai'], 'is_deleted' => 0])
+                            ->countAllResults();
+                    }
+                }
+            }
+        }
         return $this->tampil('kurva/index', [
             'semua' => $semua, 'g' => $g, 'minggu' => $minggu, 'svg' => $svg,
             'mode' => $mode, 'total' => $total, 'adaRencana' => $adaRencana, 'basis' => $basis,
+            'petaRencana' => $petaRencana, 'petaRealisasiSim' => $petaRealisasiSim,
+            'rencanaAda' => $rencanaAda, 'jumlahGedungBerencana' => $jumlahGedungBerencana,
         ], 'Kurva S Pelaksanaan — Aplikasi PBJ Sekolah');
     }
 
@@ -87,6 +130,122 @@ class Kurva extends BaseController
             $peta[] = $grup . ' → ' . ($gedung ?? 'kurva total saja');
         }
         return redirect()->to('kurva-s')->with('sukses', 'Rencana Kurva S resmi terimpor: ' . $r['baris'] . ' baris bab dalam ' . $r['minggu'] . ' minggu (total bobot ' . number_format($r['total_bobot'], 2, ',', '.') . '%). Pemetaan kelompok: ' . implode('; ', $peta) . '.');
+    }
+
+    /**
+     * Buat Rencana Belanja (Rencana Mingguan) dari satu baris minggu Kurva S:
+     * rencana untuk minggu kalender itu dibuat (bila belum ada) dan target
+     * pekerjaannya langsung terisi dari Kurva S lewat intiTargetKurva() —
+     * angka rencana kerja & persen tidak diketik ulang, dan rencana belanja
+     * yang terbentuk selalu tercatat kebutuhan pekerjaannya. Parameter
+     * gedung = id gedung, atau 'semua' (tampilan Total Sekolah: semua
+     * gedung yang punya rencana kurva). Rencana yang sudah bertarget tidak
+     * ditimpa; pengguna diarahkan membukanya.
+     */
+    public function buatRencana()
+    {
+        $db = $this->db();
+        $ke = (int) $this->request->getPost('minggu_ke');
+        $param = (string) $this->request->getPost('gedung');
+        $kembali = 'kurva-s?gedung=' . ($param === 'semua' ? 'total' : (int) $param);
+        if (! $db->tableExists('kurva_rencana') || ! $db->tableExists('kurva_minggu') || ! $db->tableExists('rencana_mingguan')) {
+            return redirect()->to($kembali)->with('galat', 'Data Kurva S / Rencana Mingguan belum tersedia — jalankan migrasi lebih dulu.');
+        }
+        $km = $db->table('kurva_minggu')->where(['sekolah_id' => $this->sid(), 'minggu_ke' => $ke, 'is_deleted' => 0])->get()->getRowArray();
+        if ($km === null) {
+            return redirect()->to($kembali)->with('galat', 'Minggu kalender ke-' . $ke . ' tidak ditemukan pada rencana Kurva S.');
+        }
+        $sasaran = [];
+        if ($param === 'semua') {
+            foreach ($db->table('kurva_rencana')->select('gedung_id')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->distinct()->get()->getResultArray() as $kr) {
+                if ($kr['gedung_id'] !== null && $this->ambilGedung((int) $kr['gedung_id']) !== null) {
+                    $sasaran[] = (int) $kr['gedung_id'];
+                }
+            }
+        } else {
+            $gid = (int) $param;
+            if ($this->ambilGedung($gid) === null || ! $this->gedungPunyaRencana($gid)) {
+                return redirect()->to($kembali)->with('galat', 'Gedung tidak ditemukan atau belum punya rencana Kurva S.');
+            }
+            $sasaran[] = $gid;
+        }
+        if ($sasaran === []) {
+            return redirect()->to($kembali)->with('galat', 'Belum ada gedung yang punya rencana Kurva S.');
+        }
+        $ringkasan = [];
+        $gagal = [];
+        $satuId = null;
+        foreach ($sasaran as $gid) {
+            $g = $this->ambilGedung($gid);
+            $r = $db->table('rencana_mingguan')
+                ->where(['sekolah_id' => $this->sid(), 'gedung_id' => $gid, 'minggu_mulai' => $km['tanggal_mulai'], 'is_deleted' => 0])
+                ->get()->getRowArray();
+            $baru = false;
+            if ($r === null) {
+                $db->table('rencana_mingguan')->insert([
+                    'sekolah_id' => $this->sid(), 'gedung_id' => $gid, 'minggu_mulai' => $km['tanggal_mulai'],
+                    'keterangan' => 'Dari Kurva S — minggu ke-' . $ke,
+                    'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+                $r = $this->ambilRencana((int) $db->insertID());
+                $baru = true;
+                $this->catatAudit('rencana_mingguan', (int) $r['id'], 'buat_dari_kurva_s', 'Dibuat dari halaman Kurva S, minggu kalender ke-' . $ke . ' (' . $km['tanggal_mulai'] . '), gedung ' . ($g['nama'] ?? $gid) . '.');
+            }
+            $satuId = (int) $r['id'];
+            $jmlTarget = (int) $db->table('rencana_mingguan_detail')
+                ->where(['rencana_id' => (int) $r['id'], 'is_deleted' => 0])->where('volume_target >', 0)->countAllResults();
+            if ($jmlTarget > 0) {
+                $ringkasan[] = ($g['nama'] ?? 'Gedung') . ': sudah ada (' . $jmlTarget . ' pekerjaan target)';
+                continue;
+            }
+            $h = $this->intiTargetKurva($r);
+            if ($h['ok']) {
+                $ringkasan[] = ($g['nama'] ?? 'Gedung') . ': ' . $h['jumlah'] . ' pekerjaan target senilai Rp ' . number_format($h['total'], 0, ',', '.');
+            } else {
+                if ($baru) {
+                    $this->hapusLunak('rencana_mingguan', ['id' => (int) $r['id']]);
+                    $satuId = null;
+                }
+                $gagal[] = ($g['nama'] ?? 'Gedung') . ': ' . $h['pesan'];
+            }
+        }
+        if (count($sasaran) === 1 && $gagal === [] && $satuId !== null) {
+            return redirect()->to('rencana-mingguan/' . $satuId)
+                ->with('sukses', 'Rencana belanja minggu ke-' . $ke . ' siap dari Kurva S — ' . implode('; ', $ringkasan) . '. Daftar belanja bersih & kebutuhan upahnya terhitung di halaman ini; silakan sesuaikan target bila perlu.');
+        }
+        $pesan = 'Rencana belanja minggu ke-' . $ke . ' dari Kurva S: ' . implode('; ', $ringkasan ?: ['tidak ada yang dibuat']) . '.';
+        if ($gagal !== []) {
+            $pesan .= ' Belum berhasil: ' . implode('; ', $gagal) . '.';
+        }
+        return redirect()->to($kembali)->with($gagal !== [] && $ringkasan === [] ? 'galat' : 'sukses', $pesan);
+    }
+
+    /**
+     * Isi realisasi mingguan (%) untuk Simulasi dari satu baris Kurva S —
+     * menulis tabel simulasi_realisasi yang sama dengan formulir Simulasi
+     * Mingguan (lewat simpanRealisasiSimulasi), jadi nilai yang diisi di
+     * sini langsung menggerakkan Simulasi tanpa diketik ulang di sana.
+     */
+    public function simpanRealisasi()
+    {
+        $db = $this->db();
+        $gid = (int) $this->request->getPost('gedung_id');
+        $ke = (int) $this->request->getPost('minggu_ke');
+        $kembali = 'kurva-s?gedung=' . $gid;
+        if ($this->ambilGedung($gid) === null) {
+            return redirect()->to('kurva-s')->with('galat', 'Gedung tidak ditemukan.');
+        }
+        if (! $db->tableExists('simulasi_realisasi') || ! $db->tableExists('kurva_minggu')) {
+            return redirect()->to($kembali)->with('galat', 'Tabel simulasi/kurva belum tersedia — jalankan migrasi lebih dulu.');
+        }
+        $km = $db->table('kurva_minggu')->where(['sekolah_id' => $this->sid(), 'minggu_ke' => $ke, 'is_deleted' => 0])->get()->getRowArray();
+        if ($km === null) {
+            return redirect()->to($kembali)->with('galat', 'Minggu kalender ke-' . $ke . ' tidak ditemukan.');
+        }
+        $nilai = max(0.0, min(100.0, (float) str_replace(',', '.', trim((string) $this->request->getPost('nilai')))));
+        $this->simpanRealisasiSimulasi($ke, $gid, $nilai);
+        $this->catatAudit('simulasi_realisasi', null, 'simpan_dari_kurva_s', 'Realisasi simulasi minggu ke-' . $ke . ' gedung ' . $gid . ' = ' . number_format($nilai, 2, ',', '.') . '% (diisi dari halaman Kurva S).');
+        return redirect()->to($kembali)->with('sukses', 'Realisasi minggu ke-' . $ke . ' tersimpan: ' . number_format($nilai, 2, ',', '.') . '% — Simulasi Mingguan kini memakai nilai ini.');
     }
 
     private function gedungPunyaRencana(int $gedungId): bool

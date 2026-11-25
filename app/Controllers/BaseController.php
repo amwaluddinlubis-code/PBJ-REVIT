@@ -639,6 +639,34 @@ abstract class BaseController extends Controller
      * (jumlah komponen analisa terkini) > harga satuan dokumen BOQ
      * (untuk pekerjaan tanpa analisa/komponen).
      */
+    /**
+     * Simpan satu sel realisasi mingguan Simulasi (tabel simulasi_realisasi):
+     * nilai > 0 di-upsert (baris terhapus lunak dihidupkan lagi), nilai 0
+     * menghapus lunak barisnya. Satu-satunya jalur tulis tabel ini — dipakai
+     * Simulasi::simpan (formulir massal) dan Kurva::simpanRealisasi (isi per
+     * baris di halaman Kurva S). Mengembalikan true bila nilai tersimpan.
+     */
+    protected function simpanRealisasiSimulasi(int $mingguKe, int $gedungId, float $nilai): bool
+    {
+        $db = $this->db();
+        $ada = $db->table('simulasi_realisasi')
+            ->where(['sekolah_id' => $this->sid(), 'minggu_ke' => $mingguKe, 'gedung_id' => $gedungId])->get()->getRowArray();
+        if ($nilai > 0) {
+            if ($ada) {
+                $db->table('simulasi_realisasi')->where('id', (int) $ada['id'])
+                    ->update(['bobot' => $nilai, 'is_deleted' => 0, 'deleted_at' => null, 'updated_at' => date('Y-m-d H:i:s')]);
+            } else {
+                $db->table('simulasi_realisasi')
+                    ->insert(['sekolah_id' => $this->sid(), 'minggu_ke' => $mingguKe, 'gedung_id' => $gedungId, 'bobot' => $nilai, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
+            }
+            return true;
+        }
+        if ($ada && (int) $ada['is_deleted'] === 0) {
+            $this->hapusLunak('simulasi_realisasi', ['id' => (int) $ada['id']]);
+        }
+        return false;
+    }
+
     protected function hargaBerjalan(array $p, ?int $sid = null): float
     {
         if (($p['harga_revisi'] ?? null) !== null) {

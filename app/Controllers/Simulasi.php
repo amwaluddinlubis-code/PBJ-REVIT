@@ -339,19 +339,8 @@ class Simulasi extends Rencana
                 $nilai = $mentah === null || trim((string) $mentah) === ''
                     ? 0.0
                     : max(0.0, (float) str_replace(',', '.', (string) $mentah));
-                $ada = $db->table('simulasi_realisasi')
-                    ->where(['sekolah_id' => $sid, 'minggu_ke' => $ke, 'gedung_id' => $gid])->get()->getRowArray();
-                if ($nilai > 0) {
-                    if ($ada) {
-                        $db->table('simulasi_realisasi')->where('id', (int) $ada['id'])
-                            ->update(['bobot' => $nilai, 'is_deleted' => 0, 'deleted_at' => null, 'updated_at' => date('Y-m-d H:i:s')]);
-                    } else {
-                        $db->table('simulasi_realisasi')
-                            ->insert(['sekolah_id' => $sid, 'minggu_ke' => $ke, 'gedung_id' => $gid, 'bobot' => $nilai, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
-                    }
+                if ($this->simpanRealisasiSimulasi($ke, $gid, $nilai)) {
                     $tersimpan++;
-                } elseif ($ada && (int) $ada['is_deleted'] === 0) {
-                    $this->hapusLunak('simulasi_realisasi', ['id' => (int) $ada['id']]);
                 }
             }
         }

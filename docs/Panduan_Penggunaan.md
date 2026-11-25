@@ -250,6 +250,8 @@ Menu **Pembangunan Gedung → Kurva S** menggambar garis rencana kumulatif melaw
 
 - Bila **rencana resmi Time Schedule perencana** sudah diimpor (berkas JSON kurva, tombol impor di halaman ini), garis rencana memakai bobot resmi per minggu kalender proyek itu.
 - Bila belum diimpor, garis rencana digambar sebagai **kurva S perkiraan** mengikuti tanggal SPK gedung — cukup untuk memantau keterlambatan secara kasar, tetapi imporlah rencana resmi agar perbandingannya sahih.
+- **Tombol Buat Rencana Belanja di setiap baris minggu** (hanya bila rencana resmi sudah diimpor): membuat Rencana Mingguan untuk minggu itu dengan target pekerjaan terisi otomatis dari kurva — angka rencana kerja dan persen tidak diketik ulang, dan rencana belanjanya langsung tercatat kebutuhan pekerjaannya. Pada tampilan Total Sekolah, tombol membuat rencana untuk semua gedung sekaligus; pada tampilan per gedung, untuk gedung itu. Minggu yang rencananya sudah ada menampilkan tombol **Lihat Rencana** — rencana yang sudah bertarget tidak pernah ditimpa.
+- **Kolom Realisasi Simulasi** (tampilan per gedung): isi persen realisasi minggu itu untuk mesin Simulasi Mingguan langsung dari tabel ini. Nilainya sama dengan formulir masukan di halaman Simulasi Mingguan — cukup isi di salah satu tempat, keduanya membaca dan menulis data yang sama.
 
 ### Laporan Kemajuan
 
@@ -304,7 +306,7 @@ Menu **Perencanaan → Rencana Mingguan** memecah pekerjaan menjadi target per m
 
 Menu **Perencanaan → Simulasi Mingguan** adalah mesin simulasi satu proyek penuh mengikuti Kurva S resmi (syarat: rencana Kurva S sudah diimpor di halaman Kurva S):
 
-1. **Isi realisasi mingguan**: pada tabel masukan, isi bobot realisasi tiap minggu per gedung — persen terhadap total proyek, satuan yang sama dengan bobot Kurva S (lihat Laporan Kemajuan). Minggu terakhir yang terisi dianggap minggu berjalan.
+1. **Isi realisasi mingguan**: pada tabel masukan, isi bobot realisasi tiap minggu per gedung — persen terhadap total proyek, satuan yang sama dengan bobot Kurva S (lihat Laporan Kemajuan). Minggu terakhir yang terisi dianggap minggu berjalan. Nilai yang sama bisa diisi per baris dari halaman Kurva S (tampilan per gedung, kolom Realisasi Simulasi) — kedua tempat menulis data yang sama.
 2. **Simpan & Generate Ulang**: realisasi disebar ke bab mengikuti porsi bobot rencana minggu itu; sisa volume tiap bab dijadwalkan ulang ke minggu-minggu berikutnya mengikuti pola Kurva S bab itu (bab yang tertinggal dikejar pada minggu berikutnya).
 3. **Baca hasilnya**: panel kedudukan per gedung (rencana kumulatif vs realisasi kumulatif), ringkasan mingguan, dan rincian per minggu — jenis pekerjaan yang berjalan beserta volume targetnya, rencana belanja bahan (kebutuhan kotor pada harga acuan), dan kebutuhan pekerja (OH + perkiraan orang pada 6 hari kerja). Baris Perabot/Persiapan/Biaya Manajemen tampil sebagai biaya non-BOQ terjadwal.
 

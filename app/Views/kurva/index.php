@@ -41,7 +41,7 @@ $resmi = ($mode ?? 'perkiraan') === 'resmi';
   <?php endif; ?>
   <?= $svg ?>
   <table data-paginasi="20" data-cari="Cari minggu…">
-    <tr><th>Minggu ke-</th><th>Periode</th><th class="angka">Rencana Kumulatif</th><th class="angka">Realisasi Kumulatif</th><th class="angka">Nilai Realisasi</th><th class="angka">Deviasi</th></tr>
+    <tr><th>Minggu ke-</th><th>Periode</th><th class="angka">Rencana Kumulatif</th><th class="angka">Realisasi Kumulatif</th><th class="angka">Nilai Realisasi</th><th class="angka">Deviasi</th><?php if ($resmi): ?><th data-tanpa-urut>Rencana Belanja</th><?php if (! $total): ?><th class="angka" data-tanpa-urut>Realisasi Simulasi (%)</th><?php endif; ?><?php endif; ?></tr>
     <?php foreach ($minggu as $m): $dev = $m['realisasi'] - $m['rencana']; ?>
     <tr>
       <td><?= (int) $m['ke'] ?></td>
@@ -50,11 +50,49 @@ $resmi = ($mode ?? 'perkiraan') === 'resmi';
       <td class="angka"><?= number_format($m['realisasi'], 1, ',', '.') ?>%</td>
       <td class="angka"><?= rp($m['nilai']) ?></td>
       <td class="angka"><span style="color:<?= $dev < -0.05 ? 'var(--ina-red-700,#a61e1e)' : 'var(--ina-green-700,#1e6b2a)' ?>"><?= number_format($dev, 1, ',', '.') ?>%</span></td>
+      <?php if ($resmi): ?>
+      <td>
+        <?php if (! $total): ?>
+          <?php if (! empty($petaRencana[(int) $m['ke']])): ?>
+          <a class="tombol kecil" href="<?= base_url('rencana-mingguan/' . (int) $petaRencana[(int) $m['ke']]) ?>">Lihat Rencana</a>
+          <?php else: ?>
+          <form method="post" action="<?= base_url('kurva-s/buat-rencana') ?>" class="inline">
+            <?= csrf_field() ?>
+            <input type="hidden" name="minggu_ke" value="<?= (int) $m['ke'] ?>">
+            <input type="hidden" name="gedung" value="<?= (int) $g['id'] ?>">
+            <button type="submit" class="kecil">Buat Rencana Belanja</button>
+          </form>
+          <?php endif; ?>
+        <?php else: ?>
+          <?php if (($rencanaAda[(int) $m['ke']] ?? 0) >= max(1, (int) $jumlahGedungBerencana)): ?>
+          <a class="tombol kecil" href="<?= base_url('rencana-mingguan') ?>">Sudah dibuat</a>
+          <?php else: ?>
+          <form method="post" action="<?= base_url('kurva-s/buat-rencana') ?>" class="inline">
+            <?= csrf_field() ?>
+            <input type="hidden" name="minggu_ke" value="<?= (int) $m['ke'] ?>">
+            <input type="hidden" name="gedung" value="semua">
+            <button type="submit" class="kecil">Buat Rencana Belanja<?= ($rencanaAda[(int) $m['ke']] ?? 0) > 0 ? ' (yang belum)' : '' ?></button>
+          </form>
+          <?php endif; ?>
+        <?php endif; ?>
+      </td>
+      <?php if (! $total): ?>
+      <td class="angka">
+        <form method="post" action="<?= base_url('kurva-s/simpan-realisasi') ?>" class="inline" style="display:flex;gap:4px;justify-content:flex-end;align-items:center">
+          <?= csrf_field() ?>
+          <input type="hidden" name="gedung_id" value="<?= (int) $g['id'] ?>">
+          <input type="hidden" name="minggu_ke" value="<?= (int) $m['ke'] ?>">
+          <input type="number" step="0.01" min="0" max="100" name="nilai" value="<?= isset($petaRealisasiSim[(int) $m['ke']]) ? esc(number_format((float) $petaRealisasiSim[(int) $m['ke']], 2, '.', '')) : '' ?>" style="width:80px;text-align:right" inputmode="decimal" aria-label="Realisasi simulasi minggu <?= (int) $m['ke'] ?>">
+          <button type="submit" class="kecil">Simpan</button>
+        </form>
+      </td>
+      <?php endif; ?>
+      <?php endif; ?>
     </tr>
     <?php endforeach; ?>
   </table>
   <?php if ($resmi): ?>
-  <p class="kecil-teks">Deviasi negatif (merah) berarti realisasi tertinggal dari rencana resmi perencana pada minggu itu. Persen realisasi gedung dihitung terhadap nilai BOQ berjalannya (hasil AHSP); persen total terhadap BOQ berjalan semua gedung didanai ditambah biaya non-gedung.</p>
+  <p class="kecil-teks">Deviasi negatif (merah) berarti realisasi tertinggal dari rencana resmi perencana pada minggu itu. Persen realisasi gedung dihitung terhadap nilai BOQ berjalannya (hasil AHSP); persen total terhadap BOQ berjalan semua gedung didanai ditambah biaya non-gedung. Kolom <strong>Rencana Belanja</strong> membuat <a href="<?= base_url('rencana-mingguan') ?>">Rencana Mingguan</a> untuk minggu itu dengan target pekerjaan terisi otomatis dari kurva ini — angka rencana kerja &amp; persen tidak perlu diketik ulang, dan rencana yang sudah bertarget tidak ditimpa. Kolom <strong>Realisasi Simulasi</strong> (tampilan per gedung) adalah masukan persen realisasi untuk <a href="<?= base_url('simulasi') ?>">Simulasi Mingguan</a>: nilai yang sama dengan formulir di halaman Simulasi, jadi cukup isi di salah satu tempat.</p>
   <?php else: ?>
   <p class="kecil-teks">Deviasi negatif berarti realisasi tertinggal dari rencana. Garis rencana digambar halus berbentuk S (lambat di awal dan akhir, cepat di tengah) sebagai pembanding; sesuaikan dengan jadwal resmi pada dokumen perencanaan.</p>
   <?php endif; ?>
