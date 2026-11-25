@@ -439,6 +439,8 @@ Menu **Keuangan → Bukti Setor & Pajak** mencatat penyetoran pajak yang dipungu
 ## 15. Buku Material & Sisa Bahan
 
 - **Buku Material** (menu **Material → Buku Material**): catatan keluar–masuk bahan per tanggal (dari pembelian/SPK dan pemakaian), menjadi dasar stok. Kolom **Gedung Tujuan** boleh diisi untuk mencatat pemakaian per gedung; saldo utama tetap se-sekolah.
+- Panel **Kebutuhan Bahan per Gedung** membandingkan kebutuhan BOQ tiap gedung dengan yang sudah keluar ke gedung itu (sisa kebutuhan; baris merah berarti keluar sudah melebihi kebutuhan atau bahan itu bukan kebutuhan gedung tersebut) — periksa panel ini sebelum mencatat agar tidak salah gedung.
+- Pada form catat, **pilihan bahan hanya menampilkan bahan yang masih berstok** (sudah di-BAST + saldo buku) beserta sisa stoknya; sesudah gedung dan bahan dipilih, petunjuk di bawah form menampilkan stok tersedia serta kebutuhan, sudah keluar, dan sisa kebutuhan gedung itu untuk bahan tersebut. Jumlah **Keluar** yang melebihi stok tersedia **ditolak** aplikasi.
 - **Sisa Bahan** (menu **Material → Sisa Bahan**): perbandingan kebutuhan RAB dengan realisasi pemakaian per bahan; sisa negatif ditandai (juga muncul di panel Perlu Perhatian dashboard).
 
 ## 16. Laporan & Ekspor Excel
