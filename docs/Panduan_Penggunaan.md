@@ -217,6 +217,7 @@ Daftar pekerjaan gedung itu: bab/kelompok, uraian, kode analisa, volume, satuan,
 
 Hal yang perlu diketahui:
 - **Subtotal per bab** tampil pada baris judul bab (kolom Jumlah Berjalan = jumlah seluruh Jumlah Berjalan pekerjaan dalam bab itu), dihitung atas semua baris bab tersebut (bukan hanya yang tampil di halaman paginasi aktif).
+- **Lipat bab**: tombol panah di awal baris judul bab melipat/membuka seluruh baris pekerjaan bab itu — subtotal bab tetap terlihat saat terlipat, jadi daftar panjang bisa diringkas per bab. Keadaan lipatan diingat per gedung di peramban yang sama. Mengarahkan kursor ke nama pekerjaan mengubah warna hurufnya menjadi kuning (tanpa latar biru).
 - **Kode analisa** pada baris pekerjaan adalah tautan ke halaman analisa itu; nama pekerjaan yang punya analisa dapat diklik untuk membuka rincian bahan & upah di tempat.
 - **Dasar nilai pekerjaan** adalah hasil AHSP: harga berjalan = harga revisi yang disahkan (bila ada) > jumlah koefisien × tarif komponen analisa terkini (tarif upah memakai yang terbesar antara tarif komponen dan Master Upah) > harga satuan dokumen BOQ (hanya untuk pekerjaan tanpa analisa/komponen). Total BOQ dashboard, verifikasi anggaran, nilai realisasi, Kurva S, dan RAB Gabungan LPJ semuanya memakai dasar ini.
 - Nama pekerjaan yang punya analisa dapat diklik untuk membuka rincian bahan & upahnya di tempat.

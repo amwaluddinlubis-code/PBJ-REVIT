@@ -17,7 +17,7 @@
     <?php $subtotalBab = []; foreach ($pekerjaan as $px) { $kb = (string) ($px['bab'] ?? ''); $subtotalBab[$kb] = ($subtotalBab[$kb] ?? 0) + (float) ($px['volume_revisi'] ?? $px['volume']) * (float) ($px['harga_berjalan'] ?? $px['harga_satuan']); } ?>
     <?php $babLalu = null; $total = 0; foreach ($pekerjaan as $p): $total += (float) ($p['volume_revisi'] ?? $p['volume']) * (float) ($p['harga_berjalan'] ?? $p['harga_satuan']); ?>
       <?php if ($p['bab'] !== $babLalu): $babLalu = $p['bab']; ?>
-      <tr><td colspan="7" style="font-weight:600;background:#fcfcfd"><?= esc($babLalu ?: '—') ?></td><td class="angka" style="font-weight:700;background:#fcfcfd"><?= number_format($subtotalBab[(string) ($babLalu ?? '')] ?? 0, 0, ',', '.') ?></td><td style="background:#fcfcfd"></td></tr>
+      <tr class="baris-bab" data-bab="<?= esc($babLalu ?: '—', 'attr') ?>"><td colspan="7" style="font-weight:600;background:#fcfcfd"><button type="button" class="kecil abu tombol-lipat-bab" aria-expanded="true" title="Lipat / buka pekerjaan bab ini" style="margin-right:6px">&#9662;</button><?= esc($babLalu ?: '—') ?></td><td class="angka" style="font-weight:700;background:#fcfcfd"><?= number_format($subtotalBab[(string) ($babLalu ?? '')] ?? 0, 0, ',', '.') ?></td><td style="background:#fcfcfd"></td></tr>
       <?php endif; ?>
       <tr id="pekerjaan-<?= (int) $p['id'] ?>">
         <td><input type="checkbox" data-pilih value="<?= (int) $p['id'] ?>" x-model="terpilih"></td>
@@ -81,7 +81,11 @@
     <?php endforeach; ?>
     <tr class="total"><td colspan="7">Grand Total BOQ Berjalan</td><td class="angka"><?= number_format($total, 0, ',', '.') ?></td><td></td></tr>
   </table></div>
-  <p class="kecil-teks">Mengubah volume pekerjaan menghitung ulang kebutuhan bahan &amp; upah gedung ini secara otomatis.</p>
+  <p class="kecil-teks">Mengubah volume pekerjaan menghitung ulang kebutuhan bahan &amp; upah gedung ini secara otomatis. Tombol panah di awal judul bab melipat/membuka baris pekerjaan bab itu (subtotal bab tetap terlihat); keadaan lipatan diingat untuk gedung ini.</p>
+  <style>
+    tr.unit-terlipat { display: none !important; }
+    @media print { tr.unit-terlipat { display: table-row !important; } }
+  </style>
 </div>
 <script>
 // Tautan dalam #pekerjaan-<id> (mis. dari panel "Dipakai di Pekerjaan" di
@@ -113,5 +117,51 @@
   // baris di luar halaman aktif) sebelum memeriksa keterlihatan baris.
   if (document.readyState === 'complete') { setTimeout(jalan, 200); }
   else { window.addEventListener('load', function () { setTimeout(jalan, 200); }); }
+})();
+</script>
+<script>
+// Lipat bab BOQ: tombol pada baris judul bab menyembunyikan baris
+// pekerjaan + baris rinciannya sampai judul bab berikutnya. Penyembunyian
+// memakai kelas (bukan style sebaris) agar tidak ditimpa mesin Tabel
+// Standar (paginasi.js) yang mengatur display baris untuk paginasi &
+// pencarian; subtotal bab tetap terlihat karena baris judul tidak pernah
+// disembunyikan oleh skrip ini. Keadaan terlipat per bab disimpan di
+// localStorage per gedung.
+(function () {
+  var kunci = 'pbj-boq-lipat-<?= (int) $g['id'] ?>';
+  var terlipat = {};
+  try {
+    JSON.parse(localStorage.getItem(kunci) || '[]').forEach(function (b) { terlipat[b] = true; });
+  } catch (e) { /* abaikan */ }
+  function simpan() {
+    try { localStorage.setItem(kunci, JSON.stringify(Object.keys(terlipat))); } catch (e) { /* abaikan */ }
+  }
+  function terapkan(kepala, lipat) {
+    var tombol = kepala.querySelector('.tombol-lipat-bab');
+    if (tombol) {
+      tombol.setAttribute('aria-expanded', lipat ? 'false' : 'true');
+      tombol.innerHTML = lipat ? '&#9656;' : '&#9662;';
+    }
+    var tr = kepala.nextElementSibling;
+    while (tr && ! tr.classList.contains('baris-bab') && ! tr.classList.contains('total')) {
+      if ((tr.id && tr.id.indexOf('pekerjaan-') === 0) || tr.classList.contains('baris-detail')) {
+        tr.classList.toggle('unit-terlipat', lipat);
+      }
+      tr = tr.nextElementSibling;
+    }
+  }
+  document.querySelectorAll('tr.baris-bab').forEach(function (kepala) {
+    var nama = kepala.getAttribute('data-bab') || '';
+    if (terlipat[nama]) terapkan(kepala, true);
+    var tombol = kepala.querySelector('.tombol-lipat-bab');
+    if (tombol) {
+      tombol.addEventListener('click', function () {
+        var lipat = ! terlipat[nama];
+        if (lipat) { terlipat[nama] = true; } else { delete terlipat[nama]; }
+        terapkan(kepala, lipat);
+        simpan();
+      });
+    }
+  });
 })();
 </script>

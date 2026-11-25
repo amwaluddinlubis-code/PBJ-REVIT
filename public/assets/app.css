@@ -3101,6 +3101,21 @@ table.satu-baris .sel-fisik .bar {
   font-size: 9px;
 }
 
+/* Hover nama pekerjaan: TANPA blok biru & bayangan bawaan tombol
+   (button:hover) — cukup warna huruf menjadi kuning (permintaan AMWAL,
+   25 Nov 2026). Selektor diperkuat agar menang dari lapisan
+   body:not(.login) button:hover. */
+body:not(.login) button.tautan-pekerjaan:hover {
+  background: none;
+  box-shadow: none;
+  transform: none;
+  color: #ca8a04;
+}
+
+html.gelap body:not(.login) button.tautan-pekerjaan:hover {
+  color: #facc15;
+}
+
 table.satu-baris tr.baris-detail>td {
   white-space: normal;
   background: rgba(120, 140, 170, .07);
