@@ -96,7 +96,7 @@
     <?php endforeach; ?>
     <input type="hidden" name="hari" value="<?= (int) ($hari_kerja ?? 6) ?>">
     <table data-paginasi="25" data-cari="Cari bahan…">
-      <tr><th style="width:34px"></th><th>Bahan</th><th class="angka">Kebutuhan</th><th class="angka">Sudah Dipesan</th><th class="angka">Sisa Kebutuhan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Sisa</th><th style="width:130px">Qty Rencana</th><th data-tanpa-urut style="width:150px">Aksi</th></tr>
+      <tr><th style="width:34px"></th><th>Bahan</th><th class="angka">Kebutuhan</th><th class="angka">Sudah Dipesan</th><th class="angka">Sisa Kebutuhan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Sisa</th><th style="width:130px">Qty Rencana</th><th data-tanpa-urut style="width:165px">Aksi</th></tr>
       <?php $totalSisa = 0; foreach ($hasil['kebutuhan']['tertaut'] as $b): $nilaiSisa = (float) $b['sisa'] * (float) $b['harga']; $totalSisa += $nilaiSisa; ?>
       <tr>
         <td><input type="checkbox" name="pilih[]" value="<?= (int) $b['bahan_id'] ?>"<?= $b['sisa'] > 0 ? ' checked' : '' ?> style="width:auto;margin:0"></td>
