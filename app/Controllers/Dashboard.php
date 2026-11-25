@@ -163,23 +163,14 @@ class Dashboard extends BaseController
         }
         $tanpaTarif = (int) $db->table('upah_master')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->where('tarif <=', 0)->countAllResults();
 
-        // Panel Pembangunan Gedung: bandingkan Nilai BOQ Asli (volume awal x
-        // harga dokumen perencana) dengan Nilai Analisa (AHSP berjalan) agar
+        // Panel Pembangunan Gedung: bandingkan Nilai BOQ Asli (kolom
+        // gedung.nilai_boq — angka dokumen perencana, BEKU; keputusan
+        // AMWAL 25 Nov 2026) dengan Nilai Analisa (AHSP berjalan) agar
         // perubahan akibat perbaikan harga/tarif analisa terlihat per gedung.
-        $asliPerGedung = [];
-        foreach ($db->query(
-            'SELECT p.gedung_id AS gid, SUM(p.volume * p.harga_satuan) AS t
-             FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
-             WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0
-             GROUP BY p.gedung_id',
-            [$sid]
-        )->getResultArray() as $r) {
-            $asliPerGedung[(int) $r['gid']] = (float) $r['t'];
-        }
         $panelGedung = [];
         $panelTotal = ['asli' => 0.0, 'analisa' => 0.0, 'perubahan' => 0.0];
         foreach ($this->semuaGedung() as $g) {
-            $g['boq_asli'] = $asliPerGedung[(int) $g['id']] ?? 0.0;
+            $g['boq_asli'] = (float) $g['nilai_boq'];
             $g['nilai_analisa'] = $this->totalBoqGedung((int) $g['id']);
             $g['perubahan'] = $g['nilai_analisa'] - $g['boq_asli'];
             $panelTotal['asli'] += $g['boq_asli'];
@@ -188,9 +179,21 @@ class Dashboard extends BaseController
             $panelGedung[] = $g;
         }
         $totalRab = $panelTotal['analisa'];
+        // Biaya Non-Gedung tampil sebagai PANEL SENDIRI di dashboard
+        // (permintaan AMWAL 25 Nov 2026) — tidak digabung ke panel
+        // Pembangunan Gedung; total panel gedung tetap murni gedung.
+        $verifikasi = $this->verifikasiAnggaran();
+        $biayaNonGedung = (float) $verifikasi['biaya_lain'];
+        $panelBiayaLain = $db->table('biaya_lain')
+            ->select('kelompok, uraian, jumlah')
+            ->where(['sekolah_id' => $sid, 'is_deleted' => 0])
+            ->orderBy('kelompok')->orderBy('id')
+            ->get()->getResultArray();
 
         return $this->tampil('dashboard/index', [
             'panelGedung' => $panelGedung, 'panelTotal' => $panelTotal,
+            'biayaNonGedung' => $biayaNonGedung,
+            'panelBiayaLain' => $panelBiayaLain,
             'tanpaHarga' => $tanpaHarga, 'tanpaTarif' => $tanpaTarif,
             'identitas'   => $identitas,
             'totalRab'    => $totalRab,
@@ -201,7 +204,7 @@ class Dashboard extends BaseController
             'invoiceCek'  => $invoiceCek,
             'sisaNegatif' => $sisaNegatif,
             'perSpk'      => $perSpk,
-            'verifikasi'  => $this->verifikasiAnggaran(),
+            'verifikasi'  => $verifikasi,
             'tahap2JatuhTempo' => $tahap2JatuhTempo,
             'fisikRata' => $fisikRata,
             'pecahCek' => $pecahCek,

@@ -187,7 +187,7 @@ Dua menu pemeriksaan membantu memastikan analisa dan harga pekerjaan sekolah mas
 Dashboard merangkum sekolah aktif: **Total RAB**, **Total SPK Terdaftar**, **Realisasi Dibayar** (bersih sesudah PPh 22), dan **Sisa Anggaran**.
 
 Panel **Pembangunan Gedung — Dari Dokumen Perencana** membandingkan, per gedung aktif:
-- **Nilai BOQ Asli** = jumlah volume awal × harga satuan dokumen perencana (nilai gedung pada dokumen asal),
+- **Nilai BOQ Asli** = angka BOQ dokumen perencana yang tersimpan pada gedung itu (terisi saat impor workbook). Nilai ini **beku**: tidak berubah oleh edit volume/harga pekerjaan — betulkan hanya lewat isian *Nilai BOQ dokumen* pada panel Ubah Gedung bila angka dokumennya memang direvisi,
 - **Nilai Analisa** = nilai AHSP berjalan (total verifikasi anggaran),
 - **Perubahan** = selisihnya bertanda +/− dan persennya terhadap BOQ asli, dengan baris total di kaki tabel.
 
@@ -202,6 +202,8 @@ Panel kuning **Perlu perhatian** menandai hal yang harus diperiksa, masing-masin
 - **ALERT MASTER**: bahan/jenis tenaga sama dengan satuan atau harga berbeda,
 - **bahan tanpa harga acuan** (terhitung Rp 0 di kebutuhan & rencana belanja),
 - **jenis upah tanpa tarif** (terhitung Rp 0 di kebutuhan upah).
+
+Panel **Biaya Non-Gedung** berdiri sendiri di bawah panel gedung: merinci kelompok, uraian, dan jumlah seluruh biaya non-gedung sekolah aktif beserta totalnya (tidak digabung ke total panel gedung).
 
 Di bawah panel utama tampil juga **verifikasi anggaran**: total BOQ gedung aktif + biaya non-gedung dibandingkan dengan pagu anggaran, beserta selisih dan status (sesuai/melebihi).
 

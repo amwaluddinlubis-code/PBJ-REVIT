@@ -82,6 +82,22 @@
 </details>
 <?php endif; ?>
 
+<details class="panel panel-lipat" data-lipat-id="dash-biaya-lain" open>
+  <summary>Biaya Non-Gedung</summary>
+  <?php if (! empty($panelBiayaLain)): ?>
+  <table data-cari="Cari biaya non-gedung…">
+    <tr><th>Kelompok</th><th>Uraian</th><th class="angka">Jumlah</th></tr>
+    <?php foreach ($panelBiayaLain as $bl): ?>
+    <tr><td><?= esc($bl['kelompok']) ?></td><td><?= esc($bl['uraian']) ?></td><td class="angka"><?= rp((float) $bl['jumlah']) ?></td></tr>
+    <?php endforeach; ?>
+    <tr class="total"><td colspan="2"><b>Total Biaya Non-Gedung</b></td><td class="angka"><b><?= rp($biayaNonGedung ?? 0) ?></b></td></tr>
+  </table>
+  <p class="kecil-teks" style="margin-bottom:0">Kelola rinciannya di <a href="<?= base_url('biaya-non-gedung') ?>">Biaya Non-Gedung</a>.</p>
+  <?php else: ?>
+  <p class="kecil-teks" style="margin:0">Belum ada biaya non-gedung. Tambahkan di <a href="<?= base_url('biaya-non-gedung') ?>">Biaya Non-Gedung</a>.</p>
+  <?php endif; ?>
+</details>
+
 <details class="panel panel-lipat" data-lipat-id="dash-spk" open>
   <summary>Ringkasan per SPK</summary>
   <table data-paginasi="10" data-cari="Cari SPK…">

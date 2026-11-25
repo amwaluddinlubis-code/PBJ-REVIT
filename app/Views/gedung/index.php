@@ -45,6 +45,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <label>Nama gedung<input type="text" name="nama" required placeholder="mis. RKB 2 Kopel"></label>
       <label>Keterangan<input type="text" name="keterangan" placeholder="mis. Ruang Kelas 2 Kopel (18 m × 7 m)"></label>
+      <label>Nilai BOQ dokumen (Rp)<input type="text" name="nilai_boq" data-uang inputmode="numeric" placeholder="0"></label>
       <div class="aksi md:col-span-2"><button type="submit">Tambah Gedung</button></div>
     </div>
   </form>

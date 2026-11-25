@@ -12,23 +12,15 @@ class Gedung extends BaseController
              FROM gedung g WHERE g.sekolah_id = ? AND g.is_deleted = 0 ORDER BY g.urutan, g.id',
             [$this->sid()]
         )->getResultArray();
-        $asliPerGedung = [];
-        foreach ($db->query(
-            'SELECT p.gedung_id AS gid, SUM(p.volume * p.harga_satuan) AS t
-             FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id
-             WHERE g.sekolah_id = ? AND p.is_deleted = 0 AND g.is_deleted = 0
-             GROUP BY p.gedung_id',
-            [$this->sid()]
-        )->getResultArray() as $r) {
-            $asliPerGedung[(int) $r['gid']] = (float) $r['t'];
-        }
         foreach ($gedung as &$g) {
-            $g['nilai_boq'] = $this->totalBoqGedung((int) $g['id']);
-            $g['boq_asli'] = $asliPerGedung[(int) $g['id']] ?? 0.0;
-            $g['nilai_analisa'] = $g['nilai_boq'];
+            // Nilai BOQ Asli = kolom gedung.nilai_boq (angka dokumen
+            // perencana, BEKU — keputusan AMWAL 25 Nov 2026): tidak lagi
+            // dihitung dari pekerjaan dan tidak ditimpa nilai AHSP.
+            $g['boq_asli'] = (float) $g['nilai_boq'];
+            $g['nilai_analisa'] = $this->totalBoqGedung((int) $g['id']);
             $g['perubahan'] = $g['nilai_analisa'] - $g['boq_asli'];
             $g['nilai_realisasi'] = $this->nilaiRealisasiGedung((int) $g['id']);
-            $g['persen_fisik'] = $g['nilai_boq'] > 0 ? min(100, $g['nilai_realisasi'] / $g['nilai_boq'] * 100) : 0;
+            $g['persen_fisik'] = $g['boq_asli'] > 0 ? min(100, $g['nilai_realisasi'] / $g['boq_asli'] * 100) : 0;
         }
         return $this->tampil('gedung/index', ['gedung' => $gedung], 'Kelola Gedung — Aplikasi PBJ Sekolah');
     }
@@ -43,6 +35,7 @@ class Gedung extends BaseController
         $this->db()->table('gedung')->insert([
             'sekolah_id' => $this->sid(), 'nama' => $nama,
             'keterangan' => trim((string) $this->request->getPost('keterangan')) ?: null,
+            'nilai_boq' => (float) str_replace(['.', ','], ['', '.'], (string) ($this->request->getPost('nilai_boq') ?? '')),
             'urutan' => $urut, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
         return redirect()->to('/gedung')->with('sukses', 'Gedung "' . $nama . '" ditambahkan.');
@@ -54,11 +47,17 @@ class Gedung extends BaseController
         if ($g === null) {
             return redirect()->to('/gedung')->with('galat', 'Gedung tidak ditemukan.');
         }
-        $this->db()->table('gedung')->where('id', (int) $id)->update([
+        $ubah = [
             'nama' => trim((string) $this->request->getPost('nama')) ?: $g['nama'],
             'keterangan' => trim((string) $this->request->getPost('keterangan')) ?: null,
             'updated_at' => date('Y-m-d H:i:s'),
-        ]);
+        ];
+        // Nilai BOQ dokumen hanya berubah lewat form ini (atau impor) —
+        // edit pekerjaan TIDAK menimpanya lagi.
+        if ($this->request->getPost('nilai_boq') !== null) {
+            $ubah['nilai_boq'] = (float) str_replace(['.', ','], ['', '.'], (string) $this->request->getPost('nilai_boq'));
+        }
+        $this->db()->table('gedung')->where('id', (int) $id)->update($ubah);
         return redirect()->to('/gedung/' . (int) $id)->with('sukses', 'Gedung diperbarui.');
     }
 
@@ -135,9 +134,8 @@ class Gedung extends BaseController
         $db = $this->db();
         $data = ['g' => $g, 'tab' => $tab];
         $data['nilai_realisasi'] = $this->nilaiRealisasiGedung((int) $g['id']);
-        $g['nilai_boq'] = $this->totalBoqGedung((int) $g['id']);
         $data['g'] = $g;
-        $data['persen_fisik'] = $g['nilai_boq'] > 0 ? min(100, $data['nilai_realisasi'] / $g['nilai_boq'] * 100) : 0;
+        $data['persen_fisik'] = (float) $g['nilai_boq'] > 0 ? min(100, $data['nilai_realisasi'] / (float) $g['nilai_boq'] * 100) : 0;
 
         if ($tab === 'boq') {
             $data['pekerjaan'] = $db->table('pekerjaan')->where(['gedung_id' => $g['id'], 'is_deleted' => 0])->orderBy('urutan')->orderBy('id')->get()->getResultArray();
@@ -245,7 +243,6 @@ class Gedung extends BaseController
         $db->table('pekerjaan')->where('id', (int) $pekerjaanId)->update([
             'volume' => $volume, 'jumlah' => $volume * (float) $p['harga_satuan'],
         ]);
-        $this->segarkanNilaiBoq((int) $p['gedung_id']);
         return redirect()->to('/gedung/' . (int) $p['gedung_id'] . '/boq')->with('sukses', 'Volume diperbarui; kebutuhan bahan & upah terhitung ulang.');
     }
 
@@ -266,7 +263,6 @@ class Gedung extends BaseController
             'volume' => $volume, 'satuan' => trim((string) $this->request->getPost('satuan')) ?: null,
             'harga_satuan' => $harga, 'jumlah' => $volume * $harga, 'urutan' => $urut,
         ]);
-        $this->segarkanNilaiBoq($gid);
         return redirect()->to('/gedung/' . $gid . '/boq')->with('sukses', 'Pekerjaan ditambahkan.');
     }
 
@@ -279,7 +275,6 @@ class Gedung extends BaseController
         }
         $this->hapusLunak('realisasi', ['pekerjaan_id' => (int) $pekerjaanId]);
         $this->hapusLunak('pekerjaan', ['id' => (int) $pekerjaanId]);
-        $this->segarkanNilaiBoq((int) $p['gedung_id']);
         return redirect()->to('/gedung/' . (int) $p['gedung_id'] . '/boq')->with('sukses', 'Pekerjaan dihapus.');
     }
 
@@ -300,7 +295,6 @@ class Gedung extends BaseController
             $this->hapusLunak('pekerjaan', ['id' => $pid]);
             $n++;
         }
-        $this->segarkanNilaiBoq($gid);
         return redirect()->to('/gedung/' . $gid . '/boq')->with($n > 0 ? 'sukses' : 'galat',
             $n > 0 ? $n . ' pekerjaan terpilih dihapus; nilai BOQ dihitung ulang.' : 'Tidak ada pekerjaan yang diproses.');
     }
@@ -322,7 +316,6 @@ class Gedung extends BaseController
             $this->hapusLunak('realisasi', ['pekerjaan_id' => (int) $pid]);
             $this->hapusLunak('pekerjaan', ['id' => (int) $pid]);
         }
-        $this->segarkanNilaiBoq($gid);
         return redirect()->to('/gedung/' . $gid . '/boq')->with('sukses', 'BOQ dikosongkan: ' . count($ids) . ' pekerjaan dihapus; nilai BOQ kini nol.');
     }
 
@@ -389,12 +382,5 @@ class Gedung extends BaseController
         $p = $db->table('pekerjaan')->where('id', (int) $r['pekerjaan_id'])->get()->getRowArray();
         $this->hapusLunak('realisasi', ['id' => (int) $realisasiId]);
         return redirect()->to('/gedung/' . (int) ($p['gedung_id'] ?? 0) . '/realisasi')->with('sukses', 'Catatan realisasi dihapus.');
-    }
-
-    private function segarkanNilaiBoq(int $gedungId): void
-    {
-        $this->db()->table('gedung')->where('id', $gedungId)->update([
-            'nilai_boq' => $this->totalBoqGedung($gedungId), 'updated_at' => date('Y-m-d H:i:s'),
-        ]);
     }
 }
