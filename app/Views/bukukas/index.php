@@ -63,12 +63,63 @@
   ?>
 </details>
 
+<details class="panel panel-lipat" data-lipat-id="bukukas-catat-transaksi-manual" data-bulk-akar x-data="komponenBulk('form-bulk-kas','ids-kas')">
+  <summary>Catat Transaksi Kas Manual</summary>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <button type="button" class="tombol" onclick="bukaKasBaru()">+ Catat Transaksi</button>
+    <?php if ($manual !== []): ?>
+    <form id="form-bulk-kas" method="post" action="<?= base_url('buku-kas/hapus-massal') ?>" data-konfirmasi-judul="Hapus Transaksi Kas Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
+      <?= csrf_field() ?>
+      <span id="ids-kas"></span>
+      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} transaksi kas terpilih dari buku?')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+    </form>
+    <form method="post" action="<?= base_url('buku-kas/kosongkan') ?>" data-konfirmasi="Kosongkan transaksi kas manual sekolah ini? Semua <?= count($manual) ?> transaksi kas yang dicatat manual (termasuk penerimaan dana) akan dihapus (hapus lunak). Baris buku dari jurnal pembayaran, upah, dan bukti setor tidak ikut terhapus." data-konfirmasi-judul="Kosongkan Transaksi Kas Manual" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
+      <?= csrf_field() ?>
+      <button type="submit" class="bahaya">Kosongkan Transaksi Manual</button>
+    </form>
+    <?php endif; ?>
+  </div>
+  <p class="kecil-teks">Pembayaran invoice, pembayaran upah, dan penyetoran pajak/sisa dana tidak perlu dicatat di sini — sudah masuk buku secara otomatis dari modulnya masing-masing.</p>
+
+  <?php if ($manual !== []): ?>
+  <?php
+  $barisManual = [];
+  foreach ($manual as $m) {
+      $barisManual[] = ['sel' => [
+          ['html' => '<input type="checkbox" data-pilih value="' . (int) $m['id'] . '" x-model="terpilih">'],
+          (string) tgl($m['tanggal']),
+          (string) $m['uraian'],
+          (string) $m['kategori'] . ($m['tahap'] ? ' · tahap ' . (int) $m['tahap'] : ''),
+          (string) $m['kanal'] . ' · ' . (string) $m['jenis'],
+          ['teks' => rp($m['jumlah']), 'angka' => true],
+          ['html' => '<form class="inline" method="post" action="' . base_url('buku-kas/hapus/' . $m['id']) . '" data-konfirmasi="Hapus transaksi kas ini?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>'],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari transaksi…',
+      'paginasi' => 10,
+      'kolom' => [
+          ['judul_html' => '<input type="checkbox" title="Pilih semua transaksi" @change="pilihSemua($event)">', 'lebar' => '34px'],
+          ['judul' => 'Tanggal'],
+          ['judul' => 'Uraian'],
+          ['judul' => 'Kategori'],
+          ['judul' => 'Kanal'],
+          ['judul' => 'Jumlah', 'angka' => true],
+          ['judul' => ''],
+      ],
+      'baris' => $barisManual,
+  ]);
+  ?>
+  <?php endif; ?>
+</details>
+
 <details class="panel panel-lipat" data-lipat-id="bukukas-tutup-buku" open>
   <summary>Tutup Buku Bulanan</summary>
 
   <?php if ($buku_terbuka !== null): ?>
   <p style="margin-top:0">Buku terbuka: <strong><?= esc($buku_terbuka['label']) ?></strong> — semua pencatatan uang masuk bulan ini. Sesudah ditutup, pencatatan berikutnya langsung masuk bulan berikutnya dan bulan ini tidak bisa diubah lagi.</p>
-  <div class="kartu-kpi">
+  <div class="kartu-kpi ringkas">
     <div class="kpi"><div class="label">Saldo Awal</div><div class="nilai"><?= rp($ringkas_terbuka['saldo_awal']) ?></div></div>
     <div class="kpi"><div class="label">Total Masuk</div><div class="nilai"><?= rp($ringkas_terbuka['total_masuk']) ?></div></div>
     <div class="kpi"><div class="label">Total Keluar</div><div class="nilai"><?= rp($ringkas_terbuka['total_keluar']) ?></div></div>
@@ -127,58 +178,6 @@
   ?>
   <?php endif; ?>
 </details>
-
-<details class="panel panel-lipat" data-lipat-id="bukukas-catat-transaksi-kas-manual">
-  <summary>Catat Transaksi Kas Manual</summary>
-
-  <button type="button" class="tombol" onclick="bukaKasBaru()">+ Catat Transaksi</button>
-  <p class="kecil-teks">Pembayaran invoice, pembayaran upah, dan penyetoran pajak/sisa dana tidak perlu dicatat di sini — sudah masuk buku secara otomatis dari modulnya masing-masing.</p>
-</details>
-
-<?php if ($manual !== []): ?>
-<div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-kas','ids-kas')">
-  <h2>Transaksi Manual Tercatat</h2>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
-    <form id="form-bulk-kas" method="post" action="<?= base_url('buku-kas/hapus-massal') ?>" data-konfirmasi-judul="Hapus Transaksi Kas Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
-      <?= csrf_field() ?>
-      <span id="ids-kas"></span>
-      <button type="button" class="bahaya" :disabled="terpilih.length === 0" @click="kirim('Hapus {n} transaksi kas terpilih dari buku?')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
-    </form>
-    <form method="post" action="<?= base_url('buku-kas/kosongkan') ?>" data-konfirmasi="Kosongkan transaksi kas manual sekolah ini? Semua <?= count($manual) ?> transaksi kas yang dicatat manual (termasuk penerimaan dana) akan dihapus (hapus lunak). Baris buku dari jurnal pembayaran, upah, dan bukti setor tidak ikut terhapus." data-konfirmasi-judul="Kosongkan Transaksi Kas Manual" data-konfirmasi-tombol="Ya, Kosongkan" style="display:inline">
-      <?= csrf_field() ?>
-      <button type="submit" class="bahaya">Kosongkan Transaksi Manual</button>
-    </form>
-  </div>
-  <?php
-  $barisManual = [];
-  foreach ($manual as $m) {
-      $barisManual[] = ['sel' => [
-          ['html' => '<input type="checkbox" data-pilih value="' . (int) $m['id'] . '" x-model="terpilih">'],
-          (string) tgl($m['tanggal']),
-          (string) $m['uraian'],
-          (string) $m['kategori'] . ($m['tahap'] ? ' · tahap ' . (int) $m['tahap'] : ''),
-          (string) $m['kanal'] . ' · ' . (string) $m['jenis'],
-          ['teks' => rp($m['jumlah']), 'angka' => true],
-          ['html' => '<form class="inline" method="post" action="' . base_url('buku-kas/hapus/' . $m['id']) . '" data-konfirmasi="Hapus transaksi kas ini?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>'],
-      ]];
-  }
-  echo tabel_bantu([
-      'cari' => 'Cari transaksi…',
-      'paginasi' => 10,
-      'kolom' => [
-          ['judul_html' => '<input type="checkbox" title="Pilih semua transaksi" @change="pilihSemua($event)">', 'lebar' => '34px'],
-          ['judul' => 'Tanggal'],
-          ['judul' => 'Uraian'],
-          ['judul' => 'Kategori'],
-          ['judul' => 'Kanal'],
-          ['judul' => 'Jumlah', 'angka' => true],
-          ['judul' => ''],
-      ],
-      'baris' => $barisManual,
-  ]);
-  ?>
-</div>
-<?php endif; ?>
 
 <?= form_modal([
     'id' => 'modal-kas',

@@ -372,6 +372,25 @@ a:hover {
   margin-top: 3px;
 }
 
+/* Varian ringkas: satu baris, tanpa ikon besar (panel Tutup Buku). */
+.kartu-kpi.ringkas {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.kartu-kpi.ringkas .kpi {
+  padding: 10px 12px;
+}
+
+.kartu-kpi.ringkas .kpi::before {
+  display: none;
+}
+
+.kartu-kpi.ringkas .kpi .nilai {
+  font-size: 14px;
+}
+
 /* ===== Panel & tabel ===== */
 .panel {
   background: #fff;
