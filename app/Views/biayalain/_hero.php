@@ -34,6 +34,13 @@ $warnaSelisih = $selisih < 0 ? 'negatif' : ($selisih > 0 ? 'positif' : '');
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Tambah Baris Biaya
       </button>
+      <form id="form-spk-biaya" method="post" action="<?= base_url('biaya-non-gedung/buat-spk') ?>" data-konfirmasi-judul="Buat SPK dari Baris Biaya Terpilih" data-konfirmasi-tombol="Ya, Buat SPK" style="display:inline">
+        <?= csrf_field() ?>
+        <span id="ids-spk-biaya"></span>
+        <button type="button" class="tombol kecil" :disabled="terpilih.length === 0" @click="kirim('Buat satu SPK (tanpa gedung) dari {n} baris biaya terpilih? Baris yang sudah tertaut ke SPK aktif akan dilewati.', 'form-spk-biaya', 'ids-spk-biaya')">
+          Buat SPK dari Terpilih (<span x-text="terpilih.length">0</span>)
+        </button>
+      </form>
       <form id="form-bulk-biaya" method="post" action="<?= base_url('biaya-non-gedung/hapus-massal') ?>" data-konfirmasi-judul="Hapus Baris Biaya Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
         <?= csrf_field() ?>
         <span id="ids-biaya"></span>

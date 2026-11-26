@@ -32,6 +32,7 @@ class BiayaLain extends BaseController
         return $this->tampil('biayalain/index', [
             'kelompok' => $kelompok,
             'total' => $total,
+            'tautan_spk' => $this->tautanSpk(array_column($daftar, 'id')),
             'verifikasi' => $this->verifikasiAnggaran(),
             'saran_kelompok' => ['Perencanaan & Pengawasan', 'Biaya Pengelolaan'],
             'opsi_pajak' => $opsiPajak,
@@ -101,6 +102,99 @@ class BiayaLain extends BaseController
         }
         $this->hapusLunak('biaya_lain', ['id' => $id]);
         return $this->balas(true, 'Baris biaya "' . $baris['uraian'] . '" dihapus.');
+    }
+
+    /**
+     * Peta tautan baris biaya -> SPK aktif yang memuatnya:
+     * biaya_lain_id => ['spk_id' => id, 'nomor' => nomor SPK].
+     * SPK terhapus lunak dan SPK berstatus Batal tidak dihitung —
+     * baris biaya pada SPK Batal boleh di-generate ulang.
+     */
+    private function tautanSpk(array $biayaIds): array
+    {
+        $biayaIds = array_values(array_filter(array_map('intval', $biayaIds)));
+        if ($biayaIds === []) {
+            return [];
+        }
+        $rows = $this->db()->query(
+            'SELECT d.biaya_lain_id, s.id AS spk_id, s.nomor
+             FROM spk_detail d JOIN spk s ON s.id = d.spk_id
+             WHERE d.biaya_lain_id IN (' . implode(',', array_fill(0, count($biayaIds), '?')) . ')
+               AND d.is_deleted = 0 AND s.is_deleted = 0 AND s.status <> ?
+               AND s.sekolah_id = ?',
+            [...$biayaIds, 'Batal', $this->sid()]
+        )->getResultArray();
+        $peta = [];
+        foreach ($rows as $r) {
+            $peta[(int) $r['biaya_lain_id']] = ['spk_id' => (int) $r['spk_id'], 'nomor' => (int) $r['nomor']];
+        }
+        return $peta;
+    }
+
+    /**
+     * Generate satu SPK (gedung NULL) dari baris Biaya Non-Gedung
+     * terpilih. Baris yang sudah tertaut ke SPK aktif dilewati
+     * (anti-dobel). Rincian SPK memakai nama/satuan manual dari
+     * uraian & satuan baris biaya; qty = volume x periode (bila ada),
+     * harga = harga satuan biaya. spk_detail.pajak adalah penanda PPN
+     * rincian, BUKAN kode potongan biaya_lain.pajak — diisi 0; potongan
+     * PPh pada baris biaya hanya acuan tampilan Bersih Diterima.
+     */
+    public function buatSpk()
+    {
+        $ids = $this->idsTerpilih();
+        if ($ids === []) {
+            return redirect()->to('/biaya-non-gedung')->with('galat', 'Centang minimal satu baris biaya untuk dibuatkan SPK.');
+        }
+        $db = $this->db();
+        $baris = $db->table('biaya_lain')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])
+            ->whereIn('id', $ids)
+            ->orderBy('kelompok')->orderBy('id')
+            ->get()->getResultArray();
+        if ($baris === []) {
+            return redirect()->to('/biaya-non-gedung')->with('galat', 'Baris biaya terpilih tidak ditemukan pada sekolah aktif.');
+        }
+        $tertaut = $this->tautanSpk(array_column($baris, 'id'));
+        $proses = array_values(array_filter($baris, static fn ($r) => ! isset($tertaut[(int) $r['id']])));
+        $dilewati = count($baris) - count($proses);
+        if ($proses === []) {
+            return redirect()->to('/biaya-non-gedung')->with('galat', 'Semua baris biaya terpilih sudah tertaut ke SPK aktif — tidak ada SPK baru yang dibuat.');
+        }
+
+        $kelompokList = array_values(array_unique(array_map(static fn ($r) => (string) $r['kelompok'], $proses)));
+        $nomor = $this->nomorSpkBerikutnya();
+        $hariIni = date('Y-m-d');
+        $now = date('Y-m-d H:i:s');
+        $db->transStart();
+        $db->table('spk')->insert([
+            'sekolah_id' => $this->sid(), 'nomor' => $nomor,
+            'tanggal' => $hariIni, 'tgl_mulai' => $hariIni,
+            'gedung_id' => null, 'penyedia_id' => null,
+            'paket' => 'Biaya Non-Gedung — ' . implode(', ', $kelompokList),
+            'status' => 'Aktif', 'created_at' => $now, 'updated_at' => $now,
+        ]);
+        $spkId = (int) $db->insertID();
+        foreach ($proses as $r) {
+            $periode = ($r['periode'] !== null && (float) $r['periode'] > 0) ? (float) $r['periode'] : 1.0;
+            $db->table('spk_detail')->insert([
+                'sekolah_id' => $this->sid(), 'spk_id' => $spkId,
+                'bahan_id' => null, 'gedung_id' => null,
+                'nama_manual' => $r['uraian'], 'satuan_manual' => $r['satuan'],
+                'qty' => (float) $r['volume'] * $periode,
+                'harga' => (int) round((float) $r['harga_satuan']),
+                'pajak' => 0, 'biaya_lain_id' => (int) $r['id'],
+                'created_at' => $now, 'updated_at' => $now,
+            ]);
+        }
+        $db->transComplete();
+        $this->catatAudit('spk', $spkId, 'buat_dari_biaya', 'SPK ' . $nomor . ' dibuat dari ' . count($proses) . ' baris Biaya Non-Gedung (' . implode(', ', $kelompokList) . ').');
+
+        $pesan = 'SPK ' . $nomor . ' dibuat dari ' . count($proses) . ' baris Biaya Non-Gedung. Lengkapi penyedia di rincian SPK ini.';
+        if ($dilewati > 0) {
+            $pesan .= ' ' . $dilewati . ' baris dilewati karena sudah tertaut ke SPK aktif.';
+        }
+        return redirect()->to('/spk/detail/' . $spkId)->with('sukses', $pesan);
     }
 
     public function hapusMassal()

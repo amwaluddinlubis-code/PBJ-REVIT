@@ -6,6 +6,9 @@
 //   kotak centang kepala: <input type="checkbox" @change="pilihSemua($event)">
 //   tombol: <button type="button" :disabled="terpilih.length===0"
 //             @click="kirim('Hapus {n} baris terpilih?')">Hapus Terpilih (<span x-text="terpilih.length">0</span>)</button>
+// Aksi massal kedua (non-hapus) boleh memakai formulir lain:
+//   @click="kirim('Buat SPK dari {n} baris terpilih?', 'form-lain', 'ids-lain')"
+// Kotak centang nonaktif (disabled) tidak ikut terpilih oleh pilihSemua.
 window.komponenBulk = function (formId, wadahId) {
   return {
     terpilih: [],
@@ -13,6 +16,7 @@ window.komponenBulk = function (formId, wadahId) {
       const akar = ev.target.closest('[data-bulk-akar]') || document;
       const ids = [...akar.querySelectorAll('[data-pilih]')]
         .filter((el) => {
+          if (el.disabled) return false;
           const baris = el.closest('tr, figure, li, div');
           return !baris || baris.style.display !== 'none';
         })
@@ -20,9 +24,11 @@ window.komponenBulk = function (formId, wadahId) {
       if (ev.target.checked) this.terpilih = [...new Set([...this.terpilih, ...ids])];
       else this.terpilih = this.terpilih.filter((id) => !ids.includes(id));
     },
-    kirim(pesan) {
-      const form = document.getElementById(formId);
-      const wadah = document.getElementById(wadahId);
+    // kirim(pesan) mengirim formulir utama komponen; kirim(pesan, formIdLain, wadahIdLain)
+    // mengirim formulir kedua dengan ids[] yang sama (mis. aksi massal non-hapus).
+    kirim(pesan, formIdLain, wadahIdLain) {
+      const form = document.getElementById(formIdLain || formId);
+      const wadah = document.getElementById(wadahIdLain || wadahId);
       if (!form || !wadah) return;
       wadah.innerHTML = '';
       this.terpilih.forEach((id) => {

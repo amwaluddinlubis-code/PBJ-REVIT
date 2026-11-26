@@ -179,6 +179,7 @@ $routes->get('biaya-non-gedung', 'BiayaLain::index', ['filter' => 'auth']);
 $routes->post('biaya-non-gedung/simpan', 'BiayaLain::simpan', ['filter' => 'auth']);
 $routes->post('biaya-non-gedung/hapus/(:num)', 'BiayaLain::hapus/$1', ['filter' => 'auth']);
 $routes->post('biaya-non-gedung/hapus-massal', 'BiayaLain::hapusMassal', ['filter' => 'auth']);
+$routes->post('biaya-non-gedung/buat-spk', 'BiayaLain::buatSpk', ['filter' => 'auth']);
 $routes->post('biaya-non-gedung/kosongkan', 'BiayaLain::kosongkan', ['filter' => 'auth']);
 $routes->post('rencana-belanja/buat-spk', 'Rencana::buatSpk', ['filter' => 'auth']);
 $routes->post('rencana-belanja/hapus-bahan/(:num)', 'Rencana::hapusBahan/$1', ['filter' => 'auth']);

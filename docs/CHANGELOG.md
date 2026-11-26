@@ -2,6 +2,19 @@
 
 Format: rilis per migrasi. Rincian lengkap ada di `git log` dan `AGENTS.md`.
 
+## 26 November 2026 — migrasi 000034 (Generate SPK dari Biaya Non-Gedung)
+
+- 000034: tautan `spk_detail.biaya_lain_id` (+ indeks) ke baris
+  `biaya_lain` sumbernya.
+- Halaman Biaya Non-Gedung: tombol **Buat SPK dari Terpilih**
+  (`biaya-non-gedung/buat-spk`) membuat satu SPK ber-gedung NULL dari
+  baris terpilih (rincian manual: uraian/satuan, qty = volume × periode,
+  harga = harga satuan, penanda PPN rincian 0); baris yang sudah tertaut
+  ke SPK aktif dilewati (anti-dobel), menampilkan lencana "SPK {nomor}",
+  dan kotak centangnya nonaktif. SPK Batal/terhapus membebaskan barisnya.
+- `komponenBulk` (`bulk.js`): `kirim()` menerima formulir kedua opsional;
+  `pilihSemua` melewati kotak centang nonaktif.
+
 ## 26 November 2026 — migrasi 000029–000033
 
 - 000029: Acuan AHSP per sekolah (`ahsp_acuan.sekolah_id`, unik
