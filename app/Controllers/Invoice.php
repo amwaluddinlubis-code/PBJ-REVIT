@@ -76,6 +76,33 @@ class Invoice extends BaseController
         if (! empty($data['tanggal']) && ($g = $this->galatBulanTertutup((string) $data['tanggal']))) {
             return $this->balasForm(false, $g);
         }
+        // Kelayakan SPK (instruksi Wilda 26 Nov 2026): SPK hanya boleh
+        // di-invoice bila sudah punya BAST (rantai BAP terakhir), tanggal
+        // BAST tidak sesudah tanggal invoice, dan nilai BAST belum habis
+        // ter-invoice. Nilai kosong = otomatis sebesar sisa.
+        if ((int) $data['spk_id'] > 0) {
+            $w = $this->warisanSpk((int) $data['spk_id'], $id);
+            if ($w['bast'] === null) {
+                return $this->balasForm(false, 'SPK ini belum punya BAST — buat BAP & BAST dulu di halaman Dokumen atau Detail SPK, baru invoice bisa dicatat.');
+            }
+            if (! empty($data['tanggal']) && ! empty($w['bast']['tanggal']) && (string) $w['bast']['tanggal'] > (string) $data['tanggal']) {
+                return $this->balasForm(false, 'Tanggal BAST (' . tgl($w['bast']['tanggal']) . ') sesudah tanggal invoice (' . tgl($data['tanggal']) . ') — invoice dicatat sesudah serah terima, periksa tanggalnya.');
+            }
+            if ($w['sisa'] <= 0) {
+                return $this->balasForm(false, 'Nilai SPK ini sudah habis ter-invoice (nilai BAST ' . rp($w['nilai_bast']) . ') — SPK tidak bisa di-invoice lagi.');
+            }
+            if ($data['nilai'] === null) {
+                $data['nilai'] = (int) $w['sisa'];
+            }
+            if ((int) $data['nilai'] <= 0) {
+                return $this->balasForm(false, 'Nilai invoice harus lebih dari 0.');
+            }
+            if ((int) $data['nilai'] > (int) $w['sisa']) {
+                return $this->balasForm(false, 'Nilai invoice melebihi sisa nilai BAST yang belum ter-invoice (' . rp($w['sisa']) . ').');
+            }
+        } elseif ($data['nilai'] === null) {
+            $data['nilai'] = 0;
+        }
         if ($this->nomorDipakai((int) $data['nomor_urut'], $id)) {
             return $this->balasForm(false, 'Nomor urut invoice ' . $data['nomor_urut'] . ' sudah dipakai di sekolah ini.');
         }
@@ -186,7 +213,9 @@ class Invoice extends BaseController
     private function daftarSpk(): array
     {
         $spk = $this->db()->query(
-            'SELECT s.id, s.nomor, s.paket, s.tanggal, (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS total
+            'SELECT s.id, s.nomor, s.paket, s.tanggal,
+                    (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS total,
+                    (SELECT COALESCE(SUM(i.nilai),0) FROM invoice i WHERE i.spk_id = s.id AND i.is_deleted = 0) AS terinvoice
              FROM spk s WHERE s.sekolah_id = ? AND s.is_deleted = 0 ORDER BY s.nomor',
             [$this->sid()]
         )->getResultArray();
@@ -198,18 +227,42 @@ class Invoice extends BaseController
         foreach ($this->db()->table('bast')->where('is_deleted', 0)->get()->getResultArray() as $r) {
             $bast[$r['spk_id']][] = $r;
         }
+        // Nilai tiap BAP = jumlah rincian SPK yang tercakup bap_detail.
+        $nilaiBap = [];
+        foreach ($this->db()->query(
+            'SELECT bd.bap_id, COALESCE(SUM(d.qty*d.harga),0) v FROM bap_detail bd JOIN spk_detail d ON d.id = bd.detail_id
+             WHERE bd.is_deleted = 0 AND d.is_deleted = 0 GROUP BY bd.bap_id'
+        )->getResultArray() as $r) {
+            $nilaiBap[(int) $r['bap_id']] = (float) $r['v'];
+        }
         // Warisan per SPK: tanggal SPK + BAP terakhir (nomor urut terbesar)
-        // dan BAST dari BAP itu (rantai 1 BAP = 1 BAST) beserta tanggalnya —
-        // invoice mewarisi ini dari SPK, pengguna tidak lagi memilih
-        // BAP/BAST sendiri.
+        // dan BAST dari BAP itu (rantai 1 BAP = 1 BAST) beserta tanggal &
+        // nilainya — invoice mewarisi ini dari SPK, pengguna tidak lagi
+        // memilih BAP/BAST sendiri. sisa = nilai BAST − sudah ter-invoice;
+        // SPK tanpa BAST atau sisa habis tidak layak di-invoice lagi.
         $warisan = [];
         foreach ($spk as $s) {
             $sid = (int) $s['id'];
             $bapW = self::terakhir($bap[$sid] ?? []);
+            $bastW = self::bastWarisan($bast[$sid] ?? [], $bapW);
+            $nilaiBast = 0.0;
+            if ($bastW !== null) {
+                $bastRow = null;
+                foreach ($bast[$sid] ?? [] as $t) {
+                    if ((int) $t['id'] === (int) $bastW['id']) { $bastRow = $t; break; }
+                }
+                // BAST lama tanpa bap_id mencakup seluruh rincian SPK.
+                $nilaiBast = ($bastRow !== null && ! empty($bastRow['bap_id']))
+                    ? ($nilaiBap[(int) $bastRow['bap_id']] ?? 0.0)
+                    : (float) $s['total'];
+            }
             $warisan[$sid] = [
-                'tanggal' => $s['tanggal'] ?? null,
-                'bap'     => $bapW,
-                'bast'    => self::bastWarisan($bast[$sid] ?? [], $bapW),
+                'tanggal'    => $s['tanggal'] ?? null,
+                'bap'        => $bapW,
+                'bast'       => $bastW,
+                'nilai_bap'  => $bapW !== null ? ($nilaiBap[(int) $bapW['id']] ?? 0.0) : 0.0,
+                'nilai_bast' => $nilaiBast,
+                'sisa'       => $nilaiBast - (float) $s['terinvoice'],
             ];
         }
         return ['list' => $spk, 'bap' => $bap, 'bast' => $bast, 'warisan' => $warisan];
@@ -236,6 +289,44 @@ class Invoice extends BaseController
         return self::terakhir($daftarBast);
     }
 
+    /**
+     * Warisan satu SPK untuk invoice: BAP terakhir, BAST miliknya, nilai
+     * BAST, dan sisa yang masih boleh di-invoice (nilai BAST − invoice
+     * aktif lain; $kecualiInvoiceId dikecualikan saat mengubah invoice).
+     */
+    private function warisanSpk(int $spkId, int $kecualiInvoiceId = 0): array
+    {
+        $b = $this->db()->table('bap')->where(['spk_id' => $spkId, 'is_deleted' => 0])->orderBy('nomor_urut', 'DESC')->orderBy('id', 'DESC')->get()->getRowArray();
+        $qb = $this->db()->table('bast')->where(['spk_id' => $spkId, 'is_deleted' => 0]);
+        if ($b) {
+            $qb->where('bap_id', (int) $b['id']);
+        }
+        $t = $qb->orderBy('nomor_urut', 'DESC')->orderBy('id', 'DESC')->get()->getRowArray();
+        $nilaiBast = 0.0;
+        if ($t) {
+            if (! empty($t['bap_id'])) {
+                $row = $this->db()->query(
+                    'SELECT COALESCE(SUM(d.qty*d.harga),0) v FROM bap_detail bd JOIN spk_detail d ON d.id = bd.detail_id
+                     WHERE bd.bap_id = ? AND bd.is_deleted = 0 AND d.is_deleted = 0',
+                    [(int) $t['bap_id']]
+                )->getRow();
+                $nilaiBast = (float) $row->v;
+            } else {
+                $nilaiBast = $this->totalSpk($spkId);
+            }
+        }
+        $row = $this->db()->query(
+            'SELECT COALESCE(SUM(nilai),0) v FROM invoice WHERE spk_id = ? AND is_deleted = 0 AND id <> ?',
+            [$spkId, $kecualiInvoiceId]
+        )->getRow();
+        return [
+            'bap'        => $b,
+            'bast'       => $t,
+            'nilai_bast' => $nilaiBast,
+            'sisa'       => $nilaiBast - (float) $row->v,
+        ];
+    }
+
     private function ambilForm(): array
     {
         $r = $this->request;
@@ -246,14 +337,9 @@ class Invoice extends BaseController
         // diabaikan.
         $bapId = $bastId = null;
         if ($spkId > 0) {
-            $b = $this->db()->table('bap')->where(['spk_id' => $spkId, 'is_deleted' => 0])->orderBy('nomor_urut', 'DESC')->orderBy('id', 'DESC')->get()->getRowArray();
-            $bapId = $b ? (int) $b['id'] : null;
-            $qb = $this->db()->table('bast')->where(['spk_id' => $spkId, 'is_deleted' => 0]);
-            if ($bapId !== null) {
-                $qb->where('bap_id', $bapId);
-            }
-            $t = $qb->orderBy('nomor_urut', 'DESC')->orderBy('id', 'DESC')->get()->getRowArray();
-            $bastId = $t ? (int) $t['id'] : null;
+            $w = $this->warisanSpk($spkId);
+            $bapId = $w['bap'] ? (int) $w['bap']['id'] : null;
+            $bastId = $w['bast'] ? (int) $w['bast']['id'] : null;
         }
         return [
             'nomor_urut' => (int) $r->getPost('nomor_urut'),
@@ -262,7 +348,8 @@ class Invoice extends BaseController
             'spk_id' => $spkId,
             'bap_id' => $bapId,
             'bast_id' => $bastId,
-            'nilai' => ($nilai === '' || $nilai === null) ? (int) $this->totalSpk($spkId) : (int) $nilai,
+            // Kosong = otomatis sebesar sisa nilai BAST (diisi prosesSimpan).
+            'nilai' => ($nilai === '' || $nilai === null) ? null : (int) $nilai,
             'status' => (string) $r->getPost('status') ?: 'Belum Bayar',
         ];
     }

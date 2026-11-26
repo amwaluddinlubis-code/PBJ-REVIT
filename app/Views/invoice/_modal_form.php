@@ -7,9 +7,14 @@
 <?php
 $opsiSpk = ['' => '— pilih SPK —'];
 foreach ($spk['list'] ?? [] as $s) {
+    $w = $spk['warisan'][(int) $s['id']] ?? [];
     $opsiSpk[(int) $s['id']] = [
         'label' => 'SPK ' . (int) $s['nomor'] . ' — ' . ($s['paket'] ?? '') . ' (total Rp ' . number_format((float) $s['total'], 0, ',', '.') . ')',
-        'data' => ['total' => (int) $s['total']],
+        'data' => [
+            'total' => (int) $s['total'],
+            'sisa' => (int) ($w['sisa'] ?? 0),
+            'bast-tanggal' => (string) ($w['bast']['tanggal'] ?? ''),
+        ],
     ];
 }
 ?>
@@ -26,7 +31,7 @@ foreach ($spk['list'] ?? [] as $s) {
         ['nama' => 'no_toko', 'label' => 'No. Invoice Toko', 'jenis' => 'teks'],
         ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal', 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
         ['nama' => 'spk_id', 'label' => 'SPK', 'jenis' => 'pilihan', 'wajib' => true, 'opsi' => $opsiSpk, 'petunjuk' => 'Tanggal SPK, BAP & BAST diwarisi otomatis dari SPK'],
-        ['nama' => 'nilai', 'label' => 'Nilai Invoice', 'jenis' => 'uang', 'petunjuk' => 'Kosongkan = total SPK'],
+        ['nama' => 'nilai', 'label' => 'Nilai Invoice', 'jenis' => 'uang', 'petunjuk' => 'Otomatis = sisa nilai BAST, boleh diubah'],
         ['nama' => 'status', 'label' => 'Status', 'jenis' => 'pilihan', 'opsi' => ['Belum Bayar' => 'Belum Bayar', 'Sudah Bayar' => 'Sudah Bayar']],
     ],
     'catatan_html' => '<div id="info-warisan-invoice" class="kecil-teks" style="margin-top:10px">Pilih SPK untuk melihat tanggal SPK, BAP, dan BAST yang diwarisi.</div>',
@@ -49,7 +54,31 @@ foreach ($spk['list'] ?? [] as $s) {
     var p = String(iso).split('-');
     return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
   }
-  function tampilWarisan() {
+  var sedangUbah = null;
+  function rpIndo(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+  function sisaEfektif(spkId) {
+    var w = warisan[spkId];
+    if (!w) return 0;
+    var sisa = Number(w.sisa || 0);
+    if (sedangUbah && String(sedangUbah.spk_id) === String(spkId)) sisa += Number(sedangUbah.nilai || 0);
+    return sisa;
+  }
+  function saringSpk() {
+    var m = document.getElementById('modal-invoice');
+    if (!m) return;
+    var sel = m.querySelector('select[name="spk_id"]');
+    var tglInv = m.querySelector('input[name="tanggal"]');
+    if (!sel) return;
+    var tgl = tglInv ? tglInv.value : '';
+    Array.prototype.forEach.call(sel.options, function (opt) {
+      if (!opt.value) return;
+      var bastTgl = opt.getAttribute('data-bast-tanggal') || '';
+      var layak = bastTgl !== '' && sisaEfektif(opt.value) > 0 && (!tgl || bastTgl <= tgl);
+      opt.disabled = !layak && opt.value !== sel.value;
+    });
+    if (window.perbaruiSelectCari) window.perbaruiSelectCari(sel);
+  }
+  function tampilWarisan(isiNilai) {
     var m = document.getElementById('modal-invoice');
     var kotak = document.getElementById('info-warisan-invoice');
     if (!m || !kotak) return;
@@ -59,27 +88,39 @@ foreach ($spk['list'] ?? [] as $s) {
       kotak.textContent = 'Pilih SPK untuk melihat tanggal SPK, BAP, dan BAST yang diwarisi.';
       return;
     }
-    var bap = w.bap ? 'BAP urut ' + w.bap.nomor_urut + ' tgl ' + tglIndo(w.bap.tanggal) : 'BAP belum ada';
-    var bast = w.bast ? 'BAST urut ' + w.bast.nomor_urut + ' tgl ' + tglIndo(w.bast.tanggal) : 'BAST belum ada';
-    kotak.textContent = 'Diwarisi dari SPK: tgl SPK ' + tglIndo(w.tanggal) + ' · ' + bap + ' · ' + bast + '.';
+    var bap = w.bap ? 'BAP urut ' + w.bap.nomor_urut + ' tgl ' + tglIndo(w.bap.tanggal) + ' (' + rpIndo(w.nilai_bap) + ')' : 'BAP belum ada';
+    var bast = w.bast ? 'BAST urut ' + w.bast.nomor_urut + ' tgl ' + tglIndo(w.bast.tanggal) + ' (' + rpIndo(w.nilai_bast) + ')' : 'BAST belum ada';
+    kotak.textContent = 'Diwarisi dari SPK: tgl SPK ' + tglIndo(w.tanggal) + ' · ' + bap + ' · ' + bast + ' · sisa belum ter-invoice ' + rpIndo(sisaEfektif(sel.value)) + '.';
+    if (isiNilai) {
+      var nilai = m.querySelector('input[name="nilai"]');
+      if (nilai) {
+        nilai.value = sisaEfektif(sel.value);
+        nilai.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
   }
   function sinkronSelect() {
     var m = document.getElementById('modal-invoice');
     if (m && window.perbaruiSelectCari) {
       m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
     }
-    tampilWarisan();
+    saringSpk();
+    tampilWarisan(false);
   }
   document.addEventListener('change', function (e) {
-    if (e.target && e.target.name === 'spk_id' && e.target.closest('#modal-invoice')) tampilWarisan();
+    if (!e.target || !e.target.closest || !e.target.closest('#modal-invoice')) return;
+    if (e.target.name === 'spk_id') tampilWarisan(true);
+    if (e.target.name === 'tanggal') saringSpk();
   });
   window.bukaInvoiceBaru = function () {
+    sedangUbah = null;
     window.bukaFormModal('modal-invoice', { nomor_urut: <?= (int) ($nomor_baru ?? 1) ?>, status: 'Belum Bayar', tanggal: <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?> });
     sinkronSelect();
   };
   window.bukaInvoiceUbah = function (id) {
     var i = dataInv[id];
     if (!i) return;
+    sedangUbah = i;
     window.bukaFormModal('modal-invoice', {
       id: i.id,
       nomor_urut: i.nomor_urut,

@@ -6,13 +6,13 @@
   <label>Tanggal <input type="date" name="tanggal" value="<?= esc(old('tanggal', $i['tanggal'] ?? '')) ?>" min="<?= esc($buku_min ?? '') ?>" max="<?= esc($buku_max ?? '') ?>"><span class="kecil-teks" style="display:block">Buku terbuka: <?= esc($buku_label ?? '') ?></span></label>
   <label>SPK
     <select name="spk_id" id="pilihSpk" required data-select-cari data-placeholder="— pilih SPK —">
-      <?php foreach ($spk['list'] as $s): ?>
-        <option value="<?= (int) $s['id'] ?>" data-total="<?= (int) $s['total'] ?>"<?= (old('spk_id', $i['spk_id'] ?? '') == $s['id']) ? ' selected' : '' ?>>SPK <?= (int) $s['nomor'] ?> — <?= esc($s['paket'] ?? '') ?> (total Rp <?= number_format((float) $s['total'], 0, ',', '.') ?>)</option>
+      <?php foreach ($spk['list'] as $s): $w = $spk['warisan'][(int) $s['id']] ?? []; ?>
+        <option value="<?= (int) $s['id'] ?>" data-total="<?= (int) $s['total'] ?>" data-sisa="<?= (int) ($w['sisa'] ?? 0) ?>" data-bast-tanggal="<?= esc($w['bast']['tanggal'] ?? '') ?>"<?= (old('spk_id', $i['spk_id'] ?? '') == $s['id']) ? ' selected' : '' ?>>SPK <?= (int) $s['nomor'] ?> — <?= esc($s['paket'] ?? '') ?> (total Rp <?= number_format((float) $s['total'], 0, ',', '.') ?>)</option>
       <?php endforeach; ?>
     </select>
   </label>
   <div class="md:col-span-2"><span class="kecil-teks" id="info-warisan-invoice">Pilih SPK untuk melihat tanggal SPK, BAP, dan BAST yang diwarisi.</span></div>
-  <label>Nilai Invoice (kosongkan = total SPK) <input type="text" inputmode="numeric" data-uang name="nilai" step="1" value="<?= esc(old('nilai', $i['nilai'] ?? '')) ?>"></label>
+  <label>Nilai Invoice (otomatis = sisa nilai BAST, boleh diubah) <input type="text" inputmode="numeric" data-uang name="nilai" step="1" value="<?= esc(old('nilai', $i['nilai'] ?? '')) ?>"></label>
   <label>Status
     <select data-select-cari name="status">
       <?php foreach (['Belum Bayar', 'Sudah Bayar'] as $st): ?>
@@ -40,18 +40,48 @@
     var p = String(iso).split('-');
     return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
   }
-  function tampil() {
+  var nilaiSendiri = <?= (int) ($i['nilai'] ?? 0) ?>;
+  var spkSendiri = <?= json_encode((string) ($i['spk_id'] ?? '')) ?>;
+  function rpIndo(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+  function sisaEfektif(spkId) {
+    var w = warisan[spkId];
+    if (!w) return 0;
+    var sisa = Number(w.sisa || 0);
+    if (spkSendiri !== '' && String(spkSendiri) === String(spkId)) sisa += nilaiSendiri;
+    return sisa;
+  }
+  function saring() {
+    var sel = document.getElementById('pilihSpk');
+    var tglInv = document.querySelector('input[name="tanggal"]');
+    if (!sel) return;
+    var tgl = tglInv ? tglInv.value : '';
+    Array.prototype.forEach.call(sel.options, function (opt) {
+      if (!opt.value) return;
+      var bastTgl = opt.getAttribute('data-bast-tanggal') || '';
+      var layak = bastTgl !== '' && sisaEfektif(opt.value) > 0 && (!tgl || bastTgl <= tgl);
+      opt.disabled = !layak && opt.value !== sel.value;
+    });
+    if (window.perbaruiSelectCari) window.perbaruiSelectCari(sel);
+  }
+  function tampil(isiNilai) {
     var sel = document.getElementById('pilihSpk');
     var kotak = document.getElementById('info-warisan-invoice');
     if (!sel || !kotak) return;
     var w = warisan[sel.value];
     if (!w) { kotak.textContent = 'Pilih SPK untuk melihat tanggal SPK, BAP, dan BAST yang diwarisi.'; return; }
-    var bap = w.bap ? 'BAP urut ' + w.bap.nomor_urut + ' tgl ' + tglIndo(w.bap.tanggal) : 'BAP belum ada';
-    var bast = w.bast ? 'BAST urut ' + w.bast.nomor_urut + ' tgl ' + tglIndo(w.bast.tanggal) : 'BAST belum ada';
-    kotak.textContent = 'Diwarisi dari SPK: tgl SPK ' + tglIndo(w.tanggal) + ' · ' + bap + ' · ' + bast + '.';
+    var bap = w.bap ? 'BAP urut ' + w.bap.nomor_urut + ' tgl ' + tglIndo(w.bap.tanggal) + ' (' + rpIndo(w.nilai_bap) + ')' : 'BAP belum ada';
+    var bast = w.bast ? 'BAST urut ' + w.bast.nomor_urut + ' tgl ' + tglIndo(w.bast.tanggal) + ' (' + rpIndo(w.nilai_bast) + ')' : 'BAST belum ada';
+    kotak.textContent = 'Diwarisi dari SPK: tgl SPK ' + tglIndo(w.tanggal) + ' · ' + bap + ' · ' + bast + ' · sisa belum ter-invoice ' + rpIndo(sisaEfektif(sel.value)) + '.';
+    if (isiNilai) {
+      var nilai = document.querySelector('input[name="nilai"]');
+      if (nilai) { nilai.value = sisaEfektif(sel.value); nilai.dispatchEvent(new Event('input', { bubbles: true })); }
+    }
   }
   var sel = document.getElementById('pilihSpk');
-  if (sel) sel.addEventListener('change', tampil);
-  tampil();
+  if (sel) sel.addEventListener('change', function () { tampil(true); });
+  var tglInv = document.querySelector('input[name="tanggal"]');
+  if (tglInv) tglInv.addEventListener('change', saring);
+  saring();
+  tampil(false);
 })();
 </script>
