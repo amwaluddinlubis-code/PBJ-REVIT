@@ -49,7 +49,7 @@
       kode = d.kode || '';
     } catch (e) { /* kode bisa diisi manual */ }
     window.bukaFormModal('modal-bahan', { kode: kode });
-    setTimeout(() => { const f = document.querySelector('#modal-bahan [name="nama"]'); if (f) f.focus(); }, 30);
+    setTimeout(() => { const f = document.querySelector('#modal-bahan [name=nama]'); if (f) f.focus(); }, 30);
   },
   bukaUbah(ds) {
     window.bukaFormModal('modal-bahan', {
@@ -59,7 +59,7 @@
       satuan: ds.satuan || '',
       harga_rab: ds.harga || ''
     });
-    setTimeout(() => { const f = document.querySelector('#modal-bahan [name="nama"]'); if (f) f.focus(); }, 30);
+    setTimeout(() => { const f = document.querySelector('#modal-bahan [name=nama]'); if (f) f.focus(); }, 30);
   },
   pilihSemua(ev) {
     const ids = [...document.querySelectorAll('#wadah-tabel-bahan [data-pilih-bahan]')].map((el) => el.value);

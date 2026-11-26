@@ -4,26 +4,111 @@
   box-sizing: border-box;
 }
 
+/* ===== Token desain (Fase 0–1, 26 Nov 2026) =====
+   Satu sumber kebenaran untuk warna, tipografi, radius, bayangan, dan
+   gerak. Aturan baru WAJIB memakai --ui-*; nama lama (--ta-*, --ina-*,
+   --fm-*) dipertahankan sebagai ALIAS agar seluruh aturan yang sudah ada
+   tetap berjalan tanpa disentuh.
+   Fase 0: konsolidasi nilai, tampilan tidak berubah.
+   Fase 1: skala huruf dinaikkan ke 7 langkah (teks isi 14.5px).
+   Penyesuaian visual berikutnya mengubah NILAI token di sini dan di
+   html.gelap, bukan menambah aturan penimpa baru. */
 :root {
-  --ta-biru: var(--ina-blue-600, #0049b8);
-  --ta-biru-500: var(--ina-blue-500, #0968f6);
-  --ta-biru-50: var(--ina-blue-50, #eff5fd);
-  --ta-teks: var(--ina-content-primary, #1f1f1f);
-  --ta-teks-2: var(--ina-content-secondary, #525252);
-  --ta-teks-3: var(--ina-content-tertiary, #737373);
-  --ta-garis: var(--ina-stroke-primary, #e5e5e5);
-  --ta-garis-2: var(--ina-stroke-secondary, #a3a3a3);
-  --ta-latar: #f9fafb;
-  --ta-latar-2: #eef5f7;
+  /* Permukaan */
+  --ui-surface: #fff;
+  --ui-surface-glass: rgba(255, 255, 255, .92);
+  --ui-surface-soft: #f7f9fc;
+  --ui-surface-input: #fbfcfe;
+  --ui-surface-hover: #f8fbff;
+  --ui-surface-total: #f3f7fc;
+  --ui-surface-raised: #fff;
+  --ui-surface-sunken: #f9fafb;
+  --ui-surface-tint: #eef5f7;
+
+  /* Garis */
+  --ui-border: rgba(15, 35, 70, .09);
+  --ui-border-strong: #d3dce8;
+  --ui-hairline: #edf1f5;
+  --ui-stroke: var(--ina-stroke-primary, #e5e5e5);
+  --ui-stroke-strong: var(--ina-stroke-secondary, #a3a3a3);
+
+  /* Teks */
+  --ui-text: var(--ina-content-primary, #1f1f1f);
+  --ui-text-2: var(--ina-content-secondary, #525252);
+  --ui-text-3: var(--ina-content-tertiary, #737373);
+  --ui-label: #526175;
+
+  /* Aksen & status */
+  --ui-accent: var(--ina-blue-600, #0049b8);
+  --ui-accent-500: var(--ina-blue-500, #0968f6);
+  --ui-accent-soft: var(--ina-blue-50, #eff5fd);
+  --ui-accent-hover: #003a94;
+  --ui-accent-ring: var(--ina-blue-100, #dbeafe);
+  --ui-danger: #800000;
+  --ui-danger-hover: #660000;
+
+  /* Tipografi — satu skala 7 langkah (Fase 1, 26 Nov 2026).
+     Sebelumnya 38 ukuran berbeda (8.8/9.2/9.6/10.4/10.8/11.2/11.6/12.4/
+     12.8/13.5/14.4/15.2/19.2/22.4/26.4 …). Semua deklarasi kini menunjuk
+     ke langkah di bawah; menaikkan skala = ubah nilai di sini. */
+  --ui-font: "Inter", "Segoe UI", system-ui, sans-serif;
+  --ui-text-2xs: 10px;      /* mikro: lencana, hitungan, kepala tabel */
+  --ui-text-xs: 11.5px;     /* kecil: label, keterangan, kontrol padat */
+  --ui-text-sm: 13px;       /* UI: isi tabel, tombol, isian */
+  --ui-text-base: 14.5px;   /* teks isi & judul panel */
+  --ui-text-lg: 17px;       /* sub-judul, nilai KPI */
+  --ui-text-xl: 20px;       /* judul halaman */
+  --ui-text-2xl: 24px;      /* judul hero */
+  --ui-text-3xl: 28px;      /* judul layar masuk */
+  --ui-text-display: clamp(36px, 5vw, 70px);
+  --ui-leading: 1.5;
+
+  /* Bentuk & elevasi */
+  --ui-radius-xs: 8px;
+  --ui-radius-sm: 12px;
+  --ui-radius-md: 14px;
+  --ui-radius-lg: 18px;
+  --ui-radius-xl: 20px;
+  --ui-radius-pill: 999px;
+  --ui-radius: var(--ui-radius-lg);
+  --ui-shadow-sm: 0 1px 2px rgba(16, 24, 40, .04), 0 4px 12px rgba(16, 24, 40, .025);
+  --ui-shadow-md: 0 12px 32px rgba(16, 24, 40, .09);
+  --ui-shadow-soft: 0 1px 2px rgba(16, 34, 62, .04), 0 10px 30px rgba(16, 34, 62, .05);
+  --ui-shadow-hover: 0 2px 4px rgba(16, 34, 62, .05), 0 18px 38px rgba(16, 34, 62, .10);
+  --ui-shadow-overlay: 0 24px 64px rgba(16, 24, 40, .3);
+
+  /* Gerak */
+  --ui-durasi-cepat: .15s;
+  --ui-durasi: .18s;
+  --ui-durasi-sedang: .2s;
+  --ui-ease: ease;
+  --ui-ease-keluar: cubic-bezier(.22, 1, .36, 1);
+
+  /* Alias lama — jangan dipakai untuk aturan baru. */
+  --ta-biru: var(--ui-accent);
+  --ta-biru-500: var(--ui-accent-500);
+  --ta-biru-50: var(--ui-accent-soft);
+  --ta-teks: var(--ui-text);
+  --ta-teks-2: var(--ui-text-2);
+  --ta-teks-3: var(--ui-text-3);
+  --ta-garis: var(--ui-stroke);
+  --ta-garis-2: var(--ui-stroke-strong);
+  --ta-latar: var(--ui-surface-sunken);
+  --ta-latar-2: var(--ui-surface-tint);
+  --ta-radius-sm: var(--ui-radius-xs);
+  --ta-radius-md: var(--ui-radius-md);
+  --ta-radius-lg: var(--ui-radius-lg);
+  --ta-shadow-sm: var(--ui-shadow-sm);
+  --ta-shadow-md: var(--ui-shadow-md);
 }
 
 body {
   margin: 0;
-  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-  background: var(--ta-latar);
-  color: var(--ta-teks);
-  font-size: 12.8px;
-  /* skala huruf global 80% */
+  font-family: var(--ui-font);
+  background: var(--ui-surface-sunken);
+  color: var(--ui-text);
+  font-size: var(--ui-text-base);
+  /* skala huruf global 80% — nilainya kini token --ui-text-base */
 }
 
 a {
@@ -101,13 +186,13 @@ a:hover {
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 12px;
+  font-size: var(--ui-text-sm);
   flex-shrink: 0;
 }
 
 .nama-logo {
   font-weight: 700;
-  font-size: 12px;
+  font-size: var(--ui-text-sm);
   line-height: 1.15;
 }
 
@@ -115,13 +200,13 @@ a:hover {
   display: block;
   font-weight: 500;
   color: var(--ta-teks-3);
-  font-size: 8.8px;
+  font-size: var(--ui-text-2xs);
   margin-top: 2px;
 }
 
 .label-samping {
   display: block;
-  font-size: 8.8px;
+  font-size: var(--ui-text-2xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -135,7 +220,7 @@ a:hover {
 
 .samping .grup {
   margin: 16px 10px 6px;
-  font-size: 8.8px;
+  font-size: var(--ui-text-2xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -145,13 +230,15 @@ a:hover {
 .samping nav a {
   display: flex;
   align-items: center;
-  gap: 10px;
+  /* Jarak ikon–teks 8px: pada skala huruf 13px, label terpanjang
+     ("Pembangunan Gedung") masih muat satu baris. */
+  gap: 8px;
   color: var(--ta-teks-2);
   padding: 9px 10px;
   min-height: 44px;
   border-radius: 8px;
   margin-bottom: 2px;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   font-weight: 500;
 }
 
@@ -180,7 +267,7 @@ a:hover {
   margin-left: auto;
   background: var(--ta-biru);
   color: #fff;
-  font-size: 8.8px;
+  font-size: var(--ui-text-2xs);
   font-weight: 600;
   border-radius: 20px;
   padding: 1px 8px;
@@ -206,12 +293,12 @@ a:hover {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 10.4px;
+  font-size: var(--ui-text-xs);
   flex-shrink: 0;
 }
 
 .profil .siapa {
-  font-size: 10.4px;
+  font-size: var(--ui-text-xs);
   font-weight: 600;
   line-height: 1.25;
   min-width: 0;
@@ -221,7 +308,7 @@ a:hover {
   display: block;
   color: var(--ta-teks-3);
   font-weight: 500;
-  font-size: 9.2px;
+  font-size: var(--ui-text-2xs);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -265,7 +352,7 @@ a:hover {
   margin: 0;
   padding: 5px 0;
   box-shadow: none;
-  font-size: 10.8px;
+  font-size: var(--ui-text-xs);
 }
 
 .topbar .cari input:focus {
@@ -285,7 +372,7 @@ a:hover {
   color: var(--ta-biru);
   border-radius: 20px;
   padding: 5px 13px;
-  font-size: 10px;
+  font-size: var(--ui-text-2xs);
   font-weight: 600;
 }
 
@@ -294,7 +381,7 @@ a:hover {
 }
 
 .atas {
-  font-size: 15.2px;
+  font-size: var(--ui-text-lg);
   font-weight: 700;
   margin-bottom: 14px;
 }
@@ -303,7 +390,7 @@ a:hover {
   padding: 11px 15px;
   border-radius: 10px;
   margin-bottom: 14px;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   border: 1px solid transparent;
 }
 
@@ -328,9 +415,9 @@ a:hover {
 }
 
 .kpi {
-  background: #fff;
-  border: 1px solid var(--ta-garis);
-  border-radius: 12px;
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-stroke);
+  border-radius: var(--ui-radius-sm);
   padding: 16px;
 }
 
@@ -364,13 +451,13 @@ a:hover {
 }
 
 .kpi .label {
-  font-size: 10.4px;
+  font-size: var(--ui-text-xs);
   color: var(--ta-teks-3);
   font-weight: 500;
 }
 
 .kpi .nilai {
-  font-size: 16px;
+  font-size: var(--ui-text-lg);
   font-weight: 700;
   margin-top: 3px;
 }
@@ -391,14 +478,14 @@ a:hover {
 }
 
 .kartu-kpi.ringkas .kpi .nilai {
-  font-size: 14px;
+  font-size: var(--ui-text-base);
 }
 
 /* ===== Panel & tabel ===== */
 .panel {
-  background: #fff;
-  border: 1px solid var(--ta-garis);
-  border-radius: 12px;
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-stroke);
+  border-radius: var(--ui-radius-sm);
   padding: 16px 18px;
   margin-bottom: 16px;
   /* clip, BUKAN auto: overflow auto/hidden pada leluhur mematikan
@@ -409,19 +496,19 @@ a:hover {
 
 .panel h2 {
   margin: 0 0 12px;
-  font-size: 12.4px;
+  font-size: var(--ui-text-sm);
   font-weight: 600;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
 }
 
 th {
   text-align: left;
-  font-size: 9.6px;
+  font-size: var(--ui-text-2xs);
   font-weight: 600;
   color: var(--ta-teks-3);
   padding: 9px 11px;
@@ -470,14 +557,14 @@ tr.total th {
 
 .peringatan h2 {
   margin: 0 0 8px;
-  font-size: 12px;
+  font-size: var(--ui-text-sm);
 }
 
 .lencana {
   display: inline-flex;
   padding: 2px 10px;
   border-radius: 20px;
-  font-size: 9.6px;
+  font-size: var(--ui-text-2xs);
   font-weight: 500;
 }
 
@@ -530,7 +617,7 @@ tr.total th {
 .tab a,
 .tab span {
   padding: 9px 13px;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   color: var(--ta-teks-2);
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
@@ -554,12 +641,12 @@ tr.total th {
    ekspor) tidak berubah, hanya bentuk & rasa tekannya yang disamakan. */
 button,
 .tombol {
-  background: var(--ta-biru);
+  background: var(--ui-accent);
   color: #fff;
-  border: 1px solid var(--ta-biru);
-  border-radius: 999px;
+  border: 1px solid var(--ui-accent);
+  border-radius: var(--ui-radius-pill);
   padding: 8px 18px;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   font-weight: 600;
   letter-spacing: .01em;
   cursor: pointer;
@@ -567,12 +654,12 @@ button,
   font-family: inherit;
   text-align: center;
   box-shadow: 0 1px 2px rgba(16, 24, 40, .08), 0 1px 3px rgba(16, 24, 40, .06);
-  transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .12s ease;
+  transition: background-color var(--ui-durasi) var(--ui-ease), border-color var(--ui-durasi) var(--ui-ease), box-shadow var(--ui-durasi) var(--ui-ease), transform .12s var(--ui-ease);
 }
 
 button:hover,
 .tombol:hover {
-  background: #003a94;
+  background: var(--ui-accent-hover);
   text-decoration: none;
   box-shadow: 0 2px 6px rgba(16, 24, 40, .12), 0 1px 3px rgba(16, 24, 40, .08);
 }
@@ -589,30 +676,30 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ta-biru-500);
+  box-shadow: 0 0 0 2px var(--ui-surface), 0 0 0 4px var(--ui-accent-500);
 }
 
 button.bahaya {
-  background: #800000;
-  border-color: #800000;
+  background: var(--ui-danger);
+  border-color: var(--ui-danger);
 }
 
 button.bahaya:hover {
-  background: #660000;
-  border-color: #660000;
+  background: var(--ui-danger-hover);
+  border-color: var(--ui-danger-hover);
 }
 
 button.kecil,
 .tombol.kecil {
   padding: 5px 13px;
-  font-size: 10.4px;
+  font-size: var(--ui-text-xs);
 }
 
 button.abu,
 .tombol.abu {
-  background: #fff;
-  color: var(--ta-teks);
-  border-color: var(--ta-garis-2);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  border-color: var(--ui-stroke-strong);
 }
 
 button.ekspor,
@@ -639,7 +726,7 @@ button:disabled {
 
 label {
   display: block;
-  font-size: 10.4px;
+  font-size: var(--ui-text-xs);
   color: var(--ta-teks-2);
   font-weight: 500;
 }
@@ -649,21 +736,21 @@ select,
 textarea {
   width: 100%;
   padding: 8px 11px;
-  border: 1px solid var(--ta-garis-2);
-  border-radius: 8px;
-  font-size: 11.2px;
+  border: 1px solid var(--ui-stroke-strong);
+  border-radius: var(--ui-radius-xs);
+  font-size: var(--ui-text-sm);
   margin-top: 4px;
-  background: #fff;
+  background: var(--ui-surface);
   font-family: inherit;
-  color: var(--ta-teks);
+  color: var(--ui-text);
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--ta-biru-500);
+  border-color: var(--ui-accent-500);
   outline: none;
-  box-shadow: 0 0 0 3px var(--ina-blue-100, #dbeafe);
+  box-shadow: 0 0 0 3px var(--ui-accent-ring);
 }
 
 .aksi {
@@ -712,7 +799,7 @@ form.inline button {
 
 .login-form-wrap h1 {
   margin: 0 0 8px;
-  font-size: 22.4px;
+  font-size: var(--ui-text-2xl);
   font-weight: 700;
   letter-spacing: -.01em;
 }
@@ -720,13 +807,13 @@ form.inline button {
 .login-form-wrap .sub {
   color: var(--ta-teks-3);
   margin: 0 0 24px;
-  font-size: 11.6px;
+  font-size: var(--ui-text-sm);
   line-height: 1.55;
 }
 
 .login-form-wrap label {
   margin-top: 16px;
-  font-size: 10.8px;
+  font-size: var(--ui-text-xs);
   color: var(--ta-teks);
 }
 
@@ -752,7 +839,7 @@ form.inline button {
   margin-top: 0;
   padding: 11px 42px 11px 42px;
   border-radius: 10px;
-  font-size: 11.6px;
+  font-size: var(--ui-text-sm);
 }
 
 .login-eye {
@@ -791,7 +878,7 @@ form.inline button {
   width: 100%;
   margin-top: 24px;
   padding: 12px;
-  font-size: 12px;
+  font-size: var(--ui-text-sm);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -810,7 +897,7 @@ form.inline button {
 .login-foot {
   margin-top: 34px;
   text-align: center;
-  font-size: 10px;
+  font-size: var(--ui-text-2xs);
   color: var(--ta-teks-3);
   line-height: 1.6;
 }
@@ -850,27 +937,27 @@ form.inline button {
   width: 46px;
   height: 46px;
   border-radius: 12px;
-  font-size: 13.6px;
+  font-size: var(--ui-text-base);
   background: rgba(255, 255, 255, .14);
   border: 1px solid rgba(255, 255, 255, .25);
   backdrop-filter: blur(4px);
 }
 
 .login-brand-nama {
-  font-size: 15.2px;
+  font-size: var(--ui-text-lg);
   font-weight: 700;
   line-height: 1.2;
 }
 
 .login-brand-sub {
-  font-size: 10px;
+  font-size: var(--ui-text-2xs);
   color: rgba(255, 255, 255, .72);
   margin-top: 2px;
 }
 
 .login-brand-inner h2 {
   margin: 0 0 14px;
-  font-size: 26.4px;
+  font-size: var(--ui-text-3xl);
   line-height: 1.22;
   font-weight: 700;
   letter-spacing: -.01em;
@@ -878,7 +965,7 @@ form.inline button {
 
 .login-brand-teks {
   margin: 0 0 30px;
-  font-size: 11.6px;
+  font-size: var(--ui-text-sm);
   line-height: 1.65;
   color: rgba(255, 255, 255, .82);
 }
@@ -920,13 +1007,13 @@ form.inline button {
 
 .login-fitur b {
   display: block;
-  font-size: 11.6px;
+  font-size: var(--ui-text-sm);
   font-weight: 600;
 }
 
 .login-fitur small {
   display: block;
-  font-size: 10px;
+  font-size: var(--ui-text-2xs);
   color: rgba(255, 255, 255, .7);
   line-height: 1.5;
   margin-top: 1px;
@@ -947,7 +1034,7 @@ form.inline button {
   }
 
   .login-brand-inner h2 {
-    font-size: 19.2px;
+    font-size: var(--ui-text-xl);
   }
 
   .login-brand-teks {
@@ -968,7 +1055,7 @@ form.inline button {
 }
 
 .kecil-teks {
-  font-size: 9.6px;
+  font-size: var(--ui-text-2xs);
   color: var(--ta-teks-3);
 }
 
@@ -980,7 +1067,7 @@ form.inline button {
   align-items: center;
   justify-content: space-between;
   margin-top: 13px;
-  font-size: 10.4px;
+  font-size: var(--ui-text-xs);
   color: var(--ta-teks-2);
 }
 
@@ -1126,7 +1213,7 @@ form.inline button {
 .samping nav .parent {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   background: transparent;
   border: none;
@@ -1136,7 +1223,7 @@ form.inline button {
   min-height: 44px;
   border-radius: 8px;
   margin-bottom: 2px;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   font-weight: 500;
   text-align: left;
   cursor: pointer;
@@ -1188,7 +1275,7 @@ form.inline button {
 }
 
 .samping nav .anak a {
-  font-size: 10.8px;
+  font-size: var(--ui-text-xs);
   padding: 6.5px 10px;
 }
 
@@ -1208,7 +1295,7 @@ form.inline button {
   box-shadow: none;
   color: var(--ta-teks-2);
   padding: 7px 10px;
-  font-size: 10.4px;
+  font-size: var(--ui-text-xs);
   font-weight: 700;
   cursor: pointer;
   border-radius: 0;
@@ -1220,7 +1307,7 @@ form.inline button {
 }
 
 .grup-font span {
-  font-size: 9.6px;
+  font-size: var(--ui-text-2xs);
   color: var(--ta-teks-3);
   min-width: 37px;
   text-align: center;
@@ -1310,13 +1397,13 @@ html.gelap .tombol-ikon-top .ikon-matahari {
 
 .user-ringkas b {
   display: block;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   font-weight: 600;
 }
 
 .user-ringkas small {
   display: block;
-  font-size: 9.6px;
+  font-size: var(--ui-text-2xs);
   color: var(--ta-teks-3);
 }
 
@@ -1349,12 +1436,12 @@ html.gelap .tombol-ikon-top .ikon-matahari {
 
 .dd-kepala b {
   display: block;
-  font-size: 11.6px;
+  font-size: var(--ui-text-sm);
 }
 
 .dd-kepala small {
   display: block;
-  font-size: 9.6px;
+  font-size: var(--ui-text-2xs);
   color: var(--ta-teks-3);
   margin-top: 1px;
 }
@@ -1370,7 +1457,7 @@ html.gelap .tombol-ikon-top .ikon-matahari {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   flex-shrink: 0;
 }
 
@@ -1381,7 +1468,7 @@ html.gelap .tombol-ikon-top .ikon-matahari {
   padding: 8px 10px;
   border-radius: 8px;
   color: var(--ta-teks-2);
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   font-weight: 500;
 }
 
@@ -1416,14 +1503,15 @@ html.gelap .tombol-ikon-top .ikon-matahari {
 
 /* ===== Tema gelap ===== */
 html.gelap {
-  --ta-teks: #e7edf5;
-  --ta-teks-2: #a9bcd2;
-  --ta-teks-3: #7e94ad;
-  --ta-garis: #22334f;
-  --ta-garis-2: #3d5578;
-  --ta-latar: #0a1120;
-  --ta-latar-2: #16263f;
-  --ta-biru-50: rgba(9, 104, 246, .18);
+  --ui-text: #e7edf5;
+  --ui-text-2: #a9bcd2;
+  --ui-text-3: #7e94ad;
+  --ui-stroke: #22334f;
+  --ui-stroke-strong: #3d5578;
+  --ui-surface-sunken: #0a1120;
+  --ui-surface-tint: #16263f;
+  --ui-surface-raised: #1c2534;
+  --ui-accent-soft: rgba(9, 104, 246, .18);
 }
 
 /* P2: padu gelap — tambah palet --ina-neutral-* gelap (hover/border tersedia di gelap). */
@@ -1593,7 +1681,7 @@ html.gelap .paginasi button {
   background: var(--ina-green-50, #ecfdf3);
   color: var(--ina-green-600, #039855);
   font-weight: 800;
-  font-size: 12px;
+  font-size: var(--ui-text-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1612,13 +1700,13 @@ html.gelap .paginasi button {
 
 .toast-isi strong {
   display: block;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   margin-bottom: 2px;
 }
 
 .toast-isi p {
   margin: 0;
-  font-size: 10.8px;
+  font-size: var(--ui-text-xs);
   line-height: 1.45;
   color: var(--ta-teks-2);
 }
@@ -1628,7 +1716,7 @@ html.gelap .paginasi button {
   background: none;
   border: 0;
   color: var(--ta-teks-3);
-  font-size: 16px;
+  font-size: var(--ui-text-lg);
   line-height: 1;
   cursor: pointer;
   padding: 2px 4px;
@@ -1717,13 +1805,13 @@ html.gelap .toast-isi p {
 
 .mk-kartu h3 {
   margin: 0 0 8px;
-  font-size: 14.4px;
+  font-size: var(--ui-text-base);
   font-weight: 700;
 }
 
 .mk-kartu p {
   margin: 0 0 20px;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   line-height: 1.55;
   color: var(--ta-teks-2);
 }
@@ -1737,7 +1825,7 @@ html.gelap .toast-isi p {
   flex: 1;
   min-height: 40px;
   border-radius: 999px;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   font-weight: 600;
   cursor: pointer;
   border: 1px solid var(--ta-garis-2);
@@ -1805,7 +1893,7 @@ html.gelap .mk-tombol.batal {
 .mk-rinci ul {
   margin: 2px 0 12px;
   padding-left: 18px;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   line-height: 1.55;
   color: var(--ta-teks-2);
 }
@@ -1820,7 +1908,7 @@ html.gelap .mk-rinci ul {
   color: #800000;
   border-radius: 8px;
   padding: 5px 10px;
-  font-size: 10.4px;
+  font-size: var(--ui-text-xs);
   font-weight: 600;
   cursor: pointer;
 }
@@ -1833,7 +1921,7 @@ html.gelap .mk-rinci ul {
 tr.baris-terhapus td {
   background: var(--ina-red-100, #fef3f2);
   color: var(--ta-teks-2);
-  font-size: 10.4px;
+  font-size: var(--ui-text-xs);
 }
 
 html.gelap tr.baris-terhapus td {
@@ -1846,7 +1934,7 @@ html.gelap tr.baris-terhapus td {
   border: 1px solid var(--ta-garis-2);
   border-radius: 8px;
   padding: 3px 9px;
-  font-size: 10.4px;
+  font-size: var(--ui-text-xs);
   font-weight: 600;
   cursor: pointer;
   color: var(--ta-teks);
@@ -1857,14 +1945,9 @@ html.gelap tr.baris-terhapus td {
   background: var(--ta-biru-50);
 }
 
-/* ===== Modernisasi visual 2026 ===== */
-:root {
-  --ta-radius-sm: 8px;
-  --ta-radius-md: 14px;
-  --ta-radius-lg: 18px;
-  --ta-shadow-sm: 0 1px 2px rgba(16, 24, 40, .04), 0 4px 12px rgba(16, 24, 40, .025);
-  --ta-shadow-md: 0 12px 32px rgba(16, 24, 40, .09);
-}
+/* ===== Modernisasi visual 2026 =====
+   Radius & bayangan kini token bersama di blok "Token desain" di awal
+   berkas (--ui-radius-*, --ui-shadow-*, alias --ta-radius-*/--ta-shadow-*). */
 
 /* ===== Biaya Non-Gedung: komponen modern ===== */
 .biaya-hero {
@@ -1904,14 +1987,14 @@ html.gelap tr.baris-terhapus td {
 }
 
 .biaya-hero .kpi-label {
-  font-size: 9px;
+  font-size: var(--ui-text-2xs);
   font-weight: 600;
   color: var(--ta-teks-3);
   line-height: 1.3;
 }
 
 .biaya-hero .kpi-nilai {
-  font-size: 14px;
+  font-size: var(--ui-text-base);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--ta-teks);
@@ -1939,7 +2022,7 @@ html.gelap tr.baris-terhapus td {
 .biaya-hero .desc {
   padding: 6px 12px 8px;
   margin: 0;
-  font-size: 9.6px;
+  font-size: var(--ui-text-2xs);
   color: var(--ta-teks-2);
   line-height: 1.35;
   border-top: 1px solid var(--ina-neutral-100, #f2f2f2);
@@ -1984,13 +2067,13 @@ html.gelap tr.baris-terhapus td {
 }
 
 .biaya-form .petunjuk-field {
-  font-size: 8.8px;
+  font-size: var(--ui-text-2xs);
   color: var(--ta-teks-3);
   margin: 0;
 }
 
 .biaya-form .petunjuk-form {
-  font-size: 9.6px;
+  font-size: var(--ui-text-2xs);
   color: var(--ta-teks-2);
   line-height: 1.55;
   margin: 10px 0 14px;
@@ -2025,7 +2108,7 @@ html.gelap tr.baris-terhapus td {
 
 .biaya-kosong h3 {
   margin: 0 0 6px;
-  font-size: 13px;
+  font-size: var(--ui-text-sm);
   font-weight: 600;
   color: var(--ta-teks);
 }
@@ -2093,7 +2176,7 @@ html.gelap tr.baris-terhapus td {
   border-top: 0;
   text-transform: uppercase;
   letter-spacing: .035em;
-  font-size: 8.8px;
+  font-size: var(--ui-text-2xs);
   font-weight: 600;
   color: var(--ta-teks-3);
   padding: 8px 11px;
@@ -2214,7 +2297,7 @@ html.gelap .biaya-hero .kpi-kartu:hover {
   }
 
   .biaya-hero .kpi-nilai {
-    font-size: 12px;
+    font-size: var(--ui-text-sm);
   }
 
   .biaya-aksi {
@@ -2222,7 +2305,7 @@ html.gelap .biaya-hero .kpi-kartu:hover {
   }
 
   .biaya-aksi button {
-    font-size: 10px;
+    font-size: var(--ui-text-2xs);
     padding: 6px 8px;
   }
 
@@ -2293,7 +2376,7 @@ html.gelap .biaya-hero .kpi-kartu:hover {
 
 .biaya-modal-kepala h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--ui-text-sm);
   font-weight: 600;
   letter-spacing: -.01em;
   color: var(--ta-teks);
@@ -2346,7 +2429,7 @@ html.gelap .biaya-modal-isi {
   border: 1px solid var(--ta-biru);
   border-radius: 10px;
   padding: 9px 16px;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background .16s ease, box-shadow .16s ease, transform .16s ease;
@@ -2451,7 +2534,7 @@ body {
   display: flex;
   align-items: center;
   min-height: 30px;
-  font-size: 18px;
+  font-size: var(--ui-text-xl);
   letter-spacing: -.02em;
   margin-bottom: 20px;
 }
@@ -2493,7 +2576,7 @@ body {
 .dashboard-kicker {
   display: block;
   margin-bottom: 6px;
-  font-size: 10px;
+  font-size: var(--ui-text-2xs);
   text-transform: uppercase;
   letter-spacing: .12em;
   color: rgba(255, 255, 255, .72);
@@ -2502,7 +2585,7 @@ body {
 
 .dashboard-hero h1 {
   margin: 0 0 5px;
-  font-size: 21px;
+  font-size: var(--ui-text-2xl);
   line-height: 1.25;
   letter-spacing: -.02em;
 }
@@ -2510,7 +2593,7 @@ body {
 .dashboard-hero p {
   margin: 0;
   color: rgba(255, 255, 255, .78);
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
 }
 
 .dashboard-aksi {
@@ -2558,12 +2641,12 @@ body {
 
 .kpi .label {
   min-height: 18px;
-  font-size: 10.5px;
+  font-size: var(--ui-text-xs);
 }
 
 .kpi .nilai {
   margin-top: 8px;
-  font-size: 17px;
+  font-size: var(--ui-text-lg);
   letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
 }
@@ -2580,7 +2663,7 @@ body {
 }
 
 .panel h2 {
-  font-size: 13px;
+  font-size: var(--ui-text-sm);
   letter-spacing: -.01em;
   margin-bottom: 14px;
 }
@@ -2599,12 +2682,12 @@ th {
   border-top: 0;
   text-transform: uppercase;
   letter-spacing: .035em;
-  font-size: 9px;
+  font-size: var(--ui-text-2xs);
 }
 
 td {
   height: 48px;
-  transition: background .15s ease;
+  transition: background var(--ui-durasi-cepat) var(--ui-ease);
 }
 
 tbody tr:hover td,
@@ -2687,7 +2770,7 @@ button:hover {
 }
 
 .login-brand .nama-logo {
-  font-size: 13px;
+  font-size: var(--ui-text-sm);
 }
 
 .login-heading {
@@ -2700,7 +2783,7 @@ button:hover {
   gap: 7px;
   margin-bottom: 12px;
   color: var(--ta-biru);
-  font-size: 9.5px;
+  font-size: var(--ui-text-2xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -2715,7 +2798,7 @@ button:hover {
 }
 
 .login-form-wrap h1 {
-  font-size: 27px;
+  font-size: var(--ui-text-3xl);
   letter-spacing: -.035em;
   margin-bottom: 7px;
 }
@@ -2723,7 +2806,7 @@ button:hover {
 .login-form-wrap .sub {
   max-width: 350px;
   margin-bottom: 0;
-  font-size: 12px;
+  font-size: var(--ui-text-sm);
 }
 
 .login-form-wrap form {
@@ -2767,7 +2850,7 @@ button:hover {
 
 .login-foot {
   margin-top: 20px;
-  font-size: 9.5px;
+  font-size: var(--ui-text-2xs);
 }
 
 .login-brand-side {
@@ -2875,7 +2958,7 @@ html.gelap table tr:hover td {
   }
 
   .atas {
-    font-size: 16px;
+    font-size: var(--ui-text-lg);
     margin-bottom: 12px;
   }
 
@@ -2887,7 +2970,7 @@ html.gelap table tr:hover td {
   }
 
   .dashboard-hero h1 {
-    font-size: 18px;
+    font-size: var(--ui-text-xl);
   }
 
   .dashboard-aksi {
@@ -2910,7 +2993,7 @@ html.gelap table tr:hover td {
   }
 
   .kpi .nilai {
-    font-size: 14.5px;
+    font-size: var(--ui-text-base);
   }
 
   .panel {
@@ -2951,7 +3034,7 @@ html.gelap table tr:hover td {
   background: #fff;
   color: var(--ta-teks);
   font: inherit;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   cursor: pointer;
   text-align: left;
   margin: 0;
@@ -3037,7 +3120,7 @@ html.gelap table tr:hover td {
   padding: 7px 9px;
   border-radius: 7px;
   cursor: pointer;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
 }
 
 .sc-opsi .sc-centang {
@@ -3062,7 +3145,7 @@ html.gelap table tr:hover td {
   padding: 10px;
   text-align: center;
   color: var(--ta-teks-2, #64748b);
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
 }
 
 html.gelap .sc-tombol {
@@ -3132,7 +3215,7 @@ table.satu-baris .sel-fisik .bar {
 }
 
 .tautan-pekerjaan .panah {
-  font-size: 9px;
+  font-size: var(--ui-text-2xs);
 }
 
 /* Hover nama pekerjaan: TANPA blok biru & bayangan bawaan tombol
@@ -3157,12 +3240,12 @@ table.satu-baris tr.baris-detail>td {
 }
 
 .detail-pekerjaan .detail-kepala {
-  font-size: 12.5px;
+  font-size: var(--ui-text-sm);
   margin-bottom: 6px;
 }
 
 .detail-pekerjaan .detail-kaki {
-  font-size: 11.5px;
+  font-size: var(--ui-text-sm);
   color: var(--ta-teks-2);
   margin-top: 6px;
 }
@@ -3175,7 +3258,7 @@ table.satu-baris tr.baris-detail>td {
 .detail-pekerjaan table.mini td {
   white-space: nowrap;
   padding: 4px 8px;
-  font-size: 12px;
+  font-size: var(--ui-text-sm);
 }
 
 .detail-pekerjaan table.mini tr.subtotal td {
@@ -3193,7 +3276,7 @@ th.bisa-urut:hover {
 }
 
 th .panah-urut {
-  font-size: 10px;
+  font-size: var(--ui-text-2xs);
   opacity: .75;
 }
 
@@ -3261,7 +3344,7 @@ tr.baris-kosong td {
   height: 46px;
   border: 1px solid rgba(255, 255, 255, .5);
   border-radius: 14px;
-  font-size: 14px;
+  font-size: var(--ui-text-base);
   letter-spacing: .08em
 }
 
@@ -3277,15 +3360,18 @@ tr.baris-kosong td {
   margin: 0 0 14px;
   color: #8de4d4;
   text-transform: uppercase;
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   letter-spacing: .16em;
   font-weight: 800
 }
 
 .login-v2-intro h1 {
+  /* Ukuran display layar masuk; breakpoint di bawah hanya menukar nilai
+     variabel lokal ini, bukan menulis ukuran baru. */
+  --masuk-judul: var(--ui-text-display);
   max-width: 690px;
   margin: 0;
-  font-size: clamp(36px, 5vw, 70px);
+  font-size: var(--masuk-judul);
   line-height: 1.03;
   letter-spacing: -.055em
 }
@@ -3299,7 +3385,7 @@ tr.baris-kosong td {
   max-width: 580px;
   margin: 25px 0 40px;
   color: rgba(255, 255, 255, .78);
-  font-size: 16px;
+  font-size: var(--ui-text-lg);
   line-height: 1.7
 }
 
@@ -3315,7 +3401,7 @@ tr.baris-kosong td {
 
 .login-v2-proof span {
   color: #8de4d4;
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   font-weight: 800;
   letter-spacing: .1em
 }
@@ -3326,7 +3412,7 @@ tr.baris-kosong td {
 }
 
 .login-v2-proof b {
-  font-size: 14px
+  font-size: var(--ui-text-base)
 }
 
 .login-v2-proof small {
@@ -3340,7 +3426,7 @@ tr.baris-kosong td {
   bottom: 30px;
   margin: 0;
   color: rgba(255, 255, 255, .55);
-  font-size: 11px
+  font-size: var(--ui-text-xs)
 }
 
 .login-v2-card {
@@ -3359,7 +3445,7 @@ tr.baris-kosong td {
   align-items: center;
   margin-bottom: 58px;
   color: var(--ta-teks-2, #667085);
-  font-size: 11px
+  font-size: var(--ui-text-xs)
 }
 
 .login-v2-status {
@@ -3383,14 +3469,14 @@ tr.baris-kosong td {
 
 .login-v2-heading h2 {
   margin: 0;
-  font-size: 30px;
+  font-size: var(--ui-text-3xl);
   letter-spacing: -.04em
 }
 
 .login-v2-heading>p:last-child {
   margin: 10px 0 0;
   color: var(--ta-teks-2, #667085);
-  font-size: 13px
+  font-size: var(--ui-text-sm)
 }
 
 .login-v2-form {
@@ -3400,7 +3486,7 @@ tr.baris-kosong td {
 .login-v2-form label {
   display: block;
   margin: 0 0 8px;
-  font-size: 12px;
+  font-size: var(--ui-text-sm);
   font-weight: 700
 }
 
@@ -3444,7 +3530,7 @@ tr.baris-kosong td {
   border: 0;
   background: transparent;
   color: #087b8b;
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   font-weight: 800;
   cursor: pointer
 }
@@ -3470,14 +3556,14 @@ tr.baris-kosong td {
 }
 
 .login-v2-submit b {
-  font-size: 21px;
+  font-size: var(--ui-text-xl);
   font-weight: 500
 }
 
 .login-v2-note {
   margin: 25px 0 0;
   color: var(--ta-teks-2, #667085);
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   line-height: 1.5;
   text-align: center
 }
@@ -3507,7 +3593,7 @@ tr.baris-kosong td {
   border-radius: 999px;
   background: var(--ta-latar-2, #eef5f7);
   color: #087b8b;
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   font-weight: 800
 }
 
@@ -3582,7 +3668,7 @@ html.gelap .login-v2 {
   }
 
   .login-v2-intro h1 {
-    font-size: 42px
+    --masuk-judul: 42px
   }
 
   .login-v2-footer {
@@ -3611,11 +3697,11 @@ html.gelap .login-v2 {
   }
 
   .login-v2-intro h1 {
-    font-size: 35px
+    --masuk-judul: 35px
   }
 
   .login-v2-lead {
-    font-size: 14px;
+    font-size: var(--ui-text-base);
     margin: 18px 0 24px
   }
 
@@ -3629,21 +3715,12 @@ html.gelap .login-v2 {
   }
 
   .login-v2-heading h2 {
-    font-size: 26px
+    font-size: var(--ui-text-2xl)
   }
 }
 
-/* === Kulit bersama v2: penyegaran seluruh modul === */
-:root {
-  --ui-surface: #fff;
-  --ui-surface-soft: #f7f9fc;
-  --ui-border: #e6ebf2;
-  --ui-border-strong: #d3dce8;
-  --ui-shadow-soft: 0 8px 24px rgba(16, 34, 62, .045);
-  --ui-shadow-hover: 0 14px 32px rgba(16, 34, 62, .09);
-  --ui-radius: 16px;
-  --ui-radius-sm: 11px;
-}
+/* === Kulit bersama v2: penyegaran seluruh modul ===
+   Token --ui-* dipusatkan di blok "Token desain" di awal berkas. */
 
 body:not(.login) {
   background:
@@ -3695,7 +3772,7 @@ body:not(.login) .isi {
 body:not(.login) .atas {
   min-height: 36px;
   margin-bottom: 22px;
-  font-size: 19px;
+  font-size: var(--ui-text-xl);
   letter-spacing: -.035em;
 }
 
@@ -3708,7 +3785,7 @@ body:not(.login) .kpi {
 }
 
 body:not(.login) .panel {
-  background: rgba(255, 255, 255, .92);
+  background: var(--ui-surface-glass);
   padding: 20px 22px;
   margin-bottom: 20px;
 }
@@ -3719,7 +3796,7 @@ body:not(.login) .panel h2 {
   gap: 8px;
   min-height: 24px;
   margin-bottom: 16px;
-  font-size: 13.5px;
+  font-size: var(--ui-text-base);
   letter-spacing: -.02em;
 }
 
@@ -3741,7 +3818,7 @@ body:not(.login) .kpi {
   background: rgba(255, 255, 255, .95);
   min-height: 158px;
   padding: 18px;
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  transition: transform var(--ui-durasi-sedang) var(--ui-ease), box-shadow var(--ui-durasi-sedang) var(--ui-ease), border-color var(--ui-durasi-sedang) var(--ui-ease);
 }
 
 body:not(.login) .kpi:hover {
@@ -3759,7 +3836,7 @@ body:not(.login) table {
 body:not(.login) th {
   height: 44px;
   padding: 10px 12px;
-  background: #f7f9fc;
+  background: var(--ui-surface-soft);
   border-bottom-color: var(--ui-border);
   color: #66758a;
   letter-spacing: .06em;
@@ -3768,7 +3845,7 @@ body:not(.login) th {
 body:not(.login) td {
   height: 50px;
   padding: 10px 12px;
-  border-bottom-color: #edf1f5;
+  border-bottom-color: var(--ui-hairline);
 }
 
 body:not(.login) tbody tr:last-child td {
@@ -3777,17 +3854,17 @@ body:not(.login) tbody tr:last-child td {
 
 body:not(.login) tbody tr:hover td,
 body:not(.login) table tr:hover td {
-  background: #f8fbff;
+  background: var(--ui-surface-hover);
 }
 
 body:not(.login) tr.total td,
 body:not(.login) tr.baris-total td {
-  background: #f3f7fc;
+  background: var(--ui-surface-total);
   border-top: 1px solid #dfe8f2;
 }
 
 body:not(.login) label {
-  color: #526175;
+  color: var(--ui-label);
   font-weight: 600;
 }
 
@@ -3797,8 +3874,8 @@ body:not(.login) textarea {
   min-height: 42px;
   border-color: var(--ui-border-strong);
   border-radius: var(--ui-radius-sm);
-  background: #fbfcfe;
-  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
+  background: var(--ui-surface-input);
+  transition: background var(--ui-durasi) var(--ui-ease), border-color var(--ui-durasi) var(--ui-ease), box-shadow var(--ui-durasi) var(--ui-ease);
 }
 
 body:not(.login) input:hover,
@@ -3965,7 +4042,7 @@ html.gelap body:not(.login) .tombol.abu {
   }
 
   body:not(.login) .atas {
-    font-size: 17px;
+    font-size: var(--ui-text-lg);
     margin-bottom: 17px;
   }
 
@@ -3984,7 +4061,7 @@ html.gelap body:not(.login) .tombol.abu {
   }
 
   body:not(.login) .kpi .nilai {
-    font-size: 15px;
+    font-size: var(--ui-text-lg);
   }
 
   body:not(.login) .aksi {
@@ -4111,6 +4188,11 @@ body:not(.login) .paginasi button {
     display: none !important;
   }
 
+  /* Tabel lebar dicetak utuh, tidak terpotong wadah gulir layar. */
+  .bungkus-tabel {
+    overflow: visible !important;
+  }
+
   table[data-paginasi] tr,
   table[data-cari] tr {
     display: table-row !important;
@@ -4211,7 +4293,7 @@ body:not(.login) .samping nav .parent {
   border: 1px solid transparent;
   border-radius: 8px;
   color: rgba(239, 249, 255, .82);
-  font-size: 11px;
+  font-size: var(--ui-text-sm);
 }
 
 body:not(.login) .samping nav a svg,
@@ -4250,7 +4332,7 @@ body:not(.login) .samping nav .anak a {
   min-height: 29px;
   padding: 5px 8px;
   color: rgba(239, 249, 255, .72);
-  font-size: 10.5px;
+  font-size: var(--ui-text-xs);
 }
 
 body:not(.login) .samping nav .anak a.aktif {
@@ -4320,17 +4402,7 @@ body:not(.login) .samping .profil .siapa small {
   font-display: swap;
 }
 
-:root {
-  --ui-radius: 18px;
-  --ui-radius-sm: 12px;
-  --ui-border: rgba(15, 35, 70, .09);
-  --ui-shadow-soft: 0 1px 2px rgba(16, 34, 62, .04), 0 10px 30px rgba(16, 34, 62, .05);
-  --ui-shadow-hover: 0 2px 4px rgba(16, 34, 62, .05), 0 18px 38px rgba(16, 34, 62, .10);
-}
-
-body {
-  font-size: 13.5px;
-}
+/* Radius & bayangan v2 kini token bersama (lihat "Token desain"). */
 
 td,
 .kpi .nilai {
@@ -4398,7 +4470,7 @@ details.panel-lipat>summary {
   align-items: center;
   gap: 8px;
   min-height: 24px;
-  font-size: 13.5px;
+  font-size: var(--ui-text-base);
   font-weight: 600;
   letter-spacing: -.02em;
   color: var(--ta-teks);
@@ -4561,13 +4633,13 @@ html.gelap body:not(.login) .samping nav .parent.aktif {
 }
 
 body:not(.login) .kpi .nilai {
-  font-size: 21px;
+  font-size: var(--ui-text-xl);
   font-weight: 650;
   letter-spacing: -.01em;
 }
 
 body:not(.login) .kpi .label {
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
 }
 
 /* 5) Modal: latar blur; di ponsel menjadi sheet menempel di bawah. */
@@ -4635,7 +4707,7 @@ body:not(.login) .dashboard-hero .tombol.abu {
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  font-size: 12px;
+  font-size: var(--ui-text-sm);
   color: var(--ta-teks-3);
   margin-bottom: 12px;
 }
@@ -4814,7 +4886,7 @@ table.tabel-acuan td.angka {
   border: 1px solid transparent;
   border-radius: 999px;
   color: #fff;
-  font-size: 11.2px;
+  font-size: var(--ui-text-sm);
   font-weight: 600;
   letter-spacing: .01em;
   text-decoration: none;
@@ -4875,11 +4947,7 @@ table.tabel-acuan td.angka {
 .fm-kartu {
   padding: 0;
   overflow: hidden;
-  --fm-latar: #fff;
-}
-
-html.gelap .fm-kartu {
-  --fm-latar: #1c2534;
+  --fm-latar: var(--ui-surface-raised);
 }
 
 .fm-kepala {
@@ -4969,7 +5037,7 @@ html.gelap .fm-kaki {
   transform: translateY(-50%);
   background: var(--fm-latar);
   padding: 0 5px;
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   font-weight: 600;
   line-height: 1.4;
   color: var(--ta-teks-2);
@@ -4997,7 +5065,7 @@ html.gelap .fm-kaki {
   max-width: 260px;
   background: #b42318;
   color: #fff;
-  font-size: 11.5px;
+  font-size: var(--ui-text-sm);
   font-weight: 600;
   line-height: 1.35;
   padding: 6px 10px;
@@ -5045,12 +5113,12 @@ html.gelap .fm-kaki {
 }
 
 .panduan-isi h1 {
-  font-size: 19px;
+  font-size: var(--ui-text-xl);
   margin: 4px 0 12px;
 }
 
 .panduan-isi h2 {
-  font-size: 16px;
+  font-size: var(--ui-text-lg);
   margin: 26px 0 10px;
   padding-top: 14px;
   border-top: 1px solid var(--ta-garis);
@@ -5062,12 +5130,12 @@ html.gelap .fm-kaki {
 }
 
 .panduan-isi h3 {
-  font-size: 14px;
+  font-size: var(--ui-text-base);
   margin: 18px 0 8px;
 }
 
 .panduan-isi h4 {
-  font-size: 13px;
+  font-size: var(--ui-text-sm);
   margin: 14px 0 6px;
 }
 

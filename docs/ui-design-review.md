@@ -7,6 +7,8 @@
 > - Panel select-cari dirender sebagai lapisan `fixed` di `<body>` (portal, z-index 500); koordinatnya dibagi dengan zoom dokumen.
 >
 > Untuk aturan desain mutakhir, rujuk `AGENTS.md` (bagian Aturan UI Wajib) dan `docs/Panduan_Penggunaan.md` Bab 2a.
+>
+> **26 November 2026 — lapisan token desain:** `public/assets/app.css` kini memakai satu blok token `--ui-*` (warna, tipografi, radius, bayangan, gerak) dengan `--ta-*`/`--fm-*` sebagai alias; tema gelap menukar token, bukan menambah selektor per komponen. **Skala huruf kini 7 langkah** (teks isi 14.5px, isi tabel/tombol/isian 13px, judul halaman 20px) dan seluruh `font-size` literal di `app.css` sudah dipetakan ke token. Rincian kontrak dan sisa pekerjaan ada di `docs/Desain_Token.md`.
 
 - Tanggal tinjauan asli: 2026-11-21 (pull `66ab742..7b5b10d`); catatan status di atas diperbarui 24 November 2026
 - Terakhir diverifikasi: 24 November 2026
