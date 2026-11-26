@@ -446,6 +446,8 @@ Menu **Keuangan → Invoice**: catat tagihan penyedia (nomor urut, toko, tanggal
 
 Menu **Keuangan → Jurnal Pembayaran** mencatat pembayaran invoice: pilih invoice, tanggal bayar, dan cara bayar. Aplikasi menghitung **PPh 22 sebesar 1,5%** secara otomatis, menandai invoice **Sudah Bayar**, dan memeriksa total terhadap pagu — jurnal yang menembus pagu ditolak. Baris jurnal dapat dihapus bila keliru catat (invoice kembali Belum Bayar). Pencatatan jurnal hanya untuk peran **bendahara** atau **admin**.
 
+**Kanal pembayaran bawaan tunai.** Setiap pembayaran dicatat dengan kanal **Tunai** atau **Bank / Non-Tunai** (pilihan ada di modal jurnal, formulir Catat Bayar di rincian SPK, dan isian Kanal Pembayaran pada formulir invoice berstatus Sudah Bayar). Bawaannya **tunai** — hanya pembayaran non-tunai yang masuk **Buku Bank**, pembayaran tunai masuk **Buku Kas Tunai**; baris pungut pajaknya mengikuti kanal yang sama. Penjaga saldo tidak-minus dan kewajiban nomor rekening penyedia berlaku per kanal terpilih (rekening hanya wajib untuk pembayaran bank). Kolom **Kanal** pada tabel jurnal menunjukkan kanal tiap pembayaran.
+
 **Tanggal bayar bawaan merekomendasikan tanggal jurnal terakhir** yang tercatat (atau tanggal invoice bila lebih baru), dijepit ke Bulan Terbuka — jadi jurnal berikutnya berawalan tanggal yang sama dengan jurnal sebelumnya. Server juga menolak pembayaran ganda untuk invoice yang sudah berstatus Sudah Bayar, dan tanggal bayar tidak boleh sebelum tanggal invoice.
 
 Pembayaran invoice sebuah SPK juga dapat dicatat langsung dari panel **Tuntaskan SPK** di rincian SPK (Bab 13) — hasil dan aturannya sama, panel hanya menghemat perpindahan menu.

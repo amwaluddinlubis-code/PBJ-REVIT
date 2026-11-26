@@ -1159,7 +1159,7 @@ abstract class BaseController extends Controller
 
         $peta = $this->ppnSpkMap();
         foreach ($db->query(
-            'SELECT p.tanggal AS tgl_bayar, i.tanggal AS tgl_inv, i.nomor_urut, i.nilai, i.spk_id,
+            'SELECT p.tanggal AS tgl_bayar, p.kanal AS kanal_bayar, i.tanggal AS tgl_inv, i.nomor_urut, i.nilai, i.spk_id,
                     s.nomor AS spk_nomor, py.nama AS penyedia
              FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0
              JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0
@@ -1174,12 +1174,15 @@ abstract class BaseController extends Controller
             // pungut tersendiri per jenis — saldo akhir sama, tetapi
             // pungutan terlihat dan bisa dibaca di Buku Pajak.
             $tglBayar = $r['tgl_bayar'] ?: $r['tgl_inv'];
+            // Kanal pembayaran: bawaan tunai; hanya pembayaran non-tunai
+            // (bank) yang masuk Buku Bank (instruksi Wilda 26 Nov 2026).
+            $kanalBayar = ($r['kanal_bayar'] ?? 'tunai') === 'bank' ? 'bank' : 'tunai';
             $entri[] = [
                 'tanggal' => $tglBayar,
                 'uraian' => 'Pembayaran Invoice ' . (int) $r['nomor_urut'] . ' (SPK ' . (int) $r['spk_nomor'] . ')'
                     . ($r['penyedia'] ? ' — ' . $r['penyedia'] : ''),
                 'masuk' => 0.0, 'keluar' => (float) $r['nilai'],
-                'kanal' => 'bank', 'sumber' => 'invoice', 'ref_id' => (int) $r['nomor_urut'],
+                'kanal' => $kanalBayar, 'sumber' => 'invoice', 'ref_id' => (int) $r['nomor_urut'],
                 'kategori' => 'belanja',
             ];
             foreach (['ppn' => 'PPN', 'pph22' => 'PPh 22'] as $kunciPjk => $labelPjk) {
@@ -1189,7 +1192,7 @@ abstract class BaseController extends Controller
                         'uraian' => 'Pungut ' . $labelPjk . ' atas Invoice ' . (int) $r['nomor_urut'] . ' (SPK ' . (int) $r['spk_nomor'] . ')'
                             . ($r['penyedia'] ? ' — ' . $r['penyedia'] : ''),
                         'masuk' => (float) $pjk[$kunciPjk], 'keluar' => 0.0,
-                        'kanal' => 'bank', 'sumber' => 'pungut', 'ref_id' => (int) $r['nomor_urut'],
+                        'kanal' => $kanalBayar, 'sumber' => 'pungut', 'ref_id' => (int) $r['nomor_urut'],
                         'kategori' => 'pajak',
                     ];
                 }

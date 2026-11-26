@@ -94,6 +94,7 @@
         <?= csrf_field() ?>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
           <label>Tanggal bayar<br><input type="date" name="tanggal_bayar" value="<?= esc($tuntas['tgl_bayar'] ?? date('Y-m-d')) ?>" min="<?= esc($tuntas['buku_min'] ?? '') ?>" max="<?= esc($tuntas['buku_max'] ?? '') ?>" required><span class="kecil-teks" style="display:block">Buku terbuka: <?= esc($tuntas['buku_label'] ?? '') ?></span></label>
+          <label>Kanal<br><select name="kanal"><option value="tunai">Tunai</option><option value="bank">Bank / Non-Tunai</option></select><span class="kecil-teks" style="display:block">Bawaan tunai</span></label>
           <button class="tombol" type="submit">Catat Bayar</button>
         </div>
         <p class="kecil-teks">Pembayaran tercatat di Jurnal Pembayaran dan status invoice menjadi Sudah Bayar; kontrol pagu anggaran tetap berlaku.</p>

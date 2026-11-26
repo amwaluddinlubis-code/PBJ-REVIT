@@ -149,10 +149,12 @@ class Invoice extends BaseController
                 ));
             }
             $pjk = $this->pajakPembelian((float) $data['nilai'], $this->ppnInvoice($this->ppnSpkMap(), (int) $data['spk_id'], (float) $data['nilai']));
-            if ($g = $this->galatSaldoMinus('bank', $tglBayar, (float) $pjk['dibayar'])) {
+            // Kanal pembayaran: bawaan tunai; hanya non-tunai yang masuk Buku Bank.
+            $kanalBayar = (string) $this->request->getPost('kanal_bayar') === 'bank' ? 'bank' : 'tunai';
+            if ($g = $this->galatSaldoMinus($kanalBayar, $tglBayar, (float) $pjk['dibayar'])) {
                 return $this->balasForm(false, $g);
             }
-            if ($g = $this->galatRekeningPenyedia((int) $data['spk_id'])) {
+            if ($kanalBayar === 'bank' && ($g = $this->galatRekeningPenyedia((int) $data['spk_id']))) {
                 return $this->balasForm(false, $g);
             }
             $catatBayar = true;
@@ -171,6 +173,7 @@ class Invoice extends BaseController
             $this->db()->table('pembayaran')->insert([
                 'invoice_id' => $invoiceId,
                 'tanggal' => $tglBayar,
+                'kanal' => $kanalBayar ?? 'tunai',
                 'keterangan' => null,
                 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
             ]);
@@ -528,19 +531,22 @@ class Invoice extends BaseController
                 $this->rp($anggaran)
             ));
         }
-        // Saldo bank tidak boleh minus pada tanggal bayar maupun sesudahnya.
+        // Kanal pembayaran: bawaan tunai; hanya non-tunai yang masuk Buku Bank.
+        $kanal = (string) $this->request->getPost('kanal') === 'bank' ? 'bank' : 'tunai';
+        // Saldo kanal tidak boleh minus pada tanggal bayar maupun sesudahnya.
         $pjk = $this->pajakPembelian((float) $inv['nilai'], $this->ppnInvoice($this->ppnSpkMap(), (int) $inv['spk_id'], (float) $inv['nilai']));
-        if ($g = $this->galatSaldoMinus('bank', (string) ($this->request->getPost('tanggal') ?: $inv['tanggal']), (float) $pjk['dibayar'])) {
+        if ($g = $this->galatSaldoMinus($kanal, (string) ($this->request->getPost('tanggal') ?: $inv['tanggal']), (float) $pjk['dibayar'])) {
             return $this->balasJurnal(false, $g);
         }
         // Pembayaran bank butuh nomor rekening penyedia.
-        if ($g = $this->galatRekeningPenyedia((int) $inv['spk_id'])) {
+        if ($kanal === 'bank' && ($g = $this->galatRekeningPenyedia((int) $inv['spk_id']))) {
             return $this->balasJurnal(false, $g);
         }
         $this->db()->transStart();
         $this->db()->table('pembayaran')->insert([
             'invoice_id' => $invoiceId,
             'tanggal' => $this->request->getPost('tanggal') ?: null,
+            'kanal' => $kanal,
             'keterangan' => trim((string) $this->request->getPost('keterangan')) ?: null,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);

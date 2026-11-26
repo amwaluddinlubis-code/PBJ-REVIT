@@ -36,6 +36,7 @@ foreach ($spk['list'] ?? [] as $s) {
         ['nama' => 'status', 'label' => 'Status', 'jenis' => 'pilihan', 'opsi' => ['Belum Bayar' => 'Belum Bayar', 'Sudah Bayar' => 'Sudah Bayar']],
         ['nama' => 'tanggal_bayar', 'label' => 'Tanggal Pembayaran', 'jenis' => 'tanggal', 'min' => $buku_min ?? '', 'max' => $buku_max ?? '',
             'petunjuk' => 'Hanya untuk status Sudah Bayar — pembayaran tercatat otomatis di Jurnal Pembayaran. Buku terbuka: ' . ($buku_label ?? '')],
+        ['nama' => 'kanal_bayar', 'label' => 'Kanal Pembayaran', 'jenis' => 'pilihan', 'opsi' => ['tunai' => 'Tunai (Buku Kas Tunai)', 'bank' => 'Bank / Non-Tunai (Buku Bank)'], 'petunjuk' => 'Bawaan tunai — hanya pembayaran non-tunai yang masuk Buku Bank'],
     ],
     'catatan_html' => '<div id="info-warisan-invoice" class="kecil-teks" style="margin-top:10px">Pilih SPK untuk melihat tanggal SPK, BAP, dan BAST yang diwarisi.</div>',
     'tombol' => ['simpan_teks' => 'Simpan', 'hapus_teks' => 'Hapus Invoice'],
@@ -137,6 +138,12 @@ foreach ($spk['list'] ?? [] as $s) {
     var sudah = selStatus.value === 'Sudah Bayar';
     if (bungkus) bungkus.style.display = sudah ? '' : 'none';
     inpBayar.disabled = !sudah;
+    var selKanal = m.querySelector('select[name="kanal_bayar"]');
+    if (selKanal) {
+      var bungkusKanal = selKanal.closest('.fm-field');
+      if (bungkusKanal) bungkusKanal.style.display = sudah ? '' : 'none';
+      selKanal.disabled = !sudah;
+    }
     if (sudah && !inpBayar.value) {
       var inpTgl = m.querySelector('input[name="tanggal"]');
       var tglInv = '';

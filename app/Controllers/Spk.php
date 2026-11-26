@@ -495,17 +495,19 @@ class Spk extends BaseController
         if (! empty($inv['tanggal']) && $tgl < (string) $inv['tanggal']) {
             return redirect()->to('spk/detail/' . (int) $id)->with('galat', 'Tanggal bayar (' . tgl($tgl) . ') tidak boleh sebelum tanggal invoice (' . tgl($inv['tanggal']) . ') — pembayaran dicatat sesudah tagihan diterbitkan.');
         }
-        // Saldo bank tidak boleh minus pada tanggal bayar maupun sesudahnya.
+        // Kanal pembayaran: bawaan tunai; hanya non-tunai yang masuk Buku Bank.
+        $kanal = (string) $this->request->getPost('kanal') === 'bank' ? 'bank' : 'tunai';
+        // Saldo kanal tidak boleh minus pada tanggal bayar maupun sesudahnya.
         $pjk = $this->pajakPembelian((float) $inv['nilai'], $this->ppnInvoice($this->ppnSpkMap(), (int) $inv['spk_id'], (float) $inv['nilai']));
-        if ($g = $this->galatSaldoMinus('bank', $tgl, (float) $pjk['dibayar'])) {
+        if ($g = $this->galatSaldoMinus($kanal, $tgl, (float) $pjk['dibayar'])) {
             return redirect()->to('spk/detail/' . (int) $id)->with('galat', $g);
         }
-        if ($g = $this->galatRekeningPenyedia((int) $inv['spk_id'])) {
+        if ($kanal === 'bank' && ($g = $this->galatRekeningPenyedia((int) $inv['spk_id']))) {
             return redirect()->to('spk/detail/' . (int) $id)->with('galat', $g);
         }
         $now = date('Y-m-d H:i:s');
         $db->transStart();
-        $db->table('pembayaran')->insert(['invoice_id' => (int) $inv['id'], 'tanggal' => $tgl, 'keterangan' => null, 'created_at' => $now, 'updated_at' => $now]);
+        $db->table('pembayaran')->insert(['invoice_id' => (int) $inv['id'], 'tanggal' => $tgl, 'kanal' => $kanal, 'keterangan' => null, 'created_at' => $now, 'updated_at' => $now]);
         $db->table('invoice')->where('id', (int) $inv['id'])->update(['status' => 'Sudah Bayar', 'updated_at' => $now]);
         $db->transComplete();
         $this->catatAudit('pembayaran', (int) $inv['id'], 'buat', 'Pembayaran invoice sebesar ' . $this->rp($inv['nilai']) . ' dicatat dari panel Tuntaskan SPK.');

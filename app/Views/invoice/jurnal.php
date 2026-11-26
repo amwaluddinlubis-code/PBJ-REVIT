@@ -23,6 +23,7 @@ foreach ($belum as $b) {
     'kolom' => [
         ['nama' => 'invoice_id', 'label' => 'Invoice Belum Bayar', 'jenis' => 'pilihan', 'wajib' => true, 'opsi' => $opsiBelum],
         ['nama' => 'tanggal', 'label' => 'Tanggal Bayar', 'jenis' => 'tanggal', 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
+        ['nama' => 'kanal', 'label' => 'Kanal Pembayaran', 'jenis' => 'pilihan', 'opsi' => ['tunai' => 'Tunai (Buku Kas Tunai)', 'bank' => 'Bank / Non-Tunai (Buku Bank)'], 'petunjuk' => 'Bawaan tunai — hanya pembayaran non-tunai yang masuk Buku Bank'],
         ['nama' => 'keterangan', 'label' => 'Keterangan', 'jenis' => 'teks'],
     ],
     'tombol' => ['simpan_teks' => 'Catat Bayar', 'hapus' => false],
@@ -91,6 +92,7 @@ foreach ($belum as $b) {
           ['teks' => rp($r['dpp']), 'angka' => true],
           ['html' => $selPph, 'angka' => true],
           ['teks' => rp($r['dibayar']), 'angka' => true],
+          ['html' => '<span class="lencana ' . (($r['kanal'] ?? 'tunai') === 'bank' ? 'biru' : 'abu') . '">' . (($r['kanal'] ?? 'tunai') === 'bank' ? 'Bank' : 'Tunai') . '</span>'],
           (string) ($r['keterangan'] ?? ''),
           ['html' => '<form class="inline" method="post" action="' . base_url('invoice/jurnal-hapus/' . $r['id']) . '" data-konfirmasi="Hapus baris jurnal ini?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>'],
       ]];
@@ -98,7 +100,7 @@ foreach ($belum as $b) {
   $barisJurnal[] = ['total' => [
       ['teks' => 'TOTAL DIBAYAR', 'colspan' => 7, 'gaya' => 'text-align:right'],
       ['teks' => rp($tot), 'angka' => true],
-      ['teks' => '', 'colspan' => 2],
+      ['teks' => '', 'colspan' => 3],
   ], 'class' => 'total'];
   echo tabel_bantu([
       'cari' => 'Cari jurnal…',
@@ -112,6 +114,7 @@ foreach ($belum as $b) {
           ['judul' => 'DPP', 'angka' => true],
           ['judul' => 'PPh 22 (1,5% dari DPP)', 'angka' => true],
           ['judul' => 'Nilai Dibayar', 'angka' => true],
+          ['judul' => 'Kanal'],
           ['judul' => 'Keterangan'],
           ['judul' => ''],
       ],
