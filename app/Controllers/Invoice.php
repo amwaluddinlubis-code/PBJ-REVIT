@@ -42,15 +42,45 @@ class Invoice extends BaseController
         ], 'Invoice Baru');
     }
 
+    /** Balasan form modal (pola balasForm): AJAX -> JSON {ok, pesan}. */
+    private function balasForm(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return $ok
+            ? redirect()->to('invoice')->with('sukses', $pesan)
+            : redirect()->back()->withInput()->with('galat', $pesan);
+    }
+
     public function simpan()
     {
+        // Modal form_modal mengirim id tersembunyi: 0 = baru, >0 = ubah.
+        return $this->prosesSimpan((int) $this->request->getPost('id'));
+    }
+
+    public function perbarui($id)
+    {
+        return $this->prosesSimpan((int) $id);
+    }
+
+    private function prosesSimpan(int $id)
+    {
+        if ($id > 0 && $this->sudahTerbayar($id)) {
+            return $this->balasForm(false, 'Invoice ini sudah dibayar dan terkunci. Koreksi dilakukan dengan menghapus jurnal pembayaran terlebih dahulu.');
+        }
         $data = $this->ambilForm();
-        if ($this->nomorDipakai((int) $data['nomor_urut'], 0)) {
-            return redirect()->back()->withInput()->with('galat', 'Nomor urut invoice ' . $data['nomor_urut'] . ' sudah dipakai di sekolah ini.');
+        if ($this->nomorDipakai((int) $data['nomor_urut'], $id)) {
+            return $this->balasForm(false, 'Nomor urut invoice ' . $data['nomor_urut'] . ' sudah dipakai di sekolah ini.');
+        }
+        if ($id > 0) {
+            $data['updated_at'] = date('Y-m-d H:i:s');
+            $this->db()->table('invoice')->where('id', $id)->update($data);
+            return $this->balasForm(true, 'Invoice diperbarui.');
         }
         $data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('invoice')->insert($data);
-        return redirect()->to('invoice')->with('sukses', 'Invoice dicatat.');
+        return $this->balasForm(true, 'Invoice dicatat.');
     }
 
     /** Nomor urut invoice unik per sekolah (lewat SPK induknya). */
@@ -73,20 +103,6 @@ class Invoice extends BaseController
         return $this->tampil('invoice/form', [
             'i' => $i, 'spk' => $this->daftarSpk(), 'aksi' => 'invoice/perbarui/' . $id,
         ], 'Ubah Invoice ' . $i['nomor_urut']);
-    }
-
-    public function perbarui($id)
-    {
-        if ($this->sudahTerbayar((int) $id)) {
-            return redirect()->to('invoice')->with('galat', 'Invoice ini sudah dibayar dan terkunci. Koreksi dilakukan dengan menghapus jurnal pembayaran terlebih dahulu.');
-        }
-        $data = $this->ambilForm();
-        if ($this->nomorDipakai((int) $data['nomor_urut'], (int) $id)) {
-            return redirect()->back()->withInput()->with('galat', 'Nomor urut invoice ' . $data['nomor_urut'] . ' sudah dipakai di sekolah ini.');
-        }
-        $data['updated_at'] = date('Y-m-d H:i:s');
-        $this->db()->table('invoice')->where('id', (int) $id)->update($data);
-        return redirect()->to('invoice')->with('sukses', 'Invoice diperbarui.');
     }
 
     /** Invoice terkunci bila sudah memiliki jurnal pembayaran aktif. */
