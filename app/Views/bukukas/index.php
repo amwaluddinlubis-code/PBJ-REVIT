@@ -3,18 +3,20 @@
   <summary><?= esc($nama_buku) ?> — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></summary>
 
   <p style="margin-top:0;color:var(--ta-teks-2)">Pembukuan menurut Juknis Revitalisasi SMP 2026. Isi buku tergabung otomatis dari pembayaran invoice (bank), pembayaran upah (tunai), bukti setor ke kas negara, dan transaksi manual di bawah. Baris pembayaran dan baris pungut/setor pajak dicatat terpisah — pungutan pajak tampil sebagai baris penerimaan tersendiri dan dirangkum di Buku Pajak (saldo = pajak belum disetor). Buku ditutup setiap akhir bulan.</p>
-  <div class="tab">
-    <?php foreach (['bku' => 'Buku Kas Umum', 'bank' => 'Buku Bank', 'tunai' => 'Buku Kas Tunai', 'pajak' => 'Buku Pajak'] as $k => $label): ?>
-      <a href="<?= base_url('buku-kas?buku=' . $k . '&bulan=' . $bulan) ?>"<?= $buku === $k ? ' class="aktif"' : '' ?>><?= $label ?></a>
-    <?php endforeach; ?>
-  </div>
-  <div class="aksi" style="justify-content:flex-start;gap:8px;flex-wrap:wrap;margin-top:10px">
-    <form method="get" action="<?= base_url('buku-kas') ?>" style="display:flex;gap:6px;align-items:center">
-      <input type="hidden" name="buku" value="<?= esc($buku) ?>">
-      <input type="month" name="bulan" value="<?= esc($bulan) ?>">
-      <button type="submit" class="kecil">Tampilkan</button>
-    </form>
-    <a class="tombol abu" href="<?= base_url('buku-kas/cetak?buku=' . $buku . '&bulan=' . $bulan) ?>" target="_blank">Cetak Bulan Ini</a>
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center">
+    <div class="tab">
+      <?php foreach (['bku' => 'Buku Kas Umum', 'bank' => 'Buku Bank', 'tunai' => 'Buku Kas Tunai', 'pajak' => 'Buku Pajak'] as $k => $label): ?>
+        <a href="<?= base_url('buku-kas?buku=' . $k . '&bulan=' . $bulan) ?>"<?= $buku === $k ? ' class="aktif"' : '' ?>><?= $label ?></a>
+      <?php endforeach; ?>
+    </div>
+    <div class="aksi" style="justify-content:flex-end;gap:8px;flex-wrap:wrap">
+      <form method="get" action="<?= base_url('buku-kas') ?>" style="display:flex;gap:6px;align-items:center">
+        <input type="hidden" name="buku" value="<?= esc($buku) ?>">
+        <input type="month" name="bulan" value="<?= esc($bulan) ?>">
+        <button type="submit" class="kecil">Tampilkan</button>
+      </form>
+      <a class="tombol abu" href="<?= base_url('buku-kas/cetak?buku=' . $buku . '&bulan=' . $bulan) ?>" target="_blank">Cetak Bulan Ini</a>
+    </div>
   </div>
 </details>
 
