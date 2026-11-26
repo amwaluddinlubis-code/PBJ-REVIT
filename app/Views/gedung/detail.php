@@ -2,7 +2,6 @@
 
 $tabAktif = $tab ?? 'boq';
 ?>
-<nav class="remah" aria-label="Jejak halaman"><a href="<?= base_url() ?>">Dashboard</a> <span aria-hidden="true">/</span> <a href="<?= base_url('gedung') ?>">Kelola Gedung</a> <span aria-hidden="true">/</span> <span><?= esc($g['nama']) ?></span></nav>
 <div style="margin-bottom:12px">
   <span class="lencana biru">Nilai BOQ <b>&nbsp;<?= rp($g['nilai_boq']) ?></b></span>
   <span class="lencana hijau">Realisasi <b>&nbsp;<?= rp($nilai_realisasi) ?> (<?= number_format($persen_fisik, 1, ',', '.') ?>%)</b></span>

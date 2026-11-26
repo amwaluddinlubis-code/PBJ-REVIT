@@ -1,5 +1,3 @@
-<nav class="remah" aria-label="Jejak halaman"><a href="<?= base_url() ?>">Dashboard</a> <span aria-hidden="true">/</span> <span>Validasi Harga Satuan</span></nav>
-
 <div class="panel">
   <h2 style="margin-top:0">Validasi Harga Satuan</h2>
   <p class="kecil-teks" style="margin-top:0">Dua pemeriksaan atas harga satuan di tabel pekerjaan untuk <strong>kode analisa yang sama</strong> (sekolah aktif): (1) antar pekerjaan — kode yang sama seharusnya memakai harga yang sama; (2) pekerjaan vs <strong>kalkulasi analisa_komponen</strong> (jumlah koefisien × tarif efektif, sama dengan harga AHSP yang dipakai aplikasi). Perbaikan menyamakan <em>harga_satuan</em> pekerjaan dalam satu kode; harga berjalan dari BA Revisi yang disahkan tidak disentuh.</p>
