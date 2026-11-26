@@ -1,3 +1,5 @@
+<?php /* Register SPK: tabel helper tabel_bantu + modal form_modal
+   (partial spk/_modal_form). */ ?>
 <div class="aksi md:col-span-2" style="margin:0 0 12px"><button type="button" class="tombol" onclick="bukaSpkBaru()">+ SPK Baru</button></div>
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-spk','ids-spk')">
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
@@ -11,22 +13,39 @@
       <button type="submit" class="bahaya">Kosongkan Register SPK</button>
     </form>
   </div>
-<table data-paginasi="10" data-cari="Cari SPK (nomor, penyedia, paket)…">
-  <tr><th style="width:34px"><input type="checkbox" title="Pilih semua SPK" @change="pilihSemua($event)"></th><th>No.</th><th>Tanggal</th><th>Penyedia</th><th>Paket</th><th>Periode</th><th class="angka">Jml Bahan</th><th class="angka">Nilai SPK</th><th>Status</th><th></th></tr>
-  <?php foreach ($spk as $s): ?>
-  <tr>
-    <td><input type="checkbox" data-pilih value="<?= (int) $s['id'] ?>" x-model="terpilih"></td>
-    <td><a href="<?= base_url('spk/detail/' . $s['id']) ?>"><?= (int) $s['nomor'] ?></a></td>
-    <td><?= esc(tgl($s['tanggal'] ?? null)) ?></td>
-    <td><?= esc($s['penyedia'] ?? '—') ?></td>
-    <td><?= esc($s['paket'] ?? '—') ?></td>
-    <td><?= esc(tgl($s['tgl_mulai'] ?? null)) ?> s.d. <?= esc(tgl($s['tgl_selesai'] ?? null)) ?></td>
-    <td class="angka"><?= (int) $s['jumlah'] ?></td>
-    <td class="angka"><?= rp($s['nilai']) ?></td>
-    <td><?= esc($s['status']) ?></td>
-    <td><button type="button" class="tombol kecil abu" onclick="bukaSpkUbah(<?= (int) $s['id'] ?>)">Ubah</button> <a class="tombol kecil" href="<?= base_url('spk/detail/' . $s['id']) ?>">Detail</a></td>
-  </tr>
-  <?php endforeach; ?>
-</table>
+<?php
+$barisSpk = [];
+foreach ($spk as $s) {
+    $barisSpk[] = ['sel' => [
+        ['html' => '<input type="checkbox" data-pilih value="' . (int) $s['id'] . '" x-model="terpilih">'],
+        ['html' => '<a href="' . base_url('spk/detail/' . $s['id']) . '">' . (int) $s['nomor'] . '</a>'],
+        (string) tgl($s['tanggal'] ?? null),
+        (string) ($s['penyedia'] ?? '—'),
+        (string) ($s['paket'] ?? '—'),
+        (string) (tgl($s['tgl_mulai'] ?? null) . ' s.d. ' . tgl($s['tgl_selesai'] ?? null)),
+        ['teks' => (string) (int) $s['jumlah'], 'angka' => true],
+        ['teks' => rp($s['nilai']), 'angka' => true],
+        (string) $s['status'],
+        ['html' => '<button type="button" class="tombol kecil abu" onclick="bukaSpkUbah(' . (int) $s['id'] . ')">Ubah</button> <a class="tombol kecil" href="' . base_url('spk/detail/' . $s['id']) . '">Detail</a>'],
+    ]];
+}
+echo tabel_bantu([
+    'cari' => 'Cari SPK (nomor, penyedia, paket)…',
+    'paginasi' => 10,
+    'kolom' => [
+        ['judul_html' => '<input type="checkbox" title="Pilih semua SPK" @change="pilihSemua($event)">', 'lebar' => '34px'],
+        ['judul' => 'No.'],
+        ['judul' => 'Tanggal'],
+        ['judul' => 'Penyedia'],
+        ['judul' => 'Paket'],
+        ['judul' => 'Periode'],
+        ['judul' => 'Jml Bahan', 'angka' => true],
+        ['judul' => 'Nilai SPK', 'angka' => true],
+        ['judul' => 'Status'],
+        ['judul' => ''],
+    ],
+    'baris' => $barisSpk,
+]);
+?>
 </div>
 <?= $this->include('spk/_modal_form') ?>

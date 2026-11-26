@@ -47,6 +47,15 @@ class Upah extends BaseController
         return $hasil;
     }
 
+    /** Balasan form modal (pola Bahan::balasForm): AJAX -> JSON {ok, pesan}; biasa -> redirect flash. */
+    private function balasForm(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return redirect()->to('/upah')->with($ok ? 'sukses' : 'galat', $pesan);
+    }
+
     public function simpan()
     {
         if ($d = $this->penjagaPeran(['bendahara'])) {
@@ -66,15 +75,15 @@ class Upah extends BaseController
         }
         $jumlah = $oh * $tarif;
         if ($jenis === '' || $oh <= 0 || $jumlah <= 0) {
-            return redirect()->to('/upah')->with('galat', 'Jenis tenaga, orang-hari, dan tarif wajib terisi benar.');
+            return $this->balasForm(false, 'Jenis tenaga, orang-hari, dan tarif wajib terisi benar.');
         }
         $tanggalUpah = (string) ($r->getPost('tanggal') ?: date('Y-m-d'));
         if ($g = $this->galatBulanBekerja($tanggalUpah)) {
-            return redirect()->to('/upah')->with('galat', $g);
+            return $this->balasForm(false, $g);
         }
         [$boleh, $sisaPagu, $anggaran] = $this->cekPagu($jumlah);
         if (! $boleh) {
-            return redirect()->to('/upah')->with('galat', sprintf(
+            return $this->balasForm(false, sprintf(
                 'Pembayaran upah ditahan: jumlah %s melewati sisa pagu anggaran %s dari total anggaran %s.',
                 $this->rp($jumlah),
                 $this->rp(max(0, $sisaPagu)),
@@ -92,7 +101,7 @@ class Upah extends BaseController
             'created_at' => date('Y-m-d H:i:s'),
         ]);
         $this->catatAudit('upah_bayar', (int) $this->db()->insertID(), 'buat', 'Pembayaran upah ' . $jenis . ' sebesar ' . $this->rp($jumlah));
-        return redirect()->to('/upah')->with('sukses', 'Pembayaran upah ' . $jenis . ' sebesar ' . $this->rp($jumlah) . ' dicatat.');
+        return $this->balasForm(true, 'Pembayaran upah ' . $jenis . ' sebesar ' . $this->rp($jumlah) . ' dicatat.');
     }
 
     public function hapus($id)
@@ -172,18 +181,18 @@ class Upah extends BaseController
         $jenis = $this->upahKanon((string) $this->request->getPost('jenis'));
         $tarif = (float) str_replace(['.', ','], ['', '.'], (string) $this->request->getPost('tarif'));
         if ($jenis === null) {
-            return redirect()->to('/upah')->with('galat',
+            return $this->balasForm(false,
                 'Master upah hanya mengenal dua jenis: Pekerja dan Tukang. Varian lain dirapikan lewat tombol "Rapikan ke 2 Jenis" di Master Bahan & Upah.');
         }
         $ada = $this->db()->table('upah_master')
             ->where(['sekolah_id' => $this->sid(), 'jenis' => $jenis, 'is_deleted' => 0])
             ->countAllResults();
         if ($ada > 0) {
-            return redirect()->to('/upah')->with('galat', 'Jenis tenaga "' . $jenis . '" sudah ada di master upah; ubah tarifnya pada baris tabel.');
+            return $this->balasForm(false, 'Jenis tenaga "' . $jenis . '" sudah ada di master upah; ubah tarifnya pada baris tabel.');
         }
         $this->db()->table('upah_master')->ignore(true)->insert([
             'sekolah_id' => $this->sid(), 'jenis' => $jenis, 'satuan' => 'OH', 'tarif' => $tarif,
         ]);
-        return redirect()->to('/upah')->with('sukses', 'Jenis tenaga "' . $jenis . '" ditambahkan ke master upah.');
+        return $this->balasForm(true, 'Jenis tenaga "' . $jenis . '" ditambahkan ke master upah.');
     }
 }

@@ -26,21 +26,44 @@
 <?php if ($banding): ?>
 <div class="panel">
   <div class="bungkus-tabel">
-    <table class="satu-baris tabel-acuan" data-cari>
-      <colgroup><col style="width:34%"><col style="width:12%"><col style="width:19%"><col style="width:19%"><col style="width:16%"></colgroup>
-      <thead><tr><th>Komponen (nama acuan)</th><th>Satuan</th><th class="angka">Koef. Kita</th><th class="angka">Koef. Acuan</th><th class="angka">Selisih %</th></tr></thead>
-      <tbody>
-      <?php foreach ($banding['baris'] as $b): ?>
-        <tr>
-          <td><?= esc($b['nama']) ?></td>
-          <td><?= esc($b['satuan']) ?></td>
-          <td class="angka"><?= $b['kita'] !== null ? number_format($b['kita'], 5, ',', '.') : '—' ?></td>
-          <td class="angka"><?= $b['acuan'] !== null ? number_format($b['acuan'], 5, ',', '.') : '—' ?></td>
-          <td class="angka"><?php if ($b['selisih'] !== null): ?><span<?php if (abs($b['selisih']) > 25): ?> style="color:var(--ina-red-700,#a61e1e);font-weight:600"<?php elseif (abs($b['selisih']) <= 5): ?> style="color:var(--ina-green-700,#1e6b2a)"<?php endif; ?>><?= ($b['selisih'] > 0 ? '+' : '−') . number_format(abs($b['selisih']), 1, ',', '.') ?>%</span><?php else: ?>—<?php endif; ?></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
+    <?php
+    // Tabel banding komponen memakai helper tabel_bantu(); lebar kolom
+    // persen menggantikan colgroup (kelas tabel-acuan: table-layout fixed).
+    // Tabel ringkasan kunci-nilai di atas dipertahankan manual — bukan
+    // tabel daftar (tanpa kepala kolom).
+    $barisBanding = [];
+    foreach ($banding['baris'] as $b) {
+        $selisih = '—';
+        if ($b['selisih'] !== null) {
+            $gaya = '';
+            if (abs($b['selisih']) > 25) {
+                $gaya = ' style="color:var(--ina-red-700,#a61e1e);font-weight:600"';
+            } elseif (abs($b['selisih']) <= 5) {
+                $gaya = ' style="color:var(--ina-green-700,#1e6b2a)"';
+            }
+            $selisih = '<span' . $gaya . '>' . ($b['selisih'] > 0 ? '+' : '−') . number_format(abs($b['selisih']), 1, ',', '.') . '%</span>';
+        }
+        $barisBanding[] = ['sel' => [
+            (string) $b['nama'],
+            (string) $b['satuan'],
+            ['teks' => $b['kita'] !== null ? number_format($b['kita'], 5, ',', '.') : '—', 'angka' => true],
+            ['teks' => $b['acuan'] !== null ? number_format($b['acuan'], 5, ',', '.') : '—', 'angka' => true],
+            ['html' => $selisih, 'angka' => true],
+        ]];
+    }
+    echo tabel_bantu([
+        'class' => 'satu-baris tabel-acuan',
+        'cari' => '',
+        'kolom' => [
+            ['judul' => 'Komponen (nama acuan)', 'lebar' => '34%'],
+            ['judul' => 'Satuan', 'lebar' => '12%'],
+            ['judul' => 'Koef. Kita', 'angka' => true, 'lebar' => '19%'],
+            ['judul' => 'Koef. Acuan', 'angka' => true, 'lebar' => '19%'],
+            ['judul' => 'Selisih %', 'angka' => true, 'lebar' => '16%'],
+        ],
+        'baris' => $barisBanding,
+    ]);
+    ?>
   </div>
   <p class="kecil-teks">Selisih merah = menyimpang lebih dari 25% dari acuan. Koefisien agregat (pasir/kerikil) dikonversi antar satuan memakai berat isi standar aplikasi (pasir 1.400 kg/m³, kerikil 1.600 kg/m³). Komponen Kepala Tukang &amp; Mandor hanya ada di acuan (sudah dihilangkan dari aplikasi) dan tidak ikut harga acuan. Perbaikan koefisien dilakukan di modul Analisa (tombol Buka di Analisa di atas) — halaman ini hanya pembanding dan tidak mengubah data.</p>
 </div>

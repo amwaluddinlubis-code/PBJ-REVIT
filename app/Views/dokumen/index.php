@@ -10,45 +10,61 @@ $ikonPensil = '<span class="ikon-tombol" aria-hidden="true">' . ikonSvg('pensil'
 <div class="panel">
   <p>Aturan: BAP dibuat dari rincian SPK dan tombol Buat BAP hilang bila semua rincian sudah ter-BAP; <b>satu BAP hanya mempunyai satu BAST</b>. Form BAP &amp; BAST dibuka sebagai modal lewat tombol Ubah. Nomor surat mengikuti pola 422/&lt;JENIS&gt;/&lt;urut&gt;/&lt;tahun&gt;.</p>
   <p><a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-papan-nama') ?>" target="_blank">Cetak Papan Nama Kegiatan</a> <a class="tombol kecil abu" href="<?= base_url('invoice') ?>">Register Invoice →</a> <span class="kecil-teks">Papan nama kegiatan sesuai format Juknis, dicetak dari identitas sekolah. BAST Aset per gedung tersedia di halaman LPJ Gedung. Sesudah BAST, tagihan dicatat di Register Invoice.</span></p>
-  <table data-paginasi="10" data-cari="Cari SPK / paket / penyedia…">
-    <tr><th>SPK</th><th>Paket / Penyedia</th><th>BAP &amp; BAST</th><th>Cetak SPK</th></tr>
-    <?php foreach ($spk as $s): ?>
-    <tr>
-      <td><a href="<?= base_url('spk/detail/' . $s['id']) ?>"><?= (int) $s['nomor'] ?></a></td>
-      <td><?= esc($s['paket'] ?? '—') ?> · <span class="kecil-teks"><?= esc($s['penyedia'] ?? '—') ?></span></td>
-      <td style="white-space:nowrap">
-        <?php if ((int) $s['jumlah_detail'] === 0): ?>
-          <span class="kecil-teks" style="white-space:normal;display:inline-block;max-width:340px">SPK belum mempunyai rincian — <a href="<?= base_url('spk/detail/' . $s['id']) ?>">lengkapi rinciannya di Detail SPK</a> agar bisa dibuatkan BAP.</span>
-        <?php endif; ?>
-        <?php $pisah = false; ?>
-        <?php foreach ($bap[$s['id']] ?? [] as $b): ?>
-          <?= $pisah ? ' <span class="kecil-teks">|</span> ' : '' ?>
-          BAP urut <?= (int) $b['nomor_urut'] ?> · <?= esc(tgl($b['tanggal'] ?? null, '(tanggal belum diisi)')) ?>
-          <button type="button" class="tombol kecil abu" onclick="bukaModalBap('modal-bap-<?= (int) $b['id'] ?>', <?= esc(json_encode(['id' => (int) $b['id'], 'nomor_urut' => (int) $b['nomor_urut'], 'tanggal' => (string) ($b['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><?= $ikonPensil ?> Ubah</button><a class="tombol-cetak tc-bap" href="<?= base_url('dokumen/cetak-bap/' . $b['id']) ?>" target="_blank" title="Cetak BAP"><?= $ikonCetak ?> Cetak</a>
-          <?php foreach ($bast_per_bap[$b['id']] ?? [] as $bs): ?>
-            → BAST urut <?= (int) $bs['nomor_urut'] ?> · <?= esc(tgl($bs['tanggal'] ?? null, '(tanggal belum diisi)')) ?>
-            <button type="button" class="tombol kecil abu" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><?= $ikonPensil ?> Ubah</button><a class="tombol-cetak tc-bast" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank" title="Cetak BAST"><?= $ikonCetak ?> Cetak</a>
-          <?php endforeach; ?>
-          <?php if (empty($bast_per_bap[$b['id']])): ?>
-            <form class="inline" method="post" action="<?= base_url('dokumen/bast-buat/' . $b['id']) ?>"><?= csrf_field() ?><button class="kecil" type="submit">+ Buat BAST</button></form>
-          <?php endif; ?>
-          <?php $pisah = true; ?>
-        <?php endforeach; ?>
-        <?php foreach ($bast_umum[$s['id']] ?? [] as $bs): ?>
-          <?= $pisah ? ' <span class="kecil-teks">|</span> ' : '' ?>
-          BAST urut <?= (int) $bs['nomor_urut'] ?> · <?= esc(tgl($bs['tanggal'] ?? null, '(tanggal belum diisi)')) ?> <span class="kecil-teks">(belum tertaut BAP)</span>
-          <button type="button" class="tombol kecil abu" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><?= $ikonPensil ?> Ubah</button><a class="tombol-cetak tc-bast" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank" title="Cetak BAST"><?= $ikonCetak ?> Cetak</a>
-          <?php $pisah = true; ?>
-        <?php endforeach; ?>
-        <?php if ((int) $s['jumlah_terbap'] < (int) $s['jumlah_detail']): ?>
-          <?= $pisah ? ' <span class="kecil-teks">|</span> ' : '' ?>
-          <form class="inline" method="post" action="<?= base_url('dokumen/bap-buat/' . $s['id']) ?>"><?= csrf_field() ?><button class="kecil" type="submit">+ Buat BAP</button></form>
-        <?php endif; ?>
-      </td>
-      <td><a class="tombol-cetak tc-spk" href="<?= base_url('dokumen/cetak-spk/' . $s['id']) ?>" target="_blank" title="Cetak SPK"><?= $ikonCetak ?> Cetak</a></td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  // Tabel utama dirender helper tabel_bantu; sel BAP & BAST yang kompleks
+  // dibangun sebagai string HTML (tombol Ubah/Cetak + form Buat persis sama).
+  $barisDok = [];
+  foreach ($spk as $s) {
+      $selBapBast = '';
+      if ((int) $s['jumlah_detail'] === 0) {
+          $selBapBast .= '<span class="kecil-teks" style="white-space:normal;display:inline-block;max-width:340px">SPK belum mempunyai rincian — <a href="' . base_url('spk/detail/' . $s['id']) . '">lengkapi rinciannya di Detail SPK</a> agar bisa dibuatkan BAP.</span>';
+      }
+      $pisah = false;
+      foreach ($bap[$s['id']] ?? [] as $b) {
+          $selBapBast .= ($pisah ? ' <span class="kecil-teks">|</span> ' : '')
+              . 'BAP urut ' . (int) $b['nomor_urut'] . ' · ' . esc(tgl($b['tanggal'] ?? null, '(tanggal belum diisi)'))
+              . ' <button type="button" class="tombol kecil abu" onclick="bukaModalBap(\'modal-bap-' . (int) $b['id'] . '\', ' . esc(json_encode(['id' => (int) $b['id'], 'nomor_urut' => (int) $b['nomor_urut'], 'tanggal' => (string) ($b['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') . ')">' . $ikonPensil . ' Ubah</button>'
+              . '<a class="tombol-cetak tc-bap" href="' . base_url('dokumen/cetak-bap/' . $b['id']) . '" target="_blank" title="Cetak BAP">' . $ikonCetak . ' Cetak</a>';
+          foreach ($bast_per_bap[$b['id']] ?? [] as $bs) {
+              $selBapBast .= ' → BAST urut ' . (int) $bs['nomor_urut'] . ' · ' . esc(tgl($bs['tanggal'] ?? null, '(tanggal belum diisi)'))
+                  . ' <button type="button" class="tombol kecil abu" onclick="bukaFormModal(\'modal-bast-' . (int) $bs['id'] . '\', ' . esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') . ')">' . $ikonPensil . ' Ubah</button>'
+                  . '<a class="tombol-cetak tc-bast" href="' . base_url('dokumen/cetak-bast/' . $bs['id']) . '" target="_blank" title="Cetak BAST">' . $ikonCetak . ' Cetak</a>';
+          }
+          if (empty($bast_per_bap[$b['id']])) {
+              $selBapBast .= ' <form class="inline" method="post" action="' . base_url('dokumen/bast-buat/' . $b['id']) . '">' . csrf_field() . '<button class="kecil" type="submit">+ Buat BAST</button></form>';
+          }
+          $pisah = true;
+      }
+      foreach ($bast_umum[$s['id']] ?? [] as $bs) {
+          $selBapBast .= ($pisah ? ' <span class="kecil-teks">|</span> ' : '')
+              . 'BAST urut ' . (int) $bs['nomor_urut'] . ' · ' . esc(tgl($bs['tanggal'] ?? null, '(tanggal belum diisi)')) . ' <span class="kecil-teks">(belum tertaut BAP)</span>'
+              . ' <button type="button" class="tombol kecil abu" onclick="bukaFormModal(\'modal-bast-' . (int) $bs['id'] . '\', ' . esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') . ')">' . $ikonPensil . ' Ubah</button>'
+              . '<a class="tombol-cetak tc-bast" href="' . base_url('dokumen/cetak-bast/' . $bs['id']) . '" target="_blank" title="Cetak BAST">' . $ikonCetak . ' Cetak</a>';
+          $pisah = true;
+      }
+      if ((int) $s['jumlah_terbap'] < (int) $s['jumlah_detail']) {
+          $selBapBast .= ($pisah ? ' <span class="kecil-teks">|</span> ' : '')
+              . ' <form class="inline" method="post" action="' . base_url('dokumen/bap-buat/' . $s['id']) . '">' . csrf_field() . '<button class="kecil" type="submit">+ Buat BAP</button></form>';
+      }
+      $barisDok[] = ['sel' => [
+          ['html' => '<a href="' . base_url('spk/detail/' . $s['id']) . '">' . (int) $s['nomor'] . '</a>'],
+          ['html' => esc($s['paket'] ?? '—') . ' · <span class="kecil-teks">' . esc($s['penyedia'] ?? '—') . '</span>'],
+          ['html' => $selBapBast, 'gaya' => 'white-space:nowrap'],
+          ['html' => '<a class="tombol-cetak tc-spk" href="' . base_url('dokumen/cetak-spk/' . $s['id']) . '" target="_blank" title="Cetak SPK">' . $ikonCetak . ' Cetak</a>'],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari SPK / paket / penyedia…',
+      'paginasi' => 10,
+      'kolom' => [
+          ['judul' => 'SPK'],
+          ['judul' => 'Paket / Penyedia'],
+          ['judul' => 'BAP & BAST'],
+          ['judul' => 'Cetak SPK'],
+      ],
+      'baris' => $barisDok,
+  ]);
+  ?>
 </div>
 
 <?php foreach ($spk as $s): ?>

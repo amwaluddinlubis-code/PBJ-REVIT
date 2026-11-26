@@ -1,4 +1,5 @@
-<?php /* Partial bahan/index: panel Master Upah (tabel tarif, bulk, kosongkan, rapikan) + sub-partial duplikat & gabung manual. */ ?>
+<?php /* Partial bahan/index: panel Master Upah (tabel tarif, bulk, kosongkan, rapikan) + sub-partial duplikat & gabung manual.
+   Tabel tarif dirender helper tabel_bantu() (data-cari tetap; saringan Alpine per baris via atribut tr). */ ?>
 <details class="panel panel-lipat" data-lipat-id="master-upah" x-data="{
   kataUpah: '',
   terpilihUpah: [],
@@ -38,25 +39,37 @@
       <button type="submit">Rapikan ke 2 Jenis (Pekerja &amp; Tukang)</button>
     </form>
   </div>
-  <table data-cari="Cari jenis tenaga…">
-    <tr>
-      <th style="width:34px"><input type="checkbox" title="Pilih semua jenis tenaga" @change="pilihSemuaUpah($event)"></th>
-      <th>Jenis Tenaga</th><th>Satuan</th><th class="angka">Tarif</th><th style="width:300px">Ubah Tarif</th><th></th>
-    </tr>
-    <?php foreach ($upah as $u): ?>
-    <tr data-jenis="<?= esc(mb_strtolower($u['jenis'])) ?>" x-show="kataUpah === '' || $el.dataset.jenis.includes(kataUpah.toLowerCase())">
-      <td><input type="checkbox" data-pilih-upah value="<?= (int) $u['id'] ?>" x-model="terpilihUpah"></td>
-      <td><?= esc($u['jenis']) ?></td>
-      <td><?= esc($u['satuan'] ?? 'OH') ?></td>
-      <td class="angka"><?= rp($u['tarif']) ?></td>
-      <td>
-        <form class="inline" method="post" action="<?= base_url('bahan/upah-perbarui/' . $u['id']) ?>"><?= csrf_field() ?><input type="text" inputmode="numeric" data-uang name="tarif" value="<?= (int) $u['tarif'] ?>" size="10"> <button class="kecil" type="submit">Simpan</button></form>
-      </td>
-      <td><form class="inline" method="post" action="<?= base_url('bahan/upah-hapus/' . $u['id']) ?>" data-konfirmasi="Hapus jenis tenaga ini dari Master Upah? Pembayaran lama tidak berubah."><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
-    </tr>
-    <?php endforeach; ?>
-    <?php if ($upah === []): ?><tr><td colspan="6">Master upah masih kosong.</td></tr><?php endif; ?>
-  </table>
+  <?php
+  $barisUpah = [];
+  foreach ($upah as $u) {
+      $barisUpah[] = [
+          'atribut' => 'data-jenis="' . esc(mb_strtolower($u['jenis']), 'attr') . '" x-show="kataUpah === \'\' || $el.dataset.jenis.includes(kataUpah.toLowerCase())"',
+          'sel' => [
+              ['html' => '<input type="checkbox" data-pilih-upah value="' . (int) $u['id'] . '" x-model="terpilihUpah">'],
+              (string) $u['jenis'],
+              (string) ($u['satuan'] ?? 'OH'),
+              ['teks' => rp($u['tarif']), 'angka' => true],
+              ['html' => '<form class="inline" method="post" action="' . base_url('bahan/upah-perbarui/' . $u['id']) . '">' . csrf_field() . '<input type="text" inputmode="numeric" data-uang name="tarif" value="' . (int) $u['tarif'] . '" size="10"> <button class="kecil" type="submit">Simpan</button></form>'],
+              ['html' => '<form class="inline" method="post" action="' . base_url('bahan/upah-hapus/' . $u['id']) . '" data-konfirmasi="Hapus jenis tenaga ini dari Master Upah? Pembayaran lama tidak berubah.">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>'],
+          ],
+      ];
+  }
+  if ($upah === []) {
+      $barisUpah[] = ['sel' => [['teks' => 'Master upah masih kosong.', 'colspan' => 6]]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari jenis tenaga…',
+      'kolom' => [
+          ['judul_html' => '<input type="checkbox" title="Pilih semua jenis tenaga" @change="pilihSemuaUpah($event)">', 'lebar' => '34px'],
+          ['judul' => 'Jenis Tenaga'],
+          ['judul' => 'Satuan'],
+          ['judul' => 'Tarif', 'angka' => true],
+          ['judul' => 'Ubah Tarif', 'lebar' => '300px'],
+          ['judul' => ''],
+      ],
+      'baris' => $barisUpah,
+  ]);
+  ?>
   <form method="post" action="<?= base_url('bahan/upah-simpan') ?>" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:end">
     <?= csrf_field() ?>
     <label>Jenis tenaga baru <input type="text" name="jenis" required placeholder="mis. Tukang Batu"></label>

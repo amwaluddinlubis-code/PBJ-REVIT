@@ -117,6 +117,7 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-penyedia','ids-penyedia')">
   <h2>Master Penyedia</h2>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+    <button type="button" class="tombol" onclick="bukaFormModal('modal-penyedia')">+ Tambah Penyedia</button>
     <form id="form-bulk-penyedia" method="post" action="<?= base_url('pengaturan/penyedia-hapus-massal') ?>" data-konfirmasi-judul="Hapus Penyedia Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
       <?= csrf_field() ?>
       <span id="ids-penyedia"></span>
@@ -127,52 +128,56 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
       <button type="submit" class="bahaya">Kosongkan Master Penyedia</button>
     </form>
   </div>
-  <table data-cari="Cari penyedia…">
-    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua penyedia" @change="pilihSemua($event)"></th><th>Nama</th><th>Alamat</th><th>Penandatangan</th><th></th></tr>
-    <?php foreach ($penyedia as $p): ?>
-    <tr><td><input type="checkbox" data-pilih value="<?= (int) $p['id'] ?>" x-model="terpilih"></td><td><?= esc($p['nama']) ?></td><td><?= esc($p['alamat'] ?? '') ?></td><td><?= esc($p['ttd_nama'] ?? '') ?></td>
-      <td style="white-space:nowrap">
-        <button class="kecil" type="button" data-ubah-penyedia data-id="<?= (int) $p['id'] ?>" data-nama="<?= esc($p['nama'], 'attr') ?>" data-alamat="<?= esc($p['alamat'] ?? '', 'attr') ?>" data-ttd="<?= esc($p['ttd_nama'] ?? '', 'attr') ?>">Ubah</button>
-        <form class="inline" method="post" action="<?= base_url('pengaturan/penyedia-hapus/' . $p['id']) ?>" data-konfirmasi="Hapus penyedia ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>
-      </td></tr>
-    <?php endforeach; ?>
-  </table>
-  <form id="form-penyedia" class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('pengaturan/penyedia-tambah') ?>" style="margin-top:12px">
-    <?= csrf_field() ?>
-    <label>Nama Penyedia <input name="nama" required></label>
-    <label>Alamat <input name="alamat"></label>
-    <label>Penandatangan <input name="ttd_nama"></label>
-    <div class="aksi md:col-span-2">
-      <button type="submit" id="tombol-penyedia">Tambah Penyedia</button>
-      <button type="button" id="batal-penyedia" class="abu" style="display:none">Batal Ubah</button>
-    </div>
-  </form>
+<?php
+$ikonPensil = '<span class="ikon-tombol" aria-hidden="true">' . ikonSvg('pensil') . '</span>';
+$barisPenyedia = [];
+foreach ($penyedia as $p) {
+    $barisPenyedia[] = [
+        'sel' => [
+            ['html' => '<input type="checkbox" data-pilih value="' . (int) $p['id'] . '" x-model="terpilih">'],
+            (string) $p['nama'],
+            (string) ($p['alamat'] ?? ''),
+            (string) ($p['ttd_nama'] ?? ''),
+            ['html' => '<button type="button" class="tombol kecil abu" data-id="' . (int) $p['id'] . '" data-nama="' . esc($p['nama'], 'attr') . '" data-alamat="' . esc($p['alamat'] ?? '', 'attr') . '" data-ttd="' . esc($p['ttd_nama'] ?? '', 'attr') . '" onclick="bukaPenyediaUbah(this)">' . $ikonPensil . ' Ubah</button> <form class="inline" method="post" action="' . base_url('pengaturan/penyedia-hapus/' . $p['id']) . '" data-konfirmasi="Hapus penyedia ini?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>', 'gaya' => 'white-space:nowrap'],
+        ],
+    ];
+}
+echo tabel_bantu([
+    'cari' => 'Cari penyedia…',
+    'paginasi' => false,
+    'kolom' => [
+        ['judul_html' => '<input type="checkbox" title="Pilih semua penyedia" @change="pilihSemua($event)">', 'lebar' => '34px'],
+        ['judul' => 'Nama'],
+        ['judul' => 'Alamat'],
+        ['judul' => 'Penandatangan'],
+        ['judul' => ''],
+    ],
+    'baris' => $barisPenyedia,
+]);
+?>
 </div>
+<?= form_modal([
+    'id' => 'modal-penyedia',
+    'judul' => 'Tambah Penyedia',
+    'judul_ubah' => 'Ubah Penyedia',
+    'aksi' => base_url('pengaturan/penyedia-tambah'),
+    'lebar' => 560,
+    'kolom' => [
+        ['nama' => 'nama', 'label' => 'Nama Penyedia', 'jenis' => 'teks', 'wajib' => true],
+        ['nama' => 'alamat', 'label' => 'Alamat', 'jenis' => 'teks'],
+        ['nama' => 'ttd_nama', 'label' => 'Penandatangan', 'jenis' => 'teks'],
+    ],
+    'tombol' => ['simpan_teks' => 'Tambah Penyedia', 'simpan_teks_ubah' => 'Simpan Perubahan'],
+]) ?>
 <script>
-(function () {
-  var form = document.getElementById('form-penyedia');
-  if (!form) return;
-  var tombol = document.getElementById('tombol-penyedia');
-  var batal = document.getElementById('batal-penyedia');
-  var aksiTambah = form.getAttribute('action');
-  function modeTambah() {
-    form.setAttribute('action', aksiTambah);
-    form.reset();
-    tombol.textContent = 'Tambah Penyedia';
-    batal.style.display = 'none';
-  }
-  batal.addEventListener('click', modeTambah);
-  document.querySelectorAll('[data-ubah-penyedia]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      form.setAttribute('action', aksiTambah.replace('penyedia-tambah', 'penyedia-ubah/' + btn.dataset.id));
-      form.querySelector('[name=nama]').value = btn.dataset.nama || '';
-      form.querySelector('[name=alamat]').value = btn.dataset.alamat || '';
-      form.querySelector('[name=ttd_nama]').value = btn.dataset.ttd || '';
-      tombol.textContent = 'Simpan Perubahan';
-      batal.style.display = '';
-      form.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      form.querySelector('[name=nama]').focus();
-    });
+// Jembatan modal Penyedia: hanya mengoper data baris (atribut data-*
+// tombol Ubah) ke bukaFormModal.
+function bukaPenyediaUbah(btn) {
+  window.bukaFormModal('modal-penyedia', {
+    id: btn.dataset.id,
+    nama: btn.dataset.nama || '',
+    alamat: btn.dataset.alamat || '',
+    ttd_nama: btn.dataset.ttd || ''
   });
-})();
+}
 </script>

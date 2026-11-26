@@ -28,6 +28,7 @@ $pct = static function ($n) {
 
   <form method="post" action="<?= base_url('simulasi/simpan') ?>">
     <?= csrf_field() ?>
+    <?php /* Grid realisasi dipertahankan manual: matriks isian minggu x gedung adalah inti simpan simulasi. */ ?>
     <div class="bungkus-tabel"><table>
       <tr><th>Minggu</th><th>Tanggal</th>
       <?php foreach ($gedung as $g): ?><th class="angka"><?= esc($g['nama']) ?> (%)</th><?php endforeach; ?>
@@ -49,43 +50,69 @@ $pct = static function ($n) {
 <details class="panel panel-lipat" data-lipat-id="simulasi-2-kedudukan-per-gedung-s-d-minggu-berjalan">
   <summary>2. Kedudukan per Gedung s.d. Minggu Berjalan (ke-<?= (int) $berjalan ?>)</summary>
 
-  <div class="bungkus-tabel"><table>
-    <tr><th>Gedung</th><th class="angka">Bobot Gedung</th><th class="angka">Rencana Kumulatif</th><th class="angka">Realisasi Kumulatif</th><th class="angka">Selisih</th><th>Keterangan</th></tr>
-    <?php foreach ($ringkas as $r): $sel = $r['realisasi_kum'] - $r['rencana_kum']; ?>
-    <tr>
-      <td><strong><?= esc($r['nama']) ?></strong></td>
-      <td class="angka"><?= $pct($r['bobot_total']) ?>%</td>
-      <td class="angka"><?= $pct($r['rencana_kum']) ?>%</td>
-      <td class="angka"><?= $pct($r['realisasi_kum']) ?>%</td>
-      <td class="angka"><?= ($sel >= 0 ? '+' : '') . $pct($sel) ?>%</td>
-      <td><?= $berjalan === 0 ? 'Belum ada realisasi dimasukkan' : ($sel >= 0.005 ? 'Lebih cepat dari rencana' : ($sel <= -0.005 ? 'Tertinggal dari rencana — sisa pekerjaan digeser & dikejar pada minggu berikutnya' : 'Sesuai rencana')) ?></td>
-    </tr>
-    <?php endforeach; ?>
-  </table></div>
+  <div class="bungkus-tabel"><?php
+  $barisKedudukan = [];
+  foreach ($ringkas as $r) {
+      $sel = $r['realisasi_kum'] - $r['rencana_kum'];
+      $barisKedudukan[] = ['sel' => [
+          ['html' => '<strong>' . esc($r['nama']) . '</strong>'],
+          ['teks' => $pct($r['bobot_total']) . '%', 'angka' => true],
+          ['teks' => $pct($r['rencana_kum']) . '%', 'angka' => true],
+          ['teks' => $pct($r['realisasi_kum']) . '%', 'angka' => true],
+          ['teks' => ($sel >= 0 ? '+' : '') . $pct($sel) . '%', 'angka' => true],
+          $berjalan === 0 ? 'Belum ada realisasi dimasukkan' : ($sel >= 0.005 ? 'Lebih cepat dari rencana' : ($sel <= -0.005 ? 'Tertinggal dari rencana — sisa pekerjaan digeser & dikejar pada minggu berikutnya' : 'Sesuai rencana')),
+      ]];
+  }
+  echo tabel_bantu([
+      'kolom' => [
+          ['judul' => 'Gedung'],
+          ['judul' => 'Bobot Gedung', 'angka' => true],
+          ['judul' => 'Rencana Kumulatif', 'angka' => true],
+          ['judul' => 'Realisasi Kumulatif', 'angka' => true],
+          ['judul' => 'Selisih', 'angka' => true],
+          ['judul' => 'Keterangan'],
+      ],
+      'baris' => $barisKedudukan,
+  ]);
+  ?></div>
 </details>
 
 <details class="panel panel-lipat" data-lipat-id="simulasi-3-ringkasan-mingguan">
   <summary>3. Ringkasan Mingguan</summary>
 
-  <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari minggu…">
-    <tr><th>Minggu</th><th>Tanggal</th><th>Status</th><th class="angka">Bobot Rencana</th><th class="angka">Belanja Bahan</th><th class="angka">Nilai Upah</th><th class="angka">Perkiraan Orang</th><th data-tanpa-urut>Rincian</th></tr>
-    <?php foreach ($hasil as $h):
+  <div class="bungkus-tabel"><?php
+  $barisRingkas = [];
+  foreach ($hasil as $h) {
       $nb = array_sum(array_column($h['bahan'], 'nilai'));
       $nu = array_sum(array_map(static fn ($u) => (float) $u['nilai'], $h['upah']));
       $org = array_sum(array_map(static fn ($u) => (int) $u['jumlah_pekerja'], $h['upah']));
-    ?>
-    <tr>
-      <td><strong><?= (int) $h['ke'] ?></strong></td>
-      <td><?= esc(tgl($h['mulai'])) ?> – <?= esc(tgl($h['selesai'])) ?></td>
-      <td><?= $h['lewat'] ? 'Sudah lewat (dari realisasi)' : 'Rencana sisa' ?></td>
-      <td class="angka"><?= $pct($h['bobot_rencana']) ?>%</td>
-      <td class="angka"><?= rp($nb) ?></td>
-      <td class="angka"><?= rp($nu) ?></td>
-      <td class="angka"><?= $org ?></td>
-      <td><a class="tombol kecil" href="#minggu-<?= (int) $h['ke'] ?>">Lihat</a></td>
-    </tr>
-    <?php endforeach; ?>
-  </table></div>
+      $barisRingkas[] = ['sel' => [
+          ['html' => '<strong>' . (int) $h['ke'] . '</strong>'],
+          tgl($h['mulai']) . ' – ' . tgl($h['selesai']),
+          $h['lewat'] ? 'Sudah lewat (dari realisasi)' : 'Rencana sisa',
+          ['teks' => $pct($h['bobot_rencana']) . '%', 'angka' => true],
+          ['teks' => rp($nb), 'angka' => true],
+          ['teks' => rp($nu), 'angka' => true],
+          ['teks' => (string) $org, 'angka' => true],
+          ['html' => '<a class="tombol kecil" href="#minggu-' . (int) $h['ke'] . '">Lihat</a>'],
+      ]];
+  }
+  echo tabel_bantu([
+      'class' => 'satu-baris',
+      'cari' => 'Cari minggu…',
+      'kolom' => [
+          ['judul' => 'Minggu'],
+          ['judul' => 'Tanggal'],
+          ['judul' => 'Status'],
+          ['judul' => 'Bobot Rencana', 'angka' => true],
+          ['judul' => 'Belanja Bahan', 'angka' => true],
+          ['judul' => 'Nilai Upah', 'angka' => true],
+          ['judul' => 'Perkiraan Orang', 'angka' => true],
+          ['judul' => 'Rincian', 'atribut' => 'data-tanpa-urut'],
+      ],
+      'baris' => $barisRingkas,
+  ]);
+  ?></div>
   <p class="kecil-teks">Belanja bahan adalah kebutuhan kotor minggu itu pada harga acuan aplikasi — saat pelaksanaan kurangi stok tersedia &amp; SPK berjalan (gunakan <a href="<?= base_url('rencana-mingguan') ?>">Rencana Mingguan</a> untuk daftar belanja bersihnya). Perkiraan orang = kebutuhan OH ÷ 6 hari kerja.</p>
 </details>
 
@@ -114,25 +141,63 @@ $pct = static function ($n) {
   <?php if ($h['bahan'] === []): ?>
   <p class="kecil-teks">Tidak ada kebutuhan bahan dari pekerjaan BOQ minggu ini.</p>
   <?php else: ?>
-  <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari bahan…" data-paginasi="25">
-    <tr><th>Kode</th><th>Bahan</th><th class="angka">Qty</th><th>Satuan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai</th></tr>
-    <?php foreach ($h['bahan'] as $b): ?>
-    <tr><td><?= esc($b['kode']) ?></td><td><?= esc($b['nama']) ?></td><td class="angka"><?= $num($b['qty']) ?></td><td><?= esc($b['satuan']) ?></td><td class="angka"><?= rp($b['harga']) ?></td><td class="angka"><?= rp($b['nilai']) ?></td></tr>
-    <?php endforeach; ?>
-    <tr class="total"><td colspan="5"><strong>Total belanja minggu ini</strong></td><td class="angka"><strong><?= rp(array_sum(array_column($h['bahan'], 'nilai'))) ?></strong></td></tr>
-  </table></div>
+  <div class="bungkus-tabel"><?php
+  $barisBahanSim = [];
+  foreach ($h['bahan'] as $b) {
+      $barisBahanSim[] = ['sel' => [
+          (string) $b['kode'],
+          (string) $b['nama'],
+          ['teks' => $num($b['qty']), 'angka' => true],
+          (string) $b['satuan'],
+          ['teks' => rp($b['harga']), 'angka' => true],
+          ['teks' => rp($b['nilai']), 'angka' => true],
+      ]];
+  }
+  $barisBahanSim[] = ['total' => [
+      ['html' => '<strong>Total belanja minggu ini</strong>', 'colspan' => 5],
+      ['html' => '<strong>' . rp(array_sum(array_column($h['bahan'], 'nilai'))) . '</strong>', 'angka' => true],
+  ], 'class' => 'total'];
+  echo tabel_bantu([
+      'class' => 'satu-baris',
+      'cari' => 'Cari bahan…',
+      'paginasi' => 25,
+      'kolom' => [
+          ['judul' => 'Kode'],
+          ['judul' => 'Bahan'],
+          ['judul' => 'Qty', 'angka' => true],
+          ['judul' => 'Satuan'],
+          ['judul' => 'Harga Acuan', 'angka' => true],
+          ['judul' => 'Nilai', 'angka' => true],
+      ],
+      'baris' => $barisBahanSim,
+  ]);
+  ?></div>
   <?php endif; ?>
 
   <h3>Kebutuhan Pekerja</h3>
   <?php if ($h['upah'] === []): ?>
   <p class="kecil-teks">Tidak ada kebutuhan upah dari pekerjaan BOQ minggu ini.</p>
   <?php else: ?>
-  <div class="bungkus-tabel"><table>
-    <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Perkiraan Orang (6 hari)</th><th class="angka">Nilai Upah</th></tr>
-    <?php foreach ($h['upah'] as $u): ?>
-    <tr><td><?= esc($u['jenis']) ?></td><td class="angka"><?= $num($u['orang_hari']) ?></td><td class="angka"><?= (int) $u['jumlah_pekerja'] ?></td><td class="angka"><?= rp($u['nilai']) ?></td></tr>
-    <?php endforeach; ?>
-  </table></div>
+  <div class="bungkus-tabel"><?php
+  $barisUpahSim = [];
+  foreach ($h['upah'] as $u) {
+      $barisUpahSim[] = ['sel' => [
+          (string) $u['jenis'],
+          ['teks' => $num($u['orang_hari']), 'angka' => true],
+          ['teks' => (string) (int) $u['jumlah_pekerja'], 'angka' => true],
+          ['teks' => rp($u['nilai']), 'angka' => true],
+      ]];
+  }
+  echo tabel_bantu([
+      'kolom' => [
+          ['judul' => 'Jenis Tenaga'],
+          ['judul' => 'Kebutuhan (OH)', 'angka' => true],
+          ['judul' => 'Perkiraan Orang (6 hari)', 'angka' => true],
+          ['judul' => 'Nilai Upah', 'angka' => true],
+      ],
+      'baris' => $barisUpahSim,
+  ]);
+  ?></div>
   <?php endif; ?>
 
   <?php if ($h['non_boq'] !== []): ?>

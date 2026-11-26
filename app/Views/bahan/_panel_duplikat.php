@@ -1,4 +1,5 @@
-<?php /* Partial bahan/index: ALERT duplikat bahan + form Perbaiki & Gabungkan per grup. */ ?>
+<?php /* Partial bahan/index: ALERT duplikat bahan + form Perbaiki & Gabungkan per grup.
+   Tabel anggota dirender helper tabel_bantu() (radio penentu baris utama + hidden anggota[]). */ ?>
 <?php if (! empty($duplikatBahan)): ?>
 <details class="panel panel-lipat" data-lipat-id="alert-duplikat" open style="border-left:4px solid var(--ta-kuning,#b58900)">
   <summary>ALERT: Bahan Sama dengan Satuan / Harga Berbeda</summary>
@@ -6,19 +7,30 @@
   <?php foreach ($duplikatBahan as $grup): ?>
   <form method="post" action="<?= base_url('bahan/gabung') ?>" data-konfirmasi="Gabungkan duplikat bahan ini? Referensi dari baris lain akan dialihkan ke baris utama yang dipilih.">
     <?= csrf_field() ?>
-    <table>
-      <tr><th style="width:36px">Utama</th><th>Kode</th><th>Nama</th><th>Satuan</th><th class="angka">Harga RAB</th><th class="angka">Qty RAB Total</th></tr>
-      <?php foreach ($grup['anggota'] as $i => $b): ?>
-      <tr>
-        <td><input type="radio" name="utama" value="<?= (int) $b['id'] ?>" <?= $i === 0 ? 'checked' : '' ?>></td>
-        <td><?= esc($b['kode']) ?><input type="hidden" name="anggota[]" value="<?= (int) $b['id'] ?>"></td>
-        <td><?= esc($b['nama']) ?></td>
-        <td><?= esc($b['satuan'] ?? '') ?></td>
-        <td class="angka"><?= rp($b['harga_rab']) ?></td>
-        <td class="angka"><?= number_format((float) $b['qty_rkb'] + (float) $b['qty_adm'] + (float) $b['qty_toilet'], 2, ',', '.') ?></td>
-      </tr>
-      <?php endforeach; ?>
-    </table>
+    <?php
+    $barisGrup = [];
+    foreach ($grup['anggota'] as $i => $b) {
+        $barisGrup[] = ['sel' => [
+            ['html' => '<input type="radio" name="utama" value="' . (int) $b['id'] . '"' . ($i === 0 ? ' checked' : '') . '>'],
+            ['html' => esc($b['kode']) . '<input type="hidden" name="anggota[]" value="' . (int) $b['id'] . '">'],
+            (string) $b['nama'],
+            (string) ($b['satuan'] ?? ''),
+            ['teks' => rp($b['harga_rab']), 'angka' => true],
+            ['teks' => number_format((float) $b['qty_rkb'] + (float) $b['qty_adm'] + (float) $b['qty_toilet'], 2, ',', '.'), 'angka' => true],
+        ]];
+    }
+    echo tabel_bantu([
+        'kolom' => [
+            ['judul' => 'Utama', 'lebar' => '36px'],
+            ['judul' => 'Kode'],
+            ['judul' => 'Nama'],
+            ['judul' => 'Satuan'],
+            ['judul' => 'Harga RAB', 'angka' => true],
+            ['judul' => 'Qty RAB Total', 'angka' => true],
+        ],
+        'baris' => $barisGrup,
+    ]);
+    ?>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:8px 0">
       <label>Satuan final (perbaiki bila perlu) <input type="text" name="satuan_final" value="<?= esc($grup['anggota'][0]['satuan'] ?? '') ?>" size="8"></label>
       <label>Harga final (Rp) <input type="text" data-uang name="harga_final" value="<?= (int) $grup['anggota'][0]['harga_rab'] ?>"></label>

@@ -1,20 +1,8 @@
-<div class="panel">
-  <h2>Tambah Pengguna</h2>
-  <form method="post" action="<?= base_url('pengguna/simpan') ?>">
-    <?= csrf_field() ?>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-      <label>Username<input type="text" name="username" required placeholder="mis. sarmin"></label>
-      <label>Nama lengkap<input type="text" name="nama" required placeholder="mis. Sarmin"></label>
-      <label>Peran
-        <select data-select-cari name="peran">
-          <?php foreach ($pilihan_peran as $p): ?><option value="<?= esc($p) ?>"<?= $p === 'operator' ? ' selected' : '' ?>><?= esc(ucfirst($p)) ?></option><?php endforeach; ?>
-        </select>
-      </label>
-      <label>Kata sandi awal (min. 6 karakter)<input type="text" name="sandi" required placeholder="dibagikan ke pengguna, nanti diganti sendiri"></label>
-      <div class="aksi md:col-span-2"><button type="submit">Tambah Pengguna</button></div>
-    </div>
-  </form>
-</div>
+<?php /* Manajemen User: tabel helper tabel_bantu + modal form_modal
+   (Tambah & Ubah; simpan AJAX ke pengguna/simpan, id tersembunyi
+   membedakan baru/ubah; pengguna/{id}/ubah tetap ada). Hapus tetap
+   form baris berkonfirmasi (tersembunyi untuk akun sendiri). */ ?>
+<div class="aksi md:col-span-2" style="margin:0 0 12px"><button type="button" class="tombol" onclick="bukaPenggunaBaru()">+ Tambah Pengguna</button></div>
 
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-pengguna','ids-pengguna')">
   <h2>Daftar Pengguna</h2>
@@ -26,50 +14,102 @@
     </form>
     <span class="kecil-teks">Tidak ada tombol Kosongkan di modul ini — daftar pengguna tidak boleh dikosongkan.</span>
   </div>
-  <table data-paginasi="25" data-cari="Cari pengguna…">
-    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua pengguna" @change="pilihSemua($event)"></th><th>Username</th><th>Nama</th><th>Peran</th><th>Terdaftar</th><th>Aksi</th></tr>
-    <?php foreach ($daftar as $u): ?>
-    <tr>
-      <td><input type="checkbox" data-pilih value="<?= (int) $u['id'] ?>" x-model="terpilih"></td>
-      <td><b><?= esc($u['username']) ?></b><?= (int) $u['id'] === $saya ? ' <span class="lencana biru">Anda</span>' : '' ?></td>
-      <td><?= esc($u['nama']) ?></td>
-      <td><span class="lencana <?= $u['peran'] === 'admin' ? 'biru' : 'abu' ?>"><?= esc(ucfirst($u['peran'])) ?></span></td>
-      <td><?= esc(tgl($u['created_at'] ?? null)) ?></td>
-      <td style="white-space:nowrap">
-        <button type="button" class="kecil" onclick="isiUbah(<?= (int) $u['id'] ?>, '<?= esc($u['username'], 'attr') ?>', '<?= esc($u['nama'], 'js') ?>', '<?= esc($u['peran'], 'js') ?>')">Ubah</button>
-        <?php if ((int) $u['id'] !== $saya): ?>
-        <form class="inline" method="post" action="<?= base_url('pengguna/' . $u['id'] . '/hapus') ?>" data-konfirmasi="Hapus pengguna <?= esc($u['username'], 'attr') ?>?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>
-        <?php endif; ?>
-      </td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
-</div>
-
-<div class="panel" id="panel-ubah" style="display:none">
-  <h2>Ubah Pengguna: <span id="ubah-username"></span></h2>
-  <form method="post" id="form-ubah" action="">
-    <?= csrf_field() ?>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-      <label>Nama lengkap<input type="text" name="nama" id="ubah-nama" required></label>
-      <label>Peran
-        <select data-select-cari name="peran" id="ubah-peran">
-          <?php foreach ($pilihan_peran as $p): ?><option value="<?= esc($p) ?>"><?= esc(ucfirst($p)) ?></option><?php endforeach; ?>
-        </select>
-      </label>
-      <label>Kata sandi baru — kosongkan bila tidak diganti<input type="text" name="sandi" placeholder="min. 6 karakter"></label>
-      <div class="aksi md:col-span-2"><button type="submit">Simpan Perubahan</button></div>
-    </div>
-  </form>
-</div>
-
-<script>
-function isiUbah(id, username, nama, peran) {
-  document.getElementById('panel-ubah').style.display = 'block';
-  document.getElementById('ubah-username').textContent = username;
-  document.getElementById('ubah-nama').value = nama;
-  document.getElementById('ubah-peran').value = peran;
-  document.getElementById('form-ubah').action = '<?= base_url('pengguna') ?>/' + id + '/ubah';
-  document.getElementById('panel-ubah').scrollIntoView({ behavior: 'smooth' });
+<?php
+$ikonPensil = '<span class="ikon-tombol" aria-hidden="true">' . ikonSvg('pensil') . '</span>';
+$barisPengguna = [];
+foreach ($daftar as $u) {
+    $aksi = '<button type="button" class="tombol kecil abu" onclick="bukaPenggunaUbah(' . (int) $u['id'] . ')">' . $ikonPensil . ' Ubah</button>';
+    if ((int) $u['id'] !== $saya) {
+        $aksi .= ' <form class="inline" method="post" action="' . base_url('pengguna/' . $u['id'] . '/hapus') . '" data-konfirmasi="Hapus pengguna ' . esc($u['username'], 'attr') . '?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>';
+    }
+    $barisPengguna[] = [
+        'sel' => [
+            ['html' => '<input type="checkbox" data-pilih value="' . (int) $u['id'] . '" x-model="terpilih">'],
+            ['html' => '<b>' . esc($u['username']) . '</b>' . ((int) $u['id'] === $saya ? ' <span class="lencana biru">Anda</span>' : '')],
+            (string) $u['nama'],
+            ['html' => '<span class="lencana ' . ($u['peran'] === 'admin' ? 'biru' : 'abu') . '">' . esc(ucfirst($u['peran'])) . '</span>'],
+            (string) tgl($u['created_at'] ?? null),
+            ['html' => $aksi, 'gaya' => 'white-space:nowrap'],
+        ],
+    ];
 }
+echo tabel_bantu([
+    'cari' => 'Cari pengguna…',
+    'paginasi' => 25,
+    'kolom' => [
+        ['judul_html' => '<input type="checkbox" title="Pilih semua pengguna" @change="pilihSemua($event)">', 'lebar' => '34px'],
+        ['judul' => 'Username'],
+        ['judul' => 'Nama'],
+        ['judul' => 'Peran'],
+        ['judul' => 'Terdaftar'],
+        ['judul' => 'Aksi'],
+    ],
+    'baris' => $barisPengguna,
+]);
+?>
+</div>
+
+<?php
+$opsiPeran = [];
+foreach ($pilihan_peran as $p) {
+    $opsiPeran[$p] = ucfirst($p);
+}
+?>
+<?= form_modal([
+    'id' => 'modal-pengguna-baru',
+    'judul' => 'Tambah Pengguna',
+    'aksi' => base_url('pengguna/simpan'),
+    'lebar' => 560,
+    'kolom' => [
+        ['nama' => 'username', 'label' => 'Username', 'jenis' => 'teks', 'wajib' => true, 'placeholder' => 'mis. sarmin'],
+        ['nama' => 'nama', 'label' => 'Nama lengkap', 'jenis' => 'teks', 'wajib' => true, 'placeholder' => 'mis. Sarmin'],
+        ['nama' => 'peran', 'label' => 'Peran', 'jenis' => 'pilihan', 'opsi' => $opsiPeran],
+        ['nama' => 'sandi', 'label' => 'Kata sandi awal (min. 6 karakter)', 'jenis' => 'teks', 'wajib' => true, 'placeholder' => 'dibagikan ke pengguna, nanti diganti sendiri'],
+    ],
+    'tombol' => ['simpan_teks' => 'Tambah Pengguna'],
+]) ?>
+<?= form_modal([
+    'id' => 'modal-pengguna-ubah',
+    'judul' => 'Ubah Pengguna',
+    'judul_ubah' => 'Ubah Pengguna',
+    'aksi' => base_url('pengguna/simpan'),
+    'lebar' => 560,
+    'kolom' => [
+        ['nama' => 'nama', 'label' => 'Nama lengkap', 'jenis' => 'teks', 'wajib' => true],
+        ['nama' => 'peran', 'label' => 'Peran', 'jenis' => 'pilihan', 'opsi' => $opsiPeran],
+        ['nama' => 'sandi', 'label' => 'Kata sandi baru — kosongkan bila tidak diganti', 'jenis' => 'teks', 'placeholder' => 'min. 6 karakter'],
+    ],
+    'tombol' => ['simpan_teks' => 'Simpan Perubahan'],
+]) ?>
+<script type="application/json" id="data-pengguna"><?= json_encode(array_column($daftar ?? [], null, 'id'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
+<script>
+// Jembatan modal Pengguna: hanya mengoper data baris ke bukaFormModal dan
+// menyinkronkan widget select-cari sesudahnya.
+(function () {
+  var dataPengguna = {};
+  try { dataPengguna = JSON.parse(document.getElementById('data-pengguna').textContent || '{}'); } catch (e) {}
+  function sinkronSelect(idModal) {
+    var m = document.getElementById(idModal);
+    if (m && window.perbaruiSelectCari) {
+      m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+    }
+  }
+  window.bukaPenggunaBaru = function () {
+    window.bukaFormModal('modal-pengguna-baru', { peran: 'operator' });
+    sinkronSelect('modal-pengguna-baru');
+  };
+  window.bukaPenggunaUbah = function (id) {
+    var u = dataPengguna[id];
+    if (!u) return;
+    var m = document.getElementById('modal-pengguna-ubah');
+    if (m) m.dataset.judulUbah = 'Ubah Pengguna: ' + (u.username || '');
+    window.bukaFormModal('modal-pengguna-ubah', {
+      id: u.id,
+      nama: u.nama || '',
+      peran: u.peran || 'operator',
+      sandi: ''
+    });
+    sinkronSelect('modal-pengguna-ubah');
+  };
+})();
 </script>

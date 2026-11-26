@@ -21,11 +21,22 @@ class Sekolah extends BaseController
         return $this->tampil('sekolah/form', ['s' => [], 'aksi' => 'sekolah/simpan'], 'Tambah Sekolah');
     }
 
+    /** Balasan form modal (pola balasForm): AJAX -> JSON {ok, pesan}. */
+    private function balasForm(bool $ok, string $pesan, string $ke = 'pengaturan')
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return $ok
+            ? redirect()->to($ke)->with('sukses', $pesan)
+            : redirect()->back()->withInput()->with('galat', $pesan);
+    }
+
     public function simpan()
     {
         $data = $this->ambilForm();
         if (trim((string) $data['nama_sekolah']) === '') {
-            return redirect()->back()->withInput()->with('galat', 'Nama sekolah wajib diisi.');
+            return $this->balasForm(false, 'Nama sekolah wajib diisi.');
         }
         $data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('sekolah')->insert($data);
@@ -37,7 +48,7 @@ class Sekolah extends BaseController
             \App\Libraries\PengimporAcuan::kloningKeSekolah($this->db(), $id);
         }
         session()->set('sekolah_id', $id);
-        return redirect()->to('pengaturan')->with('sukses', 'Sekolah "' . $data['nama_sekolah'] . '" dibuat dan langsung aktif — lengkapi identitasnya di halaman ini, lalu isi Master Bahan.');
+        return $this->balasForm(true, 'Sekolah "' . $data['nama_sekolah'] . '" dibuat dan langsung aktif — lengkapi identitasnya di halaman ini, lalu isi Master Bahan.');
     }
 
     /** Jadikan sekolah ini yang aktif. */

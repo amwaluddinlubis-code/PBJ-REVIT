@@ -27,25 +27,41 @@ class Pengguna extends BaseController
         ], 'Manajemen User');
     }
 
+    /** Balasan form modal (pola balasForm): AJAX -> JSON {ok, pesan}. */
+    private function balasForm(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return redirect()->to('/pengguna')->with($ok ? 'sukses' : 'galat', $pesan);
+    }
+
     public function simpan()
     {
         if (! $this->admin()) {
             return redirect()->to('/');
         }
+        // Modal form_modal mengirim id tersembunyi: 0 = baru, >0 = ubah.
+        $id = (int) $this->request->getPost('id');
+        return $id > 0 ? $this->prosesUbah($id) : $this->prosesTambah();
+    }
+
+    private function prosesTambah()
+    {
         $r = $this->request;
         $username = trim((string) $r->getPost('username'));
         $nama = trim((string) $r->getPost('nama'));
         $peran = (string) $r->getPost('peran');
         $sandi = (string) $r->getPost('sandi');
         if ($username === '' || $nama === '' || strlen($sandi) < 6) {
-            return redirect()->to('/pengguna')->with('galat', 'Username, nama wajib diisi dan kata sandi minimal 6 karakter.');
+            return $this->balasForm(false, 'Username, nama wajib diisi dan kata sandi minimal 6 karakter.');
         }
         if (! in_array($peran, self::PERAN, true)) {
             $peran = 'operator';
         }
         $ada = $this->db()->table('users')->where(['username' => $username, 'is_deleted' => 0])->countAllResults();
         if ($ada > 0) {
-            return redirect()->to('/pengguna')->with('galat', 'Username "' . $username . '" sudah dipakai pengguna lain.');
+            return $this->balasForm(false, 'Username "' . $username . '" sudah dipakai pengguna lain.');
         }
         $this->db()->table('users')->insert([
             'username' => $username, 'nama' => $nama, 'peran' => $peran,
@@ -53,7 +69,7 @@ class Pengguna extends BaseController
             'password_hash' => password_hash($sandi, PASSWORD_DEFAULT),
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
-        return redirect()->to('/pengguna')->with('sukses', 'Pengguna "' . $username . '" ditambahkan.');
+        return $this->balasForm(true, 'Pengguna "' . $username . '" ditambahkan.');
     }
 
     public function ubah($id)
@@ -61,7 +77,11 @@ class Pengguna extends BaseController
         if (! $this->admin()) {
             return redirect()->to('/');
         }
-        $id = (int) $id;
+        return $this->prosesUbah((int) $id);
+    }
+
+    private function prosesUbah(int $id)
+    {
         $r = $this->request;
         $data = [
             'nama' => trim((string) $r->getPost('nama')),
@@ -69,22 +89,22 @@ class Pengguna extends BaseController
             'updated_at' => date('Y-m-d H:i:s'),
         ];
         if ($data['nama'] === '') {
-            return redirect()->to('/pengguna')->with('galat', 'Nama pengguna tidak boleh kosong.');
+            return $this->balasForm(false, 'Nama pengguna tidak boleh kosong.');
         }
         // Admin terakhir tidak boleh diturunkan perannya.
         if ($data['peran'] !== 'admin' && $this->jumlahAdminSelain($id) === 0
             && $this->db()->table('users')->where('id', $id)->get()->getRowArray()['peran'] === 'admin') {
-            return redirect()->to('/pengguna')->with('galat', 'Tidak bisa mengubah peran admin terakhir.');
+            return $this->balasForm(false, 'Tidak bisa mengubah peran admin terakhir.');
         }
         $sandi = (string) $r->getPost('sandi');
         if ($sandi !== '') {
             if (strlen($sandi) < 6) {
-                return redirect()->to('/pengguna')->with('galat', 'Kata sandi baru minimal 6 karakter.');
+                return $this->balasForm(false, 'Kata sandi baru minimal 6 karakter.');
             }
             $data['password_hash'] = password_hash($sandi, PASSWORD_DEFAULT);
         }
         $this->db()->table('users')->where('id', $id)->update($data);
-        return redirect()->to('/pengguna')->with('sukses', 'Pengguna diperbarui.');
+        return $this->balasForm(true, 'Pengguna diperbarui.');
     }
 
     public function hapus($id)

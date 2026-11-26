@@ -27,6 +27,7 @@
         <?php endforeach; ?>
       </select>
     </label>
+    <?php /* Tabel Langkah 1 dipertahankan manual: centang + isian volume per baris adalah inti alur hitung (form GET). */ ?>
     <table data-paginasi="25" data-cari="Cari pekerjaan…">
       <tr>
         <th style="width:34px"><input type="checkbox" id="centang-semua-pekerjaan" style="width:auto;margin:0" title="Centang semua pekerjaan"></th>
@@ -70,20 +71,38 @@
 <details class="panel panel-lipat" data-lipat-id="rencana-langkah-2-analisa-dari-pekerjaan-terpilih">
   <summary>Langkah 2 — Analisa dari <?= (int) $hasil['jumlah_pekerjaan'] ?> Pekerjaan Terpilih</summary>
 
-  <table data-paginasi="25" data-cari="Cari analisa…">
-    <tr><th>Kode</th><th>Analisa</th><th class="angka">Dipakai Pekerjaan</th><th class="angka">Total Volume Rencana</th><th class="angka">Harga AHSP</th><th class="angka">Nilai</th></tr>
-    <?php $totalNilaiAnalisa = 0; foreach ($hasil['analisa'] as $a): $totalNilaiAnalisa += (float) $a['nilai']; ?>
-    <tr>
-      <td><a class="lencana abu" style="text-decoration:none" href="<?= base_url('analisa/' . (int) $a['id']) ?>"><?= esc($a['kode']) ?></a></td>
-      <td><?= esc($a['nama']) ?></td>
-      <td class="angka"><?= (int) $a['pekerjaan'] ?></td>
-      <td class="angka"><?= number_format((float) $a['volume'], 2, ',', '.') ?> <?= esc($a['satuan'] ?? '') ?></td>
-      <td class="angka"><?= number_format((float) $a['harga'], 0, ',', '.') ?></td>
-      <td class="angka"><?= number_format((float) $a['nilai'], 0, ',', '.') ?></td>
-    </tr>
-    <?php endforeach; ?>
-    <tr class="total"><td colspan="5">Total Nilai Analisa Pekerjaan Terpilih</td><td class="angka"><?= number_format($totalNilaiAnalisa, 0, ',', '.') ?></td></tr>
-  </table>
+  <?php
+  $barisAnalisa = [];
+  $totalNilaiAnalisa = 0;
+  foreach ($hasil['analisa'] as $a) {
+      $totalNilaiAnalisa += (float) $a['nilai'];
+      $barisAnalisa[] = ['sel' => [
+          ['html' => '<a class="lencana abu" style="text-decoration:none" href="' . base_url('analisa/' . (int) $a['id']) . '">' . esc($a['kode']) . '</a>'],
+          (string) $a['nama'],
+          ['teks' => (string) (int) $a['pekerjaan'], 'angka' => true],
+          ['teks' => number_format((float) $a['volume'], 2, ',', '.') . ' ' . ($a['satuan'] ?? ''), 'angka' => true],
+          ['teks' => number_format((float) $a['harga'], 0, ',', '.'), 'angka' => true],
+          ['teks' => number_format((float) $a['nilai'], 0, ',', '.'), 'angka' => true],
+      ]];
+  }
+  $barisAnalisa[] = ['total' => [
+      ['teks' => 'Total Nilai Analisa Pekerjaan Terpilih', 'colspan' => 5],
+      ['teks' => number_format($totalNilaiAnalisa, 0, ',', '.'), 'angka' => true],
+  ], 'class' => 'total'];
+  echo tabel_bantu([
+      'cari' => 'Cari analisa…',
+      'paginasi' => 25,
+      'kolom' => [
+          ['judul' => 'Kode'],
+          ['judul' => 'Analisa'],
+          ['judul' => 'Dipakai Pekerjaan', 'angka' => true],
+          ['judul' => 'Total Volume Rencana', 'angka' => true],
+          ['judul' => 'Harga AHSP', 'angka' => true],
+          ['judul' => 'Nilai', 'angka' => true],
+      ],
+      'baris' => $barisAnalisa,
+  ]);
+  ?>
 </details>
 
 <details class="panel panel-lipat" data-lipat-id="rencana-langkah-3-kebutuhan-bahan-dari-pekerjaan-t">
@@ -95,6 +114,7 @@
     <input type="hidden" name="kerja[<?= (int) $pidK ?>]" value="<?= esc($polos($vK)) ?>">
     <?php endforeach; ?>
     <input type="hidden" name="hari" value="<?= (int) ($hari_kerja ?? 6) ?>">
+    <?php /* Tabel Langkah 3 dipertahankan manual: centang + isian qty per baris adalah inti simpan buat-spk. */ ?>
     <table data-paginasi="25" data-cari="Cari bahan…">
       <tr><th style="width:34px"></th><th>Bahan</th><th class="angka">Kebutuhan</th><th class="angka">Sudah Dipesan</th><th class="angka">Sisa Kebutuhan</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Sisa</th><th style="width:130px">Qty Rencana</th><th data-tanpa-urut style="width:165px">Aksi</th></tr>
       <?php $totalSisa = 0; foreach ($hasil['kebutuhan']['tertaut'] as $b): $nilaiSisa = (float) $b['sisa'] * (float) $b['harga']; $totalSisa += $nilaiSisa; ?>
@@ -141,13 +161,39 @@
 <details class="panel panel-lipat" data-lipat-id="rencana-langkah-4-kebutuhan-pekerja-dari-pekerjaan">
   <summary>Langkah 4 — Kebutuhan Pekerja dari Pekerjaan Terpilih</summary>
 
-  <table data-paginasi="25" data-cari="Cari jenis tenaga…">
-    <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Tarif / OH</th><th class="angka">Nilai Kebutuhan</th><th class="angka">Jumlah Pekerja Dibutuhkan</th></tr>
-    <?php $totalUpah = 0; $totalPekerja = 0; foreach ($hasil['upah'] as $u): $totalUpah += (float) $u['nilai']; $totalPekerja += (int) $u['jumlah_pekerja']; ?>
-    <tr><td><?= esc($u['jenis']) ?></td><td class="angka"><?= number_format((float) $u['orang_hari'], 2, ',', '.') ?></td><td class="angka"><?= number_format((float) $u['tarif'], 0, ',', '.') ?></td><td class="angka"><?= number_format((float) $u['nilai'], 0, ',', '.') ?></td><td class="angka"><b><?= (int) $u['jumlah_pekerja'] ?> orang</b></td></tr>
-    <?php endforeach; ?>
-    <tr class="total"><td colspan="3">Total Nilai Kebutuhan Upah</td><td class="angka"><?= number_format($totalUpah, 0, ',', '.') ?></td><td class="angka"><?= $totalPekerja ?> orang</td></tr>
-  </table>
+  <?php
+  $barisUpah = [];
+  $totalUpah = 0;
+  $totalPekerja = 0;
+  foreach ($hasil['upah'] as $u) {
+      $totalUpah += (float) $u['nilai'];
+      $totalPekerja += (int) $u['jumlah_pekerja'];
+      $barisUpah[] = ['sel' => [
+          (string) $u['jenis'],
+          ['teks' => number_format((float) $u['orang_hari'], 2, ',', '.'), 'angka' => true],
+          ['teks' => number_format((float) $u['tarif'], 0, ',', '.'), 'angka' => true],
+          ['teks' => number_format((float) $u['nilai'], 0, ',', '.'), 'angka' => true],
+          ['html' => '<b>' . (int) $u['jumlah_pekerja'] . ' orang</b>', 'angka' => true],
+      ]];
+  }
+  $barisUpah[] = ['total' => [
+      ['teks' => 'Total Nilai Kebutuhan Upah', 'colspan' => 3],
+      ['teks' => number_format($totalUpah, 0, ',', '.'), 'angka' => true],
+      ['teks' => $totalPekerja . ' orang', 'angka' => true],
+  ], 'class' => 'total'];
+  echo tabel_bantu([
+      'cari' => 'Cari jenis tenaga…',
+      'paginasi' => 25,
+      'kolom' => [
+          ['judul' => 'Jenis Tenaga'],
+          ['judul' => 'Kebutuhan (OH)', 'angka' => true],
+          ['judul' => 'Tarif / OH', 'angka' => true],
+          ['judul' => 'Nilai Kebutuhan', 'angka' => true],
+          ['judul' => 'Jumlah Pekerja Dibutuhkan', 'angka' => true],
+      ],
+      'baris' => $barisUpah,
+  ]);
+  ?>
   <p class="kecil-teks">Jumlah pekerja dihitung dari kebutuhan OH dibagi target hari kerja (<?= (int) $hari_kerja ?> hari, diatur di Langkah 1) dan dibulatkan ke atas — itulah jumlah orang per jenis tenaga yang perlu disiapkan bila pekerjaan terpilih mau diselesaikan dalam target hari itu. Pembayaran upah dicatat per gedung di menu <a href="<?= base_url('upah') ?>">Pembayaran Upah</a> dan ikut terhitung dalam kontrol pagu.</p>
 </details>
 <?php endif; ?>

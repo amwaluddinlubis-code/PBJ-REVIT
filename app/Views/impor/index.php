@@ -89,14 +89,36 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
 <details class="panel panel-lipat" data-lipat-id="impor-verifikasi-anggaran">
   <summary>Verifikasi Anggaran — <?= esc($sekolahAktif['nama_sekolah'] ?? 'Sekolah Aktif') ?></summary>
 
-  <table>
-    <tr><th>Uraian</th><th class="angka">Nilai</th></tr>
-    <tr><td>Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung didanai</b> (dari <?= (int) ($verifikasi['gedung_semua'] ?? $verifikasi['gedung']) ?> gedung aktif — hanya yang didanai yang dihitung; tandai di <a href="<?= base_url('gedung') ?>">Kelola Gedung</a>)</td><td class="angka"><b><?= rp($verifikasi['total_boq']) ?></b></td></tr>
-    <tr><td>Biaya non-gedung (perencanaan, pengawasan, pengelolaan — menu <a href="<?= base_url('biaya-non-gedung') ?>">Biaya Non-Gedung</a>)</td><td class="angka"><b><?= rp($verifikasi['biaya_lain']) ?></b></td></tr>
-    <tr><td><b>Total keseluruhan (BOQ + biaya non-gedung)</b></td><td class="angka"><b><?= rp($verifikasi['total_semua']) ?></b></td></tr>
-    <tr><td>Pagu anggaran (diisi di <a href="<?= base_url('pengaturan') ?>">Pengaturan</a>)</td><td class="angka"><b><?= rp($verifikasi['pagu']) ?></b></td></tr>
-    <tr><td>Selisih (pagu − total keseluruhan)</td><td class="angka"><b><?= rp($verifikasi['selisih']) ?></b></td></tr>
-  </table>
+  <?php
+  echo tabel_bantu([
+      'kolom' => [
+          ['judul' => 'Uraian'],
+          ['judul' => 'Nilai', 'angka' => true],
+      ],
+      'baris' => [
+          ['sel' => [
+              ['html' => 'Total BOQ <b>' . (int) $verifikasi['gedung'] . ' gedung didanai</b> (dari ' . (int) ($verifikasi['gedung_semua'] ?? $verifikasi['gedung']) . ' gedung aktif — hanya yang didanai yang dihitung; tandai di <a href="' . base_url('gedung') . '">Kelola Gedung</a>)'],
+              ['html' => '<b>' . rp($verifikasi['total_boq']) . '</b>', 'angka' => true],
+          ]],
+          ['sel' => [
+              ['html' => 'Biaya non-gedung (perencanaan, pengawasan, pengelolaan — menu <a href="' . base_url('biaya-non-gedung') . '">Biaya Non-Gedung</a>)'],
+              ['html' => '<b>' . rp($verifikasi['biaya_lain']) . '</b>', 'angka' => true],
+          ]],
+          ['sel' => [
+              ['html' => '<b>Total keseluruhan (BOQ + biaya non-gedung)</b>'],
+              ['html' => '<b>' . rp($verifikasi['total_semua']) . '</b>', 'angka' => true],
+          ]],
+          ['sel' => [
+              ['html' => 'Pagu anggaran (diisi di <a href="' . base_url('pengaturan') . '">Pengaturan</a>)'],
+              ['html' => '<b>' . rp($verifikasi['pagu']) . '</b>', 'angka' => true],
+          ]],
+          ['sel' => [
+              'Selisih (pagu − total keseluruhan)',
+              ['html' => '<b>' . rp($verifikasi['selisih']) . '</b>', 'angka' => true],
+          ]],
+      ],
+  ]);
+  ?>
   <?php if (($verifikasi['pagu'] ?? 0) <= 0): ?>
     <p class="kecil-teks" style="margin-bottom:0;color:var(--ina-yellow-700,#a15c00)"><b>Pagu belum diatur</b> — isi total anggaran di Pengaturan agar perbandingan ini bermakna.</p>
   <?php elseif ($verifikasi['selisih'] == 0): ?>
@@ -133,26 +155,35 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
   <datalist id="daftar-bahan">
     <?php foreach ($semua_bahan as $b): ?><option value="<?= esc($b['kode']) ?> — <?= esc($b['nama']) ?>" data-id="<?= (int) $b['id'] ?>"></option><?php endforeach; ?>
   </datalist>
-  <table data-paginasi="25" data-cari="Cari komponen…">
-    <tr><th>Komponen (dari analisa)</th><th class="angka">Dipakai</th><th>Saran Padanan Master</th><th style="width:130px">Aksi</th></tr>
-    <?php foreach ($tak_tertaut as $t): ?>
-    <tr>
-      <td><?= esc($t['nama']) ?> <span class="kecil-teks">(<?= esc($t['satuan'] ?? '') ?>)</span></td>
-      <td class="angka"><?= (int) $t['dipakai'] ?> analisa</td>
-      <td>
-        <form method="post" action="<?= base_url('impor/tautkan') ?>" class="form-tautkan" style="display:flex;gap:6px;align-items:center">
-          <?= csrf_field() ?>
-          <input type="hidden" name="nama_komponen" value="<?= esc($t['nama']) ?>">
-          <input type="hidden" name="bahan_id" value="<?= $t['saran'] !== null ? (int) $t['saran']['id'] : 0 ?>">
-          <input type="text" name="bahan_teks" list="daftar-bahan" style="margin:0" value="<?= $t['saran'] !== null ? esc($t['saran']['kode'] . ' — ' . $t['saran']['nama']) : '' ?>" placeholder="Ketik kode / nama bahan…">
-          <?php if ($t['saran'] !== null): ?><span class="lencana <?= $t['skor'] >= 80 ? 'hijau' : 'abu' ?>"><?= (int) $t['skor'] ?>%</span><?php endif; ?>
-          <button class="kecil" type="submit">Tautkan</button>
-        </form>
-      </td>
-      <td class="kecil-teks"><?= $t['saran'] !== null ? 'Saran: ' . esc($t['saran']['kode']) : 'Tidak ada saran ≥ 50%' ?></td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  $barisTakTertaut = [];
+  foreach ($tak_tertaut as $t) {
+      $formTaut = '<form method="post" action="' . base_url('impor/tautkan') . '" class="form-tautkan" style="display:flex;gap:6px;align-items:center">'
+          . csrf_field()
+          . '<input type="hidden" name="nama_komponen" value="' . esc($t['nama']) . '">'
+          . '<input type="hidden" name="bahan_id" value="' . ($t['saran'] !== null ? (int) $t['saran']['id'] : 0) . '">'
+          . '<input type="text" name="bahan_teks" list="daftar-bahan" style="margin:0" value="' . ($t['saran'] !== null ? esc($t['saran']['kode'] . ' — ' . $t['saran']['nama']) : '') . '" placeholder="Ketik kode / nama bahan…">'
+          . ($t['saran'] !== null ? '<span class="lencana ' . ($t['skor'] >= 80 ? 'hijau' : 'abu') . '">' . (int) $t['skor'] . '%</span>' : '')
+          . '<button class="kecil" type="submit">Tautkan</button></form>';
+      $barisTakTertaut[] = ['sel' => [
+          ['html' => esc($t['nama']) . ' <span class="kecil-teks">(' . esc($t['satuan'] ?? '') . ')</span>'],
+          ['teks' => (int) $t['dipakai'] . ' analisa', 'angka' => true],
+          ['html' => $formTaut],
+          ['teks' => $t['saran'] !== null ? 'Saran: ' . $t['saran']['kode'] : 'Tidak ada saran ≥ 50%', 'class' => 'kecil-teks'],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari komponen…',
+      'paginasi' => 25,
+      'kolom' => [
+          ['judul' => 'Komponen (dari analisa)'],
+          ['judul' => 'Dipakai', 'angka' => true],
+          ['judul' => 'Saran Padanan Master'],
+          ['judul' => 'Aksi', 'lebar' => '130px'],
+      ],
+      'baris' => $barisTakTertaut,
+  ]);
+  ?>
 </details>
 <?php endif; ?>
 
@@ -163,18 +194,29 @@ document.querySelectorAll('.form-tautkan').forEach(f => {
   <?php foreach ($log as $l): ?>
     <p style="margin:6px 0"><b><?= esc($l['berkas']) ?></b> · <?= esc(tglWaktu($l['created_at'] ?? null, '')) ?></p>
     <?php if (! empty($l['ringkasan'])): $r = $l['ringkasan']; ?>
-    <table>
-      <tr><th>Gedung (sheet)</th><th class="angka">Pekerjaan</th><th class="angka">Total Terhitung</th><th class="angka">GRAND TOTAL Sheet</th><th class="angka">Selisih</th></tr>
-      <?php foreach ($r['gedung'] ?? [] as $g): $selisih = (float) $g['total_hitung'] - (float) $g['total_sheet']; ?>
-      <tr>
-        <td><a href="<?= base_url('gedung/' . $g['gedung_id']) ?>"><?= esc($g['nama']) ?></a></td>
-        <td class="angka"><?= (int) $g['pekerjaan'] ?></td>
-        <td class="angka">Rp <?= number_format((float) $g['total_hitung'], 0, ',', '.') ?></td>
-        <td class="angka">Rp <?= number_format((float) $g['total_sheet'], 0, ',', '.') ?></td>
-        <td class="angka"><?= abs($selisih) < 1000 ? '<span class="lencana hijau">Sesuai</span>' : 'Rp ' . number_format($selisih, 0, ',', '.') ?></td>
-      </tr>
-      <?php endforeach; ?>
-    </table>
+    <?php
+    $barisLog = [];
+    foreach ($r['gedung'] ?? [] as $g) {
+        $selisih = (float) $g['total_hitung'] - (float) $g['total_sheet'];
+        $barisLog[] = ['sel' => [
+            ['html' => '<a href="' . base_url('gedung/' . $g['gedung_id']) . '">' . esc($g['nama']) . '</a>'],
+            ['teks' => (string) (int) $g['pekerjaan'], 'angka' => true],
+            ['teks' => 'Rp ' . number_format((float) $g['total_hitung'], 0, ',', '.'), 'angka' => true],
+            ['teks' => 'Rp ' . number_format((float) $g['total_sheet'], 0, ',', '.'), 'angka' => true],
+            ['html' => abs($selisih) < 1000 ? '<span class="lencana hijau">Sesuai</span>' : 'Rp ' . number_format($selisih, 0, ',', '.'), 'angka' => true],
+        ]];
+    }
+    echo tabel_bantu([
+        'kolom' => [
+            ['judul' => 'Gedung (sheet)'],
+            ['judul' => 'Pekerjaan', 'angka' => true],
+            ['judul' => 'Total Terhitung', 'angka' => true],
+            ['judul' => 'GRAND TOTAL Sheet', 'angka' => true],
+            ['judul' => 'Selisih', 'angka' => true],
+        ],
+        'baris' => $barisLog,
+    ]);
+    ?>
     <p class="kecil-teks">Analisa terbaca: <?= (int) ($r['analisa'] ?? 0) ?> · Komponen: <?= (int) ($r['komponen'] ?? 0) ?> · Komponen bahan belum tertaut ke master: <?= (int) ($r['komponen_tak_tertaut'] ?? 0) ?> · Bahan baru: <?= (int) ($r['bahan_baru'] ?? 0) ?> · Jenis upah: <?= (int) ($r['upah'] ?? 0) ?> · Total anggaran (Rekap RAB): Rp <?= number_format((float) ($r['total_anggaran'] ?? 0), 0, ',', '.') ?><?= ! empty($r['npsn']) ? ' · NPSN dokumen: ' . esc($r['npsn']) : '' ?></p>
     <?php endif; ?>
   <?php endforeach; ?>

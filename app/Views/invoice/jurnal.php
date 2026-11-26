@@ -1,40 +1,84 @@
-<?php $tot = 0; ?>
+<?php /* Jurnal Pembayaran: form catat pembayaran memakai helper form_modal
+   (simpan AJAX ke Invoice::jurnalTambah; penjaga bendahara, Bulan
+   Bekerja, dan kontrol pagu tetap di controller). Form hapus baris
+   jurnal tetap POST biasa. Tabel dirender tabel_bantu. */ ?>
 <div class="panel">
   <h2>Catat Pembayaran</h2>
-  <form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3" method="post" action="<?= base_url('invoice/jurnal-tambah') ?>">
-    <?= csrf_field() ?>
-    <label>Invoice Belum Bayar
-      <select data-select-cari name="invoice_id" required>
-        <option value="">— pilih invoice —</option>
-        <?php foreach ($belum as $b): ?>
-          <option value="<?= (int) $b['id'] ?>">Invoice <?= (int) $b['nomor_urut'] ?> (SPK <?= (int) $b['spk_nomor'] ?>) — <?= rp($b['nilai']) ?></option>
-        <?php endforeach; ?>
-      </select>
-    </label>
-    <label>Tanggal Bayar <input type="date" name="tanggal" value="<?= esc($tgl_bayar_default ?? date('Y-m-d')) ?>"></label>
-    <label>Keterangan <input name="keterangan"></label>
-    <div class="aksi md:col-span-2"><button type="submit">Catat Bayar</button></div>
-  </form>
+  <button type="button" class="tombol" onclick="bukaJurnalBaru()">+ Catat Pembayaran</button>
+  <span class="kecil-teks">Tanggal bayar bawaan mengikuti Bulan Bekerja; hanya bendahara yang dapat mencatat pembayaran.</span>
 </div>
+<?php
+$opsiBelum = ['' => '— pilih invoice —'];
+foreach ($belum as $b) {
+    $opsiBelum[(int) $b['id']] = 'Invoice ' . (int) $b['nomor_urut'] . ' (SPK ' . (int) $b['spk_nomor'] . ') — ' . rp($b['nilai']);
+}
+?>
+<?= form_modal([
+    'id' => 'modal-jurnal',
+    'judul' => 'Catat Pembayaran',
+    'aksi' => base_url('invoice/jurnal-tambah'),
+    'kolom' => [
+        ['nama' => 'invoice_id', 'label' => 'Invoice Belum Bayar', 'jenis' => 'pilihan', 'wajib' => true, 'opsi' => $opsiBelum],
+        ['nama' => 'tanggal', 'label' => 'Tanggal Bayar', 'jenis' => 'tanggal'],
+        ['nama' => 'keterangan', 'label' => 'Keterangan', 'jenis' => 'teks'],
+    ],
+    'tombol' => ['simpan_teks' => 'Catat Bayar', 'hapus' => false],
+]) ?>
+<script>
+// Jembatan modal Jurnal: tanggal bawaan (Bulan Bekerja) dioper lewat data
+// bukaFormModal; sesudahnya sinkronkan widget select-cari.
+function bukaJurnalBaru() {
+  window.bukaFormModal('modal-jurnal', { tanggal: '<?= esc($tgl_bayar_default ?? date('Y-m-d'), 'js') ?>' });
+  var m = document.getElementById('modal-jurnal');
+  if (m && window.perbaruiSelectCari) {
+    m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+  }
+}
+</script>
 <div class="panel">
   <h2>Jurnal Pembayaran</h2>
-  <table data-paginasi="10" data-cari="Cari jurnal…">
-    <tr><th>Tanggal</th><th>Invoice</th><th>SPK</th><th class="angka">Nilai Tagihan</th><th class="angka">PPN Dipungut</th><th class="angka">DPP</th><th class="angka">PPh 22 (1,5% dari DPP)</th><th class="angka">Nilai Dibayar</th><th>Keterangan</th><th></th></tr>
-    <?php foreach ($baris as $r): $tot += (float) $r['dibayar']; ?>
-    <tr>
-      <td><?= esc(tgl($r['tanggal'] ?? null, '— (belum diisi)')) ?></td>
-      <td><?= (int) $r['nomor_urut'] ?> (<?= esc($r['no_toko'] ?? '') ?>)</td>
-      <td><?= (int) $r['spk_nomor'] ?></td>
-      <td class="angka"><?= rp($r['nilai']) ?><?php if ((float) $r['nilai'] >= 5000000): ?><br><span class="kecil-teks">kuitansi ≥ Rp5 jt: materai Rp10.000</span><?php endif; ?></td>
-      <td class="angka"><?= rp($r['ppn']) ?></td>
-      <td class="angka"><?= rp($r['dpp']) ?></td>
-      <td class="angka"><?= rp($r['pph22']) ?><?php if ((float) $r['pph22'] <= 0 && (float) $r['dpp'] > 0): ?><br><span class="kecil-teks">bebas: DPP ≤ Rp2 jt</span><?php endif; ?></td>
-      <td class="angka"><?= rp($r['dibayar']) ?></td>
-      <td><?= esc($r['keterangan'] ?? '') ?></td>
-      <td><form class="inline" method="post" action="<?= base_url('invoice/jurnal-hapus/' . $r['id']) ?>" data-konfirmasi="Hapus baris jurnal ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
-    </tr>
-    <?php endforeach; ?>
-    <tr><th colspan="7" style="text-align:right">TOTAL DIBAYAR</th><th class="angka"><?= rp($tot) ?></th><th colspan="2"></th></tr>
-  </table>
+  <?php
+  $tot = 0;
+  $barisJurnal = [];
+  foreach ($baris as $r) {
+      $tot += (float) $r['dibayar'];
+      $selNilai = rp($r['nilai']) . ((float) $r['nilai'] >= 5000000 ? '<br><span class="kecil-teks">kuitansi ≥ Rp5 jt: materai Rp10.000</span>' : '');
+      $selPph = rp($r['pph22']) . ((float) $r['pph22'] <= 0 && (float) $r['dpp'] > 0 ? '<br><span class="kecil-teks">bebas: DPP ≤ Rp2 jt</span>' : '');
+      $barisJurnal[] = ['sel' => [
+          (string) tgl($r['tanggal'] ?? null, '— (belum diisi)'),
+          (int) $r['nomor_urut'] . ' (' . ($r['no_toko'] ?? '') . ')',
+          (string) (int) $r['spk_nomor'],
+          ['html' => $selNilai, 'angka' => true],
+          ['teks' => rp($r['ppn']), 'angka' => true],
+          ['teks' => rp($r['dpp']), 'angka' => true],
+          ['html' => $selPph, 'angka' => true],
+          ['teks' => rp($r['dibayar']), 'angka' => true],
+          (string) ($r['keterangan'] ?? ''),
+          ['html' => '<form class="inline" method="post" action="' . base_url('invoice/jurnal-hapus/' . $r['id']) . '" data-konfirmasi="Hapus baris jurnal ini?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>'],
+      ]];
+  }
+  $barisJurnal[] = ['total' => [
+      ['teks' => 'TOTAL DIBAYAR', 'colspan' => 7, 'gaya' => 'text-align:right'],
+      ['teks' => rp($tot), 'angka' => true],
+      ['teks' => '', 'colspan' => 2],
+  ], 'class' => 'total'];
+  echo tabel_bantu([
+      'cari' => 'Cari jurnal…',
+      'paginasi' => 10,
+      'kolom' => [
+          ['judul' => 'Tanggal'],
+          ['judul' => 'Invoice'],
+          ['judul' => 'SPK'],
+          ['judul' => 'Nilai Tagihan', 'angka' => true],
+          ['judul' => 'PPN Dipungut', 'angka' => true],
+          ['judul' => 'DPP', 'angka' => true],
+          ['judul' => 'PPh 22 (1,5% dari DPP)', 'angka' => true],
+          ['judul' => 'Nilai Dibayar', 'angka' => true],
+          ['judul' => 'Keterangan'],
+          ['judul' => ''],
+      ],
+      'baris' => $barisJurnal,
+  ]);
+  ?>
   <p class="kecil-teks">Menurut Juknis Revitalisasi SMP 2026: PPh 22 sebesar 1,5% dihitung dari DPP (nilai di luar PPN) dan tidak dipungut untuk pembelian sampai dengan Rp2.000.000; PPN 11% dipungut bendahara dari bagian harga yang kena PPN; nilai dibayar = nilai tagihan − PPN dipungut − PPh 22.</p>
 </div>

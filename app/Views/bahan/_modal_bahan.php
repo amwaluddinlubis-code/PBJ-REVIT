@@ -1,19 +1,20 @@
-<?php /* Partial bahan/index: modal Tambah/Ubah Bahan (form dikirim via fetch oleh komponen Alpine induk). */ ?>  <div id="modal-bahan" class="mk-lapik" hidden @click.self="tutupBahan()" @keydown.escape.window="tutupBahan()">
-    <div class="mk-kartu" role="dialog" aria-modal="true" aria-labelledby="mb-judul" style="max-width:640px;width:94vw">
-      <h3 id="mb-judul" style="margin-top:0" x-text="formBahanId > 0 ? 'Ubah Bahan' : 'Tambah Bahan'">Tambah Bahan</h3>
-      <div class="galat" x-show="galatBahan" x-text="galatBahan" style="margin-bottom:10px"></div>
-      <form id="form-bahan" @submit.prevent="simpanBahan()">
-        <?= csrf_field() ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-          <label>Kode <input name="kode" required></label>
-          <label>Nama Bahan <input name="nama" required></label>
-          <label>Satuan <input name="satuan"></label>
-          <label>Harga RAB (Rp) <input type="text" inputmode="numeric" data-uang name="harga_rab" required></label>
-        </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-          <button type="button" @click="tutupBahan()">Batal</button>
-          <button type="submit" class="tombol" :disabled="memuat">Simpan</button>
-        </div>
-      </form>
-    </div>
-  </div>
+<?php /* Partial bahan/index: modal Tambah/Ubah Bahan memakai helper
+   form_modal — simpan AJAX ke bahan/simpan (id tersembunyi membedakan
+   baru/ubah; bahan/perbarui/{id} tetap untuk halaman form mandiri
+   bahan/form.php). Sesudah simpan, tabel disegarkan tanpa reload
+   (segarkan #wadah-tabel-bahan). Jembatan bukaTambah/bukaUbah ada di
+   komponen Alpine induk (index.php). */ ?>
+<?= form_modal([
+    'id' => 'modal-bahan',
+    'judul' => 'Tambah Bahan',
+    'judul_ubah' => 'Ubah Bahan',
+    'aksi' => base_url('bahan/simpan'),
+    'segarkan' => ['#wadah-tabel-bahan'],
+    'kolom' => [
+        ['nama' => 'kode', 'label' => 'Kode', 'wajib' => true],
+        ['nama' => 'nama', 'label' => 'Nama Bahan', 'wajib' => true],
+        ['nama' => 'satuan', 'label' => 'Satuan'],
+        ['nama' => 'harga_rab', 'label' => 'Harga RAB (Rp)', 'jenis' => 'uang', 'wajib' => true],
+    ],
+    'tombol' => ['simpan_teks' => 'Simpan', 'simpan_teks_ubah' => 'Simpan'],
+]) ?>

@@ -1,3 +1,6 @@
+<?php /* Negosiasi: tabel isian massal (grid) memakai helper tabel_bantu();
+   form simpan tetap satu form halaman (bukan modal — seluruh tabel
+   adalah permukaan isian). */ ?>
 <?php $rp = static fn ($n) => $n === null ? '—' : 'Rp ' . number_format((float) $n, 0, ',', '.'); ?>
 <div data-bulk-akar x-data="komponenBulk('form-bulk-nego','ids-nego')">
 <div class="panel">
@@ -20,30 +23,53 @@
   <form method="post" action="<?= base_url('negosiasi/simpan') ?>">
     <?= csrf_field() ?>
     <div style="overflow-x:auto">
-    <table data-paginasi="25" data-cari="Cari bahan…">
-      <tr><th style="width:34px"><input type="checkbox" title="Pilih semua bahan" @change="pilihSemua($event)"></th><th>Kode</th><th>Nama Bahan</th><th class="angka">Qty RAB</th><th class="angka">Harga Terpilih</th><th class="angka">Harga Penawaran</th><th class="angka">Harga Negosiasi</th><th class="angka">Total Penawaran</th><th class="angka">Total Negosiasi</th><th class="angka">Hemat</th></tr>
-      <?php $tPen = 0; $tNeg = 0; foreach ($bahan as $b):
+    <?php
+    $tPen = 0; $tNeg = 0;
+    $barisNego = [];
+    foreach ($bahan as $b) {
         $qty = (float) $b['qty_total'];
         $pen = $b['penawaran']; $neg = $b['nego'] ?? $pen;
         $totPen = $pen !== null ? $qty * (float) $pen : null;
         $totNeg = $neg !== null ? $qty * (float) $neg : null;
         if ($totPen !== null) $tPen += $totPen;
         if ($totNeg !== null) $tNeg += $totNeg;
-      ?>
-      <tr>
-        <td><input type="checkbox" data-pilih value="<?= (int) $b['id'] ?>" x-model="terpilih"></td>
-        <td><?= esc($b['kode']) ?></td><td><?= esc($b['nama']) ?></td>
-        <td class="angka"><?= number_format($qty, 2, ',', '.') ?></td>
-        <td class="angka"><?= $rp($b['terpilih']) ?></td>
-        <td class="angka"><input type="number" name="penawaran[<?= (int) $b['id'] ?>]" min="0" step="1" value="<?= esc($pen ?? '') ?>" style="width:120px"></td>
-        <td class="angka"><input type="number" name="nego[<?= (int) $b['id'] ?>]" min="0" step="1" value="<?= esc($b['nego'] ?? '') ?>" style="width:120px"></td>
-        <td class="angka"><?= $rp($totPen) ?></td>
-        <td class="angka"><?= $rp($totNeg) ?></td>
-        <td class="angka"><?= ($totPen !== null && $totNeg !== null) ? $rp($totPen - $totNeg) : '—' ?></td>
-      </tr>
-      <?php endforeach; ?>
-      <tr class="baris-total"><th colspan="7" style="text-align:right">TOTAL</th><th class="angka"><?= $rp($tPen) ?></th><th class="angka"><?= $rp($tNeg) ?></th><th class="angka"><?= $rp($tPen - $tNeg) ?></th></tr>
-    </table>
+        $barisNego[] = ['sel' => [
+            ['html' => '<input type="checkbox" data-pilih value="' . (int) $b['id'] . '" x-model="terpilih">'],
+            (string) $b['kode'],
+            (string) $b['nama'],
+            ['teks' => number_format($qty, 2, ',', '.'), 'angka' => true],
+            ['teks' => $rp($b['terpilih']), 'angka' => true],
+            ['html' => '<input type="number" name="penawaran[' . (int) $b['id'] . ']" min="0" step="1" value="' . esc($pen ?? '', 'attr') . '" style="width:120px">', 'angka' => true],
+            ['html' => '<input type="number" name="nego[' . (int) $b['id'] . ']" min="0" step="1" value="' . esc($b['nego'] ?? '', 'attr') . '" style="width:120px">', 'angka' => true],
+            ['teks' => $rp($totPen), 'angka' => true],
+            ['teks' => $rp($totNeg), 'angka' => true],
+            ['teks' => ($totPen !== null && $totNeg !== null) ? $rp($totPen - $totNeg) : '—', 'angka' => true],
+        ]];
+    }
+    $barisNego[] = ['total' => [
+        ['teks' => 'TOTAL', 'colspan' => 7, 'gaya' => 'text-align:right'],
+        ['teks' => $rp($tPen), 'angka' => true],
+        ['teks' => $rp($tNeg), 'angka' => true],
+        ['teks' => $rp($tPen - $tNeg), 'angka' => true],
+    ]];
+    echo tabel_bantu([
+        'cari' => 'Cari bahan…',
+        'paginasi' => 25,
+        'kolom' => [
+            ['judul_html' => '<input type="checkbox" title="Pilih semua bahan" @change="pilihSemua($event)">', 'lebar' => '34px'],
+            ['judul' => 'Kode'],
+            ['judul' => 'Nama Bahan'],
+            ['judul' => 'Qty RAB', 'angka' => true],
+            ['judul' => 'Harga Terpilih', 'angka' => true],
+            ['judul' => 'Harga Penawaran', 'angka' => true],
+            ['judul' => 'Harga Negosiasi', 'angka' => true],
+            ['judul' => 'Total Penawaran', 'angka' => true],
+            ['judul' => 'Total Negosiasi', 'angka' => true],
+            ['judul' => 'Hemat', 'angka' => true],
+        ],
+        'baris' => $barisNego,
+    ]);
+    ?>
     </div>
     <div class="aksi md:col-span-2"><button type="submit">Simpan Negosiasi</button></div>
   </form>

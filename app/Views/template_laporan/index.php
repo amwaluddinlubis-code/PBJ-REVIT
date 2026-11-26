@@ -35,44 +35,53 @@
   <?php if ($template === []): ?>
     <p class="kecil-teks" style="margin-bottom:0">Belum ada template. Unduh template contoh di atas, tata di Excel, lalu unggah di formulir ini.</p>
   <?php else: ?>
-  <table data-paginasi="10" data-cari="Cari template…">
-    <tr><th>Jenis</th><th>Nama</th><th>Placeholder Terdeteksi</th><th>Aktif</th><th>Render dari Data</th><th></th></tr>
-    <?php foreach ($template as $t): $terpakai = array_filter(explode(',', (string) ($t['placeholder_terpakai'] ?? ''))); ?>
-    <tr>
-      <td><?= esc($jenis[$t['jenis']]['label'] ?? $t['jenis']) ?></td>
-      <td><strong><?= esc($t['nama']) ?></strong><br><span class="kecil-teks"><?= esc(tglWaktu($t['created_at'] ?? null)) ?></span></td>
-      <td><span class="kecil-teks"><?= count($terpakai) ?> penanda<?= $terpakai ? ': ' . esc(implode(', ', array_slice($terpakai, 0, 6))) . (count($terpakai) > 6 ? ', …' : '') : '' ?></span></td>
-      <td>
-        <form class="inline" method="post" action="<?= base_url('template-laporan/aktif/' . $t['id']) ?>"><?= csrf_field() ?><button type="submit" class="kecil <?= (int) $t['aktif'] === 1 ? '' : 'abu' ?>"><?= (int) $t['aktif'] === 1 ? 'Aktif' : 'Nonaktif' ?></button></form>
-      </td>
-      <td>
-        <?php if ($t['jenis'] === 'spk'): ?>
-          <form class="inline" method="get" action="<?= base_url('template-laporan/render/' . $t['id']) ?>" style="display:flex;gap:6px">
-            <select name="spk" data-select-cari data-placeholder="— pilih SPK —" required>
-              <option value="">— pilih SPK —</option>
-              <?php foreach ($daftar_spk as $s): ?><option value="<?= (int) $s['id'] ?>">SPK <?= (int) $s['nomor'] ?> — <?= esc($s['paket'] ?? '') ?></option><?php endforeach; ?>
-            </select>
-            <button type="submit" class="kecil">Render .xlsx</button>
-          </form>
-        <?php elseif ($t['jenis'] === 'gedung'): ?>
-          <form class="inline" method="get" action="<?= base_url('template-laporan/render/' . $t['id']) ?>" style="display:flex;gap:6px">
-            <select name="gedung" data-select-cari data-placeholder="— pilih gedung —" required>
-              <option value="">— pilih gedung —</option>
-              <?php foreach ($daftar_gedung as $g): ?><option value="<?= (int) $g['id'] ?>"><?= esc($g['nama']) ?></option><?php endforeach; ?>
-            </select>
-            <button type="submit" class="kecil">Render .xlsx</button>
-          </form>
-        <?php else: ?>
-          <a class="tombol kecil" href="<?= base_url('template-laporan/render/' . $t['id']) ?>">Render .xlsx</a>
-        <?php endif; ?>
-      </td>
-      <td style="white-space:nowrap">
-        <a class="tombol kecil abu" href="<?= base_url('template-laporan/unduh/' . $t['id']) ?>">Unduh Berkas</a>
-        <form class="inline" method="post" action="<?= base_url('template-laporan/hapus/' . $t['id']) ?>" data-konfirmasi="Hapus template ini dari perpustakaan?"><?= csrf_field() ?><button type="submit" class="kecil bahaya">Hapus</button></form>
-      </td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  $barisTemplate = [];
+  foreach ($template as $t) {
+      $terpakai = array_filter(explode(',', (string) ($t['placeholder_terpakai'] ?? '')));
+      if ($t['jenis'] === 'spk') {
+          $opsiRender = '';
+          foreach ($daftar_spk as $s) {
+              $opsiRender .= '<option value="' . (int) $s['id'] . '">SPK ' . (int) $s['nomor'] . ' — ' . esc($s['paket'] ?? '') . '</option>';
+          }
+          $selRender = '<form class="inline" method="get" action="' . base_url('template-laporan/render/' . $t['id']) . '" style="display:flex;gap:6px">'
+              . '<select name="spk" data-select-cari data-placeholder="— pilih SPK —" required><option value="">— pilih SPK —</option>' . $opsiRender . '</select>'
+              . '<button type="submit" class="kecil">Render .xlsx</button></form>';
+      } elseif ($t['jenis'] === 'gedung') {
+          $opsiRender = '';
+          foreach ($daftar_gedung as $g) {
+              $opsiRender .= '<option value="' . (int) $g['id'] . '">' . esc($g['nama']) . '</option>';
+          }
+          $selRender = '<form class="inline" method="get" action="' . base_url('template-laporan/render/' . $t['id']) . '" style="display:flex;gap:6px">'
+              . '<select name="gedung" data-select-cari data-placeholder="— pilih gedung —" required><option value="">— pilih gedung —</option>' . $opsiRender . '</select>'
+              . '<button type="submit" class="kecil">Render .xlsx</button></form>';
+      } else {
+          $selRender = '<a class="tombol kecil" href="' . base_url('template-laporan/render/' . $t['id']) . '">Render .xlsx</a>';
+      }
+      $barisTemplate[] = ['sel' => [
+          (string) ($jenis[$t['jenis']]['label'] ?? $t['jenis']),
+          ['html' => '<strong>' . esc($t['nama']) . '</strong><br><span class="kecil-teks">' . esc(tglWaktu($t['created_at'] ?? null)) . '</span>'],
+          ['html' => '<span class="kecil-teks">' . count($terpakai) . ' penanda' . ($terpakai ? ': ' . esc(implode(', ', array_slice($terpakai, 0, 6))) . (count($terpakai) > 6 ? ', …' : '') : '') . '</span>'],
+          ['html' => '<form class="inline" method="post" action="' . base_url('template-laporan/aktif/' . $t['id']) . '">' . csrf_field() . '<button type="submit" class="kecil ' . ((int) $t['aktif'] === 1 ? '' : 'abu') . '">' . ((int) $t['aktif'] === 1 ? 'Aktif' : 'Nonaktif') . '</button></form>'],
+          ['html' => $selRender],
+          ['html' => '<a class="tombol kecil abu" href="' . base_url('template-laporan/unduh/' . $t['id']) . '">Unduh Berkas</a> '
+              . '<form class="inline" method="post" action="' . base_url('template-laporan/hapus/' . $t['id']) . '" data-konfirmasi="Hapus template ini dari perpustakaan?">' . csrf_field() . '<button type="submit" class="kecil bahaya">Hapus</button></form>', 'gaya' => 'white-space:nowrap'],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari template…',
+      'paginasi' => 10,
+      'kolom' => [
+          ['judul' => 'Jenis'],
+          ['judul' => 'Nama'],
+          ['judul' => 'Placeholder Terdeteksi'],
+          ['judul' => 'Aktif'],
+          ['judul' => 'Render dari Data'],
+          ['judul' => ''],
+      ],
+      'baris' => $barisTemplate,
+  ]);
+  ?>
   <?php endif; ?>
 </details>
 
@@ -81,21 +90,43 @@
   <summary>Katalog Placeholder — <?= esc($j['label']) ?> (konteks: <?= esc($j['konteks']) ?>)<?= $kode === 'spk' && ! empty($contoh['spk']) ? ' · contoh nilai dari SPK nyata pertama' : '' ?></summary>
   <?php foreach ($katalog[$kode] as $grup => $peta): ?>
     <p style="margin:12px 0 4px"><strong><?= esc($grup) ?></strong></p>
-    <table>
-      <tr><th style="width:300px">Penanda</th><th>Keterangan</th><th style="width:34%">Contoh Nilai</th></tr>
-      <?php foreach ($peta as $kunci => $label): ?>
-      <tr><td><code>{{<?= esc($kunci) ?>}}</code></td><td><?= esc($label) ?></td><td><?= esc($contoh[$kode][0][$kunci] ?? '—') ?></td></tr>
-      <?php endforeach; ?>
-    </table>
+    <?php
+    $barisKatalog = [];
+    foreach ($peta as $kunci => $label) {
+        $barisKatalog[] = ['sel' => [
+            ['html' => '<code>{{' . esc($kunci) . '}}</code>'],
+            (string) $label,
+            (string) ($contoh[$kode][0][$kunci] ?? '—'),
+        ]];
+    }
+    echo tabel_bantu([
+        'kolom' => [
+            ['judul' => 'Penanda', 'lebar' => '300px'],
+            ['judul' => 'Keterangan'],
+            ['judul' => 'Contoh Nilai', 'lebar' => '34%'],
+        ],
+        'baris' => $barisKatalog,
+    ]);
+    ?>
   <?php endforeach; ?>
   <?php foreach ($katalog_berulang[$kode] as $awalan => $peta): ?>
     <p style="margin:12px 0 4px"><strong>Baris Berulang — <?= esc($j['berulang'][$awalan] ?? $awalan) ?></strong> <span class="kecil-teks">(tulis pada SATU baris contoh; baris digandakan per data)</span></p>
-    <table>
-      <tr><th style="width:300px">Penanda</th><th>Keterangan</th></tr>
-      <?php foreach ($peta as $kunci => $label): ?>
-      <tr><td><code>{{<?= esc($kunci) ?>}}</code></td><td><?= esc($label) ?></td></tr>
-      <?php endforeach; ?>
-    </table>
+    <?php
+    $barisBerulang = [];
+    foreach ($peta as $kunci => $label) {
+        $barisBerulang[] = ['sel' => [
+            ['html' => '<code>{{' . esc($kunci) . '}}</code>'],
+            (string) $label,
+        ]];
+    }
+    echo tabel_bantu([
+        'kolom' => [
+            ['judul' => 'Penanda', 'lebar' => '300px'],
+            ['judul' => 'Keterangan'],
+        ],
+        'baris' => $barisBerulang,
+    ]);
+    ?>
   <?php endforeach; ?>
 </details>
 <?php endforeach; ?>

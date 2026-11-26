@@ -1,5 +1,6 @@
 <div class="panel">
   <h2 style="margin-top:0">Buat Rencana Mingguan</h2>
+  <?php /* Form buat rencana dipertahankan manual (bukan form_modal): sesudah dibuat pengguna langsung diarahkan ke halaman detail untuk mengisi target, sedangkan form_modal hanya memuat ulang halaman daftar. */ ?>
   <form method="post" action="<?= base_url('rencana-mingguan/buat') ?>" style="display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:8px;align-items:end">
     <?= csrf_field() ?>
     <label>Gedung
@@ -22,21 +23,32 @@
   <?php if ($daftar === []): ?>
   <p class="kecil-teks">Belum ada rencana mingguan. Buat yang pertama lewat formulir di atas.</p>
   <?php else: ?>
-  <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari rencana…" data-paginasi="25">
-    <tr><th>Gedung</th><th>Minggu</th><th>Keterangan</th><th class="angka">Pekerjaan Ditargetkan</th><th data-tanpa-urut>Aksi</th></tr>
-    <?php foreach ($daftar as $r): ?>
-    <tr>
-      <td><strong><?= esc($r['gedung_nama']) ?></strong></td>
-      <td><?= esc(date('d/m/Y', strtotime($r['minggu_mulai']))) ?> – <?= esc(date('d/m/Y', strtotime($r['minggu_mulai'] . ' +6 days'))) ?></td>
-      <td class="potong" title="<?= esc($r['keterangan'] ?? '') ?>"><?= esc($r['keterangan'] ?? '-') ?></td>
-      <td class="angka"><?= (int) $r['jml_target'] ?></td>
-      <td style="white-space:nowrap">
-        <a class="tombol kecil" href="<?= base_url('rencana-mingguan/' . $r['id']) ?>">Buka</a>
-        <button type="submit" class="tombol kecil abu" form="hapus-rm-<?= (int) $r['id'] ?>">Hapus</button>
-      </td>
-    </tr>
-    <?php endforeach; ?>
-  </table></div>
+  <div class="bungkus-tabel"><?php
+  $barisRm = [];
+  foreach ($daftar as $r) {
+      $barisRm[] = ['sel' => [
+          ['html' => '<strong>' . esc($r['gedung_nama']) . '</strong>'],
+          date('d/m/Y', strtotime($r['minggu_mulai'])) . ' – ' . date('d/m/Y', strtotime($r['minggu_mulai'] . ' +6 days')),
+          ['teks' => (string) ($r['keterangan'] ?? '-'), 'class' => 'potong', 'title' => (string) ($r['keterangan'] ?? '')],
+          ['teks' => (string) (int) $r['jml_target'], 'angka' => true],
+          ['html' => '<a class="tombol kecil" href="' . base_url('rencana-mingguan/' . $r['id']) . '">Buka</a>'
+              . ' <button type="submit" class="tombol kecil abu" form="hapus-rm-' . (int) $r['id'] . '">Hapus</button>', 'gaya' => 'white-space:nowrap'],
+      ]];
+  }
+  echo tabel_bantu([
+      'class' => 'satu-baris',
+      'cari' => 'Cari rencana…',
+      'paginasi' => 25,
+      'kolom' => [
+          ['judul' => 'Gedung'],
+          ['judul' => 'Minggu'],
+          ['judul' => 'Keterangan'],
+          ['judul' => 'Pekerjaan Ditargetkan', 'angka' => true],
+          ['judul' => 'Aksi', 'atribut' => 'data-tanpa-urut'],
+      ],
+      'baris' => $barisRm,
+  ]);
+  ?></div>
   <?php foreach ($daftar as $r): ?>
   <form id="hapus-rm-<?= (int) $r['id'] ?>" method="post" action="<?= base_url('rencana-mingguan/' . $r['id'] . '/hapus') ?>" data-konfirmasi="Hapus rencana mingguan <?= esc($r['gedung_nama']) ?> (<?= esc(date('d/m/Y', strtotime($r['minggu_mulai']))) ?>)? Target di dalamnya ikut terhapus." style="display:none"><?= csrf_field() ?></form>
   <?php endforeach; ?>

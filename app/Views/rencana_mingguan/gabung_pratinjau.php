@@ -7,6 +7,7 @@
   <form method="post" action="<?= base_url('rencana-mingguan/gabung-buat') ?>">
     <?= csrf_field() ?>
     <?php foreach ($rencana as $r): ?><input type="hidden" name="ids[]" value="<?= (int) $r['id'] ?>"><?php endforeach; ?>
+    <?php /* Tabel pratinjau dipertahankan manual: isian jumlah beli per baris (bahan x gedung) adalah inti simpan gabung-buat. */ ?>
     <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari bahan…">
       <tr><th>Bahan</th><th>Gedung Tujuan</th><th class="angka">Kebutuhan Gedung Ini</th><th class="angka">Stok + Berjalan (se-sekolah)</th><th class="angka">Jumlah Beli</th><th class="angka">Harga Acuan</th><th class="angka">Nilai</th></tr>
       <?php foreach ($baris as $b): ?>

@@ -55,27 +55,50 @@
 <?php if (! empty($panelGedung)): ?>
 <details class="panel panel-lipat" data-lipat-id="dash-gedung" open>
   <summary>Pembangunan Gedung — Dari Dokumen Perencana</summary>
-  <table data-paginasi="10" data-cari="Cari gedung…">
-    <tr><th>Gedung</th><th class="angka">Nilai BOQ Asli</th><th class="angka">Nilai Analisa</th><th class="angka">Perubahan</th><th>Fisik</th><th>Aksi</th></tr>
-    <?php foreach ($panelGedung as $gd): ?>
-    <tr>
-      <td><b><?= esc($gd['nama']) ?></b></td>
-      <td class="angka"><?= rp($gd['boq_asli']) ?></td>
-      <td class="angka"><?= rp($gd['nilai_analisa']) ?></td>
-      <td class="angka"><?php if (abs($gd['perubahan']) < 0.5): ?><span class="kecil-teks">—</span><?php else: ?><span class="<?= $gd['perubahan'] > 0 ? 'perubahan-buruk' : 'perubahan-baik' ?>"><?= $gd['perubahan'] > 0 ? '+' : '−' ?><?= rp(abs($gd['perubahan'])) ?></span><?php if ($gd['boq_asli'] > 0): ?> <span class="kecil-teks">(<?= number_format(abs($gd['perubahan']) / $gd['boq_asli'] * 100, 1, ',', '.') ?>%)</span><?php endif; ?><?php endif; ?></td>
-      <td><div class="bar<?= $gd['persen_fisik'] >= 99.5 ? ' hijau' : '' ?>"><div style="width:<?= min(100, $gd['persen_fisik']) ?>%"></div></div><span class="kecil-teks"><?= number_format($gd['persen_fisik'], 1, ',', '.') ?>%</span></td>
-      <td><a class="tombol kecil" href="<?= base_url('gedung/' . $gd['id']) ?>">Buka</a></td>
-    </tr>
-    <?php endforeach; ?>
-    <tr class="total">
-      <td><b>Total <?= count($panelGedung) ?> gedung</b></td>
-      <td class="angka"><b><?= rp($panelTotal['asli']) ?></b></td>
-      <td class="angka"><b><?= rp($panelTotal['analisa']) ?></b></td>
-      <td class="angka"><b><?php if (abs($panelTotal['perubahan']) < 0.5): ?>—<?php else: ?><span class="<?= $panelTotal['perubahan'] > 0 ? 'perubahan-buruk' : 'perubahan-baik' ?>"><?= $panelTotal['perubahan'] > 0 ? '+' : '−' ?><?= rp(abs($panelTotal['perubahan'])) ?></span><?php endif; ?></b></td>
-      <td></td>
-      <td></td>
-    </tr>
-  </table>
+  <?php
+  $selPerubahan = static function ($nilai, $dasar = null) {
+      if (abs($nilai) < 0.5) {
+          return '<span class="kecil-teks">—</span>';
+      }
+      $h = '<span class="' . ($nilai > 0 ? 'perubahan-buruk' : 'perubahan-baik') . '">' . ($nilai > 0 ? '+' : '−') . rp(abs($nilai)) . '</span>';
+      if ($dasar !== null && $dasar > 0) {
+          $h .= ' <span class="kecil-teks">(' . number_format(abs($nilai) / $dasar * 100, 1, ',', '.') . '%)</span>';
+      }
+      return $h;
+  };
+  $barisPanelGedung = [];
+  foreach ($panelGedung as $gd) {
+      $barisPanelGedung[] = ['sel' => [
+          ['html' => '<b>' . esc($gd['nama']) . '</b>'],
+          ['teks' => rp($gd['boq_asli']), 'angka' => true],
+          ['teks' => rp($gd['nilai_analisa']), 'angka' => true],
+          ['html' => $selPerubahan($gd['perubahan'], $gd['boq_asli']), 'angka' => true],
+          ['html' => '<div class="bar' . ($gd['persen_fisik'] >= 99.5 ? ' hijau' : '') . '"><div style="width:' . min(100, $gd['persen_fisik']) . '%"></div></div><span class="kecil-teks">' . number_format($gd['persen_fisik'], 1, ',', '.') . '%</span>'],
+          ['html' => '<a class="tombol kecil" href="' . base_url('gedung/' . $gd['id']) . '">Buka</a>'],
+      ]];
+  }
+  $barisPanelGedung[] = ['total' => [
+      ['html' => '<b>Total ' . count($panelGedung) . ' gedung</b>'],
+      ['html' => '<b>' . rp($panelTotal['asli']) . '</b>', 'angka' => true],
+      ['html' => '<b>' . rp($panelTotal['analisa']) . '</b>', 'angka' => true],
+      ['html' => '<b>' . (abs($panelTotal['perubahan']) < 0.5 ? '—' : $selPerubahan($panelTotal['perubahan'])) . '</b>', 'angka' => true],
+      '',
+      '',
+  ], 'class' => 'total'];
+  echo tabel_bantu([
+      'cari' => 'Cari gedung…',
+      'paginasi' => 10,
+      'kolom' => [
+          ['judul' => 'Gedung'],
+          ['judul' => 'Nilai BOQ Asli', 'angka' => true],
+          ['judul' => 'Nilai Analisa', 'angka' => true],
+          ['judul' => 'Perubahan', 'angka' => true],
+          ['judul' => 'Fisik'],
+          ['judul' => 'Aksi'],
+      ],
+      'baris' => $barisPanelGedung,
+  ]);
+  ?>
   <?php if (isset($verifikasi)): ?>
   <p class="kecil-teks" style="margin-bottom:0">Total BOQ <b><?= (int) $verifikasi['gedung'] ?> gedung aktif</b>: <b><?= rp($verifikasi['total_boq']) ?></b> + biaya non-gedung <b><?= rp($verifikasi['biaya_lain']) ?></b> = <b><?= rp($verifikasi['total_semua']) ?></b> · Pagu anggaran: <b><?= rp($verifikasi['pagu']) ?></b> · Selisih: <b><?= rp($verifikasi['selisih']) ?></b><?php if ($verifikasi['pagu'] > 0 && $verifikasi['selisih'] < 0): ?> <span class="perubahan-buruk"><b>(melebihi pagu)</b></span><?php elseif ($verifikasi['pagu'] > 0 && $verifikasi['selisih'] == 0): ?> <span class="perubahan-baik"><b>(sesuai pagu)</b></span><?php endif; ?> — pantau pemakaiannya di <a href="<?= base_url('rencana-belanja') ?>">Rencana Belanja</a> dan <a href="<?= base_url('lpj') ?>">LPJ &amp; Realisasi</a>.</p>
   <?php endif; ?>
@@ -85,13 +108,29 @@
 <details class="panel panel-lipat" data-lipat-id="dash-biaya-lain" open>
   <summary>Biaya Non-Gedung</summary>
   <?php if (! empty($panelBiayaLain)): ?>
-  <table data-cari="Cari biaya non-gedung…">
-    <tr><th>Kelompok</th><th>Uraian</th><th class="angka">Jumlah</th></tr>
-    <?php foreach ($panelBiayaLain as $bl): ?>
-    <tr><td><?= esc($bl['kelompok']) ?></td><td><?= esc($bl['uraian']) ?></td><td class="angka"><?= rp((float) $bl['jumlah']) ?></td></tr>
-    <?php endforeach; ?>
-    <tr class="total"><td colspan="2"><b>Total Biaya Non-Gedung</b></td><td class="angka"><b><?= rp($biayaNonGedung ?? 0) ?></b></td></tr>
-  </table>
+  <?php
+  $barisBiayaLain = [];
+  foreach ($panelBiayaLain as $bl) {
+      $barisBiayaLain[] = ['sel' => [
+          (string) $bl['kelompok'],
+          (string) $bl['uraian'],
+          ['teks' => rp((float) $bl['jumlah']), 'angka' => true],
+      ]];
+  }
+  $barisBiayaLain[] = ['total' => [
+      ['html' => '<b>Total Biaya Non-Gedung</b>', 'colspan' => 2],
+      ['html' => '<b>' . rp($biayaNonGedung ?? 0) . '</b>', 'angka' => true],
+  ], 'class' => 'total'];
+  echo tabel_bantu([
+      'cari' => 'Cari biaya non-gedung…',
+      'kolom' => [
+          ['judul' => 'Kelompok'],
+          ['judul' => 'Uraian'],
+          ['judul' => 'Jumlah', 'angka' => true],
+      ],
+      'baris' => $barisBiayaLain,
+  ]);
+  ?>
   <p class="kecil-teks" style="margin-bottom:0">Kelola rinciannya di <a href="<?= base_url('biaya-non-gedung') ?>">Biaya Non-Gedung</a>.</p>
   <?php else: ?>
   <p class="kecil-teks" style="margin:0">Belum ada biaya non-gedung. Tambahkan di <a href="<?= base_url('biaya-non-gedung') ?>">Biaya Non-Gedung</a>.</p>
@@ -100,18 +139,32 @@
 
 <details class="panel panel-lipat" data-lipat-id="dash-spk" open>
   <summary>Ringkasan per SPK</summary>
-  <table data-paginasi="10" data-cari="Cari SPK…">
-    <tr><th>No. SPK</th><th>Tanggal</th><th>Penyedia</th><th>Paket</th><th class="angka">Jml Bahan</th><th class="angka">Nilai</th><th>Status</th></tr>
-    <?php foreach ($perSpk as $s): ?>
-    <tr>
-      <td><a href="<?= base_url('spk') ?>"><?= (int) $s['nomor'] ?></a></td>
-      <td><?= esc(tgl($s['tanggal'] ?? null)) ?></td>
-      <td><?= esc($s['penyedia'] ?? '—') ?></td>
-      <td><?= esc($s['paket'] ?? '—') ?></td>
-      <td class="angka"><?= (int) $s['jumlah'] ?></td>
-      <td class="angka"><?= rp($s['nilai']) ?></td>
-      <td><?= esc($s['status']) ?></td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  $barisPerSpkDash = [];
+  foreach ($perSpk as $s) {
+      $barisPerSpkDash[] = ['sel' => [
+          ['html' => '<a href="' . base_url('spk') . '">' . (int) $s['nomor'] . '</a>'],
+          (string) tgl($s['tanggal'] ?? null),
+          (string) ($s['penyedia'] ?? '—'),
+          (string) ($s['paket'] ?? '—'),
+          ['teks' => (string) (int) $s['jumlah'], 'angka' => true],
+          ['teks' => rp($s['nilai']), 'angka' => true],
+          (string) $s['status'],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari SPK…',
+      'paginasi' => 10,
+      'kolom' => [
+          ['judul' => 'No. SPK'],
+          ['judul' => 'Tanggal'],
+          ['judul' => 'Penyedia'],
+          ['judul' => 'Paket'],
+          ['judul' => 'Jml Bahan', 'angka' => true],
+          ['judul' => 'Nilai', 'angka' => true],
+          ['judul' => 'Status'],
+      ],
+      'baris' => $barisPerSpkDash,
+  ]);
+  ?>
 </details>

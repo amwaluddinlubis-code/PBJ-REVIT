@@ -3,16 +3,26 @@
 
   <p style="margin-top:0;color:var(--ta-teks-2)">Database aktif: <strong><?= esc($namaDb) ?></strong> · MariaDB <?= esc($versi) ?> · <?= count($tabel) ?> tabel · total ukuran <?= esc($totalUkuran) ?>. Halaman ini hanya untuk administrator.</p>
   <div class="bungkus-tabel">
-  <table class="satu-baris" data-cari="Cari tabel…">
-    <tr><th>Tabel</th><th class="angka">Perkiraan Baris</th><th class="angka">Ukuran</th></tr>
-    <?php foreach ($tabel as $t): ?>
-    <tr>
-      <td><?= esc($t['nama']) ?></td>
-      <td class="angka"><?= number_format((float) $t['baris'], 0, ',', '.') ?></td>
-      <td class="angka"><?= number_format((float) $t['ukuran'] / 1024, 1, ',', '.') ?> KB</td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  $barisInfo = [];
+  foreach ($tabel as $t) {
+      $barisInfo[] = ['sel' => [
+          (string) $t['nama'],
+          ['teks' => number_format((float) $t['baris'], 0, ',', '.'), 'angka' => true],
+          ['teks' => number_format((float) $t['ukuran'] / 1024, 1, ',', '.') . ' KB', 'angka' => true],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari tabel…',
+      'class' => 'satu-baris',
+      'kolom' => [
+          ['judul' => 'Tabel'],
+          ['judul' => 'Perkiraan Baris', 'angka' => true],
+          ['judul' => 'Ukuran', 'angka' => true],
+      ],
+      'baris' => $barisInfo,
+  ]);
+  ?>
   </div>
 </details>
 
@@ -26,24 +36,32 @@
   </form>
   <?php if ($backups): ?>
   <div class="bungkus-tabel" style="margin-top:12px">
-  <table class="satu-baris" data-cari="Cari backup…">
-    <tr><th>Berkas</th><th>Tanggal</th><th class="angka">Ukuran</th><th style="width:190px">Aksi</th></tr>
-    <?php foreach ($backups as $b): ?>
-    <tr>
-      <td><?= esc($b['nama']) ?><div class="kecil-teks"><?= esc($b['jenis'] ?? '') ?></div></td>
-      <td><?= esc($b['tanggal']) ?></td>
-      <td class="angka"><?= esc($b['ukuran']) ?></td>
-      <td>
-        <a class="tombol kecil" href="<?= base_url('pemeliharaan-db/unduh/' . $b['nama']) ?>">Unduh</a>
-        <form class="inline" method="post" action="<?= base_url('pemeliharaan-db/hapus-backup') ?>" data-konfirmasi="Hapus berkas backup <?= esc($b['nama']) ?>?">
-          <?= csrf_field() ?>
-          <input type="hidden" name="nama" value="<?= esc($b['nama']) ?>">
-          <button class="kecil bahaya" type="submit">Hapus</button>
-        </form>
-      </td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  $barisBackup = [];
+  foreach ($backups as $b) {
+      $barisBackup[] = ['sel' => [
+          ['html' => esc($b['nama']) . '<div class="kecil-teks">' . esc($b['jenis'] ?? '') . '</div>'],
+          (string) $b['tanggal'],
+          ['teks' => (string) $b['ukuran'], 'angka' => true],
+          ['html' => '<a class="tombol kecil" href="' . base_url('pemeliharaan-db/unduh/' . $b['nama']) . '">Unduh</a>'
+              . '<form class="inline" method="post" action="' . base_url('pemeliharaan-db/hapus-backup') . '" data-konfirmasi="Hapus berkas backup ' . esc($b['nama'], 'attr') . '?">'
+              . csrf_field()
+              . '<input type="hidden" name="nama" value="' . esc($b['nama'], 'attr') . '">'
+              . '<button class="kecil bahaya" type="submit">Hapus</button></form>'],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari backup…',
+      'class' => 'satu-baris',
+      'kolom' => [
+          ['judul' => 'Berkas'],
+          ['judul' => 'Tanggal'],
+          ['judul' => 'Ukuran', 'angka' => true],
+          ['judul' => 'Aksi', 'lebar' => '190px'],
+      ],
+      'baris' => $barisBackup,
+  ]);
+  ?>
   </div>
   <?php else: ?>
   <p class="kecil-teks">Belum ada backup tersimpan.</p>
@@ -71,32 +89,39 @@
 
   <p style="margin-top:0;color:var(--ta-teks-2)">Penghapusan di aplikasi ini bersifat lunak: baris disembunyikan, bukan dimusnahkan. Di sini baris terhapus bisa <strong>dipulihkan</strong> (tampil lagi) atau <strong>dihapus permanen</strong> (tidak bisa dikembalikan).</p>
   <div class="bungkus-tabel">
-  <table class="satu-baris" data-cari="Cari tabel…">
-    <tr><th>Tabel</th><th class="angka">Baris Aktif</th><th class="angka">Baris Terhapus</th><th style="width:300px">Aksi</th></tr>
-    <?php foreach ($sampah as $t): ?>
-    <tr>
-      <td><?= esc($t['nama']) ?></td>
-      <td class="angka"><?= number_format($t['aktif'], 0, ',', '.') ?></td>
-      <td class="angka"><?= number_format($t['terhapus'], 0, ',', '.') ?></td>
-      <td>
-        <?php if ($t['terhapus'] > 0): ?>
-        <form class="inline" method="post" action="<?= base_url('pemeliharaan-db/sampah-pulihkan') ?>" data-konfirmasi="Pulihkan <?= $t['terhapus'] ?> baris terhapus pada tabel <?= esc($t['nama']) ?>? Baris akan tampil lagi di aplikasi.">
-          <?= csrf_field() ?>
-          <input type="hidden" name="tabel" value="<?= esc($t['nama']) ?>">
-          <button class="kecil" type="submit">Pulihkan Semua</button>
-        </form>
-        <form class="inline" method="post" action="<?= base_url('pemeliharaan-db/sampah-hapus') ?>" data-konfirmasi="Hapus PERMANEN <?= $t['terhapus'] ?> baris terhapus pada tabel <?= esc($t['nama']) ?>? Tindakan ini tidak bisa dibatalkan.">
-          <?= csrf_field() ?>
-          <input type="hidden" name="tabel" value="<?= esc($t['nama']) ?>">
-          <button class="kecil bahaya" type="submit">Hapus Permanen</button>
-        </form>
-        <?php else: ?>
-        <span class="kecil-teks">—</span>
-        <?php endif; ?>
-      </td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  $barisSampah = [];
+  foreach ($sampah as $t) {
+      $aksiSampah = '<span class="kecil-teks">—</span>';
+      if ($t['terhapus'] > 0) {
+          $aksiSampah = '<form class="inline" method="post" action="' . base_url('pemeliharaan-db/sampah-pulihkan') . '" data-konfirmasi="Pulihkan ' . $t['terhapus'] . ' baris terhapus pada tabel ' . esc($t['nama'], 'attr') . '? Baris akan tampil lagi di aplikasi.">'
+              . csrf_field()
+              . '<input type="hidden" name="tabel" value="' . esc($t['nama'], 'attr') . '">'
+              . '<button class="kecil" type="submit">Pulihkan Semua</button></form>'
+              . '<form class="inline" method="post" action="' . base_url('pemeliharaan-db/sampah-hapus') . '" data-konfirmasi="Hapus PERMANEN ' . $t['terhapus'] . ' baris terhapus pada tabel ' . esc($t['nama'], 'attr') . '? Tindakan ini tidak bisa dibatalkan.">'
+              . csrf_field()
+              . '<input type="hidden" name="tabel" value="' . esc($t['nama'], 'attr') . '">'
+              . '<button class="kecil bahaya" type="submit">Hapus Permanen</button></form>';
+      }
+      $barisSampah[] = ['sel' => [
+          (string) $t['nama'],
+          ['teks' => number_format($t['aktif'], 0, ',', '.'), 'angka' => true],
+          ['teks' => number_format($t['terhapus'], 0, ',', '.'), 'angka' => true],
+          ['html' => $aksiSampah],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari tabel…',
+      'class' => 'satu-baris',
+      'kolom' => [
+          ['judul' => 'Tabel'],
+          ['judul' => 'Baris Aktif', 'angka' => true],
+          ['judul' => 'Baris Terhapus', 'angka' => true],
+          ['judul' => 'Aksi', 'lebar' => '300px'],
+      ],
+      'baris' => $barisSampah,
+  ]);
+  ?>
   </div>
 </details>
 

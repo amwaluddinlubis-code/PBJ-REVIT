@@ -6,6 +6,7 @@
   <?php else: ?>
   <form method="post" action="<?= base_url('rencana-mingguan/gabung-pratinjau') ?>">
     <?= csrf_field() ?>
+    <?php /* Tabel pilihan dipertahankan manual: centang per baris adalah inti kiriman ke pratinjau gabungan (ids[]). */ ?>
     <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari rencana…">
       <tr><th style="width:34px" data-tanpa-urut>Pilih</th><th>Gedung</th><th>Minggu</th><th>Keterangan</th><th class="angka">Pekerjaan Ditargetkan</th></tr>
       <?php foreach ($daftar as $r): ?>

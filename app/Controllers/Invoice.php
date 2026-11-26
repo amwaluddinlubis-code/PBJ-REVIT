@@ -265,6 +265,15 @@ class Invoice extends BaseController
         return $this->tampil('invoice/jurnal', ['baris' => $baris, 'belum' => $belum, 'tgl_bayar_default' => $this->tanggalBulanBekerja()], 'Jurnal Pembayaran — Aplikasi PBJ Sekolah');
     }
 
+    /** Balasan form modal jurnal: AJAX -> JSON {ok, pesan}; non-AJAX -> redirect ke halaman jurnal seperti semula. */
+    private function balasJurnal(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return redirect()->to('invoice/jurnal')->with($ok ? 'sukses' : 'galat', $pesan);
+    }
+
     public function jurnalTambah()
     {
         if ($d = $this->penjagaPeran(['bendahara'])) {
@@ -272,22 +281,22 @@ class Invoice extends BaseController
         }
         $invoiceId = (int) $this->request->getPost('invoice_id');
         if ($invoiceId <= 0) {
-            return redirect()->to('invoice/jurnal')->with('galat', 'Pilih invoice yang dibayar.');
+            return $this->balasJurnal(false, 'Pilih invoice yang dibayar.');
         }
         $inv = $this->db()->query(
             'SELECT i.* FROM invoice i JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE i.id = ? AND s.sekolah_id = ? AND i.is_deleted = 0',
             [$invoiceId, $this->sid()]
         )->getRowArray();
         if ($inv === null) {
-            return redirect()->to('invoice/jurnal')->with('galat', 'Invoice tidak ditemukan.');
+            return $this->balasJurnal(false, 'Invoice tidak ditemukan.');
         }
         if ($g = $this->galatBulanBekerja($this->request->getPost('tanggal') ?: null)) {
-            return redirect()->to('invoice/jurnal')->with('galat', $g);
+            return $this->balasJurnal(false, $g);
         }
         // Kontrol pagu: total belanja terbayar tidak boleh melewati total anggaran
         [$boleh, $sisaPagu, $anggaran] = $this->cekPagu((float) $inv['nilai']);
         if (! $boleh) {
-            return redirect()->to('invoice/jurnal')->with('galat', sprintf(
+            return $this->balasJurnal(false, sprintf(
                 'Pembayaran ditahan: nilai invoice %s melewati sisa pagu anggaran %s dari total anggaran %s.',
                 $this->rp($inv['nilai']),
                 $this->rp(max(0, $sisaPagu)),
@@ -304,7 +313,7 @@ class Invoice extends BaseController
         $this->db()->table('invoice')->where('id', $invoiceId)->update(['status' => 'Sudah Bayar', 'updated_at' => date('Y-m-d H:i:s')]);
         $this->db()->transComplete();
         $this->catatAudit('pembayaran', $invoiceId, 'buat', 'Pembayaran invoice sebesar ' . $this->rp($inv['nilai']) . ' dicatat.');
-        return redirect()->to('invoice/jurnal')->with('sukses', 'Pembayaran dicatat; PPh 22 dan nilai bersih terhitung otomatis.');
+        return $this->balasJurnal(true, 'Pembayaran dicatat; PPh 22 dan nilai bersih terhitung otomatis.');
     }
 
     public function jurnalHapus($id)

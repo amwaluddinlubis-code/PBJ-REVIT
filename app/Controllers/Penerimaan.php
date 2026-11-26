@@ -37,6 +37,15 @@ class Penerimaan extends BaseController
         ], 'Penerimaan Dana Bantuan — Aplikasi PBJ Sekolah');
     }
 
+    /** Balasan form modal (pola Bahan::balasForm): AJAX -> JSON {ok, pesan}; biasa -> redirect flash. */
+    private function balasForm(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return redirect()->to('/penerimaan-dana')->with($ok ? 'sukses' : 'galat', $pesan);
+    }
+
     public function simpan()
     {
         if ($d = $this->penjagaPeran(['bendahara'])) {
@@ -46,7 +55,7 @@ class Penerimaan extends BaseController
         $jumlah = (float) preg_replace('/[^0-9]/', '', (string) $r->getPost('jumlah'));
         $tahap = (int) $r->getPost('tahap');
         if ($jumlah <= 0 || ! $r->getPost('tanggal') || ! in_array($tahap, [1, 2], true)) {
-            return redirect()->to('/penerimaan-dana')->with('galat', 'Tanggal, tahap (1/2), dan jumlah penerimaan wajib diisi.');
+            return $this->balasForm(false, 'Tanggal, tahap (1/2), dan jumlah penerimaan wajib diisi.');
         }
         $kanal = (string) $r->getPost('kanal') === 'tunai' ? 'tunai' : 'bank';
         $this->db()->table('kas_transaksi')->insert([
@@ -62,7 +71,7 @@ class Penerimaan extends BaseController
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
         $this->catatAudit('penerimaan', (int) $this->db()->insertID(), 'buat', 'Penerimaan tahap ' . $tahap . ' sebesar ' . $this->rp($jumlah));
-        return redirect()->to('/penerimaan-dana')->with('sukses', 'Penerimaan tahap ' . $tahap . ' dicatat dan masuk Buku Kas.');
+        return $this->balasForm(true, 'Penerimaan tahap ' . $tahap . ' dicatat dan masuk Buku Kas.');
     }
 
     /** Syarat baris penerimaan pada tabel kas bersama. */

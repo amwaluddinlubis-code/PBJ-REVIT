@@ -19,53 +19,54 @@
 <details class="panel panel-lipat" data-lipat-id="bukukas-bulan">
   <summary><?= esc($nama_buku) ?> — Bulan <?= esc($namaBulan($bulan)) ?></summary>
 
-  <table data-paginasi="25" data-cari="Cari transaksi…">
-    <tr><th>Tanggal</th><th>Uraian</th><th class="angka">Penerimaan</th><th class="angka">Pengeluaran</th><th class="angka">Saldo</th></tr>
-    <tr><td colspan="2"><b>Saldo awal bulan</b></td><td></td><td></td><td class="angka"><b><?= rp($saldo_awal) ?></b></td></tr>
-    <?php foreach ($baris as $e): ?>
-    <tr>
-      <td><?= esc(tgl($e['tanggal'] ?? null)) ?></td>
-      <td><?= esc($e['uraian']) ?> <span class="kecil-teks">(<?= $e['sumber'] === 'manual' ? 'manual' : ($e['sumber'] === 'invoice' ? 'jurnal pembayaran' : ($e['sumber'] === 'upah' ? 'upah' : 'bukti setor')) ?>)</span></td>
-      <td class="angka"><?= $e['masuk'] > 0 ? rp($e['masuk']) : '—' ?></td>
-      <td class="angka"><?= $e['keluar'] > 0 ? rp($e['keluar']) : '—' ?></td>
-      <td class="angka"><?= rp($e['saldo']) ?></td>
-    </tr>
-    <?php endforeach; ?>
-    <?php if ($baris === []): ?><tr><td colspan="5">Tidak ada transaksi pada bulan ini.</td></tr><?php endif; ?>
-    <tr><td colspan="2"><b>Saldo akhir bulan (penutupan buku)</b></td><td></td><td></td><td class="angka"><b><?= rp($saldo_akhir) ?></b></td></tr>
-  </table>
+  <?php
+  // Tabel buku bulan ini: saldo awal, mutasi dengan saldo berjalan, saldo akhir.
+  $labelSumber = ['manual' => 'manual', 'invoice' => 'jurnal pembayaran', 'upah' => 'upah'];
+  $barisBuku = [
+      ['sel' => [
+          ['html' => '<b>Saldo awal bulan</b>', 'colspan' => 2],
+          '',
+          '',
+          ['html' => '<b>' . rp($saldo_awal) . '</b>', 'angka' => true],
+      ]],
+  ];
+  foreach ($baris as $e) {
+      $barisBuku[] = ['sel' => [
+          (string) tgl($e['tanggal'] ?? null),
+          ['html' => esc($e['uraian']) . ' <span class="kecil-teks">(' . ($labelSumber[$e['sumber']] ?? 'bukti setor') . ')</span>'],
+          ['teks' => $e['masuk'] > 0 ? rp($e['masuk']) : '—', 'angka' => true],
+          ['teks' => $e['keluar'] > 0 ? rp($e['keluar']) : '—', 'angka' => true],
+          ['teks' => rp($e['saldo']), 'angka' => true],
+      ]];
+  }
+  if ($baris === []) {
+      $barisBuku[] = ['sel' => [['teks' => 'Tidak ada transaksi pada bulan ini.', 'colspan' => 5]]];
+  }
+  $barisBuku[] = ['sel' => [
+      ['html' => '<b>Saldo akhir bulan (penutupan buku)</b>', 'colspan' => 2],
+      '',
+      '',
+      ['html' => '<b>' . rp($saldo_akhir) . '</b>', 'angka' => true],
+  ]];
+  echo tabel_bantu([
+      'cari' => 'Cari transaksi…',
+      'paginasi' => 25,
+      'kolom' => [
+          ['judul' => 'Tanggal'],
+          ['judul' => 'Uraian'],
+          ['judul' => 'Penerimaan', 'angka' => true],
+          ['judul' => 'Pengeluaran', 'angka' => true],
+          ['judul' => 'Saldo', 'angka' => true],
+      ],
+      'baris' => $barisBuku,
+  ]);
+  ?>
 </details>
 
 <details class="panel panel-lipat" data-lipat-id="bukukas-catat-transaksi-kas-manual">
   <summary>Catat Transaksi Kas Manual</summary>
 
-  <form method="post" action="<?= base_url('buku-kas/simpan') ?>">
-    <?= csrf_field() ?>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
-      <label>Tanggal <input type="date" name="tanggal" value="<?= esc($tgl_bayar_default ?? date('Y-m-d')) ?>" required></label>
-      <label class="md:col-span-2">Uraian <input type="text" name="uraian" required placeholder="cth. Penerimaan dana bantuan tahap 1"></label>
-      <label>Kategori
-        <select data-select-cari name="kategori">
-          <option value="penerimaan">Penerimaan dana bantuan</option>
-          <option value="lainnya">Lainnya</option>
-          <option value="pajak">Pajak (di luar bukti setor)</option>
-          <option value="sisa_dana">Sisa dana</option>
-        </select>
-      </label>
-      <label>Tahap (untuk penerimaan)
-        <select data-select-cari name="tahap"><option value="">—</option><option value="1">Tahap 1 (70%)</option><option value="2">Tahap 2 (30%)</option></select>
-      </label>
-      <label>Jenis
-        <select data-select-cari name="jenis"><option value="masuk">Uang masuk</option><option value="keluar">Uang keluar</option></select>
-      </label>
-      <label>Kanal
-        <select data-select-cari name="kanal"><option value="bank">Bank</option><option value="tunai">Tunai</option></select>
-      </label>
-      <label>Jumlah (Rp) <input type="text" name="jumlah" inputmode="numeric" data-uang required placeholder="750000000"></label>
-      <label>Keterangan <input type="text" name="keterangan" placeholder="opsional"></label>
-    </div>
-    <div class="aksi" style="justify-content:flex-start"><button type="submit">Catat Transaksi</button></div>
-  </form>
+  <button type="button" class="tombol" onclick="bukaKasBaru()">+ Catat Transaksi</button>
   <p class="kecil-teks">Pembayaran invoice, pembayaran upah, dan penyetoran pajak/sisa dana tidak perlu dicatat di sini — sudah masuk buku secara otomatis dari modulnya masing-masing.</p>
 </details>
 
@@ -83,19 +84,67 @@
       <button type="submit" class="bahaya">Kosongkan Transaksi Manual</button>
     </form>
   </div>
-  <table data-paginasi="10" data-cari="Cari transaksi…">
-    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua transaksi" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Uraian</th><th>Kategori</th><th>Kanal</th><th class="angka">Jumlah</th><th></th></tr>
-    <?php foreach ($manual as $m): ?>
-    <tr>
-      <td><input type="checkbox" data-pilih value="<?= (int) $m['id'] ?>" x-model="terpilih"></td>
-      <td><?= esc(tgl($m['tanggal'])) ?></td>
-      <td><?= esc($m['uraian']) ?></td>
-      <td><?= esc($m['kategori']) ?><?= $m['tahap'] ? ' · tahap ' . (int) $m['tahap'] : '' ?></td>
-      <td><?= esc($m['kanal']) ?> · <?= esc($m['jenis']) ?></td>
-      <td class="angka"><?= rp($m['jumlah']) ?></td>
-      <td><form class="inline" method="post" action="<?= base_url('buku-kas/hapus/' . $m['id']) ?>" data-konfirmasi="Hapus transaksi kas ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  $barisManual = [];
+  foreach ($manual as $m) {
+      $barisManual[] = ['sel' => [
+          ['html' => '<input type="checkbox" data-pilih value="' . (int) $m['id'] . '" x-model="terpilih">'],
+          (string) tgl($m['tanggal']),
+          (string) $m['uraian'],
+          (string) $m['kategori'] . ($m['tahap'] ? ' · tahap ' . (int) $m['tahap'] : ''),
+          (string) $m['kanal'] . ' · ' . (string) $m['jenis'],
+          ['teks' => rp($m['jumlah']), 'angka' => true],
+          ['html' => '<form class="inline" method="post" action="' . base_url('buku-kas/hapus/' . $m['id']) . '" data-konfirmasi="Hapus transaksi kas ini?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>'],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari transaksi…',
+      'paginasi' => 10,
+      'kolom' => [
+          ['judul_html' => '<input type="checkbox" title="Pilih semua transaksi" @change="pilihSemua($event)">', 'lebar' => '34px'],
+          ['judul' => 'Tanggal'],
+          ['judul' => 'Uraian'],
+          ['judul' => 'Kategori'],
+          ['judul' => 'Kanal'],
+          ['judul' => 'Jumlah', 'angka' => true],
+          ['judul' => ''],
+      ],
+      'baris' => $barisManual,
+  ]);
+  ?>
 </div>
 <?php endif; ?>
+
+<?= form_modal([
+    'id' => 'modal-kas',
+    'judul' => 'Catat Transaksi Kas Manual',
+    'aksi' => base_url('buku-kas/simpan'),
+    'lebar' => 720,
+    'kolom' => [
+        ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal', 'wajib' => true],
+        ['nama' => 'uraian', 'label' => 'Uraian', 'jenis' => 'teks', 'wajib' => true, 'penuh' => true, 'placeholder' => 'cth. Penerimaan dana bantuan tahap 1'],
+        ['nama' => 'kategori', 'label' => 'Kategori', 'jenis' => 'pilihan', 'opsi' => [
+            'penerimaan' => 'Penerimaan dana bantuan',
+            'lainnya' => 'Lainnya',
+            'pajak' => 'Pajak (di luar bukti setor)',
+            'sisa_dana' => 'Sisa dana',
+        ]],
+        ['nama' => 'tahap', 'label' => 'Tahap (untuk penerimaan)', 'jenis' => 'pilihan', 'opsi' => ['' => '—', '1' => 'Tahap 1 (70%)', '2' => 'Tahap 2 (30%)']],
+        ['nama' => 'jenis', 'label' => 'Jenis', 'jenis' => 'pilihan', 'opsi' => ['masuk' => 'Uang masuk', 'keluar' => 'Uang keluar']],
+        ['nama' => 'kanal', 'label' => 'Kanal', 'jenis' => 'pilihan', 'opsi' => ['bank' => 'Bank', 'tunai' => 'Tunai']],
+        ['nama' => 'jumlah', 'label' => 'Jumlah (Rp)', 'jenis' => 'uang', 'wajib' => true, 'placeholder' => '750000000'],
+        ['nama' => 'keterangan', 'label' => 'Keterangan', 'jenis' => 'teks', 'placeholder' => 'opsional'],
+    ],
+    'tombol' => ['hapus' => false, 'simpan_teks' => 'Catat Transaksi'],
+]) ?>
+<script>
+// Jembatan modal kas: tanggal bawaan mengikuti Bulan Bekerja, lalu
+// sinkronkan widget select-cari sesudah modal dibuka.
+function bukaKasBaru() {
+  window.bukaFormModal('modal-kas', { tanggal: <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?> });
+  var m = document.getElementById('modal-kas');
+  if (m && window.perbaruiSelectCari) {
+    m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+  }
+}
+</script>

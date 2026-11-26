@@ -16,28 +16,40 @@
   <p class="kecil-teks" style="margin-bottom:0">Tidak ada kode analisa yang harga satuannya berbeda antar pekerjaan. Semua pekerjaan berkode sama sudah memakai harga yang sama.</p>
   <?php else: ?>
   <div class="bungkus-tabel">
-    <table class="satu-baris" data-cari data-paginasi="15">
-      <thead><tr><th>Kode</th><th>Analisa</th><th>Harga yang Dipakai</th><th>Aksi Samakan</th></tr></thead>
-      <tbody>
-      <?php foreach ($bedaAntar as $v): ?>
-        <tr>
-          <td><strong><?= esc($v['kode']) ?></strong></td>
-          <td class="potong" title="<?= esc($v['nama'] ?? '') ?>"><?= esc($v['nama'] ?? '—') ?> <span class="kecil-teks">(<?= (int) $v['n'] ?> pekerjaan)</span></td>
-          <td><?php foreach ($v['harga'] as $h => $n): ?><div><?= rp($h) ?> <span class="kecil-teks">× <?= (int) $n ?> pekerjaan</span></div><?php endforeach; ?></td>
-          <td>
-            <?php foreach ($v['harga'] as $h => $n): ?>
-            <form method="post" action="<?= base_url('validasi-harga/samakan-pekerjaan') ?>" data-konfirmasi="Samakan harga satuan semua pekerjaan berkode <?= esc($v['kode'], 'attr') ?> ke <?= esc(rp($h), 'attr') ?>?" style="display:inline-block;margin:0 4px 4px 0">
-              <?= csrf_field() ?>
-              <input type="hidden" name="kode" value="<?= esc($v['kode'], 'attr') ?>">
-              <input type="hidden" name="harga" value="<?= esc($h, 'attr') ?>">
-              <button type="submit" class="tombol kecil">Samakan ke <?= rp($h) ?></button>
-            </form>
-            <?php endforeach; ?>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
+    <?php
+    // Kedua tabel pemeriksaan memakai helper tabel_bantu().
+    $barisAntar = [];
+    foreach ($bedaAntar as $v) {
+        $hargaHtml = '';
+        $aksiHtml = '';
+        foreach ($v['harga'] as $h => $n) {
+            $hargaHtml .= '<div>' . rp($h) . ' <span class="kecil-teks">× ' . (int) $n . ' pekerjaan</span></div>';
+            $aksiHtml .= '<form method="post" action="' . base_url('validasi-harga/samakan-pekerjaan') . '" data-konfirmasi="Samakan harga satuan semua pekerjaan berkode ' . esc($v['kode'], 'attr') . ' ke ' . esc(rp($h), 'attr') . '?" style="display:inline-block;margin:0 4px 4px 0">'
+                . csrf_field()
+                . '<input type="hidden" name="kode" value="' . esc($v['kode'], 'attr') . '">'
+                . '<input type="hidden" name="harga" value="' . esc($h, 'attr') . '">'
+                . '<button type="submit" class="tombol kecil">Samakan ke ' . rp($h) . '</button></form>';
+        }
+        $barisAntar[] = ['sel' => [
+            ['html' => '<strong>' . esc($v['kode']) . '</strong>'],
+            ['html' => esc($v['nama'] ?? '—') . ' <span class="kecil-teks">(' . (int) $v['n'] . ' pekerjaan)</span>', 'class' => 'potong', 'title' => (string) ($v['nama'] ?? '')],
+            ['html' => $hargaHtml],
+            ['html' => $aksiHtml],
+        ]];
+    }
+    echo tabel_bantu([
+        'class' => 'satu-baris',
+        'cari' => '',
+        'paginasi' => 15,
+        'kolom' => [
+            ['judul' => 'Kode'],
+            ['judul' => 'Analisa'],
+            ['judul' => 'Harga yang Dipakai'],
+            ['judul' => 'Aksi Samakan'],
+        ],
+        'baris' => $barisAntar,
+    ]);
+    ?>
   </div>
   <p class="kecil-teks" style="margin-bottom:0">Pilih harga yang benar untuk kode itu — semua pekerjaan berkode sama akan memakai harga tersebut.</p>
   <?php endif; ?>
@@ -55,27 +67,42 @@
     </form>
   </div>
   <div class="bungkus-tabel">
-    <table class="satu-baris" data-cari data-paginasi="15">
-      <thead><tr><th>Kode</th><th>Analisa</th><th>Harga di Pekerjaan</th><th class="angka">Harga Analisa (Harsat)</th><th class="angka">Kalkulasi Komponen</th><th>Aksi</th></tr></thead>
-      <tbody>
-      <?php foreach ($bedaKalkulasi as $v): ?>
-        <tr>
-          <td><strong><?= esc($v['kode']) ?></strong></td>
-          <td class="potong" title="<?= esc($v['nama'] ?? '') ?>"><?= esc($v['nama'] ?? '—') ?> <span class="kecil-teks">(<?= (int) $v['n'] ?> pekerjaan)</span></td>
-          <td><?php foreach ($v['harga'] as $h => $n): ?><div<?php if (abs((float) $h - $v['kalkulasi']) > 1): ?> style="color:var(--ina-red-700,#a61e1e);font-weight:600"<?php endif; ?>><?= rp($h) ?> <span class="kecil-teks" style="font-weight:400;color:inherit">× <?= (int) $n ?></span></div><?php endforeach; ?></td>
-          <td class="angka"><?= $v['harga_a'] !== null && $v['harga_a'] > 0 ? rp($v['harga_a']) : '—' ?></td>
-          <td class="angka"><strong><?= rp($v['kalkulasi']) ?></strong></td>
-          <td>
-            <form method="post" action="<?= base_url('validasi-harga/samakan-kalkulasi') ?>" data-konfirmasi="Samakan harga satuan semua pekerjaan berkode <?= esc($v['kode'], 'attr') ?> ke kalkulasi komponen <?= esc(rp($v['kalkulasi']), 'attr') ?>?" style="display:inline">
-              <?= csrf_field() ?>
-              <input type="hidden" name="kode" value="<?= esc($v['kode'], 'attr') ?>">
-              <button type="submit" class="tombol kecil">Samakan ke Kalkulasi</button>
-            </form>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
+    <?php
+    $barisKalkulasi = [];
+    foreach ($bedaKalkulasi as $v) {
+        $hargaHtml = '';
+        foreach ($v['harga'] as $h => $n) {
+            $gaya = abs((float) $h - $v['kalkulasi']) > 1 ? ' style="color:var(--ina-red-700,#a61e1e);font-weight:600"' : '';
+            $hargaHtml .= '<div' . $gaya . '>' . rp($h) . ' <span class="kecil-teks" style="font-weight:400;color:inherit">× ' . (int) $n . '</span></div>';
+        }
+        $aksiHtml = '<form method="post" action="' . base_url('validasi-harga/samakan-kalkulasi') . '" data-konfirmasi="Samakan harga satuan semua pekerjaan berkode ' . esc($v['kode'], 'attr') . ' ke kalkulasi komponen ' . esc(rp($v['kalkulasi']), 'attr') . '?" style="display:inline">'
+            . csrf_field()
+            . '<input type="hidden" name="kode" value="' . esc($v['kode'], 'attr') . '">'
+            . '<button type="submit" class="tombol kecil">Samakan ke Kalkulasi</button></form>';
+        $barisKalkulasi[] = ['sel' => [
+            ['html' => '<strong>' . esc($v['kode']) . '</strong>'],
+            ['html' => esc($v['nama'] ?? '—') . ' <span class="kecil-teks">(' . (int) $v['n'] . ' pekerjaan)</span>', 'class' => 'potong', 'title' => (string) ($v['nama'] ?? '')],
+            ['html' => $hargaHtml],
+            ['teks' => $v['harga_a'] !== null && $v['harga_a'] > 0 ? rp($v['harga_a']) : '—', 'angka' => true],
+            ['html' => '<strong>' . rp($v['kalkulasi']) . '</strong>', 'angka' => true],
+            ['html' => $aksiHtml],
+        ]];
+    }
+    echo tabel_bantu([
+        'class' => 'satu-baris',
+        'cari' => '',
+        'paginasi' => 15,
+        'kolom' => [
+            ['judul' => 'Kode'],
+            ['judul' => 'Analisa'],
+            ['judul' => 'Harga di Pekerjaan'],
+            ['judul' => 'Harga Analisa (Harsat)', 'angka' => true],
+            ['judul' => 'Kalkulasi Komponen', 'angka' => true],
+            ['judul' => 'Aksi'],
+        ],
+        'baris' => $barisKalkulasi,
+    ]);
+    ?>
   </div>
   <p class="kecil-teks" style="margin-bottom:0">Harga berwarna merah berbeda dari kalkulasi komponen. Kolom Harga Analisa (Harsat) adalah harga satuan tersimpan di tabel analisa dari dokumen — ditampilkan sebagai bahan pertimbangan; yang menjadi pembanding resmi adalah kalkulasi komponen.</p>
   <?php endif; ?>

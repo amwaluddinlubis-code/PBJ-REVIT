@@ -1,4 +1,4 @@
-<?php /* Partial gedung/detail tab BOQ: panel daftar pekerjaan (bulk hapus, kosongkan, rincian analisa per baris) + skrip jangkar #pekerjaan-<id>. */ ?><div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-pekerjaan','ids-pekerjaan')">
+<?php /* Partial gedung/detail tab BOQ: panel daftar pekerjaan (bulk hapus, kosongkan, rincian analisa per baris) + skrip jangkar #pekerjaan-<id>. Tabel dirender helper tabel_bantu(); baris judul bab (baris-bab), baris rincian (baris-detail), dan grand total (total) dipertahankan kelasnya untuk skrip lipat & paginasi.js. */ ?><div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-pekerjaan','ids-pekerjaan')">
   <h2>BOQ — Daftar Pekerjaan</h2>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
     <form id="form-bulk-pekerjaan" method="post" action="<?= base_url('gedung/pekerjaan/hapus-massal') ?>" data-konfirmasi-judul="Hapus Pekerjaan Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">
@@ -12,36 +12,68 @@
       <button type="submit" class="bahaya">Kosongkan BOQ</button>
     </form>
   </div>
-  <div class="bungkus-tabel"><table class="satu-baris" data-paginasi="25" data-cari="Cari pekerjaan…">
-    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua pekerjaan" @change="pilihSemua($event)"></th><th>Pekerjaan</th><th>Kode</th><th class="angka">Volume Awal</th><th class="angka">Vol. Berjalan</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Jumlah Berjalan</th><th style="width:210px">Ubah Volume / Hapus</th></tr>
-    <?php $subtotalBab = []; foreach ($pekerjaan as $px) { $kb = (string) ($px['bab'] ?? ''); $subtotalBab[$kb] = ($subtotalBab[$kb] ?? 0) + (float) ($px['volume_revisi'] ?? $px['volume']) * (float) ($px['harga_berjalan'] ?? $px['harga_satuan']); } ?>
-    <?php $babLalu = null; $total = 0; foreach ($pekerjaan as $p): $total += (float) ($p['volume_revisi'] ?? $p['volume']) * (float) ($p['harga_berjalan'] ?? $p['harga_satuan']); ?>
-      <?php if ($p['bab'] !== $babLalu): $babLalu = $p['bab']; ?>
-      <tr class="baris-bab" data-bab="<?= esc($babLalu ?: '—', 'attr') ?>"><td colspan="7" style="font-weight:600;background:#fcfcfd"><button type="button" class="kecil abu tombol-lipat-bab" aria-expanded="true" title="Lipat / buka pekerjaan bab ini" style="margin-right:6px">&#9662;</button><?= esc($babLalu ?: '—') ?></td><td class="angka" style="font-weight:700;background:#fcfcfd"><?= number_format($subtotalBab[(string) ($babLalu ?? '')] ?? 0, 0, ',', '.') ?></td><td style="background:#fcfcfd"></td></tr>
-      <?php endif; ?>
-      <tr id="pekerjaan-<?= (int) $p['id'] ?>">
-        <td><input type="checkbox" data-pilih value="<?= (int) $p['id'] ?>" x-model="terpilih"></td>
-        <td class="potong" title="<?= esc($p['nama']) ?>"><?php if (! empty($p['kode_analisa']) && isset($petaAnalisa[$p['kode_analisa']])): ?><button type="button" class="tautan-pekerjaan" data-buka-detail="<?= (int) $p['id'] ?>" title="Klik untuk melihat rincian bahan &amp; upah"><span class="panah">&#9656;</span> <?= esc($p['nama']) ?></button><?php else: ?><?= esc($p['nama']) ?><?php endif; ?></td>
-        <td><?php if ($p['kode_analisa']): $idA = $petaAnalisa[$p['kode_analisa']]['id'] ?? ($p['analisa_id'] ?? null); ?><?php if ($idA): ?><a class="lencana abu" style="text-decoration:none" href="<?= base_url('analisa/' . $idA) ?>" title="Buka halaman analisa <?= esc($p['kode_analisa'], 'attr') ?>"><?= esc($p['kode_analisa']) ?></a><?php else: ?><span class="lencana abu"><?= esc($p['kode_analisa']) ?></span><?php endif; ?><?php else: ?>—<?php endif; ?></td>
-        <td class="angka"><?= rtrim(rtrim(number_format((float) $p['volume'], 3, ',', '.'), '0'), ',') ?></td>
-        <td class="angka"><?php $vb = (float) ($p['volume_revisi'] ?? $p['volume']); ?><?= rtrim(rtrim(number_format($vb, 3, ',', '.'), '0'), ',') ?><?php if (isset($p['volume_revisi']) && $p['volume_revisi'] !== null): ?> <span class="lencana abu" title="Diubah oleh BA Revisi yang disahkan">Revisi</span><?php endif; ?><?php if (! empty($p['dari_revisi_id'])): ?> <span class="lencana abu" title="Pekerjaan dari BA Revisi">Pengganti/Baru</span><?php endif; ?></td>
-        <td><?= esc($p['satuan'] ?? '') ?></td>
-        <td class="angka"><?= number_format((float) ($p['harga_berjalan'] ?? $p['harga_satuan']), 0, ',', '.') ?></td>
-        <td class="angka"><?= number_format($vb * (float) ($p['harga_berjalan'] ?? $p['harga_satuan']), 0, ',', '.') ?></td>
-        <td>
-          <form class="inline" method="post" action="<?= base_url('gedung/pekerjaan/' . $p['id'] . '/volume') ?>">
-            <?= csrf_field() ?>
-            <input type="text" name="volume" value="<?= esc((string) $p['volume']) ?>" style="width:76px;display:inline-block;margin:0;padding:4px 7px">
-            <button class="kecil" type="submit">Simpan</button>
-          </form>
-          <form class="inline" method="post" action="<?= base_url('gedung/pekerjaan/' . $p['id'] . '/hapus') ?>" data-konfirmasi="Hapus pekerjaan ini?">
-            <?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button>
-          </form>
-        </td>
-      </tr>
-      <?php if (! empty($p['kode_analisa']) && isset($petaAnalisa[$p['kode_analisa']])): $a = $petaAnalisa[$p['kode_analisa']]; $vol = (float) ($p['volume_revisi'] ?? $p['volume']); ?>
-      <tr class="baris-detail" data-detail="<?= (int) $p['id'] ?>">
-        <td colspan="9">
+  <div class="bungkus-tabel"><?php
+  $fmtVol = static fn ($n) => rtrim(rtrim(number_format((float) $n, 3, ',', '.'), '0'), ',');
+  $subtotalBab = [];
+  foreach ($pekerjaan as $px) {
+      $kb = (string) ($px['bab'] ?? '');
+      $subtotalBab[$kb] = ($subtotalBab[$kb] ?? 0) + (float) ($px['volume_revisi'] ?? $px['volume']) * (float) ($px['harga_berjalan'] ?? $px['harga_satuan']);
+  }
+  $barisBoq = [];
+  $babLalu = null;
+  $total = 0;
+  foreach ($pekerjaan as $p) {
+      $total += (float) ($p['volume_revisi'] ?? $p['volume']) * (float) ($p['harga_berjalan'] ?? $p['harga_satuan']);
+      if ($p['bab'] !== $babLalu) {
+          $babLalu = $p['bab'];
+          $barisBoq[] = [
+              'class' => 'baris-bab',
+              'atribut' => 'data-bab="' . esc($babLalu ?: '—', 'attr') . '"',
+              'sel' => [
+                  ['html' => '<button type="button" class="kecil abu tombol-lipat-bab" aria-expanded="true" title="Lipat / buka pekerjaan bab ini" style="margin-right:6px">&#9662;</button>' . esc($babLalu ?: '—'), 'colspan' => 7, 'gaya' => 'font-weight:600;background:#fcfcfd'],
+                  ['teks' => number_format($subtotalBab[(string) ($babLalu ?? '')] ?? 0, 0, ',', '.'), 'angka' => true, 'gaya' => 'font-weight:700;background:#fcfcfd'],
+                  ['teks' => '', 'gaya' => 'background:#fcfcfd'],
+              ],
+          ];
+      }
+      $vb = (float) ($p['volume_revisi'] ?? $p['volume']);
+      $namaSel = (! empty($p['kode_analisa']) && isset($petaAnalisa[$p['kode_analisa']]))
+          ? '<button type="button" class="tautan-pekerjaan" data-buka-detail="' . (int) $p['id'] . '" title="Klik untuk melihat rincian bahan &amp; upah"><span class="panah">&#9656;</span> ' . esc($p['nama']) . '</button>'
+          : esc($p['nama']);
+      if ($p['kode_analisa']) {
+          $idA = $petaAnalisa[$p['kode_analisa']]['id'] ?? ($p['analisa_id'] ?? null);
+          $kodeSel = $idA
+              ? '<a class="lencana abu" style="text-decoration:none" href="' . base_url('analisa/' . $idA) . '" title="Buka halaman analisa ' . esc($p['kode_analisa'], 'attr') . '">' . esc($p['kode_analisa']) . '</a>'
+              : '<span class="lencana abu">' . esc($p['kode_analisa']) . '</span>';
+      } else {
+          $kodeSel = '—';
+      }
+      $barisBoq[] = [
+          'atribut' => 'id="pekerjaan-' . (int) $p['id'] . '"',
+          'sel' => [
+              ['html' => '<input type="checkbox" data-pilih value="' . (int) $p['id'] . '" x-model="terpilih">'],
+              ['html' => $namaSel, 'class' => 'potong', 'title' => (string) $p['nama']],
+              ['html' => $kodeSel],
+              ['teks' => $fmtVol($p['volume']), 'angka' => true],
+              ['html' => $fmtVol($vb)
+                  . ((isset($p['volume_revisi']) && $p['volume_revisi'] !== null) ? ' <span class="lencana abu" title="Diubah oleh BA Revisi yang disahkan">Revisi</span>' : '')
+                  . (! empty($p['dari_revisi_id']) ? ' <span class="lencana abu" title="Pekerjaan dari BA Revisi">Pengganti/Baru</span>' : ''), 'angka' => true],
+              (string) ($p['satuan'] ?? ''),
+              ['teks' => number_format((float) ($p['harga_berjalan'] ?? $p['harga_satuan']), 0, ',', '.'), 'angka' => true],
+              ['teks' => number_format($vb * (float) ($p['harga_berjalan'] ?? $p['harga_satuan']), 0, ',', '.'), 'angka' => true],
+              ['html' => '<form class="inline" method="post" action="' . base_url('gedung/pekerjaan/' . $p['id'] . '/volume') . '">'
+                  . csrf_field()
+                  . '<input type="text" name="volume" value="' . esc((string) $p['volume'], 'attr') . '" style="width:76px;display:inline-block;margin:0;padding:4px 7px"> '
+                  . '<button class="kecil" type="submit">Simpan</button></form> '
+                  . '<form class="inline" method="post" action="' . base_url('gedung/pekerjaan/' . $p['id'] . '/hapus') . '" data-konfirmasi="Hapus pekerjaan ini?">'
+                  . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>'],
+          ],
+      ];
+      if (! empty($p['kode_analisa']) && isset($petaAnalisa[$p['kode_analisa']])) {
+          $a = $petaAnalisa[$p['kode_analisa']];
+          $vol = (float) ($p['volume_revisi'] ?? $p['volume']);
+          ob_start();
+          ?>
           <div class="detail-pekerjaan">
             <div class="detail-kepala">Analisa <strong><?= esc($a['kode']) ?></strong> &mdash; <?= esc($a['nama']) ?> &middot; satuan pekerjaan: <?= esc($a['satuan'] ?? '') ?> &middot; volume: <?= rtrim(rtrim(number_format($vol, 3, ',', '.'), '0'), ',') ?> &middot; harga satuan BOQ: Rp <?= number_format((float) $p['harga_satuan'], 0, ',', '.') ?></div>
             <table class="mini">
@@ -75,12 +107,38 @@
             <div class="detail-kaki">Catatan: total komponen per satuan di rincian ini (Rp <?= number_format($grand, 0, ',', '.') ?>) dapat berbeda tipis dari harga berjalan (Rp <?= number_format((float) ($p['harga_berjalan'] ?? $p['harga_satuan']), 0, ',', '.') ?>) karena harga berjalan memakai tarif terbesar antara komponen dan Master Upah. Harga satuan dokumen BOQ: Rp <?= number_format((float) $p['harga_satuan'], 0, ',', '.') ?>.</div>
             <?php endif; ?>
           </div>
-        </td>
-      </tr>
-      <?php endif; ?>
-    <?php endforeach; ?>
-    <tr class="total"><td colspan="7">Grand Total BOQ Berjalan</td><td class="angka"><?= number_format($total, 0, ',', '.') ?></td><td></td></tr>
-  </table></div>
+          <?php
+          $detailHtml = ob_get_clean();
+          $barisBoq[] = [
+              'class' => 'baris-detail',
+              'atribut' => 'data-detail="' . (int) $p['id'] . '"',
+              'sel' => [['html' => $detailHtml, 'colspan' => 9]],
+          ];
+      }
+  }
+  $barisBoq[] = ['total' => [
+      ['teks' => 'Grand Total BOQ Berjalan', 'colspan' => 7],
+      ['teks' => number_format($total, 0, ',', '.'), 'angka' => true],
+      '',
+  ], 'class' => 'total'];
+  echo tabel_bantu([
+      'cari' => 'Cari pekerjaan…',
+      'paginasi' => 25,
+      'class' => 'satu-baris',
+      'kolom' => [
+          ['judul_html' => '<input type="checkbox" title="Pilih semua pekerjaan" @change="pilihSemua($event)">', 'lebar' => '34px'],
+          ['judul' => 'Pekerjaan'],
+          ['judul' => 'Kode'],
+          ['judul' => 'Volume Awal', 'angka' => true],
+          ['judul' => 'Vol. Berjalan', 'angka' => true],
+          ['judul' => 'Satuan'],
+          ['judul' => 'Harga Satuan', 'angka' => true],
+          ['judul' => 'Jumlah Berjalan', 'angka' => true],
+          ['judul' => 'Ubah Volume / Hapus', 'lebar' => '210px'],
+      ],
+      'baris' => $barisBoq,
+  ]);
+  ?></div>
   <p class="kecil-teks">Mengubah volume pekerjaan menghitung ulang kebutuhan bahan &amp; upah gedung ini secara otomatis. Tombol panah di awal judul bab melipat/membuka baris pekerjaan bab itu (subtotal bab tetap terlihat); keadaan lipatan diingat untuk gedung ini.</p>
   <style>
     tr.unit-terlipat { display: none !important; }

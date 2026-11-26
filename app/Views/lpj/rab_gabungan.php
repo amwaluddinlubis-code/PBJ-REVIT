@@ -17,37 +17,73 @@
 
 <div class="panel">
   <h2>Ringkasan per Gedung Terpilih</h2>
-  <table data-cari="Cari gedung…">
-    <tr><th>Gedung</th><th class="angka">Nilai BOQ (RAB)</th><th class="angka">Realisasi</th><th class="angka">Fisik</th><th></th></tr>
-    <?php $totBoq = 0; foreach ($perGedung as $g): $totBoq += (float) $g['nilai_boq']; ?>
-    <tr>
-      <td><?= esc($g['nama']) ?></td>
-      <td class="angka"><?= rp($g['nilai_boq']) ?></td>
-      <td class="angka"><?= rp($g['nilai_realisasi']) ?></td>
-      <td class="angka"><?= number_format((float) $g['persen_fisik'], 1, ',', '.') ?>%</td>
-      <td><a href="<?= base_url('lpj/gedung/' . $g['id']) ?>">RAB per Gedung</a></td>
-    </tr>
-    <?php endforeach; ?>
-    <tr><th style="text-align:right">Total BOQ terpilih</th><th class="angka"><?= rp($totBoq) ?></th><th colspan="3"></th></tr>
-  </table>
+  <?php
+  $totBoq = 0;
+  $barisRingkas = [];
+  foreach ($perGedung as $g) {
+      $totBoq += (float) $g['nilai_boq'];
+      $barisRingkas[] = ['sel' => [
+          (string) $g['nama'],
+          ['teks' => rp($g['nilai_boq']), 'angka' => true],
+          ['teks' => rp($g['nilai_realisasi']), 'angka' => true],
+          ['teks' => number_format((float) $g['persen_fisik'], 1, ',', '.') . '%', 'angka' => true],
+          ['html' => '<a href="' . base_url('lpj/gedung/' . $g['id']) . '">RAB per Gedung</a>'],
+      ]];
+  }
+  $barisRingkas[] = ['total' => [
+      ['teks' => 'Total BOQ terpilih', 'gaya' => 'text-align:right'],
+      ['teks' => rp($totBoq), 'angka' => true],
+      ['teks' => '', 'colspan' => 3],
+  ], 'class' => 'total'];
+  echo tabel_bantu([
+      'cari' => 'Cari gedung…',
+      'kolom' => [
+          ['judul' => 'Gedung'],
+          ['judul' => 'Nilai BOQ (RAB)', 'angka' => true],
+          ['judul' => 'Realisasi', 'angka' => true],
+          ['judul' => 'Fisik', 'angka' => true],
+          ['judul' => ''],
+      ],
+      'baris' => $barisRingkas,
+  ]);
+  ?>
 </div>
 
 <div class="panel">
   <h2>Pekerjaan Gabungan (<?= count($gabungan) ?> jenis pekerjaan)</h2>
-  <table data-paginasi="25" data-cari="Cari pekerjaan…">
-    <tr><th>Pekerjaan</th><th>Satuan</th><th class="angka">Harga Satuan</th><th class="angka">Volume Gabungan</th><th class="angka">Jumlah</th><th class="angka">Di Gedung</th></tr>
-    <?php foreach ($gabungan as $p): ?>
-    <tr>
-      <td><?= esc($p['nama']) ?></td>
-      <td><?= esc($p['satuan'] ?? '') ?></td>
-      <td class="angka"><?= rp($p['harga_satuan']) ?></td>
-      <td class="angka"><?= $angka($p['volume']) ?></td>
-      <td class="angka"><?= rp($p['jumlah']) ?></td>
-      <td class="angka"><?= (int) $p['jumlah_gedung'] ?></td>
-    </tr>
-    <?php endforeach; ?>
-    <?php if ($gabungan === []): ?><tr><td colspan="6">Belum ada pekerjaan pada gedung terpilih.</td></tr><?php endif; ?>
-    <tr><th colspan="4" style="text-align:right">TOTAL RAB GABUNGAN</th><th class="angka"><?= rp($total) ?></th><th></th></tr>
-  </table>
+  <?php
+  $barisGabungan = [];
+  foreach ($gabungan as $p) {
+      $barisGabungan[] = ['sel' => [
+          (string) $p['nama'],
+          (string) ($p['satuan'] ?? ''),
+          ['teks' => rp($p['harga_satuan']), 'angka' => true],
+          ['teks' => $angka($p['volume']), 'angka' => true],
+          ['teks' => rp($p['jumlah']), 'angka' => true],
+          ['teks' => (string) (int) $p['jumlah_gedung'], 'angka' => true],
+      ]];
+  }
+  if ($gabungan === []) {
+      $barisGabungan[] = ['sel' => [['teks' => 'Belum ada pekerjaan pada gedung terpilih.', 'colspan' => 6]]];
+  }
+  $barisGabungan[] = ['total' => [
+      ['teks' => 'TOTAL RAB GABUNGAN', 'colspan' => 4, 'gaya' => 'text-align:right'],
+      ['teks' => rp($total), 'angka' => true],
+      '',
+  ], 'class' => 'total'];
+  echo tabel_bantu([
+      'cari' => 'Cari pekerjaan…',
+      'paginasi' => 25,
+      'kolom' => [
+          ['judul' => 'Pekerjaan'],
+          ['judul' => 'Satuan'],
+          ['judul' => 'Harga Satuan', 'angka' => true],
+          ['judul' => 'Volume Gabungan', 'angka' => true],
+          ['judul' => 'Jumlah', 'angka' => true],
+          ['judul' => 'Di Gedung', 'angka' => true],
+      ],
+      'baris' => $barisGabungan,
+  ]);
+  ?>
   <p class="kecil-teks">Total RAB gabungan dihitung dari pekerjaan yang digabung menurut nama + harga satuan; total BOQ per gedung pada ringkasan di atas adalah angka resmi per gedung dari dokumen perencana.</p>
 </div>

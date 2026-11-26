@@ -18,17 +18,34 @@
 
 <div class="panel">
   <h2>Kemajuan per Gedung</h2>
-  <table data-cari="Cari gedung…">
-    <tr><th>Gedung / Paket</th><th class="angka">Nilai BOQ</th><th class="angka">Nilai Realisasi</th><th class="angka">Kemajuan Fisik</th></tr>
-    <?php foreach ($gedung as $g): ?>
-    <tr>
-      <td><a href="<?= base_url('gedung/' . (int) ($g['id'] ?? 0) . '/realisasi') ?>"><?= esc($g['nama']) ?></a></td>
-      <td class="angka"><?= rp($g['nilai_boq']) ?></td>
-      <td class="angka"><?= rp($g['nilai_realisasi']) ?></td>
-      <td class="angka"><?= number_format((float) $g['persen_fisik'], 1, ',', '.') ?>%</td>
-    </tr>
-    <?php endforeach; ?>
-    <?php if ($gedung === []): ?><tr><td colspan="4">Belum ada gedung dari dokumen perencana.</td></tr><?php endif; ?>
-    <tr><td><b>Total</b></td><td class="angka"><b><?= rp($total_boq) ?></b></td><td class="angka"><b><?= rp($total_realisasi) ?></b></td><td class="angka"><b><?= number_format($fisik, 1, ',', '.') ?>%</b></td></tr>
-  </table>
+  <?php
+  $barisKemajuan = [];
+  foreach ($gedung as $g) {
+      $barisKemajuan[] = ['sel' => [
+          ['html' => '<a href="' . base_url('gedung/' . (int) ($g['id'] ?? 0) . '/realisasi') . '">' . esc($g['nama']) . '</a>'],
+          ['teks' => rp($g['nilai_boq']), 'angka' => true],
+          ['teks' => rp($g['nilai_realisasi']), 'angka' => true],
+          ['teks' => number_format((float) $g['persen_fisik'], 1, ',', '.') . '%', 'angka' => true],
+      ]];
+  }
+  if ($gedung === []) {
+      $barisKemajuan[] = ['sel' => [['teks' => 'Belum ada gedung dari dokumen perencana.', 'colspan' => 4]]];
+  }
+  $barisKemajuan[] = ['sel' => [
+      ['html' => '<b>Total</b>'],
+      ['html' => '<b>' . rp($total_boq) . '</b>', 'angka' => true],
+      ['html' => '<b>' . rp($total_realisasi) . '</b>', 'angka' => true],
+      ['html' => '<b>' . number_format($fisik, 1, ',', '.') . '%</b>', 'angka' => true],
+  ]];
+  echo tabel_bantu([
+      'cari' => 'Cari gedung…',
+      'kolom' => [
+          ['judul' => 'Gedung / Paket'],
+          ['judul' => 'Nilai BOQ', 'angka' => true],
+          ['judul' => 'Nilai Realisasi', 'angka' => true],
+          ['judul' => 'Kemajuan Fisik', 'angka' => true],
+      ],
+      'baris' => $barisKemajuan,
+  ]);
+  ?>
 </div>

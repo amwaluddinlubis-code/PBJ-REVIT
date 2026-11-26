@@ -155,25 +155,36 @@ class Material extends BaseController
         return $stok;
     }
 
+    /** Balasan form modal (pola balasForm): AJAX -> JSON {ok, pesan}. */
+    private function balasForm(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return $ok
+            ? redirect()->to('material')->with('sukses', $pesan)
+            : redirect()->back()->withInput()->with('galat', $pesan);
+    }
+
     public function simpan()
     {
         $db = $this->db();
         $bahanId = (int) $this->request->getPost('bahan_id');
         $bahan = $db->table('bahan')->where(['id' => $bahanId, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         if (! $bahan) {
-            return redirect()->to('material')->with('galat', 'Bahan tidak ditemukan pada sekolah aktif.');
+            return $this->balasForm(false, 'Bahan tidak ditemukan pada sekolah aktif.');
         }
         // Sejak 25 Nov 2026 form ini HANYA mencatat barang KELUAR; barang
         // masuk tercatat otomatis dari BAST (tanggal BAST).
         $keluar = (float) str_replace(',', '.', (string) $this->request->getPost('keluar'));
         if ($keluar <= 0) {
-            return redirect()->to('material')->with('galat', 'Isi jumlah Keluar terlebih dahulu — barang masuk kini tercatat otomatis dari BAST.');
+            return $this->balasForm(false, 'Isi jumlah Keluar terlebih dahulu — barang masuk kini tercatat otomatis dari BAST.');
         }
         // Validasi stok: yang keluar tidak boleh melebihi stok tersedia
         // (penerimaan BAST − yang sudah keluar) bahan itu.
         $stok = $this->stokPerBahan()[$bahanId] ?? 0.0;
         if ($keluar > $stok + 0.0005) {
-            return redirect()->to('material')->with('galat', 'Keluar ' . number_format($keluar, 2, ',', '.') . ' ' . ($bahan['satuan'] ?? '')
+            return $this->balasForm(false, 'Keluar ' . number_format($keluar, 2, ',', '.') . ' ' . ($bahan['satuan'] ?? '')
                 . ' melebihi stok tersedia ' . number_format(max($stok, 0), 2, ',', '.') . ' ' . ($bahan['satuan'] ?? '')
                 . ' untuk ' . $bahan['kode'] . ' — ' . $bahan['nama'] . '. Stok tersedia = penerimaan BAST dikurangi yang sudah keluar.');
         }
@@ -191,7 +202,7 @@ class Material extends BaseController
             'keterangan' => trim((string) $this->request->getPost('keterangan')) ?: null,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
-        return redirect()->to('material')->with('sukses', 'Baris buku material dicatat.');
+        return $this->balasForm(true, 'Baris buku material dicatat.');
     }
 
     public function hapus($id)

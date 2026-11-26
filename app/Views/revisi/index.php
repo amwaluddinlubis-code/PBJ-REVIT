@@ -57,30 +57,51 @@
       <button type="submit" class="bahaya">Kosongkan Riwayat Revisi</button>
     </form>
   </div>
-  <table data-cari="Cari revisi…">
-    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Gedung / Pekerjaan</th><th>Jenis &amp; Status</th><th>Perubahan</th><th>Uraian</th><th></th></tr>
-    <?php $labelJenis = ['catatan' => 'Catatan', 'volume' => 'Ubah volume', 'baru' => 'Pekerjaan baru', 'ganti' => 'Ganti pekerjaan', 'hapus' => 'Hapus pekerjaan']; ?>
-    <?php foreach ($revisi as $r): ?>
-    <tr>
-      <td><input type="checkbox" data-pilih value="<?= (int) $r['id'] ?>" x-model="terpilih"></td>
-      <td><?= esc(tgl($r['tanggal'])) ?></td>
-      <td><?= esc($r['gedung_nama']) ?><?= $r['pekerjaan_nama'] ? '<br><span class="kecil-teks">' . esc($r['pekerjaan_nama']) . '</span>' : '' ?><?= ! empty($r['nama_baru']) ? '<br><span class="kecil-teks">→ ' . esc($r['nama_baru']) . '</span>' : '' ?></td>
-      <td><?= esc($labelJenis[$r['jenis'] ?? 'catatan'] ?? 'Catatan') ?><br>
-        <?php if (($r['status'] ?? 'draft') === 'disahkan'): ?><span class="lencana" style="background:var(--ina-green-100);color:var(--ina-green-700)">Disahkan</span><?php else: ?><span class="lencana" style="background:var(--ina-yellow-100, #fef9c3);color:var(--ina-yellow-700, #854d0e)">Draft</span><?php endif; ?>
-      </td>
-      <td><?= esc($r['perubahan'] ?? '—') ?></td>
-      <td><?= esc($r['uraian']) ?></td>
-      <td style="white-space:nowrap">
-        <?php if (($r['status'] ?? 'draft') !== 'disahkan' && ($r['jenis'] ?? 'catatan') !== 'catatan'): ?>
-        <form class="inline" method="post" action="<?= base_url('revisi-pekerjaan/sahkan/' . $r['id']) ?>" data-konfirmasi="Sahkan revisi ini? RAB berjalan akan diperbarui dan totalnya diperiksa terhadap pagu."><?= csrf_field() ?><button class="kecil" type="submit">Sahkan</button></form>
-        <?php elseif (($r['status'] ?? 'draft') === 'disahkan'): ?>
-        <form class="inline" method="post" action="<?= base_url('revisi-pekerjaan/batal-sah/' . $r['id']) ?>" data-konfirmasi="Batalkan pengesahan? RAB berjalan kembali seperti sebelum revisi ini."><?= csrf_field() ?><button class="kecil abu" type="submit">Batalkan Sah</button></form>
-        <?php endif; ?>
-        <a class="tombol kecil abu" href="<?= base_url('revisi-pekerjaan/cetak/' . $r['id']) ?>" target="_blank">Cetak BA</a>
-        <form class="inline" method="post" action="<?= base_url('revisi-pekerjaan/hapus/' . $r['id']) ?>" data-konfirmasi="Hapus catatan revisi ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form>
-      </td>
-    </tr>
-    <?php endforeach; ?>
-    <?php if ($revisi === []): ?><tr><td colspan="6">Belum ada revisi pekerjaan yang dicatat.</td></tr><?php endif; ?>
-  </table>
+  <?php
+  // Tabel riwayat memakai helper tabel_bantu(); form Catat Revisi di atas
+  // tetap form halaman (form panjang berjenjang, bukan modal).
+  $labelJenis = ['catatan' => 'Catatan', 'volume' => 'Ubah volume', 'baru' => 'Pekerjaan baru', 'ganti' => 'Ganti pekerjaan', 'hapus' => 'Hapus pekerjaan'];
+  $barisRevisi = [];
+  foreach ($revisi as $r) {
+      $gedungPek = esc($r['gedung_nama'])
+          . ($r['pekerjaan_nama'] ? '<br><span class="kecil-teks">' . esc($r['pekerjaan_nama']) . '</span>' : '')
+          . (! empty($r['nama_baru']) ? '<br><span class="kecil-teks">→ ' . esc($r['nama_baru']) . '</span>' : '');
+      $lencanaStatus = (($r['status'] ?? 'draft') === 'disahkan')
+          ? '<span class="lencana" style="background:var(--ina-green-100);color:var(--ina-green-700)">Disahkan</span>'
+          : '<span class="lencana" style="background:var(--ina-yellow-100, #fef9c3);color:var(--ina-yellow-700, #854d0e)">Draft</span>';
+      $aksi = '';
+      if (($r['status'] ?? 'draft') !== 'disahkan' && ($r['jenis'] ?? 'catatan') !== 'catatan') {
+          $aksi .= '<form class="inline" method="post" action="' . base_url('revisi-pekerjaan/sahkan/' . $r['id']) . '" data-konfirmasi="Sahkan revisi ini? RAB berjalan akan diperbarui dan totalnya diperiksa terhadap pagu.">' . csrf_field() . '<button class="kecil" type="submit">Sahkan</button></form>';
+      } elseif (($r['status'] ?? 'draft') === 'disahkan') {
+          $aksi .= '<form class="inline" method="post" action="' . base_url('revisi-pekerjaan/batal-sah/' . $r['id']) . '" data-konfirmasi="Batalkan pengesahan? RAB berjalan kembali seperti sebelum revisi ini.">' . csrf_field() . '<button class="kecil abu" type="submit">Batalkan Sah</button></form>';
+      }
+      $aksi .= '<a class="tombol kecil abu" href="' . base_url('revisi-pekerjaan/cetak/' . $r['id']) . '" target="_blank">Cetak BA</a>'
+          . '<form class="inline" method="post" action="' . base_url('revisi-pekerjaan/hapus/' . $r['id']) . '" data-konfirmasi="Hapus catatan revisi ini?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>';
+      $barisRevisi[] = ['sel' => [
+          ['html' => '<input type="checkbox" data-pilih value="' . (int) $r['id'] . '" x-model="terpilih">'],
+          tgl($r['tanggal']),
+          ['html' => $gedungPek],
+          ['html' => esc($labelJenis[$r['jenis'] ?? 'catatan'] ?? 'Catatan') . '<br>' . $lencanaStatus],
+          (string) ($r['perubahan'] ?? '—'),
+          (string) $r['uraian'],
+          ['html' => $aksi, 'gaya' => 'white-space:nowrap'],
+      ]];
+  }
+  if ($revisi === []) {
+      $barisRevisi[] = ['sel' => [['teks' => 'Belum ada revisi pekerjaan yang dicatat.', 'colspan' => 6]]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari revisi…',
+      'kolom' => [
+          ['judul_html' => '<input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)">', 'lebar' => '34px'],
+          ['judul' => 'Tanggal'],
+          ['judul' => 'Gedung / Pekerjaan'],
+          ['judul' => 'Jenis & Status'],
+          ['judul' => 'Perubahan'],
+          ['judul' => 'Uraian'],
+          ['judul' => ''],
+      ],
+      'baris' => $barisRevisi,
+  ]);
+  ?>
 </div>

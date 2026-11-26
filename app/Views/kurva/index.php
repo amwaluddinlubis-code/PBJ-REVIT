@@ -40,6 +40,7 @@ $resmi = ($mode ?? 'perkiraan') === 'resmi';
   <h2><?= esc($g['nama']) ?> — Nilai BOQ <?= rp($g['nilai_boq']) ?> · Realisasi saat ini <?= number_format((float) $g['persen_fisik'], 1, ',', '.') ?>%</h2>
   <?php endif; ?>
   <?= $svg ?>
+  <?php /* Tabel kurva dipertahankan manual: tiap baris memuat form aksi sendiri (Buat Rencana Belanja per minggu dan isian Realisasi Simulasi per baris). */ ?>
   <table data-paginasi="20" data-cari="Cari minggu…">
     <tr><th>Minggu ke-</th><th>Periode</th><th class="angka">Rencana Kumulatif</th><th class="angka">Realisasi Kumulatif</th><th class="angka">Nilai Realisasi</th><th class="angka">Deviasi</th><?php if ($resmi): ?><th data-tanpa-urut>Rencana Belanja</th><?php if (! $total): ?><th class="angka" data-tanpa-urut>Realisasi Simulasi (%)</th><?php endif; ?><?php endif; ?></tr>
     <?php foreach ($minggu as $m): $dev = $m['realisasi'] - $m['rencana']; ?>

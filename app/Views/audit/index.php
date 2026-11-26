@@ -1,3 +1,4 @@
+<?php /* Jejak Audit (baca-saja): tabel daftar memakai helper tabel_bantu(). */ ?>
 <h1>Jejak Audit</h1>
 <p class="kecil-teks">Catatan aksi penting yang menyentuh uang dan persetujuan: siapa melakukan apa dan kapan. 500 catatan terakhir untuk sekolah aktif (termasuk catatan masuk akun). Catatan tidak dapat diubah dari aplikasi.</p>
 
@@ -6,21 +7,33 @@
     <p class="kecil-teks">Belum ada catatan audit.</p>
   <?php else: ?>
   <div class="bungkus-tabel">
-    <table class="satu-baris" data-cari data-paginasi="25">
-      <thead><tr><th>Waktu</th><th>Pengguna</th><th>Entitas</th><th>Aksi</th><th>Keterangan</th><th>IP</th></tr></thead>
-      <tbody>
-      <?php foreach ($daftar as $a): ?>
-        <tr>
-          <td><?= esc(tglWaktu($a['created_at'])) ?></td>
-          <td><?= esc($a['username'] ?? '-') ?></td>
-          <td><?= esc($a['entitas']) ?><?= $a['entitas_id'] ? ' #' . (int) $a['entitas_id'] : '' ?></td>
-          <td><?= esc($a['aksi']) ?></td>
-          <td class="potong" title="<?= esc($a['keterangan'] ?? '') ?>"><?= esc($a['keterangan'] ?? '-') ?></td>
-          <td><?= esc($a['ip'] ?? '-') ?></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
+    <?php
+    $barisAudit = [];
+    foreach ($daftar as $a) {
+        $barisAudit[] = ['sel' => [
+            tglWaktu($a['created_at']),
+            (string) ($a['username'] ?? '-'),
+            $a['entitas'] . ($a['entitas_id'] ? ' #' . (int) $a['entitas_id'] : ''),
+            (string) $a['aksi'],
+            ['teks' => (string) ($a['keterangan'] ?? '-'), 'class' => 'potong', 'title' => (string) ($a['keterangan'] ?? '')],
+            (string) ($a['ip'] ?? '-'),
+        ]];
+    }
+    echo tabel_bantu([
+        'class' => 'satu-baris',
+        'cari' => '',
+        'paginasi' => 25,
+        'kolom' => [
+            ['judul' => 'Waktu'],
+            ['judul' => 'Pengguna'],
+            ['judul' => 'Entitas'],
+            ['judul' => 'Aksi'],
+            ['judul' => 'Keterangan'],
+            ['judul' => 'IP'],
+        ],
+        'baris' => $barisAudit,
+    ]);
+    ?>
   </div>
   <?php endif; ?>
 </div>

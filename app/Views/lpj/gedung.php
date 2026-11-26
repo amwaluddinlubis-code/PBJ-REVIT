@@ -31,28 +31,63 @@
 
 <div class="panel">
   <h2>Bahan: Kebutuhan vs Dipesan</h2>
-  <table data-paginasi="25" data-cari="Cari…">
-    <tr><th>Bahan</th><th class="angka">Kebutuhan</th><th class="angka">Dipesan (SPK)</th><th class="angka">Sisa</th><th class="angka">Harga Acuan</th><th class="angka">Nilai Dipesan</th></tr>
-    <?php foreach ($kebutuhan['tertaut'] as $b): ?>
-    <tr>
-      <td><?= esc($b['kode']) ?> — <?= esc($b['nama']) ?></td>
-      <td class="angka"><?= number_format((float) $b['qty_butuh'], 2, ',', '.') ?> <?= esc($b['satuan']) ?></td>
-      <td class="angka"><?= number_format((float) $b['dipesan'], 2, ',', '.') ?></td>
-      <td class="angka"><?= number_format((float) $b['qty_butuh'] - (float) $b['dipesan'], 2, ',', '.') ?></td>
-      <td class="angka"><?= number_format((float) $b['harga'], 0, ',', '.') ?></td>
-      <td class="angka"><?= number_format((float) $b['dipesan'] * (float) $b['harga'], 0, ',', '.') ?></td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  $barisBahanLpj = [];
+  foreach ($kebutuhan['tertaut'] as $b) {
+      $barisBahanLpj[] = ['sel' => [
+          $b['kode'] . ' — ' . $b['nama'],
+          ['teks' => number_format((float) $b['qty_butuh'], 2, ',', '.') . ' ' . ($b['satuan'] ?? ''), 'angka' => true],
+          ['teks' => number_format((float) $b['dipesan'], 2, ',', '.'), 'angka' => true],
+          ['teks' => number_format((float) $b['qty_butuh'] - (float) $b['dipesan'], 2, ',', '.'), 'angka' => true],
+          ['teks' => number_format((float) $b['harga'], 0, ',', '.'), 'angka' => true],
+          ['teks' => number_format((float) $b['dipesan'] * (float) $b['harga'], 0, ',', '.'), 'angka' => true],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari…',
+      'paginasi' => 25,
+      'kolom' => [
+          ['judul' => 'Bahan'],
+          ['judul' => 'Kebutuhan', 'angka' => true],
+          ['judul' => 'Dipesan (SPK)', 'angka' => true],
+          ['judul' => 'Sisa', 'angka' => true],
+          ['judul' => 'Harga Acuan', 'angka' => true],
+          ['judul' => 'Nilai Dipesan', 'angka' => true],
+      ],
+      'baris' => $barisBahanLpj,
+  ]);
+  ?>
 </div>
 
 <div class="panel">
   <h2>Upah: Kebutuhan vs Dibayar</h2>
-  <table data-paginasi="25" data-cari="Cari jenis tenaga…">
-    <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Tarif</th><th class="angka">Nilai Kebutuhan</th></tr>
-    <?php $tot = 0; foreach ($kebutuhan_upah as $u): $n = (float) $u['orang_hari'] * (float) $u['tarif']; $tot += $n; ?>
-    <tr><td><?= esc($u['jenis']) ?></td><td class="angka"><?= number_format((float) $u['orang_hari'], 2, ',', '.') ?></td><td class="angka"><?= number_format((float) $u['tarif'], 0, ',', '.') ?></td><td class="angka"><?= number_format($n, 0, ',', '.') ?></td></tr>
-    <?php endforeach; ?>
-    <tr class="total"><td colspan="3">Total kebutuhan upah · sudah dibayar <?= rp($g['upah_dibayar']) ?></td><td class="angka"><?= number_format($tot, 0, ',', '.') ?></td></tr>
-  </table>
+  <?php
+  $totUpah = 0;
+  $barisUpahLpj = [];
+  foreach ($kebutuhan_upah as $u) {
+      $n = (float) $u['orang_hari'] * (float) $u['tarif'];
+      $totUpah += $n;
+      $barisUpahLpj[] = ['sel' => [
+          (string) $u['jenis'],
+          ['teks' => number_format((float) $u['orang_hari'], 2, ',', '.'), 'angka' => true],
+          ['teks' => number_format((float) $u['tarif'], 0, ',', '.'), 'angka' => true],
+          ['teks' => number_format($n, 0, ',', '.'), 'angka' => true],
+      ]];
+  }
+  $barisUpahLpj[] = ['total' => [
+      ['teks' => 'Total kebutuhan upah · sudah dibayar ' . rp($g['upah_dibayar']), 'colspan' => 3],
+      ['teks' => number_format($totUpah, 0, ',', '.'), 'angka' => true],
+  ], 'class' => 'total'];
+  echo tabel_bantu([
+      'cari' => 'Cari jenis tenaga…',
+      'paginasi' => 25,
+      'kolom' => [
+          ['judul' => 'Jenis Tenaga'],
+          ['judul' => 'Kebutuhan (OH)', 'angka' => true],
+          ['judul' => 'Tarif', 'angka' => true],
+          ['judul' => 'Nilai Kebutuhan', 'angka' => true],
+      ],
+      'baris' => $barisUpahLpj,
+  ]);
+  ?>
 </div>

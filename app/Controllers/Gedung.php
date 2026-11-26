@@ -25,11 +25,22 @@ class Gedung extends BaseController
         return $this->tampil('gedung/index', ['gedung' => $gedung], 'Kelola Gedung — Aplikasi PBJ Sekolah');
     }
 
+    /** Balasan simpan gedung: JSON untuk modal form_modal (AJAX), redirect untuk form biasa. */
+    private function balasForm(bool $ok, string $pesan, string $tujuan = '/gedung')
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return $ok
+            ? redirect()->to($tujuan)->with('sukses', $pesan)
+            : redirect()->back()->withInput()->with('galat', $pesan);
+    }
+
     public function simpan()
     {
         $nama = trim((string) $this->request->getPost('nama'));
         if ($nama === '') {
-            return redirect()->to('/gedung')->with('galat', 'Nama gedung wajib diisi.');
+            return $this->balasForm(false, 'Nama gedung wajib diisi.');
         }
         $urut = (int) ($this->db()->query('SELECT COALESCE(MAX(urutan),0) m FROM gedung WHERE sekolah_id = ? AND is_deleted = 0', [$this->sid()])->getRow()->m ?? 0) + 1;
         $this->db()->table('gedung')->insert([
@@ -38,14 +49,14 @@ class Gedung extends BaseController
             'nilai_boq' => (float) str_replace(['.', ','], ['', '.'], (string) ($this->request->getPost('nilai_boq') ?? '')),
             'urutan' => $urut, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
-        return redirect()->to('/gedung')->with('sukses', 'Gedung "' . $nama . '" ditambahkan.');
+        return $this->balasForm(true, 'Gedung "' . $nama . '" ditambahkan.');
     }
 
     public function perbarui($id)
     {
         $g = $this->ambilGedung((int) $id);
         if ($g === null) {
-            return redirect()->to('/gedung')->with('galat', 'Gedung tidak ditemukan.');
+            return $this->balasForm(false, 'Gedung tidak ditemukan.');
         }
         $ubah = [
             'nama' => trim((string) $this->request->getPost('nama')) ?: $g['nama'],
@@ -58,7 +69,7 @@ class Gedung extends BaseController
             $ubah['nilai_boq'] = (float) str_replace(['.', ','], ['', '.'], (string) $this->request->getPost('nilai_boq'));
         }
         $this->db()->table('gedung')->where('id', (int) $id)->update($ubah);
-        return redirect()->to('/gedung/' . (int) $id)->with('sukses', 'Gedung diperbarui.');
+        return $this->balasForm(true, 'Gedung diperbarui.', '/gedung/' . (int) $id);
     }
 
     public function hapus($id)
@@ -250,7 +261,7 @@ class Gedung extends BaseController
     {
         $gid = (int) $this->request->getPost('gedung_id');
         if ($this->ambilGedung($gid) === null) {
-            return redirect()->to('/gedung')->with('galat', 'Gedung tidak ditemukan.');
+            return $this->balasForm(false, 'Gedung tidak ditemukan.');
         }
         $volume = (float) str_replace(',', '.', (string) $this->request->getPost('volume'));
         $harga = (float) str_replace(['.', ','], ['', '.'], (string) $this->request->getPost('harga_satuan'));
@@ -263,7 +274,7 @@ class Gedung extends BaseController
             'volume' => $volume, 'satuan' => trim((string) $this->request->getPost('satuan')) ?: null,
             'harga_satuan' => $harga, 'jumlah' => $volume * $harga, 'urutan' => $urut,
         ]);
-        return redirect()->to('/gedung/' . $gid . '/boq')->with('sukses', 'Pekerjaan ditambahkan.');
+        return $this->balasForm(true, 'Pekerjaan ditambahkan.', '/gedung/' . $gid . '/boq');
     }
 
     public function hapusPekerjaan($pekerjaanId)

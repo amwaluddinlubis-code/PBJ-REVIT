@@ -18,6 +18,7 @@ $polos = static fn ($n) => rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0
 
   <form method="post" action="<?= base_url('rencana-mingguan/' . $r['id'] . '/target') ?>">
     <?= csrf_field() ?>
+    <?php /* Tabel target dipertahankan manual: isian target per baris adalah inti simpan target mingguan. */ ?>
     <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari pekerjaan…">
       <tr><th>Pekerjaan</th><th>Analisa</th><th class="angka">Volume Berjalan</th><th class="angka">Sudah Realisasi</th><th class="angka">Sisa</th><th class="angka" data-tanpa-urut>Target Minggu Ini</th></tr>
       <?php foreach ($pekerjaan as $p): $sisa = max(0, (float) $p['vol_berjalan'] - (float) $p['terealisasi']); ?>
@@ -41,6 +42,7 @@ $polos = static fn ($n) => rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0
   <p class="kecil-teks" style="margin-top:0">Perlu Beli = kebutuhan dari target − stok tersedia (sudah di-BAST + saldo Buku Material) − pesanan berjalan (SPK yang belum di-BAST). Jumlah beli boleh diubah sebelum dibuatkan SPK. Estimasi total belanja bersih: <strong><?= rp($total_bersih) ?></strong> · sisa pagu sekolah saat ini: <strong><?= rp($sisa_pagu) ?></strong>.</p>
   <form method="post" action="<?= base_url('rencana-mingguan/' . $r['id'] . '/buat-spk') ?>">
     <?= csrf_field() ?>
+    <?php /* Tabel belanja bersih dipertahankan manual: centang + isian jumlah beli per baris adalah inti simpan buat-spk. */ ?>
     <div class="bungkus-tabel"><table class="satu-baris" data-cari="Cari bahan…">
       <tr><th data-tanpa-urut>Beli</th><th>Bahan</th><th>Satuan</th><th class="angka">Kebutuhan</th><th class="angka">Stok Tersedia</th><th class="angka">Dalam Pesanan</th><th class="angka" data-tanpa-urut>Jumlah Beli</th><th class="angka">Harga Acuan</th><th class="angka">Nilai</th></tr>
       <?php foreach ($bahan as $b): ?>
@@ -66,13 +68,30 @@ $polos = static fn ($n) => rtrim(rtrim(number_format((float) $n, 4, '.', ''), '0
 <?php if ($upah !== []): ?>
 <div class="panel">
   <h2 style="margin-top:0">Kebutuhan Upah Minggu Ini</h2>
-  <div class="bungkus-tabel"><table class="satu-baris">
-    <tr><th>Jenis Tenaga</th><th class="angka">Kebutuhan (Oh)</th><th class="angka">Perkiraan Nilai</th></tr>
-    <?php foreach ($upah as $u): ?>
-    <tr><td><?= esc($u['nama']) ?></td><td class="angka"><?= $qty($u['oh']) ?></td><td class="angka"><?= rp($u['nilai']) ?></td></tr>
-    <?php endforeach; ?>
-    <tr class="baris-total"><td><strong>Total perkiraan upah</strong></td><td></td><td class="angka"><strong><?= rp($total_upah) ?></strong></td></tr>
-  </table></div>
+  <div class="bungkus-tabel"><?php
+  $barisUpahRm = [];
+  foreach ($upah as $u) {
+      $barisUpahRm[] = ['sel' => [
+          (string) $u['nama'],
+          ['teks' => $qty($u['oh']), 'angka' => true],
+          ['teks' => rp($u['nilai']), 'angka' => true],
+      ]];
+  }
+  $barisUpahRm[] = ['total' => [
+      ['html' => '<strong>Total perkiraan upah</strong>'],
+      '',
+      ['html' => '<strong>' . rp($total_upah) . '</strong>', 'angka' => true],
+  ]];
+  echo tabel_bantu([
+      'class' => 'satu-baris',
+      'kolom' => [
+          ['judul' => 'Jenis Tenaga'],
+          ['judul' => 'Kebutuhan (Oh)', 'angka' => true],
+          ['judul' => 'Perkiraan Nilai', 'angka' => true],
+      ],
+      'baris' => $barisUpahRm,
+  ]);
+  ?></div>
   <p class="kecil-teks">Oh = orang-hari. Bagi kebutuhan Oh dengan jumlah hari kerja untuk memperkirakan jumlah tukang/pekerja yang perlu hadir setiap hari.</p>
 </div>
 <?php endif; ?>

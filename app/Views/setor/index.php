@@ -3,25 +3,41 @@
   <summary>Kewajiban Pajak per Masa — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></summary>
 
   <p style="margin-top:0;color:var(--ta-teks-2)">Pajak yang dipungut/dipotong dari pembayaran invoice (PPh 22 &amp; PPN), pembayaran upah (PPh 21), dan biaya non-gedung (PPh 23 / PPh 4 ayat 2 / PPh 21 honor) wajib disetor ke kas negara dengan kode e-billing; bukti sahnya adalah NTPN. Tabel ini membandingkan kewajiban dengan bukti setor yang sudah dicatat.</p>
-  <table data-cari="Cari pajak / masa…">
-    <tr><th>Jenis Pajak</th><th>Masa</th><th class="angka">Kewajiban</th><th class="angka">Sudah Disetor</th><th class="angka">Kekurangan</th><th>Status</th></tr>
-    <?php foreach ($baris as $b): ?>
-    <tr>
-      <td><?= esc($label[$b['jenis']] ?? $b['jenis']) ?></td>
-      <td><?= esc($b['masa']) ?></td>
-      <td class="angka"><?= rp($b['wajib']) ?></td>
-      <td class="angka"><?= rp($b['disetor']) ?></td>
-      <td class="angka"><?= rp(max(0, $b['kurang'])) ?></td>
-      <td><?= esc($b['status']) ?></td>
-    </tr>
-    <?php endforeach; ?>
-    <?php if ($baris === []): ?><tr><td colspan="6">Belum ada kewajiban pajak dari transaksi yang tercatat.</td></tr><?php endif; ?>
-  </table>
+  <?php
+  $barisWajib = [];
+  foreach ($baris as $b) {
+      $barisWajib[] = ['sel' => [
+          (string) ($label[$b['jenis']] ?? $b['jenis']),
+          (string) $b['masa'],
+          ['teks' => rp($b['wajib']), 'angka' => true],
+          ['teks' => rp($b['disetor']), 'angka' => true],
+          ['teks' => rp(max(0, $b['kurang'])), 'angka' => true],
+          (string) $b['status'],
+      ]];
+  }
+  if ($baris === []) {
+      $barisWajib[] = ['sel' => [['teks' => 'Belum ada kewajiban pajak dari transaksi yang tercatat.', 'colspan' => 6]]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari pajak / masa…',
+      'kolom' => [
+          ['judul' => 'Jenis Pajak'],
+          ['judul' => 'Masa'],
+          ['judul' => 'Kewajiban', 'angka' => true],
+          ['judul' => 'Sudah Disetor', 'angka' => true],
+          ['judul' => 'Kekurangan', 'angka' => true],
+          ['judul' => 'Status'],
+      ],
+      'baris' => $barisWajib,
+  ]);
+  ?>
 </details>
 
 <details class="panel panel-lipat" data-lipat-id="setor-sisa-dana-bantuan">
   <summary>Sisa Dana Bantuan</summary>
 
+  <?php /* Tabel ringkasan 2 kolom tanpa kepala kolom — dipertahankan manual
+     (bukan tabel daftar; tabel_bantu selalu merender baris kepala). */ ?>
   <table>
     <tr><td style="width:300px">Sisa dana (diterima − digunakan)</td><td class="angka"><?= rp($sisa) ?></td></tr>
     <tr><td>Sudah disetor kembali ke kas negara</td><td class="angka"><?= rp($setor_sisa) ?></td></tr>
@@ -33,23 +49,7 @@
 <details class="panel panel-lipat" data-lipat-id="setor-catat-bukti-setor">
   <summary>Catat Bukti Setor</summary>
 
-  <form method="post" action="<?= base_url('bukti-setor/simpan') ?>">
-    <?= csrf_field() ?>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
-      <label>Jenis Setoran
-        <select data-select-cari name="jenis">
-          <?php foreach ($label as $k => $v): ?><option value="<?= $k ?>"><?= esc($v) ?></option><?php endforeach; ?>
-        </select>
-      </label>
-      <label>Masa Pajak <input type="month" name="masa"></label>
-      <label>Tanggal Setor <input type="date" name="tanggal_setor" value="<?= esc($tgl_bayar_default ?? date('Y-m-d')) ?>" required></label>
-      <label>Jumlah Disetor (Rp) <input type="text" name="jumlah" inputmode="numeric" data-uang required></label>
-      <label>Kode Billing <input type="text" name="kode_billing" placeholder="dari e-billing / SIMPONI"></label>
-      <label>NTPN <input type="text" name="ntpn" placeholder="Nomor Transaksi Penerimaan Negara"></label>
-      <label class="md:col-span-3">Keterangan <input type="text" name="keterangan" placeholder="opsional"></label>
-    </div>
-    <div class="aksi" style="justify-content:flex-start"><button type="submit">Catat Bukti Setor</button></div>
-  </form>
+  <button type="button" class="tombol" onclick="bukaSetorBaru()">+ Catat Bukti Setor</button>
 </details>
 
 <?php if ($setor !== []): ?>
@@ -66,20 +66,63 @@
       <button type="submit" class="bahaya">Kosongkan Bukti Setor</button>
     </form>
   </div>
-  <table data-paginasi="10" data-cari="Cari bukti setor…">
-    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua bukti setor" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Jenis</th><th>Masa</th><th class="angka">Jumlah</th><th>Kode Billing</th><th>NTPN</th><th></th></tr>
-    <?php foreach ($setor as $s): ?>
-    <tr>
-      <td><input type="checkbox" data-pilih value="<?= (int) $s['id'] ?>" x-model="terpilih"></td>
-      <td><?= esc(tgl($s['tanggal_setor'])) ?></td>
-      <td><?= esc($label[$s['jenis']] ?? $s['jenis']) ?></td>
-      <td><?= esc($s['masa'] ?? '—') ?></td>
-      <td class="angka"><?= rp($s['jumlah']) ?></td>
-      <td><?= esc($s['kode_billing'] ?? '—') ?></td>
-      <td><?= esc($s['ntpn'] ?? '—') ?></td>
-      <td><form class="inline" method="post" action="<?= base_url('bukti-setor/hapus/' . $s['id']) ?>" data-konfirmasi="Hapus bukti setor ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  $barisSetor = [];
+  foreach ($setor as $s) {
+      $barisSetor[] = ['sel' => [
+          ['html' => '<input type="checkbox" data-pilih value="' . (int) $s['id'] . '" x-model="terpilih">'],
+          (string) tgl($s['tanggal_setor']),
+          (string) ($label[$s['jenis']] ?? $s['jenis']),
+          (string) ($s['masa'] ?? '—'),
+          ['teks' => rp($s['jumlah']), 'angka' => true],
+          (string) ($s['kode_billing'] ?? '—'),
+          (string) ($s['ntpn'] ?? '—'),
+          ['html' => '<form class="inline" method="post" action="' . base_url('bukti-setor/hapus/' . $s['id']) . '" data-konfirmasi="Hapus bukti setor ini?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>'],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari bukti setor…',
+      'paginasi' => 10,
+      'kolom' => [
+          ['judul_html' => '<input type="checkbox" title="Pilih semua bukti setor" @change="pilihSemua($event)">', 'lebar' => '34px'],
+          ['judul' => 'Tanggal'],
+          ['judul' => 'Jenis'],
+          ['judul' => 'Masa'],
+          ['judul' => 'Jumlah', 'angka' => true],
+          ['judul' => 'Kode Billing'],
+          ['judul' => 'NTPN'],
+          ['judul' => ''],
+      ],
+      'baris' => $barisSetor,
+  ]);
+  ?>
 </div>
 <?php endif; ?>
+
+<?= form_modal([
+    'id' => 'modal-setor',
+    'judul' => 'Catat Bukti Setor',
+    'aksi' => base_url('bukti-setor/simpan'),
+    'lebar' => 720,
+    'kolom' => [
+        ['nama' => 'jenis', 'label' => 'Jenis Setoran', 'jenis' => 'pilihan', 'opsi' => $label],
+        ['nama' => 'masa', 'label' => 'Masa Pajak', 'jenis' => 'teks', 'placeholder' => 'YYYY-MM', 'petunjuk' => 'Bulan masa pajak, format YYYY-MM (cth. 2026-11).'],
+        ['nama' => 'tanggal_setor', 'label' => 'Tanggal Setor', 'jenis' => 'tanggal', 'wajib' => true],
+        ['nama' => 'jumlah', 'label' => 'Jumlah Disetor (Rp)', 'jenis' => 'uang', 'wajib' => true],
+        ['nama' => 'kode_billing', 'label' => 'Kode Billing', 'jenis' => 'teks', 'placeholder' => 'dari e-billing / SIMPONI'],
+        ['nama' => 'ntpn', 'label' => 'NTPN', 'jenis' => 'teks', 'placeholder' => 'Nomor Transaksi Penerimaan Negara'],
+        ['nama' => 'keterangan', 'label' => 'Keterangan', 'jenis' => 'teks', 'penuh' => true, 'placeholder' => 'opsional'],
+    ],
+    'tombol' => ['hapus' => false, 'simpan_teks' => 'Catat Bukti Setor'],
+]) ?>
+<script>
+// Jembatan modal setor: tanggal bawaan mengikuti Bulan Bekerja, lalu
+// sinkronkan widget select-cari sesudah modal dibuka.
+function bukaSetorBaru() {
+  window.bukaFormModal('modal-setor', { tanggal_setor: <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?> });
+  var m = document.getElementById('modal-setor');
+  if (m && window.perbaruiSelectCari) {
+    m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+  }
+}
+</script>

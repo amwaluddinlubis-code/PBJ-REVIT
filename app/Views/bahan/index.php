@@ -38,58 +38,28 @@
   tutupSinkron() {
     document.getElementById('modal-sinkron').hidden = true;
   },
-  formBahanId: 0,
-  galatBahan: '',
+  // Jembatan modal Bahan (form_modal): hanya mengambil kode baru /
+  // mengoper data baris ke bukaFormModal — buka/tutup/kirim/validasi
+  // milik form-modal.js; sesudah simpan tabel disegarkan helper.
   async bukaTambah() {
-    this.galatBahan = '';
-    this.formBahanId = 0;
-    const f = document.getElementById('form-bahan');
-    f.reset();
+    let kode = '';
     try {
       const r = await fetch('<?= base_url('bahan/kode-baru') ?>', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const d = await r.json();
-      f.kode.value = d.kode || '';
+      kode = d.kode || '';
     } catch (e) { /* kode bisa diisi manual */ }
-    document.getElementById('modal-bahan').hidden = false;
-    setTimeout(() => f.nama.focus(), 30);
+    window.bukaFormModal('modal-bahan', { kode: kode });
+    setTimeout(() => { const f = document.querySelector('#modal-bahan [name="nama"]'); if (f) f.focus(); }, 30);
   },
   bukaUbah(ds) {
-    this.galatBahan = '';
-    this.formBahanId = parseInt(ds.id || '0', 10);
-    const f = document.getElementById('form-bahan');
-    f.reset();
-    f.kode.value = ds.kode || '';
-    f.nama.value = ds.nama || '';
-    f.satuan.value = ds.satuan || '';
-    f.harga_rab.value = window.formatUang ? window.formatUang(ds.harga || '') : (ds.harga || '');
-    document.getElementById('modal-bahan').hidden = false;
-    setTimeout(() => f.nama.focus(), 30);
-  },
-  tutupBahan() {
-    document.getElementById('modal-bahan').hidden = true;
-  },
-  async simpanBahan() {
-    const f = document.getElementById('form-bahan');
-    const fd = new FormData(f);
-    fd.set('harga_rab', String(fd.get('harga_rab') || '').replace(/[^\d]/g, ''));
-    const url = this.formBahanId > 0
-      ? '<?= base_url('bahan/perbarui') ?>/' + this.formBahanId
-      : '<?= base_url('bahan/simpan') ?>';
-    this.memuat = true;
-    try {
-      const r = await fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      const d = await r.json();
-      if (d.ok) {
-        this.tutupBahan();
-        window.tampilToast(d.pesan, 'sukses');
-        this.terpilih = [];
-        await this.cari();
-      } else {
-        this.galatBahan = d.pesan || 'Gagal menyimpan bahan.';
-      }
-    } catch (e) {
-      this.galatBahan = 'Koneksi gagal — coba lagi.';
-    } finally { this.memuat = false; }
+    window.bukaFormModal('modal-bahan', {
+      id: parseInt(ds.id || '0', 10),
+      kode: ds.kode || '',
+      nama: ds.nama || '',
+      satuan: ds.satuan || '',
+      harga_rab: ds.harga || ''
+    });
+    setTimeout(() => { const f = document.querySelector('#modal-bahan [name="nama"]'); if (f) f.focus(); }, 30);
   },
   pilihSemua(ev) {
     const ids = [...document.querySelectorAll('#wadah-tabel-bahan [data-pilih-bahan]')].map((el) => el.value);

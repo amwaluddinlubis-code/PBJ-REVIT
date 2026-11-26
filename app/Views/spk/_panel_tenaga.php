@@ -3,25 +3,42 @@
 
   <p class="kecil-teks" style="margin-top:0">Catatan perkiraan tenaga kerja untuk paket ini — jenis tenaga, keahliannya, kebutuhan OH (orang-hari), dan perkiraan jumlah orang yang harus disediakan panitia. Terisi otomatis bila SPK dibuat dari Rencana Belanja; dapat ditambah atau diubah manual di sini, dan ikut tercetak pada SPK.</p>
   <?php if ($tenaga): ?>
-  <table data-cari="Cari tenaga…">
-    <tr><th>Jenis Tenaga</th><th>Keahlian</th><th class="angka">Kebutuhan (OH)</th><th class="angka">Perkiraan Orang</th><th>Keterangan</th><th></th></tr>
-    <?php $totOh = 0; $totOrang = 0; foreach ($tenaga as $t): $totOh += (float) $t['oh']; $totOrang += (int) ($t['jumlah_orang'] ?? 0); ?>
-    <tr>
-      <td><?= esc($t['jenis']) ?></td>
-      <td><?= esc($t['keahlian'] ?? '—') ?></td>
-      <td class="angka"><?= number_format((float) $t['oh'], 2, ',', '.') ?></td>
-      <td class="angka"><?= $t['jumlah_orang'] === null ? '—' : (int) $t['jumlah_orang'] ?></td>
-      <td><?= esc($t['keterangan'] ?? '—') ?></td>
-      <td>
-        <form class="inline" method="post" action="<?= base_url('spk/tenaga-hapus/' . $t['id']) ?>" data-konfirmasi="Hapus baris kebutuhan tenaga ini?">
-          <?= csrf_field() ?>
-          <button type="submit" class="kecil bahaya">Hapus</button>
-        </form>
-      </td>
-    </tr>
-    <?php endforeach; ?>
-    <tr class="baris-total"><th colspan="2" style="text-align:right">TOTAL</th><th class="angka"><?= number_format($totOh, 2, ',', '.') ?> OH</th><th class="angka"><?= $totOrang ?> orang</th><th colspan="2"></th></tr>
-  </table>
+<?php
+$barisTenaga = [];
+$totOh = 0; $totOrang = 0;
+foreach ($tenaga as $t) {
+    $totOh += (float) $t['oh'];
+    $totOrang += (int) ($t['jumlah_orang'] ?? 0);
+    $barisTenaga[] = ['sel' => [
+        (string) $t['jenis'],
+        (string) ($t['keahlian'] ?? '—'),
+        ['teks' => number_format((float) $t['oh'], 2, ',', '.'), 'angka' => true],
+        ['teks' => $t['jumlah_orang'] === null ? '—' : (string) (int) $t['jumlah_orang'], 'angka' => true],
+        (string) ($t['keterangan'] ?? '—'),
+        ['html' => '<form class="inline" method="post" action="' . base_url('spk/tenaga-hapus/' . $t['id']) . '" data-konfirmasi="Hapus baris kebutuhan tenaga ini?">'
+            . csrf_field()
+            . '<button type="submit" class="kecil bahaya">Hapus</button></form>'],
+    ]];
+}
+$barisTenaga[] = ['total' => [
+    ['html' => '<b>TOTAL</b>', 'colspan' => 2, 'gaya' => 'text-align:right'],
+    ['html' => '<b>' . number_format($totOh, 2, ',', '.') . ' OH</b>', 'angka' => true],
+    ['html' => '<b>' . $totOrang . ' orang</b>', 'angka' => true],
+    ['teks' => '', 'colspan' => 2],
+]];
+echo tabel_bantu([
+    'cari' => 'Cari tenaga…',
+    'kolom' => [
+        ['judul' => 'Jenis Tenaga'],
+        ['judul' => 'Keahlian'],
+        ['judul' => 'Kebutuhan (OH)', 'angka' => true],
+        ['judul' => 'Perkiraan Orang', 'angka' => true],
+        ['judul' => 'Keterangan'],
+        ['judul' => ''],
+    ],
+    'baris' => $barisTenaga,
+]);
+?>
   <?php endif; ?>
   <form method="post" action="<?= base_url('spk/tenaga-tambah/' . $s['id']) ?>" style="margin-top:10px">
     <?= csrf_field() ?>

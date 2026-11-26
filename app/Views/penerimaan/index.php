@@ -1,39 +1,57 @@
 <div class="panel">
   <h2>Penerimaan Dana Bantuan Revitalisasi — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></h2>
   <p style="margin-top:0;color:var(--ta-teks-2)">Menurut Juknis Revitalisasi SMP 2026, dana bantuan dicairkan bertahap: <b>Tahap 1 sebesar 70%</b> dan <b>Tahap 2 sebesar 30%</b> setelah kemajuan penyelesaian pekerjaan mencapai minimal 50% (dibuktikan Laporan Kemajuan + kuitansi penerimaan uang). Setiap penerimaan tercatat di sini dan otomatis masuk Buku Kas.</p>
-  <table>
-    <tr><th>Tahap</th><th class="angka">Target</th><th class="angka">Sudah Diterima</th><th class="angka">Kekurangan</th><th>Status</th></tr>
-    <tr>
-      <td>Tahap 1 (70%)</td><td class="angka"><?= rp($target1) ?></td><td class="angka"><?= rp($terima1) ?></td><td class="angka"><?= rp(max(0, $target1 - $terima1)) ?></td>
-      <td><?= $terima1 >= $target1 && $pagu > 0 ? 'Lengkap' : ($terima1 > 0 ? 'Sebagian' : 'Belum diterima') ?></td>
-    </tr>
-    <tr>
-      <td>Tahap 2 (30%)</td><td class="angka"><?= rp($target2) ?></td><td class="angka"><?= rp($terima2) ?></td><td class="angka"><?= rp(max(0, $target2 - $terima2)) ?></td>
-      <td><?= $terima2 >= $target2 && $pagu > 0 ? 'Lengkap' : ($terima2 > 0 ? 'Sebagian' : ($fisik >= 50 ? 'Dapat diajukan — kemajuan fisik ' . number_format($fisik, 1, ',', '.') . '% sudah ≥ 50%' : 'Belum dapat diajukan — kemajuan fisik ' . number_format($fisik, 1, ',', '.') . '% (syarat ≥ 50%)')) ?></td>
-    </tr>
-    <?php if ($terimaLain > 0): ?><tr><td>Penerimaan lain (tanpa tahap)</td><td class="angka">—</td><td class="angka"><?= rp($terimaLain) ?></td><td></td><td></td></tr><?php endif; ?>
-    <tr><td><b>Total bantuan (pagu)</b></td><td class="angka"><b><?= rp($pagu) ?></b></td><td class="angka"><b><?= rp($terima1 + $terima2 + $terimaLain) ?></b></td><td class="angka"><b><?= rp(max(0, $pagu - $terima1 - $terima2 - $terimaLain)) ?></b></td><td></td></tr>
-  </table>
+  <?php
+  $statusTahap2 = $terima2 >= $target2 && $pagu > 0 ? 'Lengkap' : ($terima2 > 0 ? 'Sebagian' : ($fisik >= 50 ? 'Dapat diajukan — kemajuan fisik ' . number_format($fisik, 1, ',', '.') . '% sudah ≥ 50%' : 'Belum dapat diajukan — kemajuan fisik ' . number_format($fisik, 1, ',', '.') . '% (syarat ≥ 50%)'));
+  $barisTahap = [
+      ['sel' => [
+          'Tahap 1 (70%)',
+          ['teks' => rp($target1), 'angka' => true],
+          ['teks' => rp($terima1), 'angka' => true],
+          ['teks' => rp(max(0, $target1 - $terima1)), 'angka' => true],
+          $terima1 >= $target1 && $pagu > 0 ? 'Lengkap' : ($terima1 > 0 ? 'Sebagian' : 'Belum diterima'),
+      ]],
+      ['sel' => [
+          'Tahap 2 (30%)',
+          ['teks' => rp($target2), 'angka' => true],
+          ['teks' => rp($terima2), 'angka' => true],
+          ['teks' => rp(max(0, $target2 - $terima2)), 'angka' => true],
+          $statusTahap2,
+      ]],
+  ];
+  if ($terimaLain > 0) {
+      $barisTahap[] = ['sel' => [
+          'Penerimaan lain (tanpa tahap)',
+          ['teks' => '—', 'angka' => true],
+          ['teks' => rp($terimaLain), 'angka' => true],
+          '',
+          '',
+      ]];
+  }
+  $barisTahap[] = ['sel' => [
+      ['html' => '<b>Total bantuan (pagu)</b>'],
+      ['html' => '<b>' . rp($pagu) . '</b>', 'angka' => true],
+      ['html' => '<b>' . rp($terima1 + $terima2 + $terimaLain) . '</b>', 'angka' => true],
+      ['html' => '<b>' . rp(max(0, $pagu - $terima1 - $terima2 - $terimaLain)) . '</b>', 'angka' => true],
+      '',
+  ]];
+  echo tabel_bantu([
+      'kolom' => [
+          ['judul' => 'Tahap'],
+          ['judul' => 'Target', 'angka' => true],
+          ['judul' => 'Sudah Diterima', 'angka' => true],
+          ['judul' => 'Kekurangan', 'angka' => true],
+          ['judul' => 'Status'],
+      ],
+      'baris' => $barisTahap,
+  ]);
+  ?>
   <?php if ($pagu <= 0): ?><p class="kecil-teks">Pagu (total anggaran) belum diisi — atur di Identitas &amp; Pengaturan agar target per tahap terhitung.</p><?php endif; ?>
 </div>
 
 <div class="panel">
   <h2>Catat Penerimaan Dana</h2>
-  <form method="post" action="<?= base_url('penerimaan-dana/simpan') ?>">
-    <?= csrf_field() ?>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
-      <label>Tanggal Terima <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required></label>
-      <label>Tahap
-        <select data-select-cari name="tahap"><option value="1">Tahap 1 (70%)</option><option value="2">Tahap 2 (30%)</option></select>
-      </label>
-      <label>Jumlah Diterima (Rp) <input type="text" name="jumlah" inputmode="numeric" data-uang required placeholder="437500000"></label>
-      <label>Kanal
-        <select data-select-cari name="kanal"><option value="bank">Bank (rekening sekolah)</option><option value="tunai">Tunai</option></select>
-      </label>
-      <label class="md:col-span-2">Keterangan <input type="text" name="keterangan" placeholder="cth. Transfer dari KPPN, SP2D No. ..."></label>
-    </div>
-    <div class="aksi" style="justify-content:flex-start"><button type="submit">Catat Penerimaan</button></div>
-  </form>
+  <button type="button" class="tombol" onclick="bukaTerimaBaru()">+ Catat Penerimaan</button>
 </div>
 
 <?php if ($daftar !== []): ?>
@@ -50,18 +68,57 @@
       <button type="submit" class="bahaya">Kosongkan Catatan Penerimaan</button>
     </form>
   </div>
-  <table data-paginasi="25" data-cari="Cari penerimaan…">
-    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Tahap</th><th class="angka">Jumlah</th><th>Keterangan</th><th></th></tr>
-    <?php foreach ($daftar as $d): ?>
-    <tr>
-      <td><input type="checkbox" data-pilih value="<?= (int) $d['id'] ?>" x-model="terpilih"></td>
-      <td><?= esc(tgl($d['tanggal'])) ?></td>
-      <td><?= $d['tahap'] ? 'Tahap ' . (int) $d['tahap'] : '—' ?></td>
-      <td class="angka"><?= rp($d['jumlah']) ?></td>
-      <td><?= esc($d['keterangan'] ?? '') ?></td>
-      <td><a class="tombol kecil abu" href="<?= base_url('penerimaan-dana/kuitansi/' . $d['id']) ?>" target="_blank">Cetak Kuitansi</a></td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  $barisTerima = [];
+  foreach ($daftar as $d) {
+      $barisTerima[] = ['sel' => [
+          ['html' => '<input type="checkbox" data-pilih value="' . (int) $d['id'] . '" x-model="terpilih">'],
+          (string) tgl($d['tanggal']),
+          $d['tahap'] ? 'Tahap ' . (int) $d['tahap'] : '—',
+          ['teks' => rp($d['jumlah']), 'angka' => true],
+          (string) ($d['keterangan'] ?? ''),
+          ['html' => '<a class="tombol kecil abu" href="' . base_url('penerimaan-dana/kuitansi/' . $d['id']) . '" target="_blank">Cetak Kuitansi</a>'],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari penerimaan…',
+      'paginasi' => 25,
+      'kolom' => [
+          ['judul_html' => '<input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)">', 'lebar' => '34px'],
+          ['judul' => 'Tanggal'],
+          ['judul' => 'Tahap'],
+          ['judul' => 'Jumlah', 'angka' => true],
+          ['judul' => 'Keterangan'],
+          ['judul' => ''],
+      ],
+      'baris' => $barisTerima,
+  ]);
+  ?>
 </div>
 <?php endif; ?>
+
+<?= form_modal([
+    'id' => 'modal-terima',
+    'judul' => 'Catat Penerimaan Dana',
+    'aksi' => base_url('penerimaan-dana/simpan'),
+    'lebar' => 720,
+    'kolom' => [
+        ['nama' => 'tanggal', 'label' => 'Tanggal Terima', 'jenis' => 'tanggal', 'wajib' => true],
+        ['nama' => 'tahap', 'label' => 'Tahap', 'jenis' => 'pilihan', 'opsi' => ['1' => 'Tahap 1 (70%)', '2' => 'Tahap 2 (30%)']],
+        ['nama' => 'jumlah', 'label' => 'Jumlah Diterima (Rp)', 'jenis' => 'uang', 'wajib' => true, 'placeholder' => '437500000'],
+        ['nama' => 'kanal', 'label' => 'Kanal', 'jenis' => 'pilihan', 'opsi' => ['bank' => 'Bank (rekening sekolah)', 'tunai' => 'Tunai']],
+        ['nama' => 'keterangan', 'label' => 'Keterangan', 'jenis' => 'teks', 'penuh' => true, 'placeholder' => 'cth. Transfer dari KPPN, SP2D No. ...'],
+    ],
+    'tombol' => ['hapus' => false, 'simpan_teks' => 'Catat Penerimaan'],
+]) ?>
+<script>
+// Jembatan modal penerimaan: tanggal bawaan hari ini (seperti form lama),
+// lalu sinkronkan widget select-cari sesudah modal dibuka.
+function bukaTerimaBaru() {
+  window.bukaFormModal('modal-terima', { tanggal: <?= json_encode(date('Y-m-d')) ?> });
+  var m = document.getElementById('modal-terima');
+  if (m && window.perbaruiSelectCari) {
+    m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+  }
+}
+</script>

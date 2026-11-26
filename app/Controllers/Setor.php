@@ -95,6 +95,15 @@ class Setor extends BaseController
         ], 'Bukti Setor & Pajak — Aplikasi PBJ Sekolah');
     }
 
+    /** Balasan form modal (pola Bahan::balasForm): AJAX -> JSON {ok, pesan}; biasa -> redirect flash. */
+    private function balasForm(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return redirect()->to('/bukti-setor')->with($ok ? 'sukses' : 'galat', $pesan);
+    }
+
     public function simpan()
     {
         if ($d = $this->penjagaPeran(['bendahara'])) {
@@ -105,10 +114,10 @@ class Setor extends BaseController
         $jumlah = (float) preg_replace('/[^0-9]/', '', (string) $r->getPost('jumlah'));
         if (! in_array($jenis, ['pph22', 'ppn', 'pph21', 'pph23', 'pph42', 'sisa_dana'], true)
             || $jumlah <= 0 || ! $r->getPost('tanggal_setor')) {
-            return redirect()->to('/bukti-setor')->with('galat', 'Jenis setoran, tanggal setor, dan jumlah wajib diisi.');
+            return $this->balasForm(false, 'Jenis setoran, tanggal setor, dan jumlah wajib diisi.');
         }
         if ($g = $this->galatBulanBekerja((string) $r->getPost('tanggal_setor'))) {
-            return redirect()->to('/bukti-setor')->with('galat', $g);
+            return $this->balasForm(false, $g);
         }
         $masa = trim((string) $r->getPost('masa'));
         $this->db()->table('bukti_setor')->insert([
@@ -123,7 +132,7 @@ class Setor extends BaseController
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
         $this->catatAudit('bukti_setor', (int) $this->db()->insertID(), 'buat', 'Bukti setor pajak dicatat.');
-        return redirect()->to('/bukti-setor')->with('sukses', 'Bukti setor dicatat dan masuk Buku Kas sebagai uang keluar.');
+        return $this->balasForm(true, 'Bukti setor dicatat dan masuk Buku Kas sebagai uang keluar.');
     }
 
     public function hapus($id)

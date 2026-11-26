@@ -131,34 +131,56 @@ class Pengaturan extends BaseController
         return redirect()->to('pengaturan')->with('sukses', 'Identitas disimpan — kop surat dan dokumen mengikuti otomatis.');
     }
 
+    /** Balasan form modal (pola balasForm): AJAX -> JSON {ok, pesan}. */
+    private function balasForm(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return redirect()->to('pengaturan')->with($ok ? 'sukses' : 'galat', $pesan);
+    }
+
     public function penyediaTambah()
     {
+        // Modal form_modal mengirim id tersembunyi: 0 = baru, >0 = ubah.
+        $id = (int) $this->request->getPost('id');
+        return $id > 0 ? $this->prosesPenyediaUbah($id) : $this->prosesPenyediaTambah();
+    }
+
+    private function prosesPenyediaTambah()
+    {
         $nama = trim((string) $this->request->getPost('nama'));
-        if ($nama !== '') {
-            $this->db()->table('penyedia')->insert([
-                'sekolah_id' => $this->sid(),
-                'nama' => $nama,
-                'alamat' => trim((string) $this->request->getPost('alamat')) ?: null,
-                'ttd_nama' => trim((string) $this->request->getPost('ttd_nama')) ?: null,
-                'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
-            ]);
+        if ($nama === '') {
+            return $this->balasForm(false, 'Nama penyedia tidak boleh kosong.');
         }
-        return redirect()->to('pengaturan')->with('sukses', 'Penyedia ditambahkan.');
+        $this->db()->table('penyedia')->insert([
+            'sekolah_id' => $this->sid(),
+            'nama' => $nama,
+            'alamat' => trim((string) $this->request->getPost('alamat')) ?: null,
+            'ttd_nama' => trim((string) $this->request->getPost('ttd_nama')) ?: null,
+            'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+        return $this->balasForm(true, 'Penyedia ditambahkan.');
     }
 
     public function penyediaUbah($id)
     {
+        return $this->prosesPenyediaUbah((int) $id);
+    }
+
+    private function prosesPenyediaUbah(int $id)
+    {
         $nama = trim((string) $this->request->getPost('nama'));
         if ($nama === '') {
-            return redirect()->to('pengaturan')->with('galat', 'Nama penyedia tidak boleh kosong.');
+            return $this->balasForm(false, 'Nama penyedia tidak boleh kosong.');
         }
-        $this->db()->table('penyedia')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->update([
+        $this->db()->table('penyedia')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->update([
             'nama' => $nama,
             'alamat' => trim((string) $this->request->getPost('alamat')) ?: null,
             'ttd_nama' => trim((string) $this->request->getPost('ttd_nama')) ?: null,
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
-        return redirect()->to('pengaturan')->with('sukses', 'Penyedia "' . $nama . '" diperbarui.');
+        return $this->balasForm(true, 'Penyedia "' . $nama . '" diperbarui.');
     }
 
     public function penyediaHapus($id)

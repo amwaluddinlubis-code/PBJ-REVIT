@@ -598,6 +598,12 @@ class Bahan extends BaseController
 
     public function simpan()
     {
+        // Modal form_modal mengirim id tersembunyi: 0 = baru, >0 = ubah
+        // (jalur perbarui yang sama dengan halaman form mandiri).
+        $id = (int) $this->request->getPost('id');
+        if ($id > 0) {
+            return $this->perbarui($id);
+        }
         $data = $this->ambilForm();
         if ($this->db()->table('bahan')->where(['kode' => $data['kode'], 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults() > 0) {
             return $this->balasForm(false, 'Kode ' . $data['kode'] . ' sudah dipakai.');

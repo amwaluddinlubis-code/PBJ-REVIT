@@ -26,28 +26,47 @@ foreach ($daftar as $d) { if ($d['acuan']['tanpa_padanan']) { $tanpa++; } elseif
 <div class="panel">
   <p class="kecil-teks"><?= count($daftar) ?> item acuan sekolah ini · <?= $terpadan ?> terpadankan ke analisa sekolah ini · <?= $tanpa ?> tanpa padanan nasional</p>
   <div class="bungkus-tabel">
-    <table class="satu-baris tabel-acuan" data-cari data-paginasi="25">
-      <colgroup><col style="width:7%"><col style="width:23%"><col style="width:20%"><col style="width:12%"><col style="width:12%"><col style="width:8%"><col style="width:8%"><col style="width:10%"></colgroup>
-      <thead><tr>
-        <th>Kode Kita</th><th>Analisa Kita (Sekolah Ini)</th><th>Padanan Nasional</th>
-        <th class="angka">Harga Kita</th><th class="angka">Harga Acuan</th><th class="angka">Selisih %</th>
-        <th class="angka">Menyimpang</th><th>Aksi</th>
-      </tr></thead>
-      <tbody>
-      <?php foreach ($daftar as $d): $ac = $d['acuan']; $an = $d['analisa']; $rg = $d['ringkas']; ?>
-        <tr>
-          <td><?= esc($ac['kode_kita']) ?></td>
-          <td><?= $an ? esc($an['nama']) : '<span class="kecil-teks">— belum ada di sekolah ini —</span>' ?></td>
-          <td><?php if ($ac['tanpa_padanan']): ?><span class="kecil-teks">tidak ada padanan</span><?php else: ?><?= esc($ac['kode_nasional']) ?> — <?= esc($ac['nama']) ?><?php endif; ?></td>
-          <td class="angka"><?= $rg ? 'Rp ' . number_format($rg['harga_kita'], 0, ',', '.') : '—' ?></td>
-          <td class="angka"><?= $rg ? 'Rp ' . number_format($rg['harga_acuan'], 0, ',', '.') : '—' ?></td>
-          <td class="angka"><?php if ($rg && $rg['selisih_harga'] !== null): ?><span style="color:<?= $rg['selisih_harga'] > 0 ? 'var(--ina-green-700,#1e6b2a)' : 'var(--ina-red-700,#a61e1e)' ?>"><?= ($rg['selisih_harga'] > 0 ? '+' : '−') . number_format(abs($rg['selisih_harga']), 1, ',', '.') ?>%</span><?php else: ?>—<?php endif; ?></td>
-          <td class="angka"><?= $rg ? (int) $rg['menyimpang'] . ' komponen' : '—' ?></td>
-          <td><a class="tombol kecil" href="<?= base_url('acuan/' . $ac['id']) ?>">Banding</a></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
+    <?php
+    // Tabel daftar acuan memakai helper tabel_bantu(); lebar kolom persen
+    // menggantikan colgroup (kelas tabel-acuan memakai table-layout fixed).
+    $barisAcuan = [];
+    foreach ($daftar as $d) {
+        $ac = $d['acuan']; $an = $d['analisa']; $rg = $d['ringkas'];
+        $selisih = '—';
+        if ($rg && $rg['selisih_harga'] !== null) {
+            $selisih = '<span style="color:' . ($rg['selisih_harga'] > 0 ? 'var(--ina-green-700,#1e6b2a)' : 'var(--ina-red-700,#a61e1e)') . '">'
+                . ($rg['selisih_harga'] > 0 ? '+' : '−') . number_format(abs($rg['selisih_harga']), 1, ',', '.') . '%</span>';
+        }
+        $barisAcuan[] = ['sel' => [
+            (string) $ac['kode_kita'],
+            $an ? (string) $an['nama'] : ['html' => '<span class="kecil-teks">— belum ada di sekolah ini —</span>'],
+            $ac['tanpa_padanan']
+                ? ['html' => '<span class="kecil-teks">tidak ada padanan</span>']
+                : $ac['kode_nasional'] . ' — ' . $ac['nama'],
+            ['teks' => $rg ? 'Rp ' . number_format($rg['harga_kita'], 0, ',', '.') : '—', 'angka' => true],
+            ['teks' => $rg ? 'Rp ' . number_format($rg['harga_acuan'], 0, ',', '.') : '—', 'angka' => true],
+            ['html' => $selisih, 'angka' => true],
+            ['teks' => $rg ? (int) $rg['menyimpang'] . ' komponen' : '—', 'angka' => true],
+            ['html' => '<a class="tombol kecil" href="' . base_url('acuan/' . $ac['id']) . '">Banding</a>'],
+        ]];
+    }
+    echo tabel_bantu([
+        'class' => 'satu-baris tabel-acuan',
+        'cari' => '',
+        'paginasi' => 25,
+        'kolom' => [
+            ['judul' => 'Kode Kita', 'lebar' => '7%'],
+            ['judul' => 'Analisa Kita (Sekolah Ini)', 'lebar' => '23%'],
+            ['judul' => 'Padanan Nasional', 'lebar' => '20%'],
+            ['judul' => 'Harga Kita', 'angka' => true, 'lebar' => '12%'],
+            ['judul' => 'Harga Acuan', 'angka' => true, 'lebar' => '12%'],
+            ['judul' => 'Selisih %', 'angka' => true, 'lebar' => '8%'],
+            ['judul' => 'Menyimpang', 'angka' => true, 'lebar' => '8%'],
+            ['judul' => 'Aksi', 'lebar' => '10%'],
+        ],
+        'baris' => $barisAcuan,
+    ]);
+    ?>
   </div>
 </div>
 <?php endif; ?>

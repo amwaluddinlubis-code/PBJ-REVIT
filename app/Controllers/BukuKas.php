@@ -65,6 +65,15 @@ class BukuKas extends BaseController
         ], $this->namaBuku($buku) . ' — Aplikasi PBJ Sekolah');
     }
 
+    /** Balasan form modal (pola Bahan::balasForm): AJAX -> JSON {ok, pesan}; biasa -> redirect flash. */
+    private function balasForm(bool $ok, string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => $ok, 'pesan' => $pesan]);
+        }
+        return redirect()->to('/buku-kas')->with($ok ? 'sukses' : 'galat', $pesan);
+    }
+
     public function simpan()
     {
         if ($d = $this->penjagaPeran(['bendahara'])) {
@@ -81,10 +90,10 @@ class BukuKas extends BaseController
         }
         $tahap = $kategori === 'penerimaan' ? ((int) $r->getPost('tahap') ?: null) : null;
         if ($uraian === '' || $jumlah <= 0 || ! $r->getPost('tanggal')) {
-            return redirect()->to('/buku-kas')->with('galat', 'Tanggal, uraian, dan jumlah wajib diisi.');
+            return $this->balasForm(false, 'Tanggal, uraian, dan jumlah wajib diisi.');
         }
         if ($g = $this->galatBulanBekerja((string) $r->getPost('tanggal'))) {
-            return redirect()->to('/buku-kas')->with('galat', $g);
+            return $this->balasForm(false, $g);
         }
         $this->db()->table('kas_transaksi')->insert([
             'sekolah_id' => $this->sid(),
@@ -99,7 +108,7 @@ class BukuKas extends BaseController
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
         $this->catatAudit('kas', (int) $this->db()->insertID(), 'buat', 'Transaksi kas manual: ' . $uraian . ' ' . $this->rp($jumlah));
-        return redirect()->to('/buku-kas')->with('sukses', 'Transaksi kas dicatat dan masuk ke buku kas.');
+        return $this->balasForm(true, 'Transaksi kas dicatat dan masuk ke buku kas.');
     }
 
     public function hapus($id)

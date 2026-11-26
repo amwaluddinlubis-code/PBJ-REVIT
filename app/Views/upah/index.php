@@ -8,32 +8,7 @@
 <details class="panel panel-lipat" data-lipat-id="upah-catat-pembayaran-upah" open>
   <summary>Catat Pembayaran Upah</summary>
 
-  <form method="post" action="<?= base_url('upah/simpan') ?>">
-    <?= csrf_field() ?>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-      <label>Tanggal<input type="date" name="tanggal" value="<?= esc($tgl_bayar_default ?? date('Y-m-d')) ?>" required></label>
-      <label>Gedung
-        <select data-select-cari name="gedung_id" id="pilih-gedung">
-          <option value="">— umum —</option>
-          <?php foreach ($semuaGedung ?? [] as $gd): ?><option value="<?= (int) $gd['id'] ?>"><?= esc($gd['nama']) ?></option><?php endforeach; ?>
-        </select>
-      </label>
-      <label>Pekerjaan (opsional)
-        <select data-select-cari name="pekerjaan_id" id="pilih-pekerjaan"><option value="">— tidak tertaut pekerjaan —</option></select>
-      </label>
-      <label>Jenis tenaga
-        <input type="text" name="jenis_tenaga" list="daftar-jenis" required placeholder="mis. Pekerja / Tukang">
-        <datalist id="daftar-jenis">
-          <?php foreach ($master as $m): ?><option value="<?= esc($m['jenis']) ?>"><?= esc($m['jenis']) ?> — <?= rp($m['tarif']) ?>/OH</option><?php endforeach; ?>
-        </datalist>
-      </label>
-      <label>Nama penerima<input type="text" name="penerima" placeholder="mis. Sarmin"></label>
-      <label>Orang-hari (OH)<input type="text" name="orang_hari" required placeholder="mis. 12,5"></label>
-      <label>Tarif per OH (Rp) — kosongkan untuk tarif master<input type="text" inputmode="numeric" data-uang name="tarif" placeholder="mis. 93578"></label>
-      <label>Keterangan<input type="text" name="keterangan" placeholder="mis. Upah pasang pondasi minggu ke-3"></label>
-      <div class="aksi md:col-span-2"><button type="submit">Catat Pembayaran</button></div>
-    </div>
-  </form>
+  <button type="button" class="tombol" onclick="bukaUpahBaru()">+ Catat Pembayaran</button>
   <p class="kecil-teks">Jumlah bayar = orang-hari × tarif, dihitung otomatis. Pembayaran upah ikut terhitung dalam kontrol pagu total anggaran. PPh 21 mengikuti Juknis Revitalisasi: upah harian sampai dengan Rp450.000 per hari tidak dipotong; di atasnya dipotong 5% dari kelebihan per hari (batas kumulatif Rp4.500.000 dalam 22 hari kerja per bulan untuk penerima yang sama perlu dicek manual).</p>
 </details>
 
@@ -50,63 +25,80 @@
       <button type="submit" class="bahaya">Kosongkan Riwayat Upah</button>
     </form>
   </div>
-  <table data-paginasi="25" data-cari="Cari pembayaran upah…">
-    <tr><th style="width:34px"><input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)"></th><th>Tanggal</th><th>Gedung</th><th>Jenis Tenaga</th><th>Penerima</th><th class="angka">OH</th><th class="angka">Tarif</th><th class="angka">Jumlah</th><th class="angka">PPh 21</th><th class="angka">Bersih</th><th>Aksi</th></tr>
-    <?php foreach ($daftar as $u): ?>
-    <tr>
-      <td><input type="checkbox" data-pilih value="<?= (int) $u['id'] ?>" x-model="terpilih"></td>
-      <td><?= esc(tgl($u['tanggal'])) ?></td>
-      <td><?= esc($u['nama_gedung'] ?? '—') ?><?= $u['nama_pekerjaan'] ? '<br><span class="kecil-teks">' . esc($u['nama_pekerjaan']) . '</span>' : '' ?></td>
-      <td><?= esc($u['jenis_tenaga']) ?></td>
-      <td><?= esc($u['penerima'] ?? '—') ?></td>
-      <td class="angka"><?= number_format((float) $u['orang_hari'], 2, ',', '.') ?></td>
-      <td class="angka"><?= number_format((float) $u['tarif'], 0, ',', '.') ?></td>
-      <td class="angka"><?= number_format((float) $u['jumlah'], 0, ',', '.') ?></td>
-      <td class="angka"><?= (float) $u['pph21'] > 0 ? number_format((float) $u['pph21'], 0, ',', '.') : '—' ?></td>
-      <td class="angka"><?= number_format((float) $u['bersih'], 0, ',', '.') ?></td>
-      <td><form class="inline" method="post" action="<?= base_url('upah/' . $u['id'] . '/hapus') ?>" data-konfirmasi="Hapus catatan ini?"><?= csrf_field() ?><button class="kecil bahaya" type="submit">Hapus</button></form></td>
-    </tr>
-    <?php endforeach; ?>
-    <?php if ($daftar === []): ?><tr><td colspan="11">Belum ada pembayaran upah tercatat.</td></tr><?php endif; ?>
-  </table>
+  <?php
+  // Angka riwayat upah tampil polos tanpa awalan Rp (persis seperti sebelumnya).
+  $barisUpah = [];
+  foreach ($daftar as $u) {
+      $barisUpah[] = ['sel' => [
+          ['html' => '<input type="checkbox" data-pilih value="' . (int) $u['id'] . '" x-model="terpilih">'],
+          (string) tgl($u['tanggal']),
+          ['html' => esc($u['nama_gedung'] ?? '—') . ($u['nama_pekerjaan'] ? '<br><span class="kecil-teks">' . esc($u['nama_pekerjaan']) . '</span>' : '')],
+          (string) $u['jenis_tenaga'],
+          (string) ($u['penerima'] ?? '—'),
+          ['teks' => number_format((float) $u['orang_hari'], 2, ',', '.'), 'angka' => true],
+          ['teks' => number_format((float) $u['tarif'], 0, ',', '.'), 'angka' => true],
+          ['teks' => number_format((float) $u['jumlah'], 0, ',', '.'), 'angka' => true],
+          ['teks' => (float) $u['pph21'] > 0 ? number_format((float) $u['pph21'], 0, ',', '.') : '—', 'angka' => true],
+          ['teks' => number_format((float) $u['bersih'], 0, ',', '.'), 'angka' => true],
+          ['html' => '<form class="inline" method="post" action="' . base_url('upah/' . $u['id'] . '/hapus') . '" data-konfirmasi="Hapus catatan ini?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>'],
+      ]];
+  }
+  if ($daftar === []) {
+      $barisUpah[] = ['sel' => [['teks' => 'Belum ada pembayaran upah tercatat.', 'colspan' => 11]]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari pembayaran upah…',
+      'paginasi' => 25,
+      'kolom' => [
+          ['judul_html' => '<input type="checkbox" title="Pilih semua catatan" @change="pilihSemua($event)">', 'lebar' => '34px'],
+          ['judul' => 'Tanggal'],
+          ['judul' => 'Gedung'],
+          ['judul' => 'Jenis Tenaga'],
+          ['judul' => 'Penerima'],
+          ['judul' => 'OH', 'angka' => true],
+          ['judul' => 'Tarif', 'angka' => true],
+          ['judul' => 'Jumlah', 'angka' => true],
+          ['judul' => 'PPh 21', 'angka' => true],
+          ['judul' => 'Bersih', 'angka' => true],
+          ['judul' => 'Aksi'],
+      ],
+      'baris' => $barisUpah,
+  ]);
+  ?>
 </div>
 
 <details class="panel panel-lipat" data-lipat-id="upah-master-tarif-upah-per-oh">
   <summary>Master Tarif Upah (per OH)</summary>
 
-  <table data-cari="Cari jenis tenaga…">
-    <tr><th>Jenis Tenaga</th><th style="width:300px">Tarif (Rp)</th></tr>
-    <?php foreach ($master as $m): ?>
-    <tr>
-      <td><?= esc($m['jenis']) ?></td>
-      <td>
-        <form method="post" action="<?= base_url('upah/tarif/' . $m['id']) ?>" style="display:flex;gap:6px">
-          <?= csrf_field() ?>
-          <input type="text" inputmode="numeric" data-uang name="tarif" value="<?= (int) round((float) $m['tarif']) ?>" style="margin:0">
-          <button class="kecil" type="submit">Simpan</button>
-        </form>
-      </td>
-    </tr>
-    <?php endforeach; ?>
-  </table>
+  <?php
+  // Form ubah tarif tetap sebaris per baris (aksi per id upah/tarif/{id});
+  // tabelnya saja yang memakai helper.
+  $barisMaster = [];
+  foreach ($master as $m) {
+      $barisMaster[] = ['sel' => [
+          (string) $m['jenis'],
+          ['html' => '<form method="post" action="' . base_url('upah/tarif/' . $m['id']) . '" style="display:flex;gap:6px">'
+              . csrf_field()
+              . '<input type="text" inputmode="numeric" data-uang name="tarif" value="' . (int) round((float) $m['tarif']) . '" style="margin:0">'
+              . '<button class="kecil" type="submit">Simpan</button></form>'],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari jenis tenaga…',
+      'kolom' => [
+          ['judul' => 'Jenis Tenaga'],
+          ['judul' => 'Tarif (Rp)', 'lebar' => '300px'],
+      ],
+      'baris' => $barisMaster,
+  ]);
+  ?>
   <?php
   $jenisMaster = array_map(static fn ($m) => (string) $m['jenis'], $master);
   $kanonKurang = array_values(array_filter(['Pekerja', 'Tukang'], static fn ($k) => ! in_array($k, $jenisMaster, true)));
   $bukanKanon  = array_values(array_filter($master, static fn ($m) => ! in_array((string) $m['jenis'], ['Pekerja', 'Tukang'], true)));
   ?>
   <?php if ($kanonKurang !== []): ?>
-  <form method="post" action="<?= base_url('upah/master') ?>" style="margin-top:12px">
-    <?= csrf_field() ?>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-      <label>Jenis tenaga
-        <select name="jenis" required>
-          <?php foreach ($kanonKurang as $k): ?><option value="<?= esc($k) ?>"><?= esc($k) ?></option><?php endforeach; ?>
-        </select>
-      </label>
-      <label>Tarif per OH (Rp)<input type="text" inputmode="numeric" data-uang name="tarif" placeholder="mis. 93578"></label>
-      <div class="aksi md:col-span-2"><button type="submit">Tambah ke Master</button></div>
-    </div>
-  </form>
+  <div style="margin-top:12px"><button type="button" class="tombol" onclick="bukaMasterBaru()">+ Tambah ke Master</button></div>
   <?php endif; ?>
   <?php if ($bukanKanon !== []): ?>
   <p class="kecil-teks">Master upah hanya mengenal <strong>Pekerja</strong> dan <strong>Tukang</strong>. Masih ada <?= count($bukanKanon) ?> jenis lain (<?= esc(implode(', ', array_column($bukanKanon, 'jenis'))) ?>) — rapikan lewat tombol <strong>Rapikan ke 2 Jenis</strong> di <a href="<?= base_url('bahan') ?>">Master Bahan &amp; Upah</a>.</p>
@@ -115,15 +107,69 @@
   <?php endif; ?>
 </details>
 
+<?php
+$opsiGedung = ['' => '— umum —'];
+foreach ($semuaGedung ?? [] as $gd) {
+    $opsiGedung[(int) $gd['id']] = (string) $gd['nama'];
+}
+?>
+<?= form_modal([
+    'id' => 'modal-upah',
+    'judul' => 'Catat Pembayaran Upah',
+    'aksi' => base_url('upah/simpan'),
+    'lebar' => 720,
+    'kolom' => [
+        ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal', 'wajib' => true],
+        ['nama' => 'gedung_id', 'label' => 'Gedung', 'jenis' => 'pilihan', 'opsi' => $opsiGedung],
+        ['nama' => 'pekerjaan_id', 'label' => 'Pekerjaan (opsional)', 'jenis' => 'pilihan', 'opsi' => ['' => '— tidak tertaut pekerjaan —']],
+        ['nama' => 'jenis_tenaga', 'label' => 'Jenis tenaga', 'jenis' => 'teks', 'wajib' => true, 'placeholder' => 'mis. Pekerja / Tukang', 'saran' => array_map(static fn ($m) => (string) $m['jenis'], $master)],
+        ['nama' => 'penerima', 'label' => 'Nama penerima', 'jenis' => 'teks', 'placeholder' => 'mis. Sarmin'],
+        ['nama' => 'orang_hari', 'label' => 'Orang-hari (OH)', 'jenis' => 'angka', 'wajib' => true, 'placeholder' => 'mis. 12,5'],
+        ['nama' => 'tarif', 'label' => 'Tarif per OH (Rp)', 'jenis' => 'uang', 'placeholder' => 'mis. 93578', 'petunjuk' => 'Kosongkan untuk tarif master'],
+        ['nama' => 'keterangan', 'label' => 'Keterangan', 'jenis' => 'teks', 'placeholder' => 'mis. Upah pasang pondasi minggu ke-3'],
+    ],
+    'tombol' => ['hapus' => false, 'simpan_teks' => 'Catat Pembayaran'],
+]) ?>
+<?php if ($kanonKurang !== []): ?>
+<?= form_modal([
+    'id' => 'modal-upah-master',
+    'judul' => 'Tambah ke Master Upah',
+    'aksi' => base_url('upah/master'),
+    'kolom' => [
+        ['nama' => 'jenis', 'label' => 'Jenis tenaga', 'jenis' => 'pilihan', 'wajib' => true, 'opsi' => array_combine($kanonKurang, $kanonKurang)],
+        ['nama' => 'tarif', 'label' => 'Tarif per OH (Rp)', 'jenis' => 'uang', 'placeholder' => 'mis. 93578'],
+    ],
+    'tombol' => ['hapus' => false, 'simpan_teks' => 'Tambah ke Master'],
+]) ?>
+<?php endif; ?>
 <script>
+// Jembatan modal upah: pilihan pekerjaan mengikuti gedung terpilih
+// (peta pekerjaanPerGedung dari server), tanggal bawaan mengikuti
+// Bulan Bekerja, dan widget select-cari disinkronkan sesudah buka.
 const pekerjaanPerGedung = <?= json_encode($pekerjaan_per_gedung) ?>;
-const selGedung = document.getElementById('pilih-gedung');
-const selPekerjaan = document.getElementById('pilih-pekerjaan');
 function segarkanPekerjaan() {
+  var selGedung = document.getElementById('modal-upah-gedung_id');
+  var selPekerjaan = document.getElementById('modal-upah-pekerjaan_id');
+  if (!selGedung || !selPekerjaan) return;
   const daftar = pekerjaanPerGedung[selGedung.value] || [];
   selPekerjaan.innerHTML = '<option value="">— tidak tertaut pekerjaan —</option>' +
     daftar.map(p => `<option value="${p.id}">${p.nama}</option>`).join('');
+  if (window.perbaruiSelectCari) { window.perbaruiSelectCari(selPekerjaan); }
 }
-selGedung.addEventListener('change', segarkanPekerjaan);
-segarkanPekerjaan();
+function sinkronSelectUpah(idModal) {
+  var m = document.getElementById(idModal);
+  if (m && window.perbaruiSelectCari) {
+    m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+  }
+}
+function bukaUpahBaru() {
+  window.bukaFormModal('modal-upah', { tanggal: <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?> });
+  segarkanPekerjaan();
+  sinkronSelectUpah('modal-upah');
+}
+function bukaMasterBaru() {
+  window.bukaFormModal('modal-upah-master');
+  sinkronSelectUpah('modal-upah-master');
+}
+document.getElementById('modal-upah-gedung_id').addEventListener('change', segarkanPekerjaan);
 </script>
