@@ -215,6 +215,7 @@ $routes->post('buku-kas/kosongkan', 'BukuKas::kosongkan', ['filter' => 'auth']);
 $routes->get('buku-kas/cetak', 'BukuKas::cetak', ['filter' => 'auth']);
 $routes->post('buku-kas/tutup', 'BukuKas::tutupBuku', ['filter' => 'auth']);
 $routes->post('buku-kas/buka-kembali/(:num)', 'BukuKas::bukaKembali/$1', ['filter' => 'auth']);
+$routes->get('spj-bulanan', 'BukuKas::spj', ['filter' => 'auth']);
 $routes->get('bersih', 'Bersih::index', ['filter' => 'auth']);
 $routes->get('bersih/grup/(:num)', 'Bersih::grup/$1', ['filter' => 'auth']);
 $routes->post('bersih/langkah2', 'Bersih::langkah2', ['filter' => 'auth']);

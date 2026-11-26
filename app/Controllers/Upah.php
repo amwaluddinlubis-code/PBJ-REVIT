@@ -31,6 +31,10 @@ class Upah extends BaseController
             'daftar' => $daftar, 'total' => $total, 'total_pph21' => $totalPph21,
             'master' => $db->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray(),
             'pekerjaan_per_gedung' => $this->pekerjaanPerGedung(),
+            'penerima_saran' => array_column($db->query(
+                "SELECT DISTINCT penerima FROM upah_bayar WHERE sekolah_id = ? AND is_deleted = 0 AND penerima IS NOT NULL AND TRIM(penerima) <> '' ORDER BY penerima",
+                [$this->sid()]
+            )->getResultArray(), 'penerima'),
             'tgl_bayar_default' => $this->tanggalBulanBekerja(),
         ] + $this->batasBuku(), 'Pembayaran Upah');
     }
@@ -66,7 +70,30 @@ class Upah extends BaseController
         if ($gedungId !== null && $this->ambilGedung($gedungId) === null) {
             $gedungId = null;
         }
-        $jenis = trim((string) $r->getPost('jenis_tenaga'));
+        // Pekerjaan wajib milik gedung terpilih (atau gedung diwarisi dari
+        // pekerjaan bila gedung kosong) — mencegah upah tercatat silang gedung.
+        $pekerjaanId = (int) $r->getPost('pekerjaan_id') ?: null;
+        if ($pekerjaanId !== null) {
+            $pek = $this->db()->query(
+                'SELECT p.gedung_id FROM pekerjaan p JOIN gedung g ON g.id = p.gedung_id AND g.is_deleted = 0 WHERE p.id = ? AND g.sekolah_id = ? AND p.is_deleted = 0',
+                [$pekerjaanId, $this->sid()]
+            )->getRowArray();
+            if ($pek === null) {
+                return $this->balasForm(false, 'Pekerjaan yang dipilih tidak ditemukan. Pilih pekerjaan dari daftar gedung terpilih.');
+            }
+            if ($gedungId !== null && (int) $pek['gedung_id'] !== $gedungId) {
+                return $this->balasForm(false, 'Pekerjaan itu bukan milik gedung yang dipilih. Samakan gedung dengan pekerjaan, atau kosongkan pekerjaannya.');
+            }
+            $gedungId = (int) $pek['gedung_id'];
+        }
+        // Jenis tenaga dikanonkan ke 2 jenis master (Pekerja/Tukang);
+        // Mandor/Kepala Tukang ditolak (dihilangkan sejak 22 Nov 2026).
+        $jenisMentah = trim((string) $r->getPost('jenis_tenaga'));
+        $jenis = $this->upahKanon($jenisMentah);
+        if ($jenis === null && $jenisMentah !== '') {
+            return $this->balasForm(false, 'Jenis tenaga hanya "Pekerja" atau "Tukang" (Mandor & Kepala Tukang sudah dihilangkan). Pilih dari daftar jenis tenaga.');
+        }
+        $jenis = $jenis ?? '';
         $oh = (float) str_replace(',', '.', (string) $r->getPost('orang_hari'));
         $tarif = (float) str_replace(['.', ','], ['', '.'], (string) $r->getPost('tarif'));
         if ($tarif <= 0) {
@@ -90,9 +117,14 @@ class Upah extends BaseController
                 $this->rp($anggaran)
             ));
         }
+        // Saldo kas tunai tidak boleh minus (upah dibayar tunai, bersih PPh 21).
+        $bersih = $jumlah - $this->pph21UpahHarian($tarif, $oh);
+        if ($g = $this->galatSaldoMinus('tunai', $tanggalUpah, $bersih)) {
+            return $this->balasForm(false, $g);
+        }
         $this->db()->table('upah_bayar')->insert([
             'sekolah_id' => $this->sid(), 'gedung_id' => $gedungId,
-            'pekerjaan_id' => (int) $r->getPost('pekerjaan_id') ?: null,
+            'pekerjaan_id' => $pekerjaanId,
             'tanggal' => $tanggalUpah,
             'jenis_tenaga' => $jenis,
             'penerima' => trim((string) $r->getPost('penerima')) ?: null,

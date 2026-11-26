@@ -72,6 +72,11 @@ class Dokumen extends BaseController
     public function bapBuat($spkId)
     {
         $db = $this->db();
+        // SPK Batal tidak boleh dibuatkan dokumen turunan baru.
+        $statusSpk = $db->table('spk')->select('status')->where(['id' => (int) $spkId, 'sekolah_id' => $this->sid()])->get()->getRowArray()['status'] ?? null;
+        if ($statusSpk === 'Batal') {
+            return redirect()->to('dokumen')->with('galat', 'SPK ini berstatus Batal — BAP baru tidak bisa dibuat untuk SPK yang dibatalkan.');
+        }
         // Aturan ketat: BAP baru hanya bila masih ada rincian SPK yang belum
         // ter-BAP — jumlah item BAP tidak boleh melebihi jumlah rincian SPK.
         $total = (int) $db->query('SELECT COUNT(*) AS j FROM spk_detail WHERE spk_id = ? AND is_deleted = 0', [(int) $spkId])->getRow()->j;
@@ -91,7 +96,14 @@ class Dokumen extends BaseController
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
         $bapId = (int) $db->insertID();
-        foreach ($db->table('spk_detail')->where(['spk_id' => (int) $spkId, 'is_deleted' => 0])->get()->getResultArray() as $d) {
+        // BAP berikutnya hanya berisi rincian yang BELUM ter-BAP — menyalin
+        // seluruh rincian lagi menggandakan nilai BAP/BAST & sisa invoice.
+        $belum = $db->query(
+            'SELECT d.id FROM spk_detail d WHERE d.spk_id = ? AND d.is_deleted = 0
+             AND d.id NOT IN (SELECT bd.detail_id FROM bap_detail bd JOIN bap bp ON bp.id = bd.bap_id AND bp.is_deleted = 0 WHERE bp.spk_id = ? AND bd.is_deleted = 0)',
+            [(int) $spkId, (int) $spkId]
+        )->getResultArray();
+        foreach ($belum as $d) {
             $db->table('bap_detail')->insert(['bap_id' => $bapId, 'detail_id' => $d['id'], 'kondisi' => 'Cukup']);
         }
         if ($this->request->getPost('balik') === 'spk') {
@@ -118,12 +130,50 @@ class Dokumen extends BaseController
         return $this->tampil('dokumen/bap_form', ['bap' => $bap, 'items' => $items, 'spk' => $spk], 'BAP ' . $this->nomorSurat('BAP', (int) $bap['nomor_urut']));
     }
 
+    /** Balasan galat simpan BAP/BAST: AJAX -> JSON ok=false; non-AJAX -> kembali dengan flash galat. */
+    private function galatDokumen(string $pesan)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['ok' => false, 'pesan' => $pesan]);
+        }
+        return redirect()->back()->withInput()->with('galat', $pesan);
+    }
+
+    /** Nomor urut surat (BAP/BAST) unik per sekolah lewat SPK induknya. */
+    private function nomorSuratDipakai(string $tabel, int $nomor, int $kecualiId): bool
+    {
+        $row = $this->db()->query(
+            "SELECT COUNT(*) j FROM {$tabel} x JOIN spk s ON s.id = x.spk_id
+             WHERE x.nomor_urut = ? AND s.sekolah_id = ? AND x.id <> ? AND x.is_deleted = 0",
+            [$nomor, $this->sid(), $kecualiId]
+        )->getRow();
+        return (int) $row->j > 0;
+    }
+
     public function bapSimpan($bapId)
     {
         $db = $this->db();
+        $bap = $db->table('bap')->where(['id' => (int) $bapId, 'is_deleted' => 0])->get()->getRowArray();
+        if (! $bap) {
+            return $this->galatDokumen('BAP tidak ditemukan.');
+        }
+        $nomor = (int) $this->request->getPost('nomor_urut');
+        if ($nomor < 1) {
+            return $this->galatDokumen('Nomor urut BAP harus diisi.');
+        }
+        if ($this->nomorSuratDipakai('bap', $nomor, (int) $bapId)) {
+            return $this->galatDokumen('Nomor urut BAP ' . $nomor . ' sudah dipakai BAP lain di sekolah ini — nomor surat tidak boleh ganda.');
+        }
+        $tanggal = (string) ($this->request->getPost('tanggal') ?: '');
+        if ($tanggal !== '') {
+            $spk = $db->table('spk')->select('tanggal')->where('id', (int) $bap['spk_id'])->get()->getRowArray();
+            if (! empty($spk['tanggal']) && $tanggal < (string) $spk['tanggal']) {
+                return $this->galatDokumen('Tanggal pemeriksaan BAP (' . tgl($tanggal) . ') tidak boleh sebelum tanggal SPK (' . tgl($spk['tanggal']) . ') — pemeriksaan mengikuti perintah kerjanya.');
+            }
+        }
         $db->table('bap')->where('id', (int) $bapId)->update([
-            'nomor_urut' => (int) $this->request->getPost('nomor_urut'),
-            'tanggal' => $this->request->getPost('tanggal') ?: null,
+            'nomor_urut' => $nomor,
+            'tanggal' => $tanggal ?: null,
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
         foreach ($this->request->getPost('kondisi') ?? [] as $bdId => $kondisi) {
@@ -179,9 +229,28 @@ class Dokumen extends BaseController
 
     public function bastSimpan($bastId)
     {
-        $this->db()->table('bast')->where('id', (int) $bastId)->update([
-            'nomor_urut' => (int) $this->request->getPost('nomor_urut'),
-            'tanggal' => $this->request->getPost('tanggal') ?: null,
+        $db = $this->db();
+        $bast = $db->table('bast')->where(['id' => (int) $bastId, 'is_deleted' => 0])->get()->getRowArray();
+        if (! $bast) {
+            return $this->galatDokumen('BAST tidak ditemukan.');
+        }
+        $nomor = (int) $this->request->getPost('nomor_urut');
+        if ($nomor < 1) {
+            return $this->galatDokumen('Nomor urut BAST harus diisi.');
+        }
+        if ($this->nomorSuratDipakai('bast', $nomor, (int) $bastId)) {
+            return $this->galatDokumen('Nomor urut BAST ' . $nomor . ' sudah dipakai BAST lain di sekolah ini — nomor surat tidak boleh ganda.');
+        }
+        $tanggal = (string) ($this->request->getPost('tanggal') ?: '');
+        if ($tanggal !== '' && ! empty($bast['bap_id'])) {
+            $bap = $db->table('bap')->select('tanggal')->where('id', (int) $bast['bap_id'])->get()->getRowArray();
+            if (! empty($bap['tanggal']) && $tanggal < (string) $bap['tanggal']) {
+                return $this->galatDokumen('Tanggal serah terima BAST (' . tgl($tanggal) . ') tidak boleh sebelum tanggal pemeriksaan BAP (' . tgl($bap['tanggal']) . ') — serah terima mengikuti pemeriksaannya.');
+            }
+        }
+        $db->table('bast')->where('id', (int) $bastId)->update([
+            'nomor_urut' => $nomor,
+            'tanggal' => $tanggal ?: null,
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
         if ($this->request->isAJAX()) {

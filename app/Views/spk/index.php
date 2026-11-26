@@ -1,6 +1,14 @@
 <?php /* Register SPK: tabel helper tabel_bantu + modal form_modal
    (partial spk/_modal_form). */ ?>
 <div class="aksi md:col-span-2" style="margin:0 0 12px"><button type="button" class="tombol" onclick="bukaSpkBaru()">+ SPK Baru</button></div>
+<?php if (! empty($cadangan)): ?>
+<div class="kartu-kpi ringkas" style="margin:0 0 12px">
+  <div class="kpi"><div class="label">Total Anggaran</div><div class="nilai"><?= rp($cadangan['anggaran']) ?></div></div>
+  <div class="kpi"><div class="label">Sudah Terbayar</div><div class="nilai"><?= rp($cadangan['terbayar']) ?></div></div>
+  <div class="kpi"><div class="label">Pencadangan SPK Aktif</div><div class="nilai"><?= rp($cadangan['komitmen']) ?></div></div>
+  <div class="kpi"><div class="label">Pagu Tersedia</div><div class="nilai"><?= rp($cadangan['tersedia']) ?></div></div>
+</div>
+<?php endif; ?>
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-spk','ids-spk')">
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
     <form id="form-bulk-spk" method="post" action="<?= base_url('spk/hapus-massal') ?>" data-konfirmasi-judul="Hapus SPK Terpilih" data-konfirmasi-tombol="Ya, Hapus" style="display:inline">

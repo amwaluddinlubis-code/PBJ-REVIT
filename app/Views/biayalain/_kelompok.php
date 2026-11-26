@@ -22,7 +22,7 @@
             'volume' => $angka($r['volume']), 'satuan' => $r['satuan'] ?? '',
             'periode' => $r['periode'] !== null ? $angka($r['periode']) : '', 'satuan_periode' => $r['satuan_periode'] ?? '',
             'harga_satuan' => (string) (int) round((float) $r['harga_satuan']), 'keterangan' => $r['keterangan'] ?? '',
-            'pajak' => $r['pajak'] ?? '',
+            'pajak' => $r['pajak'] ?? '', 'sumber' => $r['sumber'] ?? 'manual',
         ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
         $barisTabel[] = ['sel' => [
             ['html' => '<input type="checkbox" data-pilih value="' . (int) $r['id'] . '" x-model="terpilih">'],

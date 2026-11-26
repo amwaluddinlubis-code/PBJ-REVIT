@@ -90,6 +90,10 @@ class Sekolah extends BaseController
             $v = $this->request->getPost($k);
             $data[$k] = ($v === '' || $v === null) ? null : trim((string) $v);
         }
+        // Tahun anggaran kosong = tahun berjalan.
+        if (empty($data['tahun_anggaran'])) {
+            $data['tahun_anggaran'] = (int) date('Y');
+        }
         return $data;
     }
 }

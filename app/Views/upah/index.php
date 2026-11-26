@@ -112,6 +112,13 @@ $opsiGedung = ['' => '— umum —'];
 foreach ($semuaGedung ?? [] as $gd) {
     $opsiGedung[(int) $gd['id']] = (string) $gd['nama'];
 }
+$opsiJenis = ['' => '— pilih jenis —'];
+foreach ($master as $m) {
+    $opsiJenis[(string) $m['jenis']] = [
+        'label' => (string) $m['jenis'] . ' (tarif master Rp ' . number_format((float) $m['tarif'], 0, ',', '.') . ')',
+        'data' => ['tarif' => (string) (int) round((float) $m['tarif'])],
+    ];
+}
 ?>
 <?= form_modal([
     'id' => 'modal-upah',
@@ -122,8 +129,9 @@ foreach ($semuaGedung ?? [] as $gd) {
         ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal', 'wajib' => true, 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
         ['nama' => 'gedung_id', 'label' => 'Gedung', 'jenis' => 'pilihan', 'opsi' => $opsiGedung],
         ['nama' => 'pekerjaan_id', 'label' => 'Pekerjaan (opsional)', 'jenis' => 'pilihan', 'opsi' => ['' => '— tidak tertaut pekerjaan —']],
-        ['nama' => 'jenis_tenaga', 'label' => 'Jenis tenaga', 'jenis' => 'teks', 'wajib' => true, 'placeholder' => 'mis. Pekerja / Tukang', 'saran' => array_map(static fn ($m) => (string) $m['jenis'], $master)],
-        ['nama' => 'penerima', 'label' => 'Nama penerima', 'jenis' => 'teks', 'placeholder' => 'mis. Sarmin'],
+        ['nama' => 'jenis_tenaga', 'label' => 'Jenis tenaga', 'jenis' => 'pilihan', 'wajib' => true, 'opsi' => $opsiJenis,
+            'petunjuk' => 'Memilih jenis mengisi tarif master (tetap bisa diubah)'],
+        ['nama' => 'penerima', 'label' => 'Nama penerima', 'jenis' => 'teks', 'placeholder' => 'mis. Sarmin', 'saran' => ($penerima_saran ?? [])],
         ['nama' => 'orang_hari', 'label' => 'Orang-hari (OH)', 'jenis' => 'angka', 'wajib' => true, 'placeholder' => 'mis. 12,5'],
         ['nama' => 'tarif', 'label' => 'Tarif per OH (Rp)', 'jenis' => 'uang', 'placeholder' => 'mis. 93578', 'petunjuk' => 'Kosongkan untuk tarif master'],
         ['nama' => 'keterangan', 'label' => 'Keterangan', 'jenis' => 'teks', 'placeholder' => 'mis. Upah pasang pondasi minggu ke-3'],
@@ -172,4 +180,14 @@ function bukaMasterBaru() {
   sinkronSelectUpah('modal-upah-master');
 }
 document.getElementById('modal-upah-gedung_id').addEventListener('change', segarkanPekerjaan);
+// Memilih jenis tenaga mewariskan tarif master ke isian tarif.
+document.getElementById('modal-upah-jenis_tenaga').addEventListener('change', function () {
+  var opt = this.options[this.selectedIndex];
+  var tarif = opt ? opt.getAttribute('data-tarif') : '';
+  var inp = document.getElementById('modal-upah-tarif');
+  if (inp && tarif) {
+    inp.value = tarif;
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+});
 </script>

@@ -41,6 +41,21 @@ class Negosiasi extends BaseController
         $db = $this->db();
         $penawaran = $this->request->getPost('penawaran') ?? [];
         $negoIn = $this->request->getPost('nego') ?? [];
+        // Harga nego tidak boleh melebihi penawaran (penawaran efektif =
+        // isian penawaran, atau harga terpilih survei bila penawaran kosong).
+        foreach ($penawaran as $bahanId => $nilai) {
+            $bid = (int) $bahanId;
+            $nego = (isset($negoIn[$bid]) && $negoIn[$bid] !== '') ? (int) $negoIn[$bid] : null;
+            if ($nego === null) {
+                continue;
+            }
+            $tawar = ($nilai === '' || $nilai === null) ? $this->terpilih($bid) : (int) $nilai;
+            if ($tawar !== null && $nego > $tawar) {
+                $nama = $db->table('bahan')->select('nama')->where('id', $bid)->get()->getRowArray()['nama'] ?? ('bahan #' . $bid);
+                return redirect()->to('negosiasi')->with('galat',
+                    'Harga nego ' . $nama . ' (' . rp($nego) . ') melebihi harga penawaran (' . rp($tawar) . ') — hasil negosiasi tidak boleh lebih mahal dari penawaran.');
+            }
+        }
         $db->transStart();
         foreach ($penawaran as $bahanId => $nilai) {
             $bid = (int) $bahanId;

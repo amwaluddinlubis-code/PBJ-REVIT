@@ -23,11 +23,11 @@ $ikonPensil = '<span class="ikon-tombol" aria-hidden="true">' . ikonSvg('pensil'
       foreach ($bap[$s['id']] ?? [] as $b) {
           $selBapBast .= ($pisah ? ' <span class="kecil-teks">|</span> ' : '')
               . 'BAP urut ' . (int) $b['nomor_urut'] . ' · ' . esc(tgl($b['tanggal'] ?? null, '(tanggal belum diisi)'))
-              . ' <button type="button" class="tombol kecil abu" onclick="bukaModalBap(\'modal-bap-' . (int) $b['id'] . '\', ' . esc(json_encode(['id' => (int) $b['id'], 'nomor_urut' => (int) $b['nomor_urut'], 'tanggal' => (string) ($b['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') . ')">' . $ikonPensil . ' Ubah</button>'
+              . ' <button type="button" class="tombol kecil abu" onclick="bukaModalBap(\'modal-bap-' . (int) $b['id'] . '\', ' . esc(json_encode(['id' => (int) $b['id'], 'nomor_urut' => (int) $b['nomor_urut'], 'tanggal' => (string) (! empty($b['tanggal']) ? $b['tanggal'] : ($s['tgl_selesai'] ?? date('Y-m-d')))], JSON_UNESCAPED_UNICODE), 'attr') . ')">' . $ikonPensil . ' Ubah</button>'
               . '<a class="tombol-cetak tc-bap" href="' . base_url('dokumen/cetak-bap/' . $b['id']) . '" target="_blank" title="Cetak BAP">' . $ikonCetak . ' Cetak</a>';
           foreach ($bast_per_bap[$b['id']] ?? [] as $bs) {
               $selBapBast .= ' → BAST urut ' . (int) $bs['nomor_urut'] . ' · ' . esc(tgl($bs['tanggal'] ?? null, '(tanggal belum diisi)'))
-                  . ' <button type="button" class="tombol kecil abu" onclick="bukaFormModal(\'modal-bast-' . (int) $bs['id'] . '\', ' . esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') . ')">' . $ikonPensil . ' Ubah</button>'
+                  . ' <button type="button" class="tombol kecil abu" onclick="bukaFormModal(\'modal-bast-' . (int) $bs['id'] . '\', ' . esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) (! empty($bs['tanggal']) ? $bs['tanggal'] : ($bs['bap_tanggal'] ?? ''))], JSON_UNESCAPED_UNICODE), 'attr') . ')">' . $ikonPensil . ' Ubah</button>'
                   . '<a class="tombol-cetak tc-bast" href="' . base_url('dokumen/cetak-bast/' . $bs['id']) . '" target="_blank" title="Cetak BAST">' . $ikonCetak . ' Cetak</a>';
           }
           if (empty($bast_per_bap[$b['id']])) {

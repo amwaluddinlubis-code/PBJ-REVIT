@@ -104,8 +104,11 @@
     'lebar' => 720,
     'kolom' => [
         ['nama' => 'tanggal', 'label' => 'Tanggal Terima', 'jenis' => 'tanggal', 'wajib' => true, 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
-        ['nama' => 'tahap', 'label' => 'Tahap', 'jenis' => 'pilihan', 'opsi' => ['1' => 'Tahap 1 (70%)', '2' => 'Tahap 2 (30%)']],
-        ['nama' => 'jumlah', 'label' => 'Jumlah Diterima (Rp)', 'jenis' => 'uang', 'wajib' => true, 'placeholder' => '437500000'],
+        ['nama' => 'tahap', 'label' => 'Tahap', 'jenis' => 'pilihan', 'opsi' => [
+            '1' => ['label' => 'Tahap 1 (70%)', 'data' => ['kurang' => (int) max(0, ($target1 ?? 0) - ($terima1 ?? 0))]],
+            '2' => ['label' => 'Tahap 2 (30%)', 'data' => ['kurang' => (int) max(0, ($target2 ?? 0) - ($terima2 ?? 0))]],
+        ]],
+        ['nama' => 'jumlah', 'label' => 'Jumlah Diterima (Rp)', 'jenis' => 'uang', 'wajib' => true, 'placeholder' => '437500000', 'petunjuk' => 'Terisi otomatis sebesar kekurangan target tahap terpilih, boleh diubah.'],
         ['nama' => 'kanal', 'label' => 'Kanal', 'jenis' => 'pilihan', 'opsi' => ['bank' => 'Bank (rekening sekolah)', 'tunai' => 'Tunai']],
         ['nama' => 'keterangan', 'label' => 'Keterangan', 'jenis' => 'teks', 'penuh' => true, 'placeholder' => 'cth. Transfer dari KPPN, SP2D No. ...'],
     ],
@@ -113,12 +116,32 @@
 ]) ?>
 <script>
 // Jembatan modal penerimaan: tanggal bawaan hari ini (seperti form lama),
-// lalu sinkronkan widget select-cari sesudah modal dibuka.
-function bukaTerimaBaru() {
-  window.bukaFormModal('modal-terima', { tanggal: <?= json_encode(date('Y-m-d')) ?> });
-  var m = document.getElementById('modal-terima');
-  if (m && window.perbaruiSelectCari) {
-    m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+// jumlah terisi otomatis sebesar kekurangan target tahap terpilih, lalu
+// sinkronkan widget select-cari sesudah modal dibuka.
+(function () {
+  function isiJumlah() {
+    var m = document.getElementById('modal-terima');
+    if (!m) return;
+    var sel = m.querySelector('select[name="tahap"]');
+    var inp = m.querySelector('input[name="jumlah"]');
+    if (!sel || !inp) return;
+    var opt = sel.options[sel.selectedIndex];
+    var kurang = opt ? parseInt(opt.getAttribute('data-kurang') || '0', 10) : 0;
+    if (kurang > 0) {
+      inp.value = kurang;
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+    }
   }
-}
+  window.bukaTerimaBaru = function () {
+    window.bukaFormModal('modal-terima', { tanggal: <?= json_encode(date('Y-m-d')) ?> });
+    var m = document.getElementById('modal-terima');
+    if (m && window.perbaruiSelectCari) {
+      m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+    }
+    isiJumlah();
+  };
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.name === 'tahap' && e.target.closest && e.target.closest('#modal-terima')) isiJumlah();
+  });
+})();
 </script>

@@ -156,6 +156,10 @@ class Bahan extends BaseController
         $upah = $this->db()->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray();
         return $this->tampil('bahan/index', [
             'bahan' => $bahan, 'q' => $q, 'upah' => $upah,
+            'satuan_saran' => array_column($this->db()->query(
+                "SELECT DISTINCT satuan FROM bahan WHERE sekolah_id = ? AND is_deleted = 0 AND satuan IS NOT NULL AND TRIM(satuan) <> '' ORDER BY satuan",
+                [$this->sid()]
+            )->getResultArray(), 'satuan'),
             'tab' => $tab, 'jmlTerpakai' => count($setTerpakai),
             'totalBahan' => $this->db()->table('bahan')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults(),
             'totalUpah' => count($upah),

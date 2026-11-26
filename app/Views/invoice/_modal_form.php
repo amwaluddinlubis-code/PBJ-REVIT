@@ -14,6 +14,7 @@ foreach ($spk['list'] ?? [] as $s) {
             'total' => (int) $s['total'],
             'sisa' => (int) ($w['sisa'] ?? 0),
             'bast-tanggal' => (string) ($w['bast']['tanggal'] ?? ''),
+            'status' => (string) ($s['status'] ?? 'Aktif'),
         ],
     ];
 }
@@ -33,6 +34,8 @@ foreach ($spk['list'] ?? [] as $s) {
         ['nama' => 'spk_id', 'label' => 'SPK', 'jenis' => 'pilihan', 'wajib' => true, 'opsi' => $opsiSpk, 'petunjuk' => 'Tanggal SPK, BAP & BAST diwarisi otomatis dari SPK'],
         ['nama' => 'nilai', 'label' => 'Nilai Invoice', 'jenis' => 'uang', 'petunjuk' => 'Otomatis = sisa nilai BAST, boleh diubah'],
         ['nama' => 'status', 'label' => 'Status', 'jenis' => 'pilihan', 'opsi' => ['Belum Bayar' => 'Belum Bayar', 'Sudah Bayar' => 'Sudah Bayar']],
+        ['nama' => 'tanggal_bayar', 'label' => 'Tanggal Pembayaran', 'jenis' => 'tanggal', 'min' => $buku_min ?? '', 'max' => $buku_max ?? '',
+            'petunjuk' => 'Hanya untuk status Sudah Bayar — pembayaran tercatat otomatis di Jurnal Pembayaran. Buku terbuka: ' . ($buku_label ?? '')],
     ],
     'catatan_html' => '<div id="info-warisan-invoice" class="kecil-teks" style="margin-top:10px">Pilih SPK untuk melihat tanggal SPK, BAP, dan BAST yang diwarisi.</div>',
     'tombol' => ['simpan_teks' => 'Simpan', 'hapus_teks' => 'Hapus Invoice'],
@@ -73,7 +76,7 @@ foreach ($spk['list'] ?? [] as $s) {
     Array.prototype.forEach.call(sel.options, function (opt) {
       if (!opt.value) return;
       var bastTgl = opt.getAttribute('data-bast-tanggal') || '';
-      var layak = bastTgl !== '' && sisaEfektif(opt.value) > 0 && (!tgl || bastTgl <= tgl);
+      var layak = bastTgl !== '' && sisaEfektif(opt.value) > 0 && (!tgl || bastTgl <= tgl) && opt.getAttribute('data-status') !== 'Batal';
       opt.disabled = !layak && opt.value !== sel.value;
     });
     if (window.perbaruiSelectCari) window.perbaruiSelectCari(sel);
@@ -99,6 +102,55 @@ foreach ($spk['list'] ?? [] as $s) {
       }
     }
   }
+  // Tanggal Pembayaran: hanya tampil untuk status Sudah Bayar; nilai
+  // bawaannya merekomendasikan tanggal jurnal terakhir (dijepit Bulan
+  // Terbuka) — pembayaran tercatat otomatis saat disimpan.
+  var tglJurnalTerakhir = <?= json_encode($tgl_jurnal_terakhir ?? null) ?>;
+  var bukuMin = <?= json_encode($buku_min ?? '') ?>;
+  var bukuMax = <?= json_encode($buku_max ?? '') ?>;
+  function isiTanggal(inp, iso) {
+    if (!inp || !iso) return;
+    if (inp.classList.contains('isian-tanggal')) {
+      var p = iso.split('-');
+      inp.value = p[2] + '-' + p[1] + '-' + p[0];
+    } else {
+      inp.value = iso;
+    }
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    inp.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  function rekomendasiBayar(tglInvoice) {
+    var calon = tglJurnalTerakhir || '';
+    if (tglInvoice && tglInvoice > calon) calon = tglInvoice;
+    if (!calon) calon = <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?>;
+    if (bukuMin && calon < bukuMin) calon = bukuMin;
+    if (bukuMax && calon > bukuMax) calon = bukuMax;
+    return calon;
+  }
+  function segarkanTanggalBayar() {
+    var m = document.getElementById('modal-invoice');
+    if (!m) return;
+    var selStatus = m.querySelector('select[name="status"]');
+    var inpBayar = m.querySelector('input[name="tanggal_bayar"]');
+    if (!selStatus || !inpBayar) return;
+    var bungkus = inpBayar.closest('.fm-field');
+    var sudah = selStatus.value === 'Sudah Bayar';
+    if (bungkus) bungkus.style.display = sudah ? '' : 'none';
+    inpBayar.disabled = !sudah;
+    if (sudah && !inpBayar.value) {
+      var inpTgl = m.querySelector('input[name="tanggal"]');
+      var tglInv = '';
+      if (inpTgl) {
+        if (inpTgl.classList.contains('isian-tanggal')) {
+          var p = inpTgl.value.split('-');
+          tglInv = p.length === 3 ? p[2] + '-' + p[1] + '-' + p[0] : '';
+        } else {
+          tglInv = inpTgl.value;
+        }
+      }
+      isiTanggal(inpBayar, rekomendasiBayar(tglInv));
+    }
+  }
   function sinkronSelect() {
     var m = document.getElementById('modal-invoice');
     if (m && window.perbaruiSelectCari) {
@@ -106,11 +158,13 @@ foreach ($spk['list'] ?? [] as $s) {
     }
     saringSpk();
     tampilWarisan(false);
+    segarkanTanggalBayar();
   }
   document.addEventListener('change', function (e) {
     if (!e.target || !e.target.closest || !e.target.closest('#modal-invoice')) return;
     if (e.target.name === 'spk_id') tampilWarisan(true);
     if (e.target.name === 'tanggal') saringSpk();
+    if (e.target.name === 'status') segarkanTanggalBayar();
   });
   window.bukaInvoiceBaru = function () {
     sedangUbah = null;

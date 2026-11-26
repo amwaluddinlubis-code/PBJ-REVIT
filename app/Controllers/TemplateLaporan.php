@@ -67,9 +67,14 @@ class TemplateLaporan extends BaseController
             @unlink($path);
             return redirect()->to('template-laporan')->with('galat', 'Berkas tidak dapat dibaca sebagai .xlsx: ' . $e->getMessage());
         }
+        // Nama kosong = nama berkas unggahan tanpa ekstensi.
+        $namaTemplate = trim((string) $this->request->getPost('nama'));
+        if ($namaTemplate === '') {
+            $namaTemplate = trim(pathinfo((string) $berkas->getClientName(), PATHINFO_FILENAME)) ?: ('Template ' . MesinLaporan::jenis()[$jenis]['label']);
+        }
         $this->db()->table('laporan_template')->insert([
             'sekolah_id' => $this->sid(), 'jenis' => $jenis,
-            'nama' => trim((string) $this->request->getPost('nama')) ?: ('Template ' . MesinLaporan::jenis()[$jenis]['label']),
+            'nama' => $namaTemplate,
             'berkas' => $namaFile, 'placeholder_terpakai' => implode(',', $terpakai), 'aktif' => 1,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);

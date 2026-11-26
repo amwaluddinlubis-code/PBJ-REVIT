@@ -27,6 +27,7 @@ class Invoice extends BaseController
             'spk'        => $this->daftarSpk(),
             'nomor_baru' => ((int) $row->m) + 1,
             'tgl_bayar_default' => $this->tanggalBulanBekerja(),
+            'tgl_jurnal_terakhir' => $this->tanggalPembayaranTerakhir(),
         ] + $this->batasBuku(), 'Register Invoice — Aplikasi PBJ Sekolah');
     }
 
@@ -38,6 +39,7 @@ class Invoice extends BaseController
         $spkPilih = (int) $this->request->getGet('spk') ?: null;
         return $this->tampil('invoice/form', [
             'i' => ['nomor_urut' => ((int) $row->m) + 1, 'status' => 'Belum Bayar', 'spk_id' => $spkPilih, 'tanggal' => $this->tanggalBulanBekerja()],
+            'tgl_jurnal_terakhir' => $this->tanggalPembayaranTerakhir(),
             'spk' => $this->daftarSpk(),
             'aksi' => 'invoice/simpan',
         ] + $this->batasBuku(), 'Invoice Baru');
@@ -81,6 +83,15 @@ class Invoice extends BaseController
         // BAST tidak sesudah tanggal invoice, dan nilai BAST belum habis
         // ter-invoice. Nilai kosong = otomatis sebesar sisa.
         if ((int) $data['spk_id'] > 0) {
+            // SPK Batal tidak boleh di-invoice baru (invoice lama SPK yang
+            // sama tetap bisa diubah).
+            $statusSpk = $this->db()->table('spk')->select('status')->where(['id' => (int) $data['spk_id'], 'sekolah_id' => $this->sid()])->get()->getRowArray()['status'] ?? null;
+            if ($statusSpk === 'Batal') {
+                $spkLama = $id > 0 ? (int) ($this->db()->table('invoice')->select('spk_id')->where('id', $id)->get()->getRowArray()['spk_id'] ?? 0) : 0;
+                if ($spkLama !== (int) $data['spk_id']) {
+                    return $this->balasForm(false, 'SPK ini berstatus Batal — invoice baru tidak bisa dicatat untuk SPK yang dibatalkan.');
+                }
+            }
             $w = $this->warisanSpk((int) $data['spk_id'], $id);
             if ($w['bast'] === null) {
                 return $this->balasForm(false, 'SPK ini belum punya BAST — buat BAP & BAST dulu di halaman Dokumen atau Detail SPK, baru invoice bisa dicatat.');
@@ -106,14 +117,70 @@ class Invoice extends BaseController
         if ($this->nomorDipakai((int) $data['nomor_urut'], $id)) {
             return $this->balasForm(false, 'Nomor urut invoice ' . $data['nomor_urut'] . ' sudah dipakai di sekolah ini.');
         }
+        // Pembayaran otomatis: status "Sudah Bayar" pada formulir mencatat
+        // jurnal pembayaran dalam transaksi yang sama, dengan penjaga yang
+        // sama seperti Jurnal Pembayaran (bendahara, Bulan Terbuka, tanggal
+        // bayar >= tanggal invoice, kontrol pagu). Invoice yang sudah punya
+        // pembayaran aktif terkunci (diperiksa di atas), jadi di sini selalu
+        // belum terbayar.
+        $tglBayar = trim((string) $this->request->getPost('tanggal_bayar'));
+        $catatBayar = false;
+        if (($data['status'] ?? '') === 'Sudah Bayar') {
+            if ($tglBayar === '') {
+                return $this->balasForm(false, 'Tanggal Pembayaran wajib diisi bila status Sudah Bayar — pembayaran akan tercatat otomatis sebagai jurnal pembayaran.');
+            }
+            $peran = (string) ($this->pengguna['peran'] ?? '');
+            if ($peran !== 'admin' && $peran !== 'bendahara') {
+                return $this->balasForm(false, 'Mencatat pembayaran hanya boleh dilakukan bendahara/admin. Simpan sebagai Belum Bayar, lalu bendahara mencatatnya di Jurnal Pembayaran.');
+            }
+            if ($g = $this->galatBulanTertutup($tglBayar)) {
+                return $this->balasForm(false, $g);
+            }
+            if (! empty($data['tanggal']) && $tglBayar < (string) $data['tanggal']) {
+                return $this->balasForm(false, 'Tanggal pembayaran (' . tgl($tglBayar) . ') tidak boleh sebelum tanggal invoice (' . tgl($data['tanggal']) . ') — pembayaran dicatat sesudah tagihan diterbitkan.');
+            }
+            [$boleh, $sisaPagu, $anggaran] = $this->cekPagu((float) $data['nilai']);
+            if (! $boleh) {
+                return $this->balasForm(false, sprintf(
+                    'Pembayaran ditahan: nilai invoice %s melewati sisa pagu anggaran %s dari total anggaran %s.',
+                    $this->rp($data['nilai']),
+                    $this->rp(max(0, $sisaPagu)),
+                    $this->rp($anggaran)
+                ));
+            }
+            $pjk = $this->pajakPembelian((float) $data['nilai'], $this->ppnInvoice($this->ppnSpkMap(), (int) $data['spk_id'], (float) $data['nilai']));
+            if ($g = $this->galatSaldoMinus('bank', $tglBayar, (float) $pjk['dibayar'])) {
+                return $this->balasForm(false, $g);
+            }
+            if ($g = $this->galatRekeningPenyedia((int) $data['spk_id'])) {
+                return $this->balasForm(false, $g);
+            }
+            $catatBayar = true;
+        }
+        $this->db()->transStart();
         if ($id > 0) {
             $data['updated_at'] = date('Y-m-d H:i:s');
             $this->db()->table('invoice')->where('id', $id)->update($data);
-            return $this->balasForm(true, 'Invoice diperbarui.');
+            $invoiceId = $id;
+        } else {
+            $data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
+            $this->db()->table('invoice')->insert($data);
+            $invoiceId = (int) $this->db()->insertID();
         }
-        $data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
-        $this->db()->table('invoice')->insert($data);
-        return $this->balasForm(true, 'Invoice dicatat.');
+        if ($catatBayar) {
+            $this->db()->table('pembayaran')->insert([
+                'invoice_id' => $invoiceId,
+                'tanggal' => $tglBayar,
+                'keterangan' => null,
+                'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+        $this->db()->transComplete();
+        if ($catatBayar) {
+            $this->catatAudit('pembayaran', $invoiceId, 'buat', 'Pembayaran invoice sebesar ' . $this->rp($data['nilai']) . ' dicatat otomatis dari formulir invoice (status Sudah Bayar).');
+            return $this->balasForm(true, ($id > 0 ? 'Invoice diperbarui' : 'Invoice dicatat') . ' dan pembayaran tercatat di Jurnal Pembayaran.');
+        }
+        return $this->balasForm(true, $id > 0 ? 'Invoice diperbarui.' : 'Invoice dicatat.');
     }
 
     /** Nomor urut invoice unik per sekolah (lewat SPK induknya). */
@@ -135,6 +202,7 @@ class Invoice extends BaseController
         }
         return $this->tampil('invoice/form', [
             'i' => $i, 'spk' => $this->daftarSpk(), 'aksi' => 'invoice/perbarui/' . $id,
+            'tgl_jurnal_terakhir' => $this->tanggalPembayaranTerakhir(),
         ] + $this->batasBuku(), 'Ubah Invoice ' . $i['nomor_urut']);
     }
 
@@ -213,7 +281,7 @@ class Invoice extends BaseController
     private function daftarSpk(): array
     {
         $spk = $this->db()->query(
-            'SELECT s.id, s.nomor, s.paket, s.tanggal,
+            'SELECT s.id, s.nomor, s.paket, s.tanggal, s.status,
                     (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS total,
                     (SELECT COALESCE(SUM(i.nilai),0) FROM invoice i WHERE i.spk_id = s.id AND i.is_deleted = 0) AS terinvoice
              FROM spk s WHERE s.sekolah_id = ? AND s.is_deleted = 0 ORDER BY s.nomor',
@@ -227,11 +295,13 @@ class Invoice extends BaseController
         foreach ($this->db()->table('bast')->where('is_deleted', 0)->get()->getResultArray() as $r) {
             $bast[$r['spk_id']][] = $r;
         }
-        // Nilai tiap BAP = jumlah rincian SPK yang tercakup bap_detail.
+        // Nilai tiap BAP = jumlah rincian SPK yang tercakup bap_detail dan
+        // DITERIMA BAIK (kondisi Baik/Cukup; Kurang/Tidak Sesuai tidak ikut
+        // nilai BAP/BAST sehingga tidak ikut sisa invoice).
         $nilaiBap = [];
         foreach ($this->db()->query(
-            'SELECT bd.bap_id, COALESCE(SUM(d.qty*d.harga),0) v FROM bap_detail bd JOIN spk_detail d ON d.id = bd.detail_id
-             WHERE bd.is_deleted = 0 AND d.is_deleted = 0 GROUP BY bd.bap_id'
+            "SELECT bd.bap_id, COALESCE(SUM(d.qty*d.harga),0) v FROM bap_detail bd JOIN spk_detail d ON d.id = bd.detail_id
+             WHERE bd.is_deleted = 0 AND d.is_deleted = 0 AND bd.kondisi NOT IN ('Kurang', 'Tidak Sesuai') GROUP BY bd.bap_id"
         )->getResultArray() as $r) {
             $nilaiBap[(int) $r['bap_id']] = (float) $r['v'];
         }
@@ -306,8 +376,8 @@ class Invoice extends BaseController
         if ($t) {
             if (! empty($t['bap_id'])) {
                 $row = $this->db()->query(
-                    'SELECT COALESCE(SUM(d.qty*d.harga),0) v FROM bap_detail bd JOIN spk_detail d ON d.id = bd.detail_id
-                     WHERE bd.bap_id = ? AND bd.is_deleted = 0 AND d.is_deleted = 0',
+                    "SELECT COALESCE(SUM(d.qty*d.harga),0) v FROM bap_detail bd JOIN spk_detail d ON d.id = bd.detail_id
+                     WHERE bd.bap_id = ? AND bd.is_deleted = 0 AND d.is_deleted = 0 AND bd.kondisi NOT IN ('Kurang', 'Tidak Sesuai')",
                     [(int) $t['bap_id']]
                 )->getRow();
                 $nilaiBast = (float) $row->v;
@@ -400,11 +470,15 @@ class Invoice extends BaseController
         }
         unset($r);
         $belum = $this->db()->query(
-            "SELECT i.id, i.nomor_urut, i.nilai, s.nomor AS spk_nomor FROM invoice i
+            "SELECT i.id, i.nomor_urut, i.nilai, i.tanggal, s.nomor AS spk_nomor FROM invoice i
              JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE i.status = 'Belum Bayar' AND s.sekolah_id = ? AND i.is_deleted = 0 ORDER BY i.nomor_urut",
             [$this->sid()]
         )->getResultArray();
-        return $this->tampil('invoice/jurnal', ['baris' => $baris, 'belum' => $belum, 'tgl_bayar_default' => $this->tanggalBulanBekerja()] + $this->batasBuku(), 'Jurnal Pembayaran — Aplikasi PBJ Sekolah');
+        return $this->tampil('invoice/jurnal', [
+            'baris' => $baris, 'belum' => $belum,
+            'tgl_bayar_default' => $this->tanggalBulanBekerja(),
+            'tgl_jurnal_terakhir' => $this->tanggalPembayaranTerakhir() ?? '',
+        ] + $this->batasBuku(), 'Jurnal Pembayaran — Aplikasi PBJ Sekolah');
     }
 
     /** Balasan form modal jurnal: AJAX -> JSON {ok, pesan}; non-AJAX -> redirect ke halaman jurnal seperti semula. */
@@ -432,6 +506,15 @@ class Invoice extends BaseController
         if ($inv === null) {
             return $this->balasJurnal(false, 'Invoice tidak ditemukan.');
         }
+        // Penjaga status: pemilih hanya menampilkan Belum Bayar, tetapi server
+        // memeriksa ulang agar pembayaran tidak tercatat dua kali.
+        if (($inv['status'] ?? '') !== 'Belum Bayar') {
+            return $this->balasJurnal(false, 'Invoice ini sudah berstatus Sudah Bayar — pembayaran tidak bisa dicatat dua kali. Bila perlu koreksi, hapus jurnal pembayaran sebelumnya terlebih dahulu.');
+        }
+        $tglBayar = (string) ($this->request->getPost('tanggal') ?: '');
+        if ($tglBayar !== '' && ! empty($inv['tanggal']) && $tglBayar < (string) $inv['tanggal']) {
+            return $this->balasJurnal(false, 'Tanggal bayar (' . tgl($tglBayar) . ') tidak boleh sebelum tanggal invoice (' . tgl($inv['tanggal']) . ') — pembayaran dicatat sesudah tagihan diterbitkan.');
+        }
         if ($g = $this->galatBulanTertutup($this->request->getPost('tanggal') ?: null)) {
             return $this->balasJurnal(false, $g);
         }
@@ -444,6 +527,15 @@ class Invoice extends BaseController
                 $this->rp(max(0, $sisaPagu)),
                 $this->rp($anggaran)
             ));
+        }
+        // Saldo bank tidak boleh minus pada tanggal bayar maupun sesudahnya.
+        $pjk = $this->pajakPembelian((float) $inv['nilai'], $this->ppnInvoice($this->ppnSpkMap(), (int) $inv['spk_id'], (float) $inv['nilai']));
+        if ($g = $this->galatSaldoMinus('bank', (string) ($this->request->getPost('tanggal') ?: $inv['tanggal']), (float) $pjk['dibayar'])) {
+            return $this->balasJurnal(false, $g);
+        }
+        // Pembayaran bank butuh nomor rekening penyedia.
+        if ($g = $this->galatRekeningPenyedia((int) $inv['spk_id'])) {
+            return $this->balasJurnal(false, $g);
         }
         $this->db()->transStart();
         $this->db()->table('pembayaran')->insert([

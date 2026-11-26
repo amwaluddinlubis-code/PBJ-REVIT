@@ -129,9 +129,19 @@ class Material extends BaseController
         $kebutuhanTampil = $fGedung > 0
             ? array_values(array_filter($kebutuhanGedung, static fn ($kg) => (int) $kg['gedung']['id'] === $fGedung))
             : $kebutuhanGedung;
+        // Saran nomor BPB berikutnya (nomor angka terbesar + 1).
+        $maxBpb = 0;
+        foreach ($db->query(
+            'SELECT m.no_bpb FROM buku_material m JOIN bahan b ON b.id = m.bahan_id WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND m.no_bpb IS NOT NULL',
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            if (is_numeric(trim((string) $r['no_bpb']))) {
+                $maxBpb = max($maxBpb, (int) trim((string) $r['no_bpb']));
+            }
+        }
         return $this->tampil('material/index', ['baris' => $baris, 'bahan' => $bahan, 'gedung' => $gedung, 'rekap_gedung' => $rekapGedung,
             'bahan_pilih' => $bahanPilih, 'kebutuhan_gedung' => $kebutuhanTampil, 'semua_kebutuhan_gedung' => $kebutuhanGedung,
-            'f_gedung' => $fGedung, 'peta_info' => $petaInfo], 'Buku Material — Aplikasi PBJ Sekolah');
+            'f_gedung' => $fGedung, 'peta_info' => $petaInfo, 'no_bpb_baru' => (string) ($maxBpb + 1)], 'Buku Material — Aplikasi PBJ Sekolah');
     }
 
     /**
@@ -174,6 +184,11 @@ class Material extends BaseController
         if (! $bahan) {
             return $this->balasForm(false, 'Bahan tidak ditemukan pada sekolah aktif.');
         }
+        // Tanggal wajib (buku tanpa tanggal tidak bisa diurutkan/diaudit).
+        $tanggal = trim((string) $this->request->getPost('tanggal'));
+        if ($tanggal === '' || strtotime($tanggal) === false) {
+            return $this->balasForm(false, 'Tanggal catatan wajib diisi.');
+        }
         // Sejak 25 Nov 2026 form ini HANYA mencatat barang KELUAR; barang
         // masuk tercatat otomatis dari BAST (tanggal BAST).
         $keluar = (float) str_replace(',', '.', (string) $this->request->getPost('keluar'));
@@ -193,7 +208,7 @@ class Material extends BaseController
             $gedungId = null;
         }
         $this->db()->table('buku_material')->insert([
-            'tanggal' => $this->request->getPost('tanggal') ?: null,
+            'tanggal' => $tanggal,
             'no_bpb' => trim((string) $this->request->getPost('no_bpb')) ?: null,
             'bahan_id' => $bahanId,
             'gedung_id' => $gedungId,

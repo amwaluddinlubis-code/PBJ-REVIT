@@ -154,6 +154,16 @@ class Gedung extends BaseController
                 $pk['harga_berjalan'] = $this->hargaBerjalan($pk);
             }
             unset($pk);
+            // Pilihan kode analisa + daftar bab untuk formulir Tambah
+            // Pekerjaan (warisan satuan & harga dari analisa terpilih).
+            $data['analisaPilih'] = [];
+            foreach ($db->table('analisa')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('kode')->get()->getResultArray() as $a) {
+                $data['analisaPilih'][] = [
+                    'kode' => $a['kode'], 'nama' => $a['nama'], 'satuan' => $a['satuan'] ?? '',
+                    'harga' => $this->hargaAhspKode($a['kode']) ?? (isset($a['harga_satuan']) ? (float) $a['harga_satuan'] : null),
+                ];
+            }
+            $data['daftarBab'] = array_values(array_unique(array_filter(array_column($data['pekerjaan'], 'bab'))));
             // Peta analisa untuk rincian klik pekerjaan: komponen bahan/upah/alat
             // per kode analisa, lengkap dengan faktor konversi satuan bahan.
             $data['petaAnalisa'] = [];
@@ -227,6 +237,10 @@ class Gedung extends BaseController
                  WHERE p.gedung_id = ? AND p.is_deleted = 0 GROUP BY p.id ORDER BY p.urutan, p.id',
                 [$g['id']]
             )->getResultArray();
+            foreach ($data['pekerjaan'] as &$pk) {
+                $pk['vol_berjalan'] = $this->volBerjalan($pk);
+            }
+            unset($pk);
             $data['riwayat'] = $db->query(
                 'SELECT r.*, p.nama AS nama_pekerjaan FROM realisasi r JOIN pekerjaan p ON p.id = r.pekerjaan_id
                  WHERE p.gedung_id = ? AND r.is_deleted = 0 AND p.is_deleted = 0 ORDER BY r.tanggal DESC, r.id DESC LIMIT 30',
@@ -251,6 +265,16 @@ class Gedung extends BaseController
             return redirect()->to('/gedung')->with('galat', 'Pekerjaan tidak ditemukan.');
         }
         $volume = (float) str_replace(',', '.', (string) $this->request->getPost('volume'));
+        // Volume tidak boleh di bawah realisasi tercatat (sisa negatif).
+        $terealisasi = (float) ($db->query(
+            'SELECT COALESCE(SUM(volume), 0) AS t FROM realisasi WHERE pekerjaan_id = ? AND is_deleted = 0',
+            [(int) $pekerjaanId]
+        )->getRowArray()['t'] ?? 0);
+        if ($volume < $terealisasi - 0.0001) {
+            return redirect()->to('/gedung/' . (int) $p['gedung_id'] . '/boq')->with('galat',
+                'Volume ditolak: realisasi pekerjaan ini sudah tercatat ' . number_format($terealisasi, 2, ',', '.') . ' ' . ($p['satuan'] ?? '')
+                . ' — volume tidak boleh lebih kecil dari itu. Koreksi realisasinya terlebih dahulu bila memang keliru.');
+        }
         $db->table('pekerjaan')->where('id', (int) $pekerjaanId)->update([
             'volume' => $volume, 'jumlah' => $volume * (float) $p['harga_satuan'],
         ]);
@@ -265,13 +289,30 @@ class Gedung extends BaseController
         }
         $volume = (float) str_replace(',', '.', (string) $this->request->getPost('volume'));
         $harga = (float) str_replace(['.', ','], ['', '.'], (string) $this->request->getPost('harga_satuan'));
+        $kodeAnalisa = trim((string) $this->request->getPost('kode_analisa')) ?: null;
+        $satuan = trim((string) $this->request->getPost('satuan')) ?: null;
+        // Kode analisa wajib ada di master analisa — salah ketik membuat
+        // pekerjaan diam-diam tidak tertaut kebutuhan bahan/upah.
+        if ($kodeAnalisa !== null) {
+            $analisa = $this->db()->table('analisa')->where(['sekolah_id' => $this->sid(), 'kode' => $kodeAnalisa, 'is_deleted' => 0])->get()->getRowArray();
+            if ($analisa === null) {
+                return $this->balasForm(false, 'Kode analisa "' . $kodeAnalisa . '" tidak ditemukan di master Analisa. Pilih dari daftar, atau kosongkan bila pekerjaan ini memang tanpa analisa.');
+            }
+            // Warisan: satuan & harga kosong diisi dari analisa terpilih.
+            if ($satuan === null && ! empty($analisa['satuan'])) {
+                $satuan = (string) $analisa['satuan'];
+            }
+            if ($harga <= 0) {
+                $harga = $this->hargaAhspKode($kodeAnalisa) ?? (isset($analisa['harga_satuan']) ? (float) $analisa['harga_satuan'] : 0.0);
+            }
+        }
         $urut = (int) ($this->db()->query('SELECT COALESCE(MAX(urutan),0) m FROM pekerjaan WHERE gedung_id = ? AND is_deleted = 0', [$gid])->getRow()->m ?? 0) + 1;
         $this->db()->table('pekerjaan')->insert([
             'gedung_id' => $gid, 'bab' => trim((string) $this->request->getPost('bab')) ?: null,
             'nama' => trim((string) $this->request->getPost('nama')),
-            'kode_analisa' => trim((string) $this->request->getPost('kode_analisa')) ?: null,
-            'analisa_id' => $this->analisaIdDariKode(trim((string) $this->request->getPost('kode_analisa')) ?: null),
-            'volume' => $volume, 'satuan' => trim((string) $this->request->getPost('satuan')) ?: null,
+            'kode_analisa' => $kodeAnalisa,
+            'analisa_id' => $this->analisaIdDariKode($kodeAnalisa),
+            'volume' => $volume, 'satuan' => $satuan,
             'harga_satuan' => $harga, 'jumlah' => $volume * $harga, 'urutan' => $urut,
         ]);
         return $this->balasForm(true, 'Pekerjaan ditambahkan.', '/gedung/' . $gid . '/boq');

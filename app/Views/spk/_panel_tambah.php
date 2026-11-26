@@ -7,11 +7,11 @@
       <select name="bahan_id" id="pilihBahan" required data-select-cari data-placeholder="— pilih bahan —">
         <option value="">— pilih bahan —</option>
         <?php foreach ($bahan as $b): ?>
-          <option value="<?= (int) $b['id'] ?>" data-harga="<?= (int) $b['harga_acuan'] ?>"><?= esc($b['kode']) ?> — <?= esc($b['nama']) ?> (<?= esc($b['satuan'] ?? '') ?>)</option>
+          <option value="<?= (int) $b['id'] ?>" data-harga="<?= (int) $b['harga_acuan'] ?>" data-sisa="<?= $b['sisa_butuh'] === null ? '' : esc(rtrim(rtrim(number_format((float) $b['sisa_butuh'], 3, '.', ''), '0'), '.')) ?>"><?= esc($b['kode']) ?> — <?= esc($b['nama']) ?> (<?= esc($b['satuan'] ?? '') ?>)<?= $b['sisa_butuh'] !== null ? ' · sisa kebutuhan ' . esc(number_format((float) $b['sisa_butuh'], 2, ',', '.')) : '' ?></option>
         <?php endforeach; ?>
       </select>
     </label>
-    <label>Qty <input type="number" name="qty" step="0.001" min="0" required></label>
+    <label>Qty <input type="number" name="qty" id="qtyIsi" step="0.001" min="0" required></label>
     <label>Harga Satuan (kosongkan = harga acuan) <input type="text" inputmode="numeric" data-uang name="harga" step="1" id="hargaIsi" placeholder="otomatis"></label>
     <label>Kena PPN
       <select data-select-cari name="pajak"><option value="0">Tidak</option><option value="1">Ya</option></select>

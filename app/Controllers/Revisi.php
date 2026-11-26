@@ -31,9 +31,19 @@ class Revisi extends BaseController
              ORDER BY p.gedung_id, p.id',
             [$this->sid()]
         )->getResultArray();
+        // Nilai berjalan per pekerjaan untuk warisan formulir revisi.
+        foreach ($pekerjaan as &$p) {
+            $p['vol_berjalan'] = $this->volBerjalan($p);
+            $p['harga_berjalan'] = $this->hargaBerjalan($p);
+        }
+        unset($p);
         $analisa = $db->table('analisa')->select('kode, nama')
             ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])
             ->orderBy('kode')->get()->getResultArray();
+        foreach ($analisa as &$a) {
+            $a['harga_ahsp'] = $this->hargaAhspKode($a['kode']);
+        }
+        unset($a);
         return $this->tampil('revisi/index', [
             'revisi' => $rows, 'gedung' => $this->semuaGedung(), 'pekerjaan' => $pekerjaan,
             'analisa' => $analisa,
@@ -74,10 +84,36 @@ class Revisi extends BaseController
         if (in_array($jenis, ['baru', 'ganti'], true) && ($namaBaru === null || $volumeBaru === null || $hargaBaru === null)) {
             return redirect()->to('/revisi-pekerjaan')->with('galat', 'Pekerjaan pengganti/baru wajib diisi nama, volume, dan harga satuannya.');
         }
+        // Ringkasan perubahan dibuat otomatis dari delta terhitung bila
+        // kosong, agar tidak menyimpang dari angka sebenarnya.
+        $perubahan = trim((string) $r->getPost('perubahan')) ?: null;
+        if ($perubahan === null && $jenis !== 'catatan') {
+            $delta = $this->deltaNilai(['jenis' => $jenis, 'pekerjaan_id' => $pekerjaanId, 'volume_baru' => $volumeBaru, 'harga_baru' => $hargaBaru]);
+            $tanda = ($delta >= 0 ? '+' : '−') . 'Rp' . number_format(abs($delta), 0, ',', '.');
+            $pRow = $pekerjaanId !== null ? $this->db()->table('pekerjaan')->where('id', $pekerjaanId)->get()->getRowArray() : null;
+            $satuan = trim((string) $r->getPost('satuan_baru')) ?: ($pRow['satuan'] ?? '');
+            $perubahan = match ($jenis) {
+                'volume' => 'Volume ' . number_format($pRow ? $this->volBerjalan($pRow) : 0, 2, ',', '.') . ' → ' . number_format((float) $volumeBaru, 2, ',', '.') . ' ' . $satuan . '; selisih biaya ' . $tanda,
+                'hapus' => 'Pekerjaan dihapus dari RAB berjalan; selisih biaya ' . $tanda,
+                'baru' => 'Pekerjaan baru ' . $namaBaru . ' ' . number_format((float) $volumeBaru, 2, ',', '.') . ' ' . $satuan . '; biaya ' . $tanda,
+                'ganti' => 'Diganti dengan ' . $namaBaru . '; selisih biaya ' . $tanda,
+                default => null,
+            };
+        }
+        // Peringatan draft sejenis yang masih terbuka untuk pekerjaan sama.
+        $peringatan = '';
+        if ($pekerjaanId !== null && $jenis !== 'catatan') {
+            $draftSama = $this->db()->table('revisi_pekerjaan')
+                ->where(['sekolah_id' => $this->sid(), 'pekerjaan_id' => $pekerjaanId, 'jenis' => $jenis, 'status' => 'draft', 'is_deleted' => 0])
+                ->countAllResults();
+            if ($draftSama > 0) {
+                $peringatan = ' Perhatian: sudah ada ' . $draftSama . ' draft revisi sejenis untuk pekerjaan ini yang belum disahkan — periksa urutan pengesahannya.';
+            }
+        }
         $this->db()->table('revisi_pekerjaan')->insert([
             'sekolah_id' => $this->sid(), 'gedung_id' => $gedungId, 'pekerjaan_id' => $pekerjaanId,
             'tanggal' => (string) $r->getPost('tanggal'), 'uraian' => $uraian,
-            'perubahan' => trim((string) $r->getPost('perubahan')) ?: null,
+            'perubahan' => $perubahan,
             'status' => 'draft', 'jenis' => $jenis,
             'volume_baru' => $volumeBaru, 'harga_baru' => $hargaBaru,
             'nama_baru' => $namaBaru,
@@ -85,7 +121,7 @@ class Revisi extends BaseController
             'kode_analisa_baru' => trim((string) $r->getPost('kode_analisa_baru')) ?: null,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
-        return redirect()->to('/revisi-pekerjaan')->with('sukses', 'Revisi pekerjaan dicatat sebagai draft. Sahkan agar mengubah RAB berjalan.');
+        return redirect()->to('/revisi-pekerjaan')->with('sukses', 'Revisi pekerjaan dicatat sebagai draft. Sahkan agar mengubah RAB berjalan.' . $peringatan);
     }
 
     /** Selisih nilai revisi terhadap RAB berjalan saat ini. */
@@ -121,6 +157,21 @@ class Revisi extends BaseController
         }
         if ($r['status'] === 'disahkan') {
             return redirect()->to('/revisi-pekerjaan')->with('galat', 'Revisi ini sudah disahkan.');
+        }
+        // Volume berjalan sesudah revisi tidak boleh di bawah realisasi
+        // tercatat (sisa negatif merusak Rencana & Kurva S).
+        if (! empty($r['pekerjaan_id']) && in_array($r['jenis'], ['volume', 'ganti', 'hapus'], true)) {
+            $realisasi = (float) $db->query(
+                'SELECT COALESCE(SUM(volume), 0) AS t FROM realisasi WHERE pekerjaan_id = ? AND is_deleted = 0',
+                [(int) $r['pekerjaan_id']]
+            )->getRowArray()['t'];
+            $berjalanBaru = $r['jenis'] === 'volume' ? (float) $r['volume_baru'] : 0.0;
+            if ($berjalanBaru < $realisasi - 0.0001) {
+                return redirect()->to('/revisi-pekerjaan')->with('galat',
+                    'Revisi ditolak: volume berjalan pekerjaan ini menjadi ' . number_format($berjalanBaru, 2, ',', '.')
+                    . ', di bawah realisasi yang sudah tercatat (' . number_format($realisasi, 2, ',', '.')
+                    . '). Sesuaikan volume revisi atau koreksi realisasinya terlebih dahulu.');
+            }
         }
         // Kontrol pagu: total RAB berjalan + biaya non-gedung sesudah
         // revisi ini tidak boleh melebihi pagu sekolah.

@@ -13,7 +13,7 @@
     'kolom' => [
         ['nama' => 'kode', 'label' => 'Kode', 'wajib' => true],
         ['nama' => 'nama', 'label' => 'Nama Bahan', 'wajib' => true],
-        ['nama' => 'satuan', 'label' => 'Satuan'],
+        ['nama' => 'satuan', 'label' => 'Satuan', 'saran' => ($satuan_saran ?? [])],
         ['nama' => 'harga_rab', 'label' => 'Harga RAB (Rp)', 'jenis' => 'uang', 'wajib' => true],
     ],
     'tombol' => ['simpan_teks' => 'Simpan', 'simpan_teks_ubah' => 'Simpan'],

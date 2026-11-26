@@ -5,6 +5,10 @@
   $barisKemajuan = [];
   foreach ($pekerjaan as $p) {
       $persen = (float) $p['volume'] > 0 ? min(100, (float) $p['volume_terealisasi'] / (float) $p['volume'] * 100) : 0;
+      // Isian awal = sisa volume (berjalan − terealisasi), ditulis polos
+      // bertitik desimal agar parsing server tidak berubah.
+      $sisaVol = max(0, (float) ($p['vol_berjalan'] ?? $p['volume']) - (float) $p['volume_terealisasi']);
+      $sisaTeks = $sisaVol > 0 ? rtrim(rtrim(number_format($sisaVol, 3, '.', ''), '0'), '.') : '';
       $barisKemajuan[] = ['sel' => [
           ['html' => esc($p['nama']) . (! empty($p['bab']) ? ' <span class="kecil-teks">(' . esc($p['bab']) . ')</span>' : ''), 'class' => 'potong', 'title' => (string) $p['nama']],
           ['teks' => $fmtVol($p['volume']) . ' ' . ($p['satuan'] ?? ''), 'angka' => true],
@@ -12,7 +16,7 @@
           ['html' => '<div class="sel-fisik"><div class="bar' . ($persen >= 99.5 ? ' hijau' : '') . '"><div style="width:' . $persen . '%"></div></div><span class="kecil-teks">' . number_format($persen, 1, ',', '.') . '%</span></div>'],
           ['html' => '<form method="post" action="' . base_url('gedung/pekerjaan/' . $p['id'] . '/realisasi') . '" style="display:flex;gap:5px">'
               . csrf_field()
-              . '<input type="text" name="volume" placeholder="Volume" required style="margin:0;width:84px">'
+              . '<input type="text" name="volume" value="' . esc($sisaTeks, 'attr') . '" placeholder="Volume" required style="margin:0;width:84px">'
               . '<input type="date" name="tanggal" value="' . date('Y-m-d') . '" style="margin:0;width:132px">'
               . '<button class="kecil" type="submit">Catat</button></form>'],
       ]];

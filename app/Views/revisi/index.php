@@ -5,15 +5,15 @@
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       <label>Gedung
-        <select data-select-cari name="gedung_id" required>
+        <select data-select-cari name="gedung_id" id="pilihGedungRevisi" required>
           <option value="">— pilih gedung —</option>
           <?php foreach ($gedung as $g): ?><option value="<?= (int) $g['id'] ?>"><?= esc($g['nama']) ?></option><?php endforeach; ?>
         </select>
       </label>
       <label>Pekerjaan (opsional)
-        <select data-select-cari name="pekerjaan_id">
+        <select data-select-cari name="pekerjaan_id" id="pilihPekerjaanRevisi">
           <option value="">— umum / beberapa pekerjaan —</option>
-          <?php foreach ($pekerjaan as $p): ?><option value="<?= (int) $p['id'] ?>"><?= esc($p['nama']) ?></option><?php endforeach; ?>
+          <?php foreach ($pekerjaan as $p): ?><option value="<?= (int) $p['id'] ?>" data-gedung="<?= (int) $p['gedung_id'] ?>" data-volume="<?= esc(rtrim(rtrim(number_format((float) $p['vol_berjalan'], 3, '.', ''), '0'), '.')) ?>" data-harga="<?= (int) round((float) $p['harga_berjalan']) ?>" data-satuan="<?= esc($p['satuan'] ?? '', 'attr') ?>" data-nama="<?= esc($p['nama'], 'attr') ?>"><?= esc($p['nama']) ?></option><?php endforeach; ?>
         </select>
       </label>
       <label>Tanggal Revisi <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" required></label>
@@ -33,9 +33,9 @@
       <label>Satuan Pengganti <input type="text" name="satuan_baru" placeholder="cth. unit, m2, ls"></label>
       <label>Harga Satuan Baru / Pengganti <input type="text" name="harga_baru" inputmode="numeric" data-uang placeholder="Rp per satuan"></label>
       <label>Analisa Pengganti
-        <select data-select-cari name="kode_analisa_baru">
+        <select data-select-cari name="kode_analisa_baru" id="pilihAnalisaRevisi">
           <option value="">— tanpa analisa —</option>
-          <?php foreach ($analisa as $a): ?><option value="<?= esc($a['kode']) ?>"><?= esc($a['kode']) ?> — <?= esc($a['nama']) ?></option><?php endforeach; ?>
+          <?php foreach ($analisa as $a): ?><option value="<?= esc($a['kode']) ?>" data-harga="<?= $a['harga_ahsp'] === null ? '' : (int) round((float) $a['harga_ahsp']) ?>"><?= esc($a['kode']) ?> — <?= esc($a['nama']) ?></option><?php endforeach; ?>
         </select>
       </label>
     </div>
@@ -43,6 +43,61 @@
     <div class="aksi" style="justify-content:flex-start"><button type="submit">Catat Revisi</button></div>
   </form>
 </div>
+<script>
+// Jembatan formulir revisi: pekerjaan disaring per gedung terpilih dan
+// nilai berjalan pekerjaan (volume/harga/satuan/nama) diwariskan ke
+// field revisi; analisa pengganti mewariskan harga AHSP-nya. Semua
+// isian tetap bisa diubah sebelum disimpan.
+(function () {
+  var selGedung = document.getElementById('pilihGedungRevisi');
+  var selPek = document.getElementById('pilihPekerjaanRevisi');
+  var selAna = document.getElementById('pilihAnalisaRevisi');
+  if (!selGedung || !selPek) return;
+  function saringPekerjaan() {
+    var gid = selGedung.value;
+    Array.prototype.forEach.call(selPek.options, function (opt) {
+      if (!opt.value) return;
+      opt.disabled = gid !== '' && opt.getAttribute('data-gedung') !== gid;
+    });
+    var terpilih = selPek.options[selPek.selectedIndex];
+    if (terpilih && terpilih.disabled) {
+      selPek.value = '';
+      selPek.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (window.perbaruiSelectCari) window.perbaruiSelectCari(selPek);
+  }
+  function isiDariPekerjaan() {
+    var opt = selPek.options[selPek.selectedIndex];
+    if (!opt || !opt.value) return;
+    var form = selPek.closest('form');
+    var set = function (nama, nilai) {
+      var inp = form.querySelector('[name="' + nama + '"]');
+      if (inp && nilai !== null && nilai !== '') {
+        inp.value = nilai;
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    };
+    set('volume_baru', opt.getAttribute('data-volume'));
+    set('harga_baru', opt.getAttribute('data-harga'));
+    set('satuan_baru', opt.getAttribute('data-satuan'));
+    set('nama_baru', opt.getAttribute('data-nama'));
+  }
+  selGedung.addEventListener('change', saringPekerjaan);
+  selPek.addEventListener('change', isiDariPekerjaan);
+  if (selAna) {
+    selAna.addEventListener('change', function () {
+      var opt = selAna.options[selAna.selectedIndex];
+      var harga = opt ? opt.getAttribute('data-harga') : '';
+      var inp = selAna.closest('form').querySelector('[name="harga_baru"]');
+      if (inp && harga) {
+        inp.value = harga;
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+  }
+  saringPekerjaan();
+})();
+</script>
 
 <div class="panel" data-bulk-akar x-data="komponenBulk('form-bulk-revisi','ids-revisi')">
   <h2>Riwayat Revisi</h2>

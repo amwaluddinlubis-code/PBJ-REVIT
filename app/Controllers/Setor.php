@@ -11,51 +11,10 @@ namespace App\Controllers;
  */
 class Setor extends BaseController
 {
-    /** Kewajiban pajak per jenis & masa dari transaksi yang sudah terjadi. */
+    /** Kewajiban pajak per jenis & masa (hitungan bersama di BaseController). */
     private function kewajiban(): array
     {
-        $db = $this->db();
-        $sid = $this->sid();
-        $wajib = []; // "jenis|masa" => jumlah
-
-        $tambah = static function (string $jenis, ?string $tanggal, float $jumlah) use (&$wajib) {
-            if ($jumlah <= 0 || ! $tanggal) {
-                return;
-            }
-            $kunci = $jenis . '|' . substr($tanggal, 0, 7);
-            $wajib[$kunci] = ($wajib[$kunci] ?? 0) + $jumlah;
-        };
-
-        $peta = $this->ppnSpkMap();
-        foreach ($db->query(
-            'SELECT p.tanggal AS tgl_bayar, i.tanggal AS tgl_inv, i.nilai, i.spk_id
-             FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0
-             JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0
-             WHERE s.sekolah_id = ? AND p.is_deleted = 0',
-            [$sid]
-        )->getResultArray() as $r) {
-            $tgl = $r['tgl_bayar'] ?: $r['tgl_inv'];
-            $pjk = $this->pajakPembelian((float) $r['nilai'], $this->ppnInvoice($peta, (int) $r['spk_id'], (float) $r['nilai']));
-            $tambah('pph22', $tgl, $pjk['pph22']);
-            $tambah('ppn', $tgl, $pjk['ppn']);
-        }
-
-        foreach ($db->table('upah_bayar')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $u) {
-            $tambah('pph21', $u['tanggal'], $this->pph21UpahHarian((float) $u['tarif'], (float) $u['orang_hari']));
-        }
-
-        foreach ($db->table('biaya_lain')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $b) {
-            if (empty($b['pajak'])) {
-                continue;
-            }
-            $jenis = str_starts_with($b['pajak'], 'pph42') ? 'pph42' : (str_starts_with($b['pajak'], 'pph21') ? 'pph21' : $b['pajak']);
-            if (! in_array($jenis, ['pph23', 'pph42', 'pph21'], true)) {
-                continue;
-            }
-            $tambah($jenis, $b['created_at'], $this->potonganPajak($b['pajak'], (float) $b['jumlah']));
-        }
-        ksort($wajib);
-        return $wajib;
+        return $this->kewajibanPajak();
     }
 
     public function index()
@@ -119,11 +78,48 @@ class Setor extends BaseController
         if ($g = $this->galatBulanTertutup((string) $r->getPost('tanggal_setor'))) {
             return $this->balasForm(false, $g);
         }
+        // Masa wajib & berformat sah untuk jenis pajak — setoran tanpa masa
+        // tidak pernah mengurangi kewajiban mana pun. Sisa dana boleh tanpa
+        // masa, tetapi format yang diisi harus tetap sah.
         $masa = trim((string) $r->getPost('masa'));
+        if ($masa !== '' && ! preg_match('/^\d{4}-\d{2}$/', $masa)) {
+            return $this->balasForm(false, 'Masa pajak harus berformat YYYY-MM (cth. 2026-05).');
+        }
+        if ($jenis !== 'sisa_dana' && $masa === '') {
+            return $this->balasForm(false, 'Masa pajak wajib diisi untuk setoran pajak — tanpa masa, setoran tidak mengurangi kewajiban masa mana pun.');
+        }
+        // Peringatan kelebihan setor (bukan blokir: setor gabungan beberapa
+        // masa adalah praktik sah) — kelebihan tidak menutup masa lain.
+        $peringatan = '';
+        if ($jenis === 'sisa_dana') {
+            $per = $this->penerimaanPerTahap();
+            $setorSisa = (float) $this->db()->query(
+                "SELECT COALESCE(SUM(jumlah),0) v FROM bukti_setor WHERE sekolah_id = ? AND jenis = 'sisa_dana' AND is_deleted = 0",
+                [$this->sid()]
+            )->getRow()->v;
+            $tersedia = ($per[1] + $per[2] + $per['lain'] - $this->totalBelanja()) - $setorSisa;
+            if ($jumlah > $tersedia) {
+                $peringatan = ' Perhatian: jumlah melebihi sisa dana terhitung yang belum dikembalikan (' . $this->rp(max(0, $tersedia)) . ').';
+            }
+        } else {
+            $wajib = $this->kewajiban()[$jenis . '|' . $masa] ?? 0;
+            $sudah = (float) $this->db()->query(
+                'SELECT COALESCE(SUM(jumlah),0) v FROM bukti_setor WHERE sekolah_id = ? AND jenis = ? AND masa = ? AND is_deleted = 0',
+                [$this->sid(), $jenis, $masa]
+            )->getRow()->v;
+            $kurang = $wajib - $sudah;
+            if ($jumlah > $kurang) {
+                $peringatan = ' Perhatian: jumlah melebihi kekurangan kewajiban ' . strtoupper($jenis) . ' masa ' . $masa . ' (' . $this->rp(max(0, $kurang)) . ') — kelebihan tidak mengurangi kewajiban masa lain.';
+            }
+        }
+        // Saldo bank tidak boleh minus pada tanggal setor maupun sesudahnya.
+        if ($g = $this->galatSaldoMinus('bank', (string) $r->getPost('tanggal_setor'), $jumlah)) {
+            return $this->balasForm(false, $g);
+        }
         $this->db()->table('bukti_setor')->insert([
             'sekolah_id' => $this->sid(),
             'jenis' => $jenis,
-            'masa' => preg_match('/^\d{4}-\d{2}$/', $masa) ? $masa : null,
+            'masa' => $masa !== '' ? $masa : null,
             'tanggal_setor' => (string) $r->getPost('tanggal_setor'),
             'jumlah' => $jumlah,
             'kode_billing' => trim((string) $r->getPost('kode_billing')) ?: null,
@@ -132,7 +128,7 @@ class Setor extends BaseController
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
         $this->catatAudit('bukti_setor', (int) $this->db()->insertID(), 'buat', 'Bukti setor pajak dicatat.');
-        return $this->balasForm(true, 'Bukti setor dicatat dan masuk Buku Kas sebagai uang keluar.');
+        return $this->balasForm(true, 'Bukti setor dicatat dan masuk Buku Kas sebagai uang keluar.' . $peringatan);
     }
 
     public function hapus($id)

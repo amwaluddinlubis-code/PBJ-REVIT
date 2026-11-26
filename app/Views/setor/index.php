@@ -1,11 +1,15 @@
 <?php $label = ['pph22' => 'PPh Pasal 22', 'ppn' => 'PPN dipungut', 'pph21' => 'PPh Pasal 21', 'pph23' => 'PPh Pasal 23', 'pph42' => 'PPh Pasal 4 ayat 2', 'sisa_dana' => 'Pengembalian sisa dana (SIMPONI)']; ?>
 <details class="panel panel-lipat" data-lipat-id="setor-kewajiban-pajak-per-masa" open>
-  <summary>Kewajiban Pajak per Masa — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></summary>
+  <summary>Buku Pembantu Pajak — Kewajiban vs Setoran per Masa — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></summary>
 
-  <p style="margin-top:0;color:var(--ta-teks-2)">Pajak yang dipungut/dipotong dari pembayaran invoice (PPh 22 &amp; PPN), pembayaran upah (PPh 21), dan biaya non-gedung (PPh 23 / PPh 4 ayat 2 / PPh 21 honor) wajib disetor ke kas negara dengan kode e-billing; bukti sahnya adalah NTPN. Tabel ini membandingkan kewajiban dengan bukti setor yang sudah dicatat.</p>
+  <p style="margin-top:0;color:var(--ta-teks-2)">Pajak yang dipungut/dipotong dari pembayaran invoice (PPh 22 &amp; PPN), pembayaran upah (PPh 21), dan biaya non-gedung (PPh 23 / PPh 4 ayat 2 / PPh 21 honor) wajib disetor ke kas negara dengan kode e-billing; bukti sahnya adalah NTPN. Buku pembantu ini membandingkan kewajiban dengan bukti setor yang sudah dicatat; saldo <strong>Belum Disetor</strong> adalah kewajiban yang masih harus disetor.</p>
   <?php
   $barisWajib = [];
+  $totWajib = $totDisetor = $totKurang = 0.0;
   foreach ($baris as $b) {
+      $totWajib += (float) $b['wajib'];
+      $totDisetor += (float) $b['disetor'];
+      $totKurang += max(0, (float) $b['kurang']);
       $barisWajib[] = ['sel' => [
           (string) ($label[$b['jenis']] ?? $b['jenis']),
           (string) $b['masa'],
@@ -17,6 +21,14 @@
   }
   if ($baris === []) {
       $barisWajib[] = ['sel' => [['teks' => 'Belum ada kewajiban pajak dari transaksi yang tercatat.', 'colspan' => 6]]];
+  } else {
+      $barisWajib[] = ['sel' => [
+          ['html' => '<b>Total</b>', 'colspan' => 2],
+          ['html' => '<b>' . rp($totWajib) . '</b>', 'angka' => true],
+          ['html' => '<b>' . rp($totDisetor) . '</b>', 'angka' => true],
+          ['html' => '<b>' . rp($totKurang) . '</b>', 'angka' => true],
+          ['html' => '<b>Belum disetor: ' . rp($totKurang) . '</b>'],
+      ]];
   }
   echo tabel_bantu([
       'cari' => 'Cari pajak / masa…',
@@ -25,7 +37,7 @@
           ['judul' => 'Masa'],
           ['judul' => 'Kewajiban', 'angka' => true],
           ['judul' => 'Sudah Disetor', 'angka' => true],
-          ['judul' => 'Kekurangan', 'angka' => true],
+          ['judul' => 'Belum Disetor', 'angka' => true],
           ['judul' => 'Status'],
       ],
       'baris' => $barisWajib,
@@ -99,6 +111,14 @@
 </div>
 <?php endif; ?>
 
+<?php
+// Peta kekurangan per jenis+masa untuk isi-otomatis jumlah & saring jenis.
+$petaKurang = [];
+foreach ($baris as $b) {
+    $petaKurang[$b['jenis'] . '|' . $b['masa']] = max(0, (float) $b['kurang']);
+}
+$petaKurang['sisa_dana|'] = max(0, (float) $sisa - (float) $setor_sisa);
+?>
 <?= form_modal([
     'id' => 'modal-setor',
     'judul' => 'Catat Bukti Setor',
@@ -106,23 +126,55 @@
     'lebar' => 720,
     'kolom' => [
         ['nama' => 'jenis', 'label' => 'Jenis Setoran', 'jenis' => 'pilihan', 'opsi' => $label],
-        ['nama' => 'masa', 'label' => 'Masa Pajak', 'jenis' => 'teks', 'placeholder' => 'YYYY-MM', 'petunjuk' => 'Bulan masa pajak, format YYYY-MM (cth. 2026-11).'],
+        ['nama' => 'masa', 'label' => 'Masa Pajak', 'jenis' => 'teks', 'placeholder' => 'YYYY-MM', 'petunjuk' => 'Bulan masa pajak, format YYYY-MM (cth. 2026-11). Wajib untuk pajak.'],
         ['nama' => 'tanggal_setor', 'label' => 'Tanggal Setor', 'jenis' => 'tanggal', 'wajib' => true, 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
-        ['nama' => 'jumlah', 'label' => 'Jumlah Disetor (Rp)', 'jenis' => 'uang', 'wajib' => true],
+        ['nama' => 'jumlah', 'label' => 'Jumlah Disetor (Rp)', 'jenis' => 'uang', 'wajib' => true, 'petunjuk' => 'Terisi otomatis sebesar kekurangan kewajiban masa terpilih, boleh diubah.'],
         ['nama' => 'kode_billing', 'label' => 'Kode Billing', 'jenis' => 'teks', 'placeholder' => 'dari e-billing / SIMPONI'],
         ['nama' => 'ntpn', 'label' => 'NTPN', 'jenis' => 'teks', 'placeholder' => 'Nomor Transaksi Penerimaan Negara'],
         ['nama' => 'keterangan', 'label' => 'Keterangan', 'jenis' => 'teks', 'penuh' => true, 'placeholder' => 'opsional'],
     ],
     'tombol' => ['hapus' => false, 'simpan_teks' => 'Catat Bukti Setor'],
 ]) ?>
+<script type="application/json" id="data-kurang-setor"><?= json_encode($petaKurang, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 <script>
-// Jembatan modal setor: tanggal bawaan mengikuti Bulan Terbuka, lalu
-// sinkronkan widget select-cari sesudah modal dibuka.
-function bukaSetorBaru() {
-  window.bukaFormModal('modal-setor', { tanggal_setor: <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?>, masa: <?= json_encode($buku_ym ?? '') ?> });
-  var m = document.getElementById('modal-setor');
-  if (m && window.perbaruiSelectCari) {
-    m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+// Jembatan modal setor: tanggal bawaan Bulan Terbuka; jumlah terisi
+// otomatis sebesar kekurangan kewajiban jenis+masa terpilih dan pilihan
+// jenis disaring ke yang berkewajiban pada masa itu (sisa dana bila ada).
+(function () {
+  var kurang = {};
+  try { kurang = JSON.parse(document.getElementById('data-kurang-setor').textContent || '{}'); } catch (e) {}
+  function kunci(jenis, masa) { return jenis === 'sisa_dana' ? 'sisa_dana|' : jenis + '|' + (masa || ''); }
+  function terapkan() {
+    var m = document.getElementById('modal-setor');
+    if (!m) return;
+    var selJenis = m.querySelector('select[name="jenis"]');
+    var inpMasa = m.querySelector('input[name="masa"]');
+    var inpJumlah = m.querySelector('input[name="jumlah"]');
+    if (!selJenis || !inpMasa || !inpJumlah) return;
+    var masa = (inpMasa.value || '').trim();
+    Array.prototype.forEach.call(selJenis.options, function (opt) {
+      if (!opt.value) return;
+      var ada = (kurang[kunci(opt.value, masa)] || 0) > 0;
+      opt.disabled = !ada && opt.value !== selJenis.value;
+    });
+    if (window.perbaruiSelectCari) window.perbaruiSelectCari(selJenis);
+    var k = kurang[kunci(selJenis.value, masa)];
+    if (k != null && k > 0) {
+      inpJumlah.value = Math.round(k);
+      inpJumlah.dispatchEvent(new Event('input', { bubbles: true }));
+    }
   }
-}
+  window.bukaSetorBaru = function () {
+    window.bukaFormModal('modal-setor', { tanggal_setor: <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?>, masa: <?= json_encode($buku_ym ?? '') ?> });
+    var m = document.getElementById('modal-setor');
+    if (m && window.perbaruiSelectCari) {
+      m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+    }
+    terapkan();
+  };
+  document.addEventListener('change', function (e) {
+    if (!e.target || !e.target.closest || !e.target.closest('#modal-setor')) return;
+    if (e.target.name === 'jenis' || e.target.name === 'masa') terapkan();
+  });
+})();
 </script>

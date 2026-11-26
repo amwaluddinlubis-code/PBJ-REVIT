@@ -132,7 +132,7 @@ foreach ($penyedia as $p) {
             (string) $p['nama'],
             (string) ($p['alamat'] ?? ''),
             (string) ($p['ttd_nama'] ?? ''),
-            ['html' => '<button type="button" class="tombol kecil abu" data-id="' . (int) $p['id'] . '" data-nama="' . esc($p['nama'], 'attr') . '" data-alamat="' . esc($p['alamat'] ?? '', 'attr') . '" data-ttd="' . esc($p['ttd_nama'] ?? '', 'attr') . '" onclick="bukaPenyediaUbah(this)">' . $ikonPensil . ' Ubah</button> <form class="inline" method="post" action="' . base_url('pengaturan/penyedia-hapus/' . $p['id']) . '" data-konfirmasi="Hapus penyedia ini?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>', 'gaya' => 'white-space:nowrap'],
+            ['html' => '<button type="button" class="tombol kecil abu" data-id="' . (int) $p['id'] . '" data-nama="' . esc($p['nama'], 'attr') . '" data-alamat="' . esc($p['alamat'] ?? '', 'attr') . '" data-ttd="' . esc($p['ttd_nama'] ?? '', 'attr') . '" data-rekening="' . esc($p['no_rekening'] ?? '', 'attr') . '" data-bank="' . esc($p['nama_bank'] ?? '', 'attr') . '" onclick="bukaPenyediaUbah(this)">' . $ikonPensil . ' Ubah</button> <form class="inline" method="post" action="' . base_url('pengaturan/penyedia-hapus/' . $p['id']) . '" data-konfirmasi="Hapus penyedia ini?">' . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>', 'gaya' => 'white-space:nowrap'],
         ],
     ];
 }
@@ -160,6 +160,8 @@ echo tabel_bantu([
         ['nama' => 'nama', 'label' => 'Nama Penyedia', 'jenis' => 'teks', 'wajib' => true],
         ['nama' => 'alamat', 'label' => 'Alamat', 'jenis' => 'teks'],
         ['nama' => 'ttd_nama', 'label' => 'Penandatangan', 'jenis' => 'teks'],
+        ['nama' => 'no_rekening', 'label' => 'Nomor Rekening', 'jenis' => 'teks', 'petunjuk' => 'Wajib untuk pembayaran transfer bank (jurnal pembayaran menolak penyedia tanpa nomor rekening).'],
+        ['nama' => 'nama_bank', 'label' => 'Nama Bank', 'jenis' => 'teks'],
     ],
     'tombol' => ['simpan_teks' => 'Tambah Penyedia', 'simpan_teks_ubah' => 'Simpan Perubahan'],
 ]) ?>
@@ -171,7 +173,9 @@ function bukaPenyediaUbah(btn) {
     id: btn.dataset.id,
     nama: btn.dataset.nama || '',
     alamat: btn.dataset.alamat || '',
-    ttd_nama: btn.dataset.ttd || ''
+    ttd_nama: btn.dataset.ttd || '',
+    no_rekening: btn.dataset.rekening || '',
+    nama_bank: btn.dataset.bank || ''
   });
 }
 </script>

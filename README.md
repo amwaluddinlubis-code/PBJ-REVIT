@@ -105,12 +105,15 @@ Antarmuka memakai **INA Digital Design System (IDDS)** dikombinasikan dengan **T
   jalankan `php spark migrate` (migration 000002 MultiSekolah).
 - Fase 2 (selesai): Survei Harga (termurah/terpilih otomatis) & Negosiasi (total + hemat),
   BAP/BAST per SPK + cetak dokumen SPK/BAP/BAST (kop dari Identitas, nomor 422/... otomatis,
-  terbilang otomatis), Invoice (peringatan nilai != total SPK) & Jurnal Pembayaran
-  (PPh 22 1,5% otomatis), Buku Material (saldo berjalan) & Sisa Bahan,
+  terbilang otomatis), Invoice (BAP/BAST diwarisi dari SPK; nilai otomatis =
+  sisa nilai BAST; SPK hanya layak bila ber-BAST, tanggal BAST ≤ tanggal
+  invoice, dan sisa > 0; status Sudah Bayar mencatat jurnal otomatis) &
+  Jurnal Pembayaran (PPh 22 1,5% otomatis; tanggal bayar bawaan
+  merekomendasikan tanggal jurnal terakhir), Buku Material (saldo berjalan) & Sisa Bahan,
   Identitas & Pengaturan + master Penyedia.
 
 Skema: 41 tabel aplikasi (42 termasuk tabel `migrations` yang dicatat CodeIgniter),
-dimulai dari 14 tabel inti di atas dan bertambah melalui migrasi 000002–000028:
+dimulai dari 14 tabel inti di atas dan bertambah melalui migrasi 000002–000032:
 gedung, pekerjaan, analisa, analisa_komponen, upah_master, realisasi, upah_bayar,
 impor_log, sekolah, biaya_lain, kas_transaksi, bukti_setor, foto_progres,
 dokumen_spk, revisi_pekerjaan, bahan_konversi, audit_events, rencana_mingguan,
@@ -151,7 +154,7 @@ Catatan impor: konversi satuan mengikuti praktik AHSP — semen kg→zak (÷50),
 (÷1.400), kerikil/batu kg→m³ (÷1.600), keramik bh→ktk (menurut ukuran). Baris yang satuannya
 berbeda tanpa aturan konversi ditandai "satuan beda" agar diperiksa pengguna.
 
-Langkah sesudah `git pull`: jalankan `php spark migrate` (migrasi terakhir saat ini 000028),
+Langkah sesudah `git pull`: jalankan `php spark migrate` (migrasi terakhir saat ini 000032),
 lalu buka menu **Impor Dokumen Perencana** dan unggah workbook RAB perencana sekolah.
 
 ## Kesesuaian dengan Juknis Revitalisasi SMP 2026
@@ -188,6 +191,21 @@ Pengembangan lanjutan berdasarkan Juknis (migrasi 000008–000011):
   Pembantu Kas Tunai yang ditutup setiap akhir bulan, tergabung otomatis
   dari pembayaran invoice (bank), pembayaran upah (tunai), bukti setor,
   dan transaksi kas manual; cetak mengikuti format dokumen Juknis.
+  **Tutup Buku bulanan** (migrasi 000031): bulan ditutup berurutan
+  Jan–Des dari panel di Buku Kas; **Bulan Terbuka** (bulan terkecil yang
+  belum ditutup) menjadi satu-satunya bulan pencatatan uang — termasuk
+  tanggal invoice — dan formulir otomatis mengarah ke bulan n+1 sesudah
+  tutup buku. Buka kembali hanya admin dengan alasan (tercatat audit).
+  **Fase 2 keuangan** (migrasi 000032, adopsi pola ARKAS/SAKTI/SIMDA):
+  saldo per kanal (bank/tunai) tidak boleh minus pada tanggal mana pun;
+  nomor bukti BKU urut per bulan + snapshot beku saat tutup buku (cetakan
+  bulan tertutup membaca snapshot); koreksi bulan tertutup lewat jurnal
+  balik berujukan di bulan terbuka; daftar periksa rekonsiliasi tutup
+  buku (saldo koran, kas fisik, bunga/biaya bank otomatis); Buku
+  Pembantu Pajak; pencadangan pagu sejak SPK; kunci referensial hapus
+  SPK (batal lewat status); SPJ Bulanan dari snapshot; panel Perlu
+  Tindak Lanjut di Dashboard; nilai BAP/BAST hanya dari barang diterima
+  baik; pembayaran bank mensyaratkan nomor rekening penyedia.
 - **Penerimaan Dana**: pencairan bertahap Tahap 1 (70%) dan Tahap 2 (30%,
   syarat kemajuan fisik ≥ 50%) dengan target, status, peringatan jatuh
   tempo di Dashboard, dan cetak Kuitansi Penerimaan Uang format Juknis.

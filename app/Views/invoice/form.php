@@ -7,7 +7,7 @@
   <label>SPK
     <select name="spk_id" id="pilihSpk" required data-select-cari data-placeholder="— pilih SPK —">
       <?php foreach ($spk['list'] as $s): $w = $spk['warisan'][(int) $s['id']] ?? []; ?>
-        <option value="<?= (int) $s['id'] ?>" data-total="<?= (int) $s['total'] ?>" data-sisa="<?= (int) ($w['sisa'] ?? 0) ?>" data-bast-tanggal="<?= esc($w['bast']['tanggal'] ?? '') ?>"<?= (old('spk_id', $i['spk_id'] ?? '') == $s['id']) ? ' selected' : '' ?>>SPK <?= (int) $s['nomor'] ?> — <?= esc($s['paket'] ?? '') ?> (total Rp <?= number_format((float) $s['total'], 0, ',', '.') ?>)</option>
+        <option value="<?= (int) $s['id'] ?>" data-total="<?= (int) $s['total'] ?>" data-sisa="<?= (int) ($w['sisa'] ?? 0) ?>" data-bast-tanggal="<?= esc($w['bast']['tanggal'] ?? '') ?>" data-status="<?= esc($s['status'] ?? 'Aktif', 'attr') ?>"<?= (old('spk_id', $i['spk_id'] ?? '') == $s['id']) ? ' selected' : '' ?>>SPK <?= (int) $s['nomor'] ?> — <?= esc($s['paket'] ?? '') ?> (total Rp <?= number_format((float) $s['total'], 0, ',', '.') ?>)</option>
       <?php endforeach; ?>
     </select>
   </label>
@@ -20,6 +20,7 @@
       <?php endforeach; ?>
     </select>
   </label>
+  <label id="bungkus-tanggal-bayar">Tanggal Pembayaran <input type="date" name="tanggal_bayar" value="<?= esc(old('tanggal_bayar', '')) ?>" min="<?= esc($buku_min ?? '') ?>" max="<?= esc($buku_max ?? '') ?>"><span class="kecil-teks" style="display:block">Hanya untuk status Sudah Bayar — pembayaran tercatat otomatis di Jurnal Pembayaran. Buku terbuka: <?= esc($buku_label ?? '') ?></span></label>
   <div class="aksi md:col-span-2"><button type="submit">Simpan</button><a class="tombol abu" href="<?= base_url('invoice') ?>">Batal</a></div>
 </form>
 <?php if (! empty($i['id'])): ?>
@@ -58,7 +59,7 @@
     Array.prototype.forEach.call(sel.options, function (opt) {
       if (!opt.value) return;
       var bastTgl = opt.getAttribute('data-bast-tanggal') || '';
-      var layak = bastTgl !== '' && sisaEfektif(opt.value) > 0 && (!tgl || bastTgl <= tgl);
+      var layak = bastTgl !== '' && sisaEfektif(opt.value) > 0 && (!tgl || bastTgl <= tgl) && opt.getAttribute('data-status') !== 'Batal';
       opt.disabled = !layak && opt.value !== sel.value;
     });
     if (window.perbaruiSelectCari) window.perbaruiSelectCari(sel);
@@ -81,7 +82,35 @@
   if (sel) sel.addEventListener('change', function () { tampil(true); });
   var tglInv = document.querySelector('input[name="tanggal"]');
   if (tglInv) tglInv.addEventListener('change', saring);
+  // Tanggal Pembayaran hanya untuk status Sudah Bayar; bawaannya
+  // merekomendasikan tanggal jurnal terakhir (dijepit Bulan Terbuka).
+  var tglJurnalTerakhir = <?= json_encode($tgl_jurnal_terakhir ?? null) ?>;
+  var bukuMin = <?= json_encode($buku_min ?? '') ?>;
+  var bukuMax = <?= json_encode($buku_max ?? '') ?>;
+  function segarkanTanggalBayar() {
+    var selStatus = document.querySelector('select[name="status"]');
+    var bungkus = document.getElementById('bungkus-tanggal-bayar');
+    var inpBayar = document.querySelector('input[name="tanggal_bayar"]');
+    if (!selStatus || !bungkus || !inpBayar) return;
+    var sudah = selStatus.value === 'Sudah Bayar';
+    bungkus.style.display = sudah ? '' : 'none';
+    inpBayar.disabled = !sudah;
+    if (sudah && !inpBayar.value) {
+      var calon = tglJurnalTerakhir || '';
+      var tglInvVal = tglInv ? tglInv.value : '';
+      if (tglInvVal && tglInvVal > calon) calon = tglInvVal;
+      if (!calon) calon = <?= json_encode($i['tanggal'] ?? date('Y-m-d')) ?>;
+      if (bukuMin && calon < bukuMin) calon = bukuMin;
+      if (bukuMax && calon > bukuMax) calon = bukuMax;
+      inpBayar.value = calon;
+      inpBayar.dispatchEvent(new Event('input', { bubbles: true }));
+      inpBayar.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+  var selStatus = document.querySelector('select[name="status"]');
+  if (selStatus) selStatus.addEventListener('change', segarkanTanggalBayar);
   saring();
   tampil(false);
+  segarkanTanggalBayar();
 })();
 </script>

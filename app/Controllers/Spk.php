@@ -21,6 +21,7 @@ class Spk extends BaseController
             'spk'         => $spk,
             'penyedia'    => $this->db()->table('penyedia')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('nama')->get()->getResultArray(),
             'nomor_baru'  => $this->nomorSpkBerikutnya(),
+            'cadangan'    => $this->pencadanganPagu(),
         ], 'Register SPK — Aplikasi PBJ Sekolah');
     }
 
@@ -37,19 +38,20 @@ class Spk extends BaseController
     public function simpan()
     {
         $data = $this->ambilForm();
-        if ($this->db()->table('spk')->where(['nomor' => $data['nomor'], 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults() > 0) {
+        if ($g = $this->galatFormSpk($data, 0)) {
             if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['ok' => false, 'pesan' => 'Nomor SPK ' . $data['nomor'] . ' sudah ada.']);
+                return $this->response->setJSON(['ok' => false, 'pesan' => $g]);
             }
-            return redirect()->back()->withInput()->with('galat', 'Nomor SPK ' . $data['nomor'] . ' sudah ada.');
+            return redirect()->back()->withInput()->with('galat', $g);
         }
         $data['sekolah_id'] = $this->sid();
         $data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('spk')->insert($data);
+        $peringatan = $this->peringatanCadangan();
         if ($this->request->isAJAX()) {
-            return $this->response->setJSON(['ok' => true, 'pesan' => 'SPK ' . $data['nomor'] . ' dibuat — buka tombol Detail pada barisnya untuk mengisi rincian.']);
+            return $this->response->setJSON(['ok' => true, 'pesan' => 'SPK ' . $data['nomor'] . ' dibuat — buka tombol Detail pada barisnya untuk mengisi rincian.' . $peringatan]);
         }
-        return redirect()->to('spk/detail/' . $this->db()->insertID())->with('sukses', 'SPK ' . $data['nomor'] . ' dibuat — silakan isi rinciannya.');
+        return redirect()->to('spk/detail/' . $this->db()->insertID())->with('sukses', 'SPK ' . $data['nomor'] . ' dibuat — silakan isi rinciannya.' . $peringatan);
     }
 
     public function ubah($id)
@@ -69,19 +71,63 @@ class Spk extends BaseController
     public function perbarui($id)
     {
         $data = $this->ambilForm();
+        if ($g = $this->galatFormSpk($data, (int) $id)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['ok' => false, 'pesan' => $g]);
+            }
+            return redirect()->back()->withInput()->with('galat', $g);
+        }
         $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('spk')->where(['id' => (int) $id, 'sekolah_id' => $this->sid()])->update($data);
+        $peringatan = $this->peringatanCadangan();
         if ($this->request->isAJAX()) {
-            return $this->response->setJSON(['ok' => true, 'pesan' => 'SPK diperbarui.']);
+            return $this->response->setJSON(['ok' => true, 'pesan' => 'SPK diperbarui.' . $peringatan]);
         }
         if ($this->request->getPost('balik') === 'detail') {
-            return redirect()->to('spk/detail/' . (int) $id)->with('sukses', 'SPK diperbarui.');
+            return redirect()->to('spk/detail/' . (int) $id)->with('sukses', 'SPK diperbarui.' . $peringatan);
         }
-        return redirect()->to('spk')->with('sukses', 'SPK diperbarui.');
+        return redirect()->to('spk')->with('sukses', 'SPK diperbarui.' . $peringatan);
+    }
+
+    /** Peringatan pencadangan pagu: komitmen SPK aktif melewati pagu tersedia. */
+    private function peringatanCadangan(): string
+    {
+        $c = $this->pencadanganPagu();
+        if ($c['anggaran'] > 0 && $c['tersedia'] < 0) {
+            return ' Perhatian: pencadangan pagu SPK aktif (' . $this->rp($c['komitmen']) . ') ditambah yang sudah terbayar (' . $this->rp($c['terbayar']) . ') melewati total anggaran (' . $this->rp($c['anggaran']) . ') — pagu tersedia ' . $this->rp($c['tersedia']) . '. Pembayaran tetap dijaga cekPagu.';
+        }
+        return '';
+    }
+
+    /**
+     * Kunci referensial: SPK yang sudah punya turunan (BAP/BAST/invoice
+     * aktif) tidak bisa dihapus — pembatalan lewat status Batal.
+     * Mengembalikan pesan galat atau null bila boleh dihapus.
+     */
+    private function galatHapusSpk(int $id): ?string
+    {
+        $db = $this->db();
+        $turunan = [];
+        if ($db->table('bap')->where(['spk_id' => $id, 'is_deleted' => 0])->countAllResults() > 0) {
+            $turunan[] = 'BAP';
+        }
+        if ($db->table('bast')->where(['spk_id' => $id, 'is_deleted' => 0])->countAllResults() > 0) {
+            $turunan[] = 'BAST';
+        }
+        if ($db->table('invoice')->where(['spk_id' => $id, 'is_deleted' => 0])->countAllResults() > 0) {
+            $turunan[] = 'invoice';
+        }
+        if ($turunan !== []) {
+            return 'SPK ini sudah punya dokumen turunan (' . implode(', ', $turunan) . ') sehingga tidak bisa dihapus. Untuk membatalkannya, ubah status SPK menjadi Batal — pencadangan pagunya ikut bebas.';
+        }
+        return null;
     }
 
     public function hapus($id)
     {
+        if ($g = $this->galatHapusSpk((int) $id)) {
+            return redirect()->to('spk')->with('galat', $g);
+        }
         // Hapus lunak: SPK ditandai terhapus; rinciannya menjadi belum bernomor
         // (spk_id dikosongkan) agar tetap bisa dipakai ulang. BAP/BAST/invoice
         // yang menunjuk SPK ini ikut tersembunyi lewat saringannya.
@@ -96,7 +142,7 @@ class Spk extends BaseController
     private function hapusSatuSpk(int $id): bool
     {
         $ada = $this->db()->table('spk')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults();
-        if ($ada === 0) {
+        if ($ada === 0 || $this->galatHapusSpk($id) !== null) {
             return false;
         }
         $this->db()->table('spk_detail')->where(['spk_id' => $id, 'is_deleted' => 0])
@@ -156,9 +202,29 @@ class Spk extends BaseController
         )->getResultArray();
         $gabungan = count(array_unique(array_filter(array_map(static fn ($d) => $d['gedung_rincian'] ?? null, $detail)))) > 1;
         $bahan = $db->query('SELECT id, kode, nama, satuan, harga_rab FROM bahan WHERE sekolah_id = ? AND is_deleted = 0 ORDER BY kode', [$this->sid()])->getResultArray();
+        // Sisa kebutuhan per bahan untuk gedung SPK ini (kebutuhan BOQ −
+        // sudah dipesan pada SPK gedung itu) — bawaan qty Tambah Baris.
+        $sisaButuh = [];
+        if (! empty($s['gedung_id'])) {
+            foreach ($this->kebutuhanBahan((int) $s['gedung_id'])['tertaut'] as $kb) {
+                $sisaButuh[(int) $kb['bahan_id']] = (float) $kb['qty_butuh'];
+            }
+            foreach ($db->query(
+                'SELECT d.bahan_id, COALESCE(SUM(d.qty),0) AS qty FROM spk_detail d JOIN spk sx ON sx.id = d.spk_id AND sx.is_deleted = 0
+                 WHERE COALESCE(d.gedung_id, sx.gedung_id) = ? AND d.is_deleted = 0 AND d.bahan_id IS NOT NULL GROUP BY d.bahan_id',
+                [(int) $s['gedung_id']]
+            )->getResultArray() as $r) {
+                $bid = (int) $r['bahan_id'];
+                if (isset($sisaButuh[$bid])) {
+                    $sisaButuh[$bid] -= (float) $r['qty'];
+                }
+            }
+        }
         foreach ($bahan as &$b) {
             $b['harga_acuan'] = $this->hargaAcuan((int) $b['id']);
+            $b['sisa_butuh'] = isset($sisaButuh[(int) $b['id']]) ? max(0, $sisaButuh[(int) $b['id']]) : null;
         }
+        unset($b);
         $nilaiPaket = array_sum(array_map(static fn ($d) => (float) $d['total'], $detail));
         $pembanding = (int) $db->query(
             'SELECT COUNT(DISTINCT sh.toko) AS j FROM survei_harga sh
@@ -201,7 +267,8 @@ class Spk extends BaseController
             'invoice' => $invTuntas,
             'pajak' => $pajakTuntas,
             'tgl_terima' => $s['tgl_selesai'] ?: date('Y-m-d'),
-            'tgl_bayar' => $this->tanggalBulanBekerja(),
+            // Rekomendasi tanggal bayar: jurnal terakhir / tanggal invoice, dijepit Bulan Terbuka.
+            'tgl_bayar' => $this->tanggalBayarRekomendasi($invTuntas['tanggal'] ?? null),
         ] + $this->batasBuku();
         // Catatan kebutuhan tenaga kerja SPK (panel + cetak).
         $tenaga = [];
@@ -253,6 +320,7 @@ class Spk extends BaseController
         }
         return $this->tampil('spk/detail', [
             's' => $s, 'detail' => $detail, 'gabungan' => $gabungan, 'template_spk' => $templateSpk, 'bahan' => $bahan,
+            'rincian_terkunci' => $this->rincianTerkunci((int) $id),
             'nilai_paket' => $nilaiPaket,
             'ketentuan' => $this->ketentuanPbj($nilaiPaket),
             'pembanding' => $pembanding,
@@ -318,6 +386,11 @@ class Spk extends BaseController
         if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $tgl)) {
             $tgl = $s['tgl_selesai'] ?: date('Y-m-d');
         }
+        // Tanggal terima menjadi tanggal BAP+BAST+Invoice sekaligus —
+        // tidak boleh mendahului tanggal SPK (rantai SPK → BAP → BAST).
+        if (! empty($s['tanggal']) && $tgl < (string) $s['tanggal']) {
+            return redirect()->to('spk/detail/' . (int) $id)->with('galat', 'Tanggal terima (' . tgl($tgl) . ') tidak boleh sebelum tanggal SPK (' . tgl($s['tanggal']) . ').');
+        }
         $total = (int) round(array_sum(array_map(static fn ($d) => (float) $d['qty'] * (float) $d['harga'], $detail)));
         $now = date('Y-m-d H:i:s');
         $db->transStart();
@@ -358,6 +431,12 @@ class Spk extends BaseController
         }
         $oh = (float) str_replace(',', '.', (string) ($this->request->getPost('oh') ?: 0));
         $orang = $this->request->getPost('jumlah_orang');
+        // Perkiraan orang kosong = ceil(OH ÷ lama periode SPK) bila periode
+        // diketahui (pola hitung yang sama dengan jalur Rencana Belanja).
+        if (($orang === '' || $orang === null) && $oh > 0 && ! empty($s['tgl_mulai']) && ! empty($s['tgl_selesai']) && $s['tgl_selesai'] >= $s['tgl_mulai']) {
+            $hari = (int) ((strtotime((string) $s['tgl_selesai']) - strtotime((string) $s['tgl_mulai'])) / 86400) + 1;
+            $orang = (string) (int) ceil($oh / max(1, $hari));
+        }
         $db->table('spk_tenaga')->insert([
             'sekolah_id' => $this->sid(), 'spk_id' => (int) $spkId, 'jenis' => $jenis,
             'keahlian' => trim((string) $this->request->getPost('keahlian')) ?: null,
@@ -412,6 +491,18 @@ class Spk extends BaseController
         if ($g = $this->galatBulanTertutup($tgl)) {
             return redirect()->to('spk/detail/' . (int) $id)->with('galat', $g);
         }
+        // Urutan tanggal sama seperti Jurnal Pembayaran: bayar tidak mendahului invoice.
+        if (! empty($inv['tanggal']) && $tgl < (string) $inv['tanggal']) {
+            return redirect()->to('spk/detail/' . (int) $id)->with('galat', 'Tanggal bayar (' . tgl($tgl) . ') tidak boleh sebelum tanggal invoice (' . tgl($inv['tanggal']) . ') — pembayaran dicatat sesudah tagihan diterbitkan.');
+        }
+        // Saldo bank tidak boleh minus pada tanggal bayar maupun sesudahnya.
+        $pjk = $this->pajakPembelian((float) $inv['nilai'], $this->ppnInvoice($this->ppnSpkMap(), (int) $inv['spk_id'], (float) $inv['nilai']));
+        if ($g = $this->galatSaldoMinus('bank', $tgl, (float) $pjk['dibayar'])) {
+            return redirect()->to('spk/detail/' . (int) $id)->with('galat', $g);
+        }
+        if ($g = $this->galatRekeningPenyedia((int) $inv['spk_id'])) {
+            return redirect()->to('spk/detail/' . (int) $id)->with('galat', $g);
+        }
         $now = date('Y-m-d H:i:s');
         $db->transStart();
         $db->table('pembayaran')->insert(['invoice_id' => (int) $inv['id'], 'tanggal' => $tgl, 'keterangan' => null, 'created_at' => $now, 'updated_at' => $now]);
@@ -421,15 +512,41 @@ class Spk extends BaseController
         return redirect()->to('spk/detail/' . (int) $id)->with('sukses', 'Pembayaran dicatat; PPh 22 dan nilai bersih terhitung otomatis. Rantai SPK ini selesai — tinggal cetak SPJ lengkapnya.');
     }
 
+    /**
+     * Alasan rincian SPK terkunci (null = boleh diubah): SPK sudah punya
+     * BAST atau invoice terbayar — dokumen yang sudah ditandatangani tidak
+     * boleh berubah isinya lewat ubah/hapus rincian.
+     */
+    private function rincianTerkunci(int $spkId): ?string
+    {
+        $db = $this->db();
+        if ($db->table('bast')->where(['spk_id' => $spkId, 'is_deleted' => 0])->countAllResults() > 0) {
+            return 'Rincian SPK ini terkunci karena sudah mempunyai BAST — koreksi dilakukan lewat dokumen baru, bukan mengubah rincian yang sudah diserahterimakan.';
+        }
+        $terbayar = (int) $db->query(
+            'SELECT COUNT(*) AS j FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0
+             WHERE i.spk_id = ? AND p.is_deleted = 0',
+            [$spkId]
+        )->getRow()->j;
+        if ($terbayar > 0) {
+            return 'Rincian SPK ini terkunci karena sudah ada invoice yang terbayar — koreksi pembayaran lewat Jurnal Pembayaran terlebih dahulu.';
+        }
+        return null;
+    }
+
     public function detailTambah($spkId)
     {
         $bahanId = (int) $this->request->getPost('bahan_id');
+        $qty = (float) str_replace(',', '.', (string) ($this->request->getPost('qty') ?: 0));
         $harga = $this->request->getPost('harga');
         $harga = ($harga === '' || $harga === null) ? $this->hargaAcuan($bahanId) : (int) $harga;
+        if ($qty <= 0 || $harga < 0) {
+            return redirect()->to('spk/detail/' . $spkId)->with('galat', 'Qty harus lebih dari 0 dan harga tidak boleh negatif.');
+        }
         $this->db()->table('spk_detail')->insert([
             'sekolah_id' => $this->sid(),
             'spk_id' => (int) $spkId, 'bahan_id' => $bahanId,
-            'qty' => (float) $this->request->getPost('qty'), 'harga' => $harga,
+            'qty' => $qty, 'harga' => $harga,
             'pajak' => (int) $this->request->getPost('pajak'),
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
@@ -442,21 +559,32 @@ class Spk extends BaseController
         if (! $d) {
             return redirect()->to('spk')->with('galat', 'Baris tidak ditemukan.');
         }
+        $kembali = $d['spk_id'] ? 'spk/detail/' . $d['spk_id'] : 'belum-bernomor';
+        if (! empty($d['spk_id']) && ($kunci = $this->rincianTerkunci((int) $d['spk_id']))) {
+            return redirect()->to($kembali)->with('galat', $kunci);
+        }
+        $qty = (float) str_replace(',', '.', (string) ($this->request->getPost('qty') ?: 0));
+        $harga = (int) $this->request->getPost('harga');
+        if ($qty <= 0 || $harga < 0) {
+            return redirect()->to($kembali)->with('galat', 'Qty harus lebih dari 0 dan harga tidak boleh negatif.');
+        }
         $this->db()->table('spk_detail')->where('id', (int) $detailId)->update([
-            'qty' => (float) $this->request->getPost('qty'),
-            'harga' => (int) $this->request->getPost('harga'),
+            'qty' => $qty,
+            'harga' => $harga,
             'pajak' => (int) $this->request->getPost('pajak'),
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
-        $kembali = $d['spk_id'] ? 'spk/detail/' . $d['spk_id'] : 'belum-bernomor';
         return redirect()->to($kembali)->with('sukses', 'Baris diperbarui.');
     }
 
     public function detailHapus($detailId)
     {
         $d = $this->db()->table('spk_detail')->where(['id' => (int) $detailId, 'is_deleted' => 0])->get()->getRowArray();
-        $this->hapusLunak('spk_detail', ['id' => (int) $detailId]);
         $kembali = ($d && $d['spk_id']) ? 'spk/detail/' . $d['spk_id'] : 'belum-bernomor';
+        if ($d && ! empty($d['spk_id']) && ($kunci = $this->rincianTerkunci((int) $d['spk_id']))) {
+            return redirect()->to($kembali)->with('galat', $kunci);
+        }
+        $this->hapusLunak('spk_detail', ['id' => (int) $detailId]);
         return redirect()->to($kembali)->with('sukses', 'Baris dihapus.');
     }
 
@@ -493,17 +621,49 @@ class Spk extends BaseController
             $penyediaId = (int) $this->db()->insertID();
         }
         $tgl = static fn ($v) => ($v === '' || $v === null) ? null : $v;
+        $tanggal = $tgl($r->getPost('tanggal'));
+        // Warisan: tgl_mulai kosong = tanggal SPK; penandatangan kosong =
+        // ttd_nama master penyedia.
+        $ttd = trim((string) $r->getPost('ttd_penyedia')) ?: null;
+        if ($ttd === null && $penyediaId !== null) {
+            $pen = $this->db()->table('penyedia')->select('ttd_nama')->where(['id' => $penyediaId, 'sekolah_id' => $this->sid()])->get()->getRowArray();
+            $ttd = ! empty($pen['ttd_nama']) ? (string) $pen['ttd_nama'] : null;
+        }
         return [
             'nomor' => (int) $r->getPost('nomor'),
-            'tanggal' => $tgl($r->getPost('tanggal')),
-            'tgl_mulai' => $tgl($r->getPost('tgl_mulai')),
+            'tanggal' => $tanggal,
+            'tgl_mulai' => $tgl($r->getPost('tgl_mulai')) ?? $tanggal,
             'tgl_selesai' => $tgl($r->getPost('tgl_selesai')),
             'penyedia_id' => $penyediaId,
             'penerima_manual' => trim((string) $r->getPost('penerima_manual')) ?: null,
             'gedung_id' => (int) $r->getPost('gedung_id') ?: null,
-            'ttd_penyedia' => trim((string) $r->getPost('ttd_penyedia')) ?: null,
+            'ttd_penyedia' => $ttd,
             'paket' => trim((string) $r->getPost('paket')) ?: null,
             'status' => (string) $r->getPost('status') ?: 'Aktif',
         ];
+    }
+
+    /** Validasi kepala SPK: urutan tanggal, nomor unik, penerima Masyarakat. */
+    private function galatFormSpk(array $data, int $kecualiId): ?string
+    {
+        if (! empty($data['tanggal']) && ! empty($data['tgl_mulai']) && (string) $data['tgl_mulai'] < (string) $data['tanggal']) {
+            return 'Tanggal mulai (' . tgl($data['tgl_mulai']) . ') tidak boleh sebelum tanggal SPK (' . tgl($data['tanggal']) . ').';
+        }
+        if (! empty($data['tgl_mulai']) && ! empty($data['tgl_selesai']) && (string) $data['tgl_selesai'] < (string) $data['tgl_mulai']) {
+            return 'Tanggal selesai (' . tgl($data['tgl_selesai']) . ') tidak boleh sebelum tanggal mulai (' . tgl($data['tgl_mulai']) . ').';
+        }
+        $dipakai = $this->db()->table('spk')
+            ->where(['nomor' => $data['nomor'], 'sekolah_id' => $this->sid(), 'is_deleted' => 0])
+            ->where('id <>', $kecualiId)->countAllResults() > 0;
+        if ($dipakai) {
+            return 'Nomor SPK ' . $data['nomor'] . ' sudah ada.';
+        }
+        if (! empty($data['penyedia_id']) && empty($data['penerima_manual'])) {
+            $pen = $this->db()->table('penyedia')->select('nama')->where(['id' => (int) $data['penyedia_id'], 'sekolah_id' => $this->sid()])->get()->getRowArray();
+            if ($pen !== null && (string) $pen['nama'] === 'Masyarakat') {
+                return 'SPK untuk penyedia "Masyarakat" wajib mengisi nama penerima (orang yang dibayar) pada kolom Penerima.';
+            }
+        }
+        return null;
     }
 }

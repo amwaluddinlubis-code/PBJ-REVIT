@@ -2,7 +2,7 @@
 <?php
 $opsiPenyedia = ['' => '— Masyarakat / nama manual di bawah —'];
 foreach ($penyedia_list ?? [] as $p) {
-    $opsiPenyedia[(int) $p['id']] = (string) $p['nama'];
+    $opsiPenyedia[(int) $p['id']] = ['label' => (string) $p['nama'], 'data' => ['ttd' => (string) ($p['ttd_nama'] ?? '')]];
 }
 $opsiGedung = ['' => '— Gabungan / belum ditentukan —'];
 foreach ($gedung_list ?? [] as $g) {
@@ -30,3 +30,28 @@ foreach ($gedung_list ?? [] as $g) {
     ],
     'tombol' => ['simpan_teks' => 'Simpan Perubahan', 'hapus' => false],
 ]) ?>
+<script>
+// Warisan modal Ubah SPK: penyedia → penandatangan master; tanggal SPK →
+// tanggal mulai bila masih kosong.
+document.addEventListener('change', function (e) {
+  if (!e.target || !e.target.closest || !e.target.closest('#modal-ubah-spk')) return;
+  var form = e.target.closest('form');
+  if (e.target.name === 'penyedia_id') {
+    var opt = e.target.options[e.target.selectedIndex];
+    var ttd = opt ? opt.getAttribute('data-ttd') : '';
+    var inp = form.querySelector('[name="ttd_penyedia"]');
+    if (inp && ttd && !inp.value) {
+      inp.value = ttd;
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+  if (e.target.name === 'tanggal') {
+    var mulai = form.querySelector('[name="tgl_mulai"]');
+    if (mulai && e.target.value && !mulai.value) {
+      mulai.value = e.target.value;
+      mulai.dispatchEvent(new Event('input', { bubbles: true }));
+      mulai.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+});
+</script>

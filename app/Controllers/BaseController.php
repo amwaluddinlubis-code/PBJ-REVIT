@@ -323,7 +323,7 @@ abstract class BaseController extends Controller
                  EXISTS (SELECT 1 FROM bap_detail bd
                          JOIN bap bp ON bp.id = bd.bap_id AND bp.is_deleted = 0
                          JOIN bast x ON x.bap_id = bd.bap_id AND x.is_deleted = 0
-                         WHERE bd.detail_id = d.id AND bd.is_deleted = 0)
+                         WHERE bd.detail_id = d.id AND bd.is_deleted = 0 AND bd.kondisi NOT IN (\'Kurang\', \'Tidak Sesuai\'))
                  OR EXISTS (SELECT 1 FROM bast y WHERE y.spk_id = s.id AND y.bap_id IS NULL AND y.is_deleted = 0)
                )
              GROUP BY d.bahan_id',
@@ -360,7 +360,7 @@ abstract class BaseController extends Controller
              FROM spk_detail d
              JOIN spk s ON s.id = d.spk_id AND s.is_deleted = 0
              JOIN bahan b ON b.id = d.bahan_id
-             JOIN bap_detail bd ON bd.detail_id = d.id AND bd.is_deleted = 0
+             JOIN bap_detail bd ON bd.detail_id = d.id AND bd.is_deleted = 0 AND bd.kondisi NOT IN (\'Kurang\', \'Tidak Sesuai\')
              JOIN bap bp ON bp.id = bd.bap_id AND bp.is_deleted = 0
              JOIN bast x ON x.bap_id = bd.bap_id AND x.is_deleted = 0
              WHERE b.sekolah_id = ? AND d.bahan_id IS NOT NULL AND d.is_deleted = 0',
@@ -509,6 +509,32 @@ abstract class BaseController extends Controller
         )->getRowArray();
         $upah = $db->table('upah_bayar')->selectSum('jumlah')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
         return (float) ($inv['t'] ?? 0) + (float) ($upah['jumlah'] ?? 0);
+    }
+
+    /**
+     * Pencadangan pagu sejak SPK (pola encumbrance SIPD/SAKTI): pagu
+     * tersedia = total anggaran − terbayar − nilai SPK aktif yang belum
+     * terbayar. SPK berstatus Batal tidak mencadangkan pagu. Kunci:
+     * anggaran, terbayar, komitmen, tersedia.
+     */
+    protected function pencadanganPagu(): array
+    {
+        $anggaran = (float) ($this->sekolahAktif()['total_anggaran'] ?? 0);
+        $terbayar = $this->totalBelanja();
+        $row = $this->db()->query(
+            "SELECT COALESCE(SUM(GREATEST(t.total - COALESCE(t.bayar, 0), 0)), 0) AS komitmen FROM (
+                SELECT s.id,
+                    (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS total,
+                    (SELECT COALESCE(SUM(i.nilai),0) FROM invoice i WHERE i.spk_id = s.id AND i.is_deleted = 0 AND i.status = 'Sudah Bayar') AS bayar
+                FROM spk s WHERE s.sekolah_id = ? AND s.is_deleted = 0 AND s.status <> 'Batal'
+            ) t",
+            [$this->sid()]
+        )->getRowArray();
+        $komitmen = (float) ($row['komitmen'] ?? 0);
+        return [
+            'anggaran' => $anggaran, 'terbayar' => $terbayar,
+            'komitmen' => $komitmen, 'tersedia' => $anggaran - $terbayar - $komitmen,
+        ];
     }
 
     /** Total nilai BOQ semua gedung AKTIF sebuah sekolah (volume x harga satuan pekerjaan aktif). */
@@ -898,6 +924,42 @@ abstract class BaseController extends Controller
         return $bt['awal'];
     }
 
+    /** Tanggal pembayaran (jurnal) terakhir yang tercatat di sekolah aktif. */
+    protected function tanggalPembayaranTerakhir(): ?string
+    {
+        $row = $this->db()->query(
+            'SELECT MAX(p.tanggal) t FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0
+             JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0
+             WHERE s.sekolah_id = ? AND p.is_deleted = 0 AND p.tanggal IS NOT NULL',
+            [$this->sid()]
+        )->getRow();
+        return $row->t ?? null;
+    }
+
+    /**
+     * Rekomendasi tanggal bayar jurnal berikutnya: MAX(tanggal pembayaran
+     * terakhir tercatat, tanggal invoice yang dibayar), dijepit ke Bulan
+     * Terbuka. Tanpa pembayaran sama sekali -> tanggalBulanBekerja().
+     */
+    protected function tanggalBayarRekomendasi(?string $tglInvoice = null): string
+    {
+        $terakhir = $this->tanggalPembayaranTerakhir();
+        $calon = max((string) ($terakhir ?? ''), (string) ($tglInvoice ?? ''));
+        if ($calon === '') {
+            return $this->tanggalBulanBekerja();
+        }
+        $bt = $this->bulanTerbuka();
+        if ($bt !== null) {
+            if ($calon < $bt['awal']) {
+                return $bt['awal'];
+            }
+            if ($calon > $bt['akhir']) {
+                return $bt['akhir'];
+            }
+        }
+        return $calon;
+    }
+
     /** Batas pemilih tanggal + label Bulan Terbuka untuk formulir pencatatan uang. */
     protected function batasBuku(): array
     {
@@ -1148,6 +1210,139 @@ abstract class BaseController extends Controller
         }
         usort($entri, static fn ($a, $b) => [$a['tanggal'] ?? '9999', $a['sumber'], $a['ref_id']] <=> [$b['tanggal'] ?? '9999', $b['sumber'], $b['ref_id']]);
         return $entri;
+    }
+
+    /**
+     * Penjaga saldo per kanal (pola BKU ARKAS): pengeluaran baru tidak
+     * boleh membuat saldo berjalan kanal itu minus pada tanggal transaksi
+     * maupun sesudahnya (termasuk transaksi lain yang sudah tercatat di
+     * bulan terbuka). Hanya diterapkan pada pencatatan baru — data lama
+     * tidak diubah. Mengembalikan pesan galat atau null bila aman.
+     */
+    protected function galatSaldoMinus(string $kanal, string $tanggal, float $keluarBaru): ?string
+    {
+        if ($keluarBaru <= 0) {
+            return null;
+        }
+        $saldo = 0.0;
+        $sudahDiterapkan = false;
+        foreach ($this->gabungBukuKas($kanal) as $e) {
+            $tglE = (string) ($e['tanggal'] ?? '9999-12-31');
+            if (! $sudahDiterapkan && $tglE > $tanggal) {
+                $saldo -= $keluarBaru;
+                $sudahDiterapkan = true;
+                if ($saldo < -0.005) {
+                    return 'Pengeluaran ini membuat saldo ' . ($kanal === 'tunai' ? 'kas tunai' : 'bank') . ' minus pada ' . tgl($tanggal)
+                        . ' (saldo menjadi ' . $this->rp($saldo) . '). Saldo buku tidak boleh minus pada tanggal mana pun — periksa tanggalnya terhadap penerimaan yang mendanai, atau catat penerimaannya terlebih dahulu.';
+                }
+            }
+            $saldo += (float) $e['masuk'] - (float) $e['keluar'];
+            if ($sudahDiterapkan && $saldo < -0.005) {
+                return 'Pengeluaran ini membuat saldo ' . ($kanal === 'tunai' ? 'kas tunai' : 'bank') . ' minus pada ' . tgl($tglE)
+                    . ' (saldo menjadi ' . $this->rp($saldo) . '). Saldo buku tidak boleh minus pada tanggal mana pun — periksa urutan tanggal transaksi kanal ini.';
+            }
+        }
+        if (! $sudahDiterapkan) {
+            $saldo -= $keluarBaru;
+            if ($saldo < -0.005) {
+                return 'Pengeluaran ini membuat saldo ' . ($kanal === 'tunai' ? 'kas tunai' : 'bank') . ' minus pada ' . tgl($tanggal)
+                    . ' (saldo menjadi ' . $this->rp($saldo) . '). Saldo buku tidak boleh minus pada tanggal mana pun — periksa tanggalnya terhadap penerimaan yang mendanai, atau catat penerimaannya terlebih dahulu.';
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Validasi kelengkapan penyedia untuk pembayaran non-tunai (bank):
+     * penyedia SPK wajib punya nomor rekening. Dikecualikan pembelian
+     * dari Masyarakat (penerima manual per SPK). Mengembalikan pesan
+     * galat atau null.
+     */
+    protected function galatRekeningPenyedia(int $spkId): ?string
+    {
+        $s = $this->db()->table('spk')->where(['id' => $spkId, 'is_deleted' => 0])->get()->getRowArray();
+        if (! $s || trim((string) ($s['penerima_manual'] ?? '')) !== '') {
+            return null;
+        }
+        if (empty($s['penyedia_id'])) {
+            return null;
+        }
+        $p = $this->db()->table('penyedia')->where(['id' => (int) $s['penyedia_id'], 'is_deleted' => 0])->get()->getRowArray();
+        if (! $p || ($p['nama'] ?? '') === 'Masyarakat') {
+            return null;
+        }
+        if (trim((string) ($p['no_rekening'] ?? '')) === '') {
+            return 'Pembayaran bank ditahan: penyedia "' . $p['nama'] . '" belum punya nomor rekening. Isi nomor rekening & nama bank di Pengaturan → Master Penyedia terlebih dahulu.';
+        }
+        return null;
+    }
+
+    /**
+     * Kewajiban pajak per jenis & masa dari transaksi yang sudah terjadi
+     * (pembayaran invoice -> PPh 22/PPN, upah -> PPh 21, biaya lain ->
+     * PPh 23/4(2)/21). Kunci "jenis|YYYY-MM" => jumlah. Dipakai Buku
+     * Pembantu Pajak (Setor) dan panel tindak lanjut Dashboard.
+     */
+    protected function kewajibanPajak(): array
+    {
+        $db = $this->db();
+        $sid = $this->sid();
+        $wajib = [];
+        $tambah = static function (string $jenis, ?string $tanggal, float $jumlah) use (&$wajib) {
+            if ($jumlah <= 0 || ! $tanggal) {
+                return;
+            }
+            $kunci = $jenis . '|' . substr($tanggal, 0, 7);
+            $wajib[$kunci] = ($wajib[$kunci] ?? 0) + $jumlah;
+        };
+        $peta = $this->ppnSpkMap();
+        foreach ($db->query(
+            'SELECT p.tanggal AS tgl_bayar, i.tanggal AS tgl_inv, i.nilai, i.spk_id
+             FROM pembayaran p JOIN invoice i ON i.id = p.invoice_id AND i.is_deleted = 0
+             JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0
+             WHERE s.sekolah_id = ? AND p.is_deleted = 0',
+            [$sid]
+        )->getResultArray() as $r) {
+            $tgl = $r['tgl_bayar'] ?: $r['tgl_inv'];
+            $pjk = $this->pajakPembelian((float) $r['nilai'], $this->ppnInvoice($peta, (int) $r['spk_id'], (float) $r['nilai']));
+            $tambah('pph22', $tgl, $pjk['pph22']);
+            $tambah('ppn', $tgl, $pjk['ppn']);
+        }
+        foreach ($db->table('upah_bayar')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $u) {
+            $tambah('pph21', $u['tanggal'], $this->pph21UpahHarian((float) $u['tarif'], (float) $u['orang_hari']));
+        }
+        foreach ($db->table('biaya_lain')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $b) {
+            if (empty($b['pajak'])) {
+                continue;
+            }
+            $jenis = str_starts_with($b['pajak'], 'pph42') ? 'pph42' : (str_starts_with($b['pajak'], 'pph21') ? 'pph21' : $b['pajak']);
+            if (! in_array($jenis, ['pph23', 'pph42', 'pph21'], true)) {
+                continue;
+            }
+            $tambah($jenis, $b['created_at'], $this->potonganPajak($b['pajak'], (float) $b['jumlah']));
+        }
+        ksort($wajib);
+        return $wajib;
+    }
+
+    /**
+     * Bulan-bulan tertutup yang SPJ-nya belum lengkap (belum punya
+     * snapshot tutup_buku_baris — ditutup sebelum snapshot diterapkan).
+     * Mengembalikan daftar "YYYY-MM".
+     */
+    protected function bulanTanpaSnapshot(): array
+    {
+        if (! $this->db()->tableExists('tutup_buku')) {
+            return [];
+        }
+        $belum = [];
+        foreach ($this->petaTutupBuku() as $b => $t) {
+            $j = (int) $this->db()->table('tutup_buku_baris')->where(['tutup_buku_id' => (int) $t['id'], 'is_deleted' => 0])->countAllResults();
+            if ($j === 0) {
+                $belum[] = sprintf('%04d-%02d', (int) $t['tahun'], (int) $b);
+            }
+        }
+        return $belum;
     }
 
     /** Penerimaan dana bantuan per tahap dari kas_transaksi (kategori penerimaan). */

@@ -24,7 +24,7 @@
   $labelSumber = ['manual' => 'manual', 'invoice' => 'jurnal pembayaran', 'upah' => 'upah'];
   $barisBuku = [
       ['sel' => [
-          ['html' => '<b>Saldo awal bulan</b>', 'colspan' => 2],
+          ['html' => '<b>Saldo awal bulan</b>', 'colspan' => 3],
           '',
           '',
           ['html' => '<b>' . rp($saldo_awal) . '</b>', 'angka' => true],
@@ -32,6 +32,7 @@
   ];
   foreach ($baris as $e) {
       $barisBuku[] = ['sel' => [
+          (string) ($e['nomor'] ?? ''),
           (string) tgl($e['tanggal'] ?? null),
           ['html' => esc($e['uraian']) . ' <span class="kecil-teks">(' . ($labelSumber[$e['sumber']] ?? 'bukti setor') . ')</span>'],
           ['teks' => $e['masuk'] > 0 ? rp($e['masuk']) : '—', 'angka' => true],
@@ -40,10 +41,10 @@
       ]];
   }
   if ($baris === []) {
-      $barisBuku[] = ['sel' => [['teks' => 'Tidak ada transaksi pada bulan ini.', 'colspan' => 5]]];
+      $barisBuku[] = ['sel' => [['teks' => 'Tidak ada transaksi pada bulan ini.', 'colspan' => 6]]];
   }
   $barisBuku[] = ['sel' => [
-      ['html' => '<b>Saldo akhir bulan (penutupan buku)</b>', 'colspan' => 2],
+      ['html' => '<b>Saldo akhir bulan (penutupan buku)</b>', 'colspan' => 3],
       '',
       '',
       ['html' => '<b>' . rp($saldo_akhir) . '</b>', 'angka' => true],
@@ -52,6 +53,7 @@
       'cari' => 'Cari transaksi…',
       'paginasi' => 25,
       'kolom' => [
+          ['judul' => 'No. Bukti'],
           ['judul' => 'Tanggal'],
           ['judul' => 'Uraian'],
           ['judul' => 'Penerimaan', 'angka' => true],
@@ -80,7 +82,7 @@
     </form>
     <?php endif; ?>
   </div>
-  <p class="kecil-teks">Pembayaran invoice, pembayaran upah, dan penyetoran pajak/sisa dana tidak perlu dicatat di sini — sudah masuk buku secara otomatis dari modulnya masing-masing.</p>
+  <p class="kecil-teks">Pembayaran invoice, pembayaran upah, penerimaan dana, dan penyetoran pajak/sisa dana tidak dicatat di sini — sudah masuk buku secara otomatis dari modulnya masing-masing: <a href="<?= base_url('penerimaan-dana') ?>">Penerimaan Dana</a> · <a href="<?= base_url('bukti-setor') ?>">Bukti Setor &amp; Pajak</a> · <a href="<?= base_url('invoice/jurnal') ?>">Jurnal Pembayaran</a> · <a href="<?= base_url('upah') ?>">Pembayaran Upah</a>. Panel ini hanya untuk transaksi kas lain-lain di luar modul tersebut.</p>
 
   <?php if ($manual !== []): ?>
   <?php
@@ -131,9 +133,20 @@
   <?php else: ?>
   <p class="kecil-teks">Periksa kewajiban pajak masa ini di menu Bukti Setor &amp; Pajak sebelum menutup buku.</p>
   <?php endif; ?>
-  <form method="post" action="<?= base_url('buku-kas/tutup') ?>" data-konfirmasi="Tutup buku <?= esc($buku_terbuka['label']) ?> dengan saldo akhir <?= rp($ringkas_terbuka['saldo_akhir']) ?>? Sesudah ditutup, transaksi bulan ini tidak bisa dicatat/diubah/dihapus lagi dan pencatatan berikutnya masuk bulan berikutnya." data-konfirmasi-judul="Tutup Buku <?= esc($buku_terbuka['label']) ?>" data-konfirmasi-tombol="Ya, Tutup Buku" style="display:inline">
+  <?php if (! empty($spj_belum_lengkap)): ?>
+  <p class="kecil-teks">Perhatian: SPJ bulan <?= esc(implode(', ', array_map(static fn ($ym) => bulanTahun($ym), $spj_belum_lengkap))) ?> belum lengkap (belum ada snapshot bukti) — lihat menu <a href="<?= base_url('spj-bulanan') ?>">SPJ Bulanan</a>.</p>
+  <?php endif; ?>
+  <form method="post" action="<?= base_url('buku-kas/tutup') ?>" data-konfirmasi="Tutup buku <?= esc($buku_terbuka['label']) ?> dengan saldo akhir <?= rp($ringkas_terbuka['saldo_akhir']) ?>? Sesudah ditutup, transaksi bulan ini tidak bisa dicatat/diubah/dihapus lagi dan pencatatan berikutnya masuk bulan berikutnya." data-konfirmasi-judul="Tutup Buku <?= esc($buku_terbuka['label']) ?>" data-konfirmasi-tombol="Ya, Tutup Buku">
     <?= csrf_field() ?>
-    <button type="submit">Tutup Buku <?= esc($buku_terbuka['label']) ?></button>
+    <p class="kecil-teks" style="margin:8px 0 6px"><strong>Daftar periksa rekonsiliasi (wajib diisi, 0 bila tidak ada):</strong> bunga &amp; biaya bank yang dinyatakan dicatat otomatis sebagai transaksi kas bila belum tercatat.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+      <label class="kecil-teks">Saldo rekening koran bank (Rp)<br><input type="text" name="saldo_koran" inputmode="numeric" required placeholder="0" style="max-width:190px"></label>
+      <label class="kecil-teks">Kas fisik hasil opname (Rp)<br><input type="text" name="kas_fisik" inputmode="numeric" required placeholder="0" style="max-width:190px"></label>
+      <label class="kecil-teks">Bunga bank bulan ini (Rp)<br><input type="text" name="bunga_bank" inputmode="numeric" required placeholder="0" style="max-width:170px"></label>
+      <label class="kecil-teks">Biaya bank bulan ini (Rp)<br><input type="text" name="biaya_bank" inputmode="numeric" required placeholder="0" style="max-width:170px"></label>
+      <label class="kecil-teks">Penjelasan selisih (bila ada)<br><input type="text" name="penjelasan_rekon" placeholder="opsional" style="max-width:240px"></label>
+      <button type="submit">Tutup Buku <?= esc($buku_terbuka['label']) ?></button>
+    </div>
   </form>
   <?php else: ?>
   <p style="margin-top:0">Seluruh bulan tahun anggaran ini sudah ditutup. Pencatatan uang tidak diterima lagi; buka kembali buku (admin) bila memang perlu koreksi.</p>
@@ -151,12 +164,21 @@
               . '<input type="text" name="alasan" placeholder="Alasan (wajib)" required style="max-width:190px"> '
               . '<button class="kecil" type="submit">Buka Kembali</button></form>';
       }
+      $rekon = '—';
+      if (($t['saldo_koran'] ?? null) !== null) {
+          $rekon = 'koran ' . rp($t['saldo_koran']) . ' · selisih bank ' . rp($t['selisih_bank'] ?? 0)
+              . ' · kas fisik ' . rp($t['kas_fisik'] ?? 0) . ' · selisih tunai ' . rp($t['selisih_tunai'] ?? 0)
+              . ((float) ($t['bunga_bank'] ?? 0) > 0 ? ' · bunga ' . rp($t['bunga_bank']) : '')
+              . ((float) ($t['biaya_bank'] ?? 0) > 0 ? ' · biaya ' . rp($t['biaya_bank']) : '')
+              . (! empty($t['penjelasan_rekon']) ? ' — ' . $t['penjelasan_rekon'] : '');
+      }
       $barisTutup[] = ['sel' => [
           $namaBulan(sprintf('%04d-%02d', (int) $t['tahun'], (int) $b)),
           ['teks' => rp($t['saldo_awal']), 'angka' => true],
           ['teks' => rp($t['total_masuk']), 'angka' => true],
           ['teks' => rp($t['total_keluar']), 'angka' => true],
           ['teks' => rp($t['saldo_akhir']), 'angka' => true],
+          $rekon,
           (string) ($t['ditutup_oleh'] ?? '—') . ' · ' . (string) tglWaktu($t['ditutup_pada'] ?? null),
           ['html' => $aksi],
       ]];
@@ -170,6 +192,7 @@
           ['judul' => 'Masuk', 'angka' => true],
           ['judul' => 'Keluar', 'angka' => true],
           ['judul' => 'Saldo Akhir', 'angka' => true],
+          ['judul' => 'Rekonsiliasi'],
           ['judul' => 'Ditutup Oleh'],
           ['judul' => ''],
       ],
@@ -188,12 +211,10 @@
         ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal', 'wajib' => true, 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
         ['nama' => 'uraian', 'label' => 'Uraian', 'jenis' => 'teks', 'wajib' => true, 'penuh' => true, 'placeholder' => 'cth. Penerimaan dana bantuan tahap 1'],
         ['nama' => 'kategori', 'label' => 'Kategori', 'jenis' => 'pilihan', 'opsi' => [
-            'penerimaan' => 'Penerimaan dana bantuan',
             'lainnya' => 'Lainnya',
-            'pajak' => 'Pajak (di luar bukti setor)',
-            'sisa_dana' => 'Sisa dana',
-        ]],
-        ['nama' => 'tahap', 'label' => 'Tahap (untuk penerimaan)', 'jenis' => 'pilihan', 'opsi' => ['' => '—', '1' => 'Tahap 1 (70%)', '2' => 'Tahap 2 (30%)']],
+            'koreksi' => 'Koreksi bulan tertutup (jurnal balik)',
+        ], 'petunjuk' => 'Penerimaan dana dicatat di modul Penerimaan Dana; pajak & sisa dana di Bukti Setor & Pajak. Koreksi hanya untuk membalik transaksi bulan yang sudah ditutup.'],
+        ['nama' => 'koreksi_ref', 'label' => 'Transaksi Asal (bulan tertutup)', 'jenis' => 'pilihan', 'opsi' => $pilihan_koreksi ?? [], 'penuh' => true, 'petunjuk' => 'Wajib untuk kategori Koreksi — jurnal balik tercatat sebagai lawan transaksi asal di bulan terbuka.'],
         ['nama' => 'jenis', 'label' => 'Jenis', 'jenis' => 'pilihan', 'opsi' => ['masuk' => 'Uang masuk', 'keluar' => 'Uang keluar']],
         ['nama' => 'kanal', 'label' => 'Kanal', 'jenis' => 'pilihan', 'opsi' => ['bank' => 'Bank', 'tunai' => 'Tunai']],
         ['nama' => 'jumlah', 'label' => 'Jumlah (Rp)', 'jenis' => 'uang', 'wajib' => true, 'placeholder' => '750000000'],
@@ -210,5 +231,31 @@ function bukaKasBaru() {
   if (m && window.perbaruiSelectCari) {
     m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
   }
+  segarkanKoreksiKas();
 }
+// Kategori Koreksi: tampilkan pemilih transaksi asal; memilih asal
+// mengisi jumlah & arah lawan (server tetap menentukan arah akhir).
+function segarkanKoreksiKas() {
+  var m = document.getElementById('modal-kas');
+  if (!m) return;
+  var kat = m.querySelector('select[name="kategori"]');
+  var ref = m.querySelector('select[name="koreksi_ref"]');
+  if (!kat || !ref) return;
+  var bungkus = ref.closest('.fm-field');
+  if (bungkus) bungkus.style.display = kat.value === 'koreksi' ? '' : 'none';
+  ref.disabled = kat.value !== 'koreksi';
+}
+document.addEventListener('change', function (ev) {
+  var m = document.getElementById('modal-kas');
+  if (!m || !m.contains(ev.target)) return;
+  if (ev.target.name === 'kategori') { segarkanKoreksiKas(); return; }
+  if (ev.target.name === 'koreksi_ref') {
+    var opt = ev.target.options[ev.target.selectedIndex];
+    if (!opt) return;
+    var jml = m.querySelector('input[name="jumlah"]');
+    if (jml && opt.dataset.jumlah) { jml.value = opt.dataset.jumlah; jml.dispatchEvent(new Event('input', { bubbles: true })); }
+    var jenis = m.querySelector('select[name="jenis"]');
+    if (jenis && opt.dataset.jenisAsal) { jenis.value = opt.dataset.jenisAsal === 'masuk' ? 'keluar' : 'masuk'; jenis.dispatchEvent(new Event('change', { bubbles: true })); }
+  }
+});
 </script>

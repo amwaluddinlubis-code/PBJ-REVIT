@@ -2,7 +2,7 @@
 <?php
 $opsiPenyediaReg = ['' => '— pilih / isi baru di bawah —'];
 foreach ($penyedia ?? [] as $p) {
-    $opsiPenyediaReg[(int) $p['id']] = (string) $p['nama'];
+    $opsiPenyediaReg[(int) $p['id']] = ['label' => (string) $p['nama'], 'data' => ['ttd' => (string) ($p['ttd_nama'] ?? '')]];
 }
 $opsiGedungReg = ['' => '— umum / belum ditentukan —'];
 foreach ($semuaGedung ?? [] as $gd) {
@@ -21,7 +21,7 @@ foreach ($semuaGedung ?? [] as $gd) {
         ['nama' => 'nomor', 'label' => 'Nomor SPK', 'jenis' => 'angka', 'wajib' => true],
         ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal'],
         ['nama' => 'penyedia_id', 'label' => 'Penyedia', 'jenis' => 'pilihan', 'opsi' => $opsiPenyediaReg],
-        ['nama' => 'penyedia_baru', 'label' => 'Penyedia Baru (bila belum ada)'],
+        ['nama' => 'penyedia_baru', 'label' => 'Penyedia Baru (bila belum ada)', 'saran' => array_values(array_filter([(string) ($sekolahAktif['penyedia_default_nama'] ?? '')])), 'petunjuk' => 'Penyedia bawaan sekolah (dari Pengaturan) muncul sebagai saran'],
         ['nama' => 'penerima_manual', 'label' => 'Nama Penerima (khusus penyedia "Masyarakat")', 'penuh' => true, 'petunjuk' => 'Bila penyedia dipilih "Masyarakat", isi nama orangnya di sini — nama ini yang tampil menggantikan nama penyedia di SPK, BAP, BAST, invoice, dan cetakan turunannya.'],
         ['nama' => 'ttd_penyedia', 'label' => 'Nama Penandatangan Penyedia', 'petunjuk' => 'Kosongkan = memakai Nama Penerima.'],
         ['nama' => 'gedung_id', 'label' => 'Gedung Tujuan', 'jenis' => 'pilihan', 'opsi' => $opsiGedungReg],
@@ -59,5 +59,28 @@ foreach ($semuaGedung ?? [] as $gd) {
     });
     sinkronPilihan();
   };
+  // Warisan formulir: memilih penyedia mengisi penandatangan dari master
+  // penyedia; mengisi tanggal SPK mengisi tanggal mulai bila masih kosong.
+  document.addEventListener('change', function (e) {
+    if (!e.target || !e.target.closest || !e.target.closest('#modal-spk')) return;
+    var form = formSpk();
+    if (e.target.name === 'penyedia_id') {
+      var opt = e.target.options[e.target.selectedIndex];
+      var ttd = opt ? opt.getAttribute('data-ttd') : '';
+      var inp = form.querySelector('[name="ttd_penyedia"]');
+      if (inp && ttd && !inp.value) {
+        inp.value = ttd;
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+    if (e.target.name === 'tanggal') {
+      var mulai = form.querySelector('[name="tgl_mulai"]');
+      if (mulai && e.target.value && !mulai.value) {
+        mulai.value = e.target.value;
+        mulai.dispatchEvent(new Event('input', { bubbles: true }));
+        mulai.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+  });
 })();
 </script>

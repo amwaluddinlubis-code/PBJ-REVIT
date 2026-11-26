@@ -187,23 +187,33 @@ foreach ($bahan_pilih as $b) {
   function segarkan() {
     if (!selB.value) { info.hidden = true; return; }
     var op = selB.options[selB.selectedIndex];
-    var teks = 'Stok tersedia bahan ini: ' + fmt(parseFloat(op.dataset.stok || '0')) + ' ' + (op.dataset.satuan || '') + ' (penerimaan BAST dikurangi yang sudah keluar).';
+    var stok = parseFloat(op.dataset.stok || '0');
+    var teks = 'Stok tersedia bahan ini: ' + fmt(stok) + ' ' + (op.dataset.satuan || '') + ' (penerimaan BAST dikurangi yang sudah keluar).';
+    var saran = stok;
     if (selG && selG.value) {
       var namaG = selG.options[selG.selectedIndex].textContent;
       var e = (peta[selG.value] || {})[selB.value];
       if (e) {
         teks += ' Kebutuhan ' + namaG + ': ' + fmt(e.butuh) + ' ' + e.satuan + ' · sudah keluar ke gedung ini: ' + fmt(e.keluar) + ' · sisa kebutuhan: ' + fmt(e.sisa) + '.';
+        saran = Math.min(stok, Math.max(0, parseFloat(e.sisa || 0)));
       } else {
         teks += ' Bahan ini TIDAK termasuk kebutuhan ' + namaG + ' — periksa lagi gedung tujuannya.';
       }
     }
     info.textContent = teks;
     info.hidden = false;
+    // Jumlah keluar diisi otomatis = yang lebih kecil antara stok dan
+    // sisa kebutuhan gedung terpilih (tetap bisa diubah).
+    var inpKeluar = modal.querySelector('[name="keluar"]');
+    if (inpKeluar && saran > 0) {
+      inpKeluar.value = String(Math.round(saran * 1000) / 1000);
+      inpKeluar.dispatchEvent(new Event('input', { bubbles: true }));
+    }
   }
   selB.addEventListener('change', segarkan);
   if (selG) selG.addEventListener('change', segarkan);
   window.bukaCatatKeluar = function () {
-    window.bukaFormModal('modal-material', { keluar: 0 });
+    window.bukaFormModal('modal-material', { keluar: 0, tanggal: <?= json_encode(date('Y-m-d')) ?>, no_bpb: <?= json_encode($no_bpb_baru ?? '1') ?> });
     if (window.perbaruiSelectCari) {
       modal.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
     }

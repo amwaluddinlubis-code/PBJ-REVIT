@@ -42,6 +42,21 @@ class RencanaMingguan extends BaseController
         if ($this->ambilGedung($gedungId) === null || $mulai === '') {
             return redirect()->to('rencana-mingguan')->with('galat', 'Pilih gedung dan tanggal mulai minggu terlebih dahulu.');
         }
+        // Minggu selalu dinormalkan ke hari Seninnya agar satu minggu
+        // kalender = satu rencana per gedung.
+        $ts = strtotime($mulai);
+        if ($ts === false) {
+            return redirect()->to('rencana-mingguan')->with('galat', 'Tanggal mulai minggu tidak valid.');
+        }
+        $senin = date('Y-m-d', strtotime('monday this week', $ts));
+        $ada = $this->db()->table('rencana_mingguan')
+            ->where(['sekolah_id' => $this->sid(), 'gedung_id' => $gedungId, 'minggu_mulai' => $senin, 'is_deleted' => 0])
+            ->get()->getRowArray();
+        if ($ada !== null) {
+            return redirect()->to('rencana-mingguan/' . (int) $ada['id'])->with('galat',
+                'Rencana mingguan gedung ini untuk minggu mulai ' . tgl($senin) . ' sudah ada — dibuka rencana yang sudah ada agar tidak ganda.');
+        }
+        $mulai = $senin;
         $this->db()->table('rencana_mingguan')->insert([
             'sekolah_id' => $this->sid(), 'gedung_id' => $gedungId, 'minggu_mulai' => $mulai,
             'keterangan' => trim((string) $this->request->getPost('keterangan')) ?: null,
@@ -74,10 +89,30 @@ class RencanaMingguan extends BaseController
         foreach ($target as $pid => $nilai) {
             $map[(int) $pid] = max(0, (float) str_replace(',', '.', (string) $nilai));
         }
+        // Peringatan (bukan blokir): target melebihi sisa volume pekerjaan.
+        $lebih = [];
+        foreach ($this->db()->table('pekerjaan')->where(['gedung_id' => (int) $r['gedung_id'], 'is_deleted' => 0])->get()->getResultArray() as $p) {
+            $vol = $map[(int) $p['id']] ?? 0;
+            if ($vol <= 0) {
+                continue;
+            }
+            $terealisasi = (float) ($this->db()->query(
+                'SELECT COALESCE(SUM(volume), 0) AS t FROM realisasi WHERE pekerjaan_id = ? AND is_deleted = 0',
+                [(int) $p['id']]
+            )->getRowArray()['t'] ?? 0);
+            $sisa = $this->volBerjalan($p) - $terealisasi;
+            if ($vol > $sisa + 0.0001) {
+                $lebih[] = $p['nama'] . ' (target ' . number_format($vol, 2, ',', '.') . ' > sisa ' . number_format(max(0, $sisa), 2, ',', '.') . ' ' . ($p['satuan'] ?? '') . ')';
+            }
+        }
         $this->db()->transStart();
         $this->terapkanTarget((int) $id, (int) $r['gedung_id'], $map);
         $this->db()->transComplete();
-        return redirect()->to('rencana-mingguan/' . $id)->with('sukses', 'Target minggu ini disimpan. Daftar belanja bersih di bawah sudah dihitung ulang.');
+        $pesan = 'Target minggu ini disimpan. Daftar belanja bersih di bawah sudah dihitung ulang.';
+        if ($lebih !== []) {
+            $pesan .= ' Perhatian: target melebihi sisa volume pada ' . count($lebih) . ' pekerjaan — ' . implode('; ', array_slice($lebih, 0, 3)) . (count($lebih) > 3 ? '; …' : '') . '.';
+        }
+        return redirect()->to('rencana-mingguan/' . $id)->with('sukses', $pesan);
     }
 
     /** Terapkan peta target volume per pekerjaan (tambah/ubah/hidupkan/hapus lunak). */

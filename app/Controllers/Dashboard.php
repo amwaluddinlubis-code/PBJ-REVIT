@@ -190,7 +190,73 @@ class Dashboard extends BaseController
             ->orderBy('kelompok')->orderBy('id')
             ->get()->getResultArray();
 
+        // Panel "perlu tindak lanjut": pekerjaan keuangan yang menggantung,
+        // masing-masing dengan umur hari & tautan ke modulnya.
+        $hariIni = strtotime(date('Y-m-d'));
+        $umur = static fn (?string $tgl) => $tgl ? max(0, (int) round(($hariIni - strtotime($tgl)) / 86400)) : 0;
+        $tindakLanjut = [];
+        // BAST yang SPK-nya belum (penuh) di-invoice.
+        foreach ($db->query(
+            "SELECT x.nomor_urut AS bast_urut, x.tanggal AS bast_tgl, s.nomor AS spk_nomor,
+                    (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM bap_detail bd JOIN spk_detail d ON d.id = bd.detail_id
+                     WHERE bd.bap_id = x.bap_id AND bd.is_deleted = 0 AND d.is_deleted = 0 AND bd.kondisi NOT IN ('Kurang','Tidak Sesuai')) AS nilai_bast,
+                    (SELECT COALESCE(SUM(i.nilai),0) FROM invoice i WHERE i.spk_id = s.id AND i.is_deleted = 0) AS terinvoice
+             FROM bast x JOIN spk s ON s.id = x.spk_id AND s.is_deleted = 0
+             WHERE s.sekolah_id = ? AND x.is_deleted = 0 AND s.status <> 'Batal'
+             ORDER BY x.tanggal",
+            [$sid]
+        )->getResultArray() as $r) {
+            $sisa = (float) $r['nilai_bast'] - (float) $r['terinvoice'];
+            if ($sisa > 0.005) {
+                $tindakLanjut[] = [
+                    'jenis' => 'BAST belum di-invoice',
+                    'uraian' => 'BAST urut ' . (int) $r['bast_urut'] . ' (SPK ' . (int) $r['spk_nomor'] . ') — sisa belum di-invoice ' . $this->rp($sisa),
+                    'umur' => $umur($r['bast_tgl']), 'tautan' => 'invoice',
+                ];
+            }
+        }
+        // Invoice belum dibayar.
+        foreach ($db->query(
+            "SELECT i.nomor_urut, i.nilai, i.tanggal, s.nomor AS spk_nomor FROM invoice i
+             JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0
+             WHERE s.sekolah_id = ? AND i.is_deleted = 0 AND i.status = 'Belum Bayar' ORDER BY i.tanggal",
+            [$sid]
+        )->getResultArray() as $r) {
+            $tindakLanjut[] = [
+                'jenis' => 'Invoice belum dibayar',
+                'uraian' => 'Invoice No. ' . (int) $r['nomor_urut'] . ' (SPK ' . (int) $r['spk_nomor'] . ') senilai ' . $this->rp($r['nilai']),
+                'umur' => $umur($r['tanggal']), 'tautan' => 'invoice/jurnal',
+            ];
+        }
+        // Pajak masa lampau yang belum disetor.
+        $sudahSetor = [];
+        foreach ($db->table('bukti_setor')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $s) {
+            $k = $s['jenis'] . '|' . ($s['masa'] ?? '');
+            $sudahSetor[$k] = ($sudahSetor[$k] ?? 0) + (float) $s['jumlah'];
+        }
+        foreach ($this->kewajibanPajak() as $kunci => $jumlah) {
+            [$jenis, $masa] = explode('|', $kunci);
+            $kurang = $jumlah - ($sudahSetor[$kunci] ?? 0);
+            if ($kurang > 0.005 && $masa < date('Y-m')) {
+                $tindakLanjut[] = [
+                    'jenis' => 'Pajak belum disetor',
+                    'uraian' => strtoupper($jenis) . ' masa ' . $masa . ' — belum disetor ' . $this->rp($kurang),
+                    'umur' => $umur($masa . '-01'), 'tautan' => 'bukti-setor',
+                ];
+            }
+        }
+        // Bulan terbuka yang bulannya sudah lewat tetapi belum ditutup.
+        $bt = $this->bulanTerbuka();
+        if ($bt !== null && $bt['ym'] < date('Y-m')) {
+            $tindakLanjut[] = [
+                'jenis' => 'Buku belum ditutup',
+                'uraian' => 'Buku ' . $bt['label'] . ' masih terbuka padahal bulannya sudah lewat',
+                'umur' => $umur(date('Y-m-t', strtotime($bt['ym'] . '-01'))), 'tautan' => 'buku-kas',
+            ];
+        }
+
         return $this->tampil('dashboard/index', [
+            'tindakLanjut' => $tindakLanjut,
             'panelGedung' => $panelGedung, 'panelTotal' => $panelTotal,
             'biayaNonGedung' => $biayaNonGedung,
             'panelBiayaLain' => $panelBiayaLain,
@@ -209,6 +275,7 @@ class Dashboard extends BaseController
             'fisikRata' => $fisikRata,
             'pecahCek' => $pecahCek,
             'masterKonflik' => $masterKonflik,
+            'cadangan' => $this->pencadanganPagu(),
         ], 'Dashboard — Aplikasi PBJ Sekolah');
     }
 }

@@ -28,7 +28,7 @@
         <?php if (! empty($b['tanggal'])): ?><span><?= esc(tgl($b['tanggal'])) ?></span><?php else: ?><span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;font-size:11px">tanggal belum diisi</span><?php endif; ?>
         <span class="kecil-teks"><?= count($itemsB) ?> item diperiksa</span>
         <span style="margin-left:auto">
-          <button type="button" class="tombol kecil" onclick="bukaModalBap('modal-bap-<?= (int) $b['id'] ?>', <?= esc(json_encode(['id' => (int) $b['id'], 'nomor_urut' => (int) $b['nomor_urut'], 'tanggal' => (string) ($b['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAP</button>
+          <button type="button" class="tombol kecil" onclick="bukaModalBap('modal-bap-<?= (int) $b['id'] ?>', <?= esc(json_encode(['id' => (int) $b['id'], 'nomor_urut' => (int) $b['nomor_urut'], 'tanggal' => (string) (! empty($b['tanggal']) ? $b['tanggal'] : ($s['tgl_selesai'] ?? date('Y-m-d')))], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAP</button>
           <a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-bap/' . $b['id']) ?>" target="_blank">Cetak BAP</a>
         </span>
       </div>
@@ -39,7 +39,7 @@
         <span class="kecil-teks"><?= esc($bs['surat']) ?></span>
         <?php if (! empty($bs['tanggal'])): ?><span><?= esc(tgl($bs['tanggal'])) ?></span><?php else: ?><span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;font-size:11px">tanggal belum diisi</span><?php endif; ?>
         <span style="margin-left:auto">
-          <button type="button" class="tombol kecil" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAST</button>
+          <button type="button" class="tombol kecil" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) (! empty($bs['tanggal']) ? $bs['tanggal'] : ($bs['bap_tanggal'] ?? ''))], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAST</button>
           <a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank">Cetak BAST</a>
         </span>
       </div>
@@ -62,7 +62,7 @@
         <span class="kecil-teks"><?= esc($bs['surat']) ?> · belum tertaut BAP</span>
         <?php if (! empty($bs['tanggal'])): ?><span><?= esc(tgl($bs['tanggal'])) ?></span><?php else: ?><span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;font-size:11px">tanggal belum diisi</span><?php endif; ?>
         <span style="margin-left:auto">
-          <button type="button" class="tombol kecil" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAST</button>
+          <button type="button" class="tombol kecil" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) (! empty($bs['tanggal']) ? $bs['tanggal'] : ($bs['bap_tanggal'] ?? ''))], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAST</button>
           <a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank">Cetak BAST</a>
         </span>
       </div>

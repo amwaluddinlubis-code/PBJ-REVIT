@@ -98,6 +98,16 @@ foreach ($pilihan_peran as $p) {
     window.bukaFormModal('modal-pengguna-baru', { peran: 'operator' });
     sinkronSelect('modal-pengguna-baru');
   };
+  // Saran username dari nama (hanya selama username belum diisi manual).
+  document.addEventListener('input', function (e) {
+    if (!e.target || e.target.name !== 'nama' || !e.target.closest('#modal-pengguna-baru')) return;
+    var inp = e.target.closest('form').querySelector('[name="username"]');
+    if (!inp || inp.dataset.disentuh) return;
+    inp.value = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '');
+  });
+  document.addEventListener('input', function (e) {
+    if (e.target && e.target.name === 'username') e.target.dataset.disentuh = '1';
+  });
   window.bukaPenggunaUbah = function (id) {
     var u = dataPengguna[id];
     if (!u) return;

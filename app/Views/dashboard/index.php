@@ -15,6 +15,39 @@
   <div class="kpi"><div class="label">Realisasi Dibayar (bersih PPh 22)</div><div class="nilai"><?= rp($realisasi) ?></div></div>
   <div class="kpi"><div class="label">Sisa Anggaran</div><div class="nilai"><?= rp($sisa) ?></div></div>
 </div>
+<?php if (! empty($cadangan)): ?>
+<div class="kartu-kpi ringkas">
+  <div class="kpi"><div class="label">Pencadangan SPK Aktif (belum terbayar)</div><div class="nilai"><?= rp($cadangan['komitmen']) ?></div></div>
+  <div class="kpi"><div class="label">Pagu Tersedia (anggaran − terbayar − pencadangan)</div><div class="nilai"><?= rp($cadangan['tersedia']) ?></div></div>
+</div>
+<?php endif; ?>
+
+<?php if (! empty($tindakLanjut)): ?>
+<details class="panel panel-lipat" data-lipat-id="dash-tindak-lanjut" open>
+  <summary>Perlu Tindak Lanjut (<?= count($tindakLanjut) ?>)</summary>
+  <?php
+  $barisTl = [];
+  foreach ($tindakLanjut as $t) {
+      $barisTl[] = ['sel' => [
+          (string) $t['jenis'],
+          (string) $t['uraian'],
+          ['teks' => (int) $t['umur'] . ' hari', 'angka' => true],
+          ['html' => '<a class="tombol kecil abu" href="' . base_url($t['tautan']) . '">Buka Modul</a>'],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => false, 'paginasi' => false,
+      'kolom' => [
+          ['judul' => 'Jenis'],
+          ['judul' => 'Uraian'],
+          ['judul' => 'Umur', 'angka' => true],
+          ['judul' => ''],
+      ],
+      'baris' => $barisTl,
+  ]);
+  ?>
+</details>
+<?php endif; ?>
 
 <?php if ($tanpaSpk->j > 0 || $invoiceCek || $sisaNegatif || ! empty($tahap2JatuhTempo) || ! empty($pecahCek) || ! empty($masterKonflik) || ($tanpaHarga ?? 0) > 0 || ($tanpaTarif ?? 0) > 0): ?>
 <div class="peringatan">

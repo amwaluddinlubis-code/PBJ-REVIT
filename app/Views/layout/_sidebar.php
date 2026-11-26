@@ -103,6 +103,7 @@ $svg = static fn (string $k): string => ikonSvg($k);
         <?php if ($bolehMenu('invoice')): ?><a href="<?= base_url('invoice') ?>"<?= $uriPenuh === 'invoice' ? ' class="aktif"' : '' ?>>Invoice</a><?php endif; ?>
         <?php if ($bolehMenu('invoice')): ?><a href="<?= base_url('invoice/jurnal') ?>"<?= $uriPenuh === 'invoice/jurnal' ? ' class="aktif"' : '' ?>>Jurnal Pembayaran</a><?php endif; ?>
         <?php if ($bolehMenu('buku-kas')): ?><a href="<?= base_url('buku-kas') ?>"<?= $aktif('buku-kas') ?>>Buku Kas (BKU)</a><?php endif; ?>
+        <?php if ($bolehMenu('buku-kas')): ?><a href="<?= base_url('spj-bulanan') ?>"<?= $aktif('spj-bulanan') ?>>SPJ Bulanan</a><?php endif; ?>
         <?php if ($bolehMenu('bukti-setor')): ?><a href="<?= base_url('bukti-setor') ?>"<?= $aktif('bukti-setor') ?>>Bukti Setor &amp; Pajak</a><?php endif; ?>
         <?php if ($bolehMenu('upah')): ?><a href="<?= base_url('upah') ?>"<?= $aktif('upah') ?>>Pembayaran Upah</a><?php endif; ?>
       <?= $tutupInduk() ?>

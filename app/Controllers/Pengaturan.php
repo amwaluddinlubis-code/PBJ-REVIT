@@ -121,7 +121,13 @@ class Pengaturan extends BaseController
         // menyelaraskan kolom cache bulan_bekerja).
         $data['updated_at'] = date('Y-m-d H:i:s');
         $this->db()->table('sekolah')->where('id', $this->sid())->update($data);
-        return redirect()->to('pengaturan')->with('sukses', 'Identitas disimpan — kop surat dan dokumen mengikuti otomatis.');
+        $pesan = 'Identitas disimpan — kop surat dan dokumen mengikuti otomatis.';
+        // Peringatan: pagu baru di bawah belanja yang sudah tercatat.
+        $belanja = $this->totalBelanja();
+        if ($data['total_anggaran'] > 0 && $data['total_anggaran'] < $belanja - 0.5) {
+            $pesan .= ' Perhatian: pagu baru (' . rp($data['total_anggaran']) . ') lebih kecil dari belanja yang sudah tercatat (' . rp($belanja) . ') — pembayaran berikutnya akan tertahan kontrol pagu.';
+        }
+        return redirect()->to('pengaturan')->with('sukses', $pesan);
     }
 
     /** Balasan form modal (pola balasForm): AJAX -> JSON {ok, pesan}. */
@@ -146,14 +152,20 @@ class Pengaturan extends BaseController
         if ($nama === '') {
             return $this->balasForm(false, 'Nama penyedia tidak boleh kosong.');
         }
+        $ganda = $this->db()->query(
+            'SELECT COUNT(*) j FROM penyedia WHERE sekolah_id = ? AND is_deleted = 0 AND LOWER(TRIM(nama)) = LOWER(?)',
+            [$this->sid(), $nama]
+        )->getRow()->j;
         $this->db()->table('penyedia')->insert([
             'sekolah_id' => $this->sid(),
             'nama' => $nama,
             'alamat' => trim((string) $this->request->getPost('alamat')) ?: null,
             'ttd_nama' => trim((string) $this->request->getPost('ttd_nama')) ?: null,
+            'no_rekening' => trim((string) $this->request->getPost('no_rekening')) ?: null,
+            'nama_bank' => trim((string) $this->request->getPost('nama_bank')) ?: null,
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
-        return $this->balasForm(true, 'Penyedia ditambahkan.');
+        return $this->balasForm(true, 'Penyedia ditambahkan.' . ($ganda > 0 ? ' Perhatian: sudah ada penyedia bernama sama — periksa apakah ini memang toko yang berbeda.' : ''));
     }
 
     public function penyediaUbah($id)
@@ -167,13 +179,19 @@ class Pengaturan extends BaseController
         if ($nama === '') {
             return $this->balasForm(false, 'Nama penyedia tidak boleh kosong.');
         }
+        $ganda = $this->db()->query(
+            'SELECT COUNT(*) j FROM penyedia WHERE sekolah_id = ? AND is_deleted = 0 AND id <> ? AND LOWER(TRIM(nama)) = LOWER(?)',
+            [$this->sid(), $id, $nama]
+        )->getRow()->j;
         $this->db()->table('penyedia')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->update([
             'nama' => $nama,
             'alamat' => trim((string) $this->request->getPost('alamat')) ?: null,
             'ttd_nama' => trim((string) $this->request->getPost('ttd_nama')) ?: null,
+            'no_rekening' => trim((string) $this->request->getPost('no_rekening')) ?: null,
+            'nama_bank' => trim((string) $this->request->getPost('nama_bank')) ?: null,
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
-        return $this->balasForm(true, 'Penyedia "' . $nama . '" diperbarui.');
+        return $this->balasForm(true, 'Penyedia "' . $nama . '" diperbarui.' . ($ganda > 0 ? ' Perhatian: ada penyedia lain bernama sama.' : ''));
     }
 
     public function penyediaHapus($id)

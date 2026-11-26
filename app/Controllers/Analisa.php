@@ -288,6 +288,15 @@ class Analisa extends BaseController
         if ($nama === '') {
             return $this->balasKomponen(false, 'Nama komponen wajib diisi (atau pilih bahan dari master).');
         }
+        // Penjaga komponen ganda: bahan yang sama tidak boleh dua kali
+        // dalam satu analisa (koefisiennya akan terhitung dobel).
+        if ($bahanId !== null) {
+            $ganda = $db->table('analisa_komponen')
+                ->where(['analisa_id' => $a['id'], 'bahan_id' => $bahanId, 'is_deleted' => 0])->countAllResults();
+            if ($ganda > 0) {
+                return $this->balasKomponen(false, 'Bahan "' . $nama . '" sudah menjadi komponen analisa ini — ubah koefisien baris yang ada, jangan menambah baris kedua.');
+            }
+        }
         $db->table('analisa_komponen')->insert([
             'analisa_id' => $a['id'], 'jenis' => $jenis, 'nama' => $nama, 'satuan' => $satuan ?: null,
             'koefisien' => (float) str_replace(',', '.', (string) $this->request->getPost('koefisien')),

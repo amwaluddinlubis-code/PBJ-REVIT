@@ -5,12 +5,15 @@
 <div class="panel">
   <h2>Catat Pembayaran</h2>
   <button type="button" class="tombol" onclick="bukaJurnalBaru()">+ Catat Pembayaran</button>
-  <span class="kecil-teks">Tanggal bayar bawaan mengikuti Bulan Terbuka; hanya bendahara yang dapat mencatat pembayaran.</span>
+  <span class="kecil-teks">Tanggal bayar bawaan merekomendasikan tanggal jurnal terakhir yang tercatat (dijepit ke Bulan Terbuka); hanya bendahara yang dapat mencatat pembayaran.</span>
 </div>
 <?php
 $opsiBelum = ['' => '— pilih invoice —'];
 foreach ($belum as $b) {
-    $opsiBelum[(int) $b['id']] = 'Invoice ' . (int) $b['nomor_urut'] . ' (SPK ' . (int) $b['spk_nomor'] . ') — ' . rp($b['nilai']);
+    $opsiBelum[(int) $b['id']] = [
+        'label' => 'Invoice ' . (int) $b['nomor_urut'] . ' (SPK ' . (int) $b['spk_nomor'] . ') — ' . rp($b['nilai']),
+        'data' => ['tanggal' => (string) ($b['tanggal'] ?? '')],
+    ];
 }
 ?>
 <?= form_modal([
@@ -25,15 +28,50 @@ foreach ($belum as $b) {
     'tombol' => ['simpan_teks' => 'Catat Bayar', 'hapus' => false],
 ]) ?>
 <script>
-// Jembatan modal Jurnal: tanggal bawaan (Bulan Terbuka) dioper lewat data
-// bukaFormModal; sesudahnya sinkronkan widget select-cari.
-function bukaJurnalBaru() {
-  window.bukaFormModal('modal-jurnal', { tanggal: '<?= esc($tgl_bayar_default ?? date('Y-m-d'), 'js') ?>' });
-  var m = document.getElementById('modal-jurnal');
-  if (m && window.perbaruiSelectCari) {
-    m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+// Jembatan modal Jurnal: tanggal bayar direkomendasikan dari jurnal
+// terakhir tercatat — MAX(tanggal pembayaran terakhir, tanggal invoice
+// terpilih), dijepit ke Bulan Terbuka; tanpa pembayaran sama sekali
+// memakai bawaan Bulan Terbuka. Server tetap menegakkan penjaganya.
+(function () {
+  var tglTerakhir = '<?= esc($tgl_jurnal_terakhir ?? '', 'js') ?>';
+  var tglBawaan = '<?= esc($tgl_bayar_default ?? date('Y-m-d'), 'js') ?>';
+  var bukuMin = '<?= esc($buku_min ?? '', 'js') ?>';
+  var bukuMax = '<?= esc($buku_max ?? '', 'js') ?>';
+  function rekomendasi(tglInvoice) {
+    var calon = tglTerakhir || '';
+    if (tglInvoice && tglInvoice > calon) calon = tglInvoice;
+    if (!calon) return tglBawaan;
+    if (bukuMin && calon < bukuMin) return bukuMin;
+    if (bukuMax && calon > bukuMax) return bukuMax;
+    return calon;
   }
-}
+  function isiTanggal(iso) {
+    var m = document.getElementById('modal-jurnal');
+    if (!m || !iso) return;
+    var inp = m.querySelector('input[name="tanggal"]');
+    if (!inp) return;
+    if (inp.classList.contains('isian-tanggal')) {
+      var p = iso.split('-');
+      inp.value = p[2] + '-' + p[1] + '-' + p[0];
+    } else {
+      inp.value = iso;
+    }
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    inp.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  window.bukaJurnalBaru = function () {
+    window.bukaFormModal('modal-jurnal', { tanggal: rekomendasi('') });
+    var m = document.getElementById('modal-jurnal');
+    if (m && window.perbaruiSelectCari) {
+      m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+    }
+  };
+  document.addEventListener('change', function (e) {
+    if (!e.target || e.target.name !== 'invoice_id' || !e.target.closest || !e.target.closest('#modal-jurnal')) return;
+    var opt = e.target.options[e.target.selectedIndex];
+    isiTanggal(rekomendasi(opt ? (opt.getAttribute('data-tanggal') || '') : ''));
+  });
+})();
 </script>
 <div class="panel">
   <h2>Jurnal Pembayaran</h2>

@@ -12,6 +12,18 @@ namespace App\Controllers;
  */
 class Penerimaan extends BaseController
 {
+    /** Persen fisik tertimbang seluruh gedung (dasar syarat Tahap 2). */
+    private function persenFisik(): float
+    {
+        $totalBoq = 0.0;
+        $tertimbang = 0.0;
+        foreach ($this->semuaGedung() as $g) {
+            $totalBoq += (float) $g['nilai_boq'];
+            $tertimbang += (float) $g['nilai_boq'] * (float) $g['persen_fisik'];
+        }
+        return $totalBoq > 0 ? $tertimbang / $totalBoq : 0.0;
+    }
+
     public function index()
     {
         $idn = $this->sekolahAktif();
@@ -21,13 +33,7 @@ class Penerimaan extends BaseController
             ->where(['sekolah_id' => $this->sid(), 'kategori' => 'penerimaan', 'jenis' => 'masuk', 'is_deleted' => 0])
             ->orderBy('tanggal')->orderBy('id')->get()->getResultArray();
 
-        $totalBoq = 0.0;
-        $tertimbang = 0.0;
-        foreach ($this->semuaGedung() as $g) {
-            $totalBoq += (float) $g['nilai_boq'];
-            $tertimbang += (float) $g['nilai_boq'] * (float) $g['persen_fisik'];
-        }
-        $fisik = $totalBoq > 0 ? $tertimbang / $totalBoq : 0.0;
+        $fisik = $this->persenFisik();
 
         return $this->tampil('penerimaan/index', [
             'pagu' => $pagu,
@@ -61,6 +67,29 @@ class Penerimaan extends BaseController
         if ($g = $this->galatBulanTertutup((string) $r->getPost('tanggal'))) {
             return $this->balasForm(false, $g);
         }
+        // Peringatan syarat Juknis (bukan blokir — data fisik bisa belum
+        // diperbarui): Tahap 2 mensyaratkan fisik >= 50%, dan total per
+        // tahap tidak melebihi target tahapnya (70%/30% pagu).
+        $peringatan = '';
+        if ($tahap === 2) {
+            $fisik = $this->persenFisik();
+            if ($fisik < 50) {
+                $peringatan .= ' Perhatian: kemajuan fisik tercatat ' . number_format($fisik, 1, ',', '.') . '% — Juknis mensyaratkan minimal 50% untuk pencairan Tahap 2.';
+            }
+            // SPJ bulan tertutup sebelumnya belum lengkap: peringatan saja.
+            $spjBelum = $this->bulanTanpaSnapshot();
+            if ($spjBelum !== []) {
+                $peringatan .= ' Perhatian: SPJ bulan ' . implode(', ', $spjBelum) . ' belum lengkap (belum ada snapshot bukti) — lengkapi lewat menu SPJ Bulanan.';
+            }
+        }
+        $pagu = (float) ($this->sekolahAktif()['total_anggaran'] ?? 0);
+        if ($pagu > 0) {
+            $target = round($pagu * ($tahap === 1 ? 0.7 : 0.3));
+            $sudah = (float) ($this->penerimaanPerTahap()[$tahap] ?? 0);
+            if ($sudah + $jumlah > $target) {
+                $peringatan .= ' Perhatian: total penerimaan Tahap ' . $tahap . ' menjadi ' . $this->rp($sudah + $jumlah) . ', melebihi target tahap (' . $this->rp($target) . ').';
+            }
+        }
         $kanal = (string) $r->getPost('kanal') === 'tunai' ? 'tunai' : 'bank';
         $this->db()->table('kas_transaksi')->insert([
             'sekolah_id' => $this->sid(),
@@ -75,7 +104,7 @@ class Penerimaan extends BaseController
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
         $this->catatAudit('penerimaan', (int) $this->db()->insertID(), 'buat', 'Penerimaan tahap ' . $tahap . ' sebesar ' . $this->rp($jumlah));
-        return $this->balasForm(true, 'Penerimaan tahap ' . $tahap . ' dicatat dan masuk Buku Kas.');
+        return $this->balasForm(true, 'Penerimaan tahap ' . $tahap . ' dicatat dan masuk Buku Kas.' . $peringatan);
     }
 
     /** Syarat baris penerimaan pada tabel kas bersama. */

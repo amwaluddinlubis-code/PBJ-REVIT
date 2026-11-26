@@ -243,9 +243,17 @@ class Kurva extends RencanaMingguan
             return redirect()->to($kembali)->with('galat', 'Minggu kalender ke-' . $ke . ' tidak ditemukan.');
         }
         $nilai = max(0.0, min(100.0, (float) str_replace(',', '.', trim((string) $this->request->getPost('nilai')))));
+        // Peringatan bila nilai minggu ini diturunkan dari catatan
+        // sebelumnya (kumulatif realisasi ikut menurun).
+        $lama = $db->table('simulasi_realisasi')
+            ->where(['sekolah_id' => $this->sid(), 'minggu_ke' => $ke, 'gedung_id' => $gid, 'is_deleted' => 0])
+            ->get()->getRowArray();
+        $peringatan = ($lama !== null && $nilai < (float) $lama['bobot'] - 0.0001)
+            ? ' Perhatian: nilai ini lebih kecil dari catatan sebelumnya (' . number_format((float) $lama['bobot'], 2, ',', '.') . '%) sehingga kumulatif realisasi menurun — pastikan memang koreksi.'
+            : '';
         $this->simpanRealisasiSimulasi($ke, $gid, $nilai);
         $this->catatAudit('simulasi_realisasi', null, 'simpan_dari_kurva_s', 'Realisasi simulasi minggu ke-' . $ke . ' gedung ' . $gid . ' = ' . number_format($nilai, 2, ',', '.') . '% (diisi dari halaman Kurva S).');
-        return redirect()->to($kembali)->with('sukses', 'Realisasi minggu ke-' . $ke . ' tersimpan: ' . number_format($nilai, 2, ',', '.') . '% — Simulasi Mingguan kini memakai nilai ini.');
+        return redirect()->to($kembali)->with('sukses', 'Realisasi minggu ke-' . $ke . ' tersimpan: ' . number_format($nilai, 2, ',', '.') . '% — Simulasi Mingguan kini memakai nilai ini.' . $peringatan);
     }
 
     private function gedungPunyaRencana(int $gedungId): bool

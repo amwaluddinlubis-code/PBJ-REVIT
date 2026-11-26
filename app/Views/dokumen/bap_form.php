@@ -3,7 +3,7 @@
   <?= csrf_field() ?>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
     <label>Nomor Urut BAP <input type="number" name="nomor_urut" min="1" value="<?= esc($bap['nomor_urut']) ?>" required></label>
-    <label>Tanggal Pemeriksaan <input type="date" name="tanggal" value="<?= esc($bap['tanggal'] ?? '') ?>"></label>
+    <label>Tanggal Pemeriksaan <input type="date" name="tanggal" value="<?= esc(! empty($bap['tanggal']) ? $bap['tanggal'] : ($spk['tgl_selesai'] ?? date('Y-m-d'))) ?>"></label>
     <label>Tanggal SPK <input type="date" value="<?= esc($spk['tanggal'] ?? '') ?>" readonly></label>
     <label>Tanggal Mulai SPK <input type="date" value="<?= esc($spk['tgl_mulai'] ?? '') ?>" readonly></label>
     <label>Tanggal Selesai SPK <input type="date" value="<?= esc($spk['tgl_selesai'] ?? '') ?>" readonly></label>
