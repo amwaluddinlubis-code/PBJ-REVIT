@@ -186,7 +186,7 @@ class Invoice extends BaseController
     private function daftarSpk(): array
     {
         $spk = $this->db()->query(
-            'SELECT s.id, s.nomor, s.paket, (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS total
+            'SELECT s.id, s.nomor, s.paket, s.tanggal, (SELECT COALESCE(SUM(d.qty*d.harga),0) FROM spk_detail d WHERE d.spk_id = s.id AND d.is_deleted = 0) AS total
              FROM spk s WHERE s.sekolah_id = ? AND s.is_deleted = 0 ORDER BY s.nomor',
             [$this->sid()]
         )->getResultArray();
@@ -198,7 +198,42 @@ class Invoice extends BaseController
         foreach ($this->db()->table('bast')->where('is_deleted', 0)->get()->getResultArray() as $r) {
             $bast[$r['spk_id']][] = $r;
         }
-        return ['list' => $spk, 'bap' => $bap, 'bast' => $bast];
+        // Warisan per SPK: tanggal SPK + BAP terakhir (nomor urut terbesar)
+        // dan BAST dari BAP itu (rantai 1 BAP = 1 BAST) beserta tanggalnya —
+        // invoice mewarisi ini dari SPK, pengguna tidak lagi memilih
+        // BAP/BAST sendiri.
+        $warisan = [];
+        foreach ($spk as $s) {
+            $sid = (int) $s['id'];
+            $bapW = self::terakhir($bap[$sid] ?? []);
+            $warisan[$sid] = [
+                'tanggal' => $s['tanggal'] ?? null,
+                'bap'     => $bapW,
+                'bast'    => self::bastWarisan($bast[$sid] ?? [], $bapW),
+            ];
+        }
+        return ['list' => $spk, 'bap' => $bap, 'bast' => $bast, 'warisan' => $warisan];
+    }
+
+    /** BAP/BAST terakhir dari daftar (nomor urut terbesar, lalu id terbesar). */
+    private static function terakhir(array $daftar): ?array
+    {
+        if ($daftar === []) {
+            return null;
+        }
+        usort($daftar, static fn ($a, $b) => [(int) ($b['nomor_urut'] ?? 0), (int) $b['id']] <=> [(int) ($a['nomor_urut'] ?? 0), (int) $a['id']]);
+        $t = $daftar[0];
+        return ['id' => (int) $t['id'], 'nomor_urut' => (int) ($t['nomor_urut'] ?? 0), 'tanggal' => $t['tanggal'] ?? null];
+    }
+
+    /** BAST warisan: BAST milik BAP warisan; tanpa BAP, BAST terakhir SPK (warisan lama tanpa bap_id). */
+    private static function bastWarisan(array $daftarBast, ?array $bapW): ?array
+    {
+        if ($bapW !== null) {
+            $milik = array_values(array_filter($daftarBast, static fn ($t) => (int) ($t['bap_id'] ?? 0) === (int) $bapW['id']));
+            return self::terakhir($milik);
+        }
+        return self::terakhir($daftarBast);
     }
 
     private function ambilForm(): array
@@ -206,13 +241,27 @@ class Invoice extends BaseController
         $r = $this->request;
         $spkId = (int) $r->getPost('spk_id');
         $nilai = $r->getPost('nilai');
+        // BAP & BAST diwarisi dari SPK (BAP terakhir + BAST miliknya),
+        // bukan dipilih pengguna — server yang menentukan, nilai POST
+        // diabaikan.
+        $bapId = $bastId = null;
+        if ($spkId > 0) {
+            $b = $this->db()->table('bap')->where(['spk_id' => $spkId, 'is_deleted' => 0])->orderBy('nomor_urut', 'DESC')->orderBy('id', 'DESC')->get()->getRowArray();
+            $bapId = $b ? (int) $b['id'] : null;
+            $qb = $this->db()->table('bast')->where(['spk_id' => $spkId, 'is_deleted' => 0]);
+            if ($bapId !== null) {
+                $qb->where('bap_id', $bapId);
+            }
+            $t = $qb->orderBy('nomor_urut', 'DESC')->orderBy('id', 'DESC')->get()->getRowArray();
+            $bastId = $t ? (int) $t['id'] : null;
+        }
         return [
             'nomor_urut' => (int) $r->getPost('nomor_urut'),
             'no_toko' => trim((string) $r->getPost('no_toko')) ?: null,
             'tanggal' => $r->getPost('tanggal') ?: null,
             'spk_id' => $spkId,
-            'bap_id' => (int) $r->getPost('bap_id') ?: null,
-            'bast_id' => (int) $r->getPost('bast_id') ?: null,
+            'bap_id' => $bapId,
+            'bast_id' => $bastId,
             'nilai' => ($nilai === '' || $nilai === null) ? (int) $this->totalSpk($spkId) : (int) $nilai,
             'status' => (string) $r->getPost('status') ?: 'Belum Bayar',
         ];
