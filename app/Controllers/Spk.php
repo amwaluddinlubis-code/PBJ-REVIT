@@ -225,10 +225,17 @@ class Spk extends BaseController
             )->getResultArray();
         }
         unset($b);
+        $bapById = [];
+        foreach ($daftarBap as $b) {
+            $bapById[(int) $b['id']] = $b;
+        }
         $bastPerBap = [];
         $bastUmum = [];
         foreach ($db->table('bast')->where(['spk_id' => (int) $id, 'is_deleted' => 0])->orderBy('nomor_urut')->orderBy('id')->get()->getResultArray() as $bs) {
             $bs['surat'] = $this->nomorSurat('BAST', (int) $bs['nomor_urut']);
+            // Tanggal BAP tertaut ditampilkan di form BAST (info baca-saja).
+            $bs['bap_tanggal'] = ! empty($bs['bap_id']) ? ($bapById[(int) $bs['bap_id']]['tanggal'] ?? null) : null;
+            $bs['bap_nomor_urut'] = ! empty($bs['bap_id']) ? ($bapById[(int) $bs['bap_id']]['nomor_urut'] ?? null) : null;
             if (! empty($bs['bap_id'])) {
                 $bastPerBap[(int) $bs['bap_id']][] = $bs;
             } else {

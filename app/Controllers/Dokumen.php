@@ -35,8 +35,11 @@ class Dokumen extends BaseController
             [$this->sid()]
         )->getResultArray();
         $bap = [];
+        $bapById = [];
         foreach ($db->table('bap')->where('is_deleted', 0)->get()->getResultArray() as $r) {
+            $r['surat'] = $this->nomorSurat('BAP', (int) $r['nomor_urut']);
             $bap[$r['spk_id']][] = $r;
+            $bapById[(int) $r['id']] = $r;
         }
         $bapItems = [];
         foreach ($db->query(
@@ -50,6 +53,10 @@ class Dokumen extends BaseController
         $bastPerBap = [];
         $bastUmum = [];
         foreach ($db->table('bast')->where('is_deleted', 0)->get()->getResultArray() as $r) {
+            $r['surat'] = $this->nomorSurat('BAST', (int) $r['nomor_urut']);
+            // Tanggal BAP tertaut ditampilkan di form BAST (info baca-saja).
+            $r['bap_tanggal'] = ! empty($r['bap_id']) ? ($bapById[(int) $r['bap_id']]['tanggal'] ?? null) : null;
+            $r['bap_nomor_urut'] = ! empty($r['bap_id']) ? ($bapById[(int) $r['bap_id']]['nomor_urut'] ?? null) : null;
             if (! empty($r['bap_id'])) {
                 $bastPerBap[$r['bap_id']][] = $r;
             } else {
@@ -158,11 +165,16 @@ class Dokumen extends BaseController
 
     public function bastUbah($bastId)
     {
-        $bast = $this->db()->table('bast')->where(['id' => (int) $bastId, 'is_deleted' => 0])->get()->getRowArray();
+        $db = $this->db();
+        $bast = $db->table('bast')->where(['id' => (int) $bastId, 'is_deleted' => 0])->get()->getRowArray();
         if (! $bast) {
             return redirect()->to('dokumen')->with('galat', 'BAST tidak ditemukan.');
         }
-        return $this->tampil('dokumen/bast_form', ['bast' => $bast], 'BAST ' . $this->nomorSurat('BAST', (int) $bast['nomor_urut']));
+        // Tanggal BAP tertaut ditampilkan di form BAST (info baca-saja).
+        $bap = ! empty($bast['bap_id'])
+            ? $db->table('bap')->where(['id' => (int) $bast['bap_id'], 'is_deleted' => 0])->get()->getRowArray()
+            : null;
+        return $this->tampil('dokumen/bast_form', ['bast' => $bast, 'bap' => $bap], 'BAST ' . $this->nomorSurat('BAST', (int) $bast['nomor_urut']));
     }
 
     public function bastSimpan($bastId)

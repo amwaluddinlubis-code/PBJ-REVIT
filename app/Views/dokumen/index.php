@@ -1,7 +1,11 @@
 <?php
+/* Halaman Dokumen (BAP & BAST semua SPK). Form Ubah BAP/BAST memakai
+   helper form_modal (simpan AJAX ke Dokumen::bapSimpan/bastSimpan) —
+   pola yang sama dengan panel BAP & BAST di Detail SPK. Tombol cetak
+   gaya Apple (.tombol-cetak pil berwarna per jenis dokumen); tombol
+   Ubah berikon pensil. Aturan: satu BAP hanya satu BAST. */
 $ikonCetak = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>';
-$bukaModal = static fn (string $id) => "document.getElementById('{$id}').hidden=false";
-$tutupModal = static fn (string $id) => "document.getElementById('{$id}').hidden=true";
+$ikonPensil = '<span class="ikon-tombol" aria-hidden="true">' . ikonSvg('pensil') . '</span>';
 ?>
 <div class="panel">
   <p>Aturan: BAP dibuat dari rincian SPK dan tombol Buat BAP hilang bila semua rincian sudah ter-BAP; <b>satu BAP hanya mempunyai satu BAST</b>. Form BAP &amp; BAST dibuka sebagai modal lewat tombol Ubah. Nomor surat mengikuti pola 422/&lt;JENIS&gt;/&lt;urut&gt;/&lt;tahun&gt;.</p>
@@ -20,10 +24,10 @@ $tutupModal = static fn (string $id) => "document.getElementById('{$id}').hidden
         <?php foreach ($bap[$s['id']] ?? [] as $b): ?>
           <?= $pisah ? ' <span class="kecil-teks">|</span> ' : '' ?>
           BAP urut <?= (int) $b['nomor_urut'] ?> · <?= esc(tgl($b['tanggal'] ?? null, '(tanggal belum diisi)')) ?>
-          <button type="button" class="tombol kecil abu" onclick="<?= $bukaModal('modal-bap-' . $b['id']) ?>">Ubah</button><a class="tombol-cetak tc-bap" href="<?= base_url('dokumen/cetak-bap/' . $b['id']) ?>" target="_blank" title="Cetak BAP"><?= $ikonCetak ?> Cetak</a>
+          <button type="button" class="tombol kecil abu" onclick="bukaModalBap('modal-bap-<?= (int) $b['id'] ?>', <?= esc(json_encode(['id' => (int) $b['id'], 'nomor_urut' => (int) $b['nomor_urut'], 'tanggal' => (string) ($b['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><?= $ikonPensil ?> Ubah</button><a class="tombol-cetak tc-bap" href="<?= base_url('dokumen/cetak-bap/' . $b['id']) ?>" target="_blank" title="Cetak BAP"><?= $ikonCetak ?> Cetak</a>
           <?php foreach ($bast_per_bap[$b['id']] ?? [] as $bs): ?>
             → BAST urut <?= (int) $bs['nomor_urut'] ?> · <?= esc(tgl($bs['tanggal'] ?? null, '(tanggal belum diisi)')) ?>
-            <button type="button" class="tombol kecil abu" onclick="<?= $bukaModal('modal-bast-' . $bs['id']) ?>">Ubah</button><a class="tombol-cetak tc-bast" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank" title="Cetak BAST"><?= $ikonCetak ?> Cetak</a>
+            <button type="button" class="tombol kecil abu" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><?= $ikonPensil ?> Ubah</button><a class="tombol-cetak tc-bast" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank" title="Cetak BAST"><?= $ikonCetak ?> Cetak</a>
           <?php endforeach; ?>
           <?php if (empty($bast_per_bap[$b['id']])): ?>
             <form class="inline" method="post" action="<?= base_url('dokumen/bast-buat/' . $b['id']) ?>"><?= csrf_field() ?><button class="kecil" type="submit">+ Buat BAST</button></form>
@@ -33,7 +37,7 @@ $tutupModal = static fn (string $id) => "document.getElementById('{$id}').hidden
         <?php foreach ($bast_umum[$s['id']] ?? [] as $bs): ?>
           <?= $pisah ? ' <span class="kecil-teks">|</span> ' : '' ?>
           BAST urut <?= (int) $bs['nomor_urut'] ?> · <?= esc(tgl($bs['tanggal'] ?? null, '(tanggal belum diisi)')) ?> <span class="kecil-teks">(belum tertaut BAP)</span>
-          <button type="button" class="tombol kecil abu" onclick="<?= $bukaModal('modal-bast-' . $bs['id']) ?>">Ubah</button><a class="tombol-cetak tc-bast" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank" title="Cetak BAST"><?= $ikonCetak ?> Cetak</a>
+          <button type="button" class="tombol kecil abu" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><?= $ikonPensil ?> Ubah</button><a class="tombol-cetak tc-bast" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank" title="Cetak BAST"><?= $ikonCetak ?> Cetak</a>
           <?php $pisah = true; ?>
         <?php endforeach; ?>
         <?php if ((int) $s['jumlah_terbap'] < (int) $s['jumlah_detail']): ?>
@@ -49,41 +53,36 @@ $tutupModal = static fn (string $id) => "document.getElementById('{$id}').hidden
 
 <?php foreach ($spk as $s): ?>
   <?php foreach ($bap[$s['id']] ?? [] as $b): ?>
-  <div id="modal-bap-<?= (int) $b['id'] ?>" class="mk-lapik" hidden onclick="if(event.target===this)this.hidden=true">
-    <div class="mk-kartu" role="dialog" aria-modal="true" style="max-width:820px;width:96vw;text-align:left">
-      <h3 style="margin-top:0">BAP Urut <?= (int) $b['nomor_urut'] ?> — SPK Nomor <?= (int) $s['nomor'] ?></h3>
-      <form method="post" action="<?= base_url('dokumen/bap-simpan/' . $b['id']) ?>">
-        <?= csrf_field() ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-          <label>Nomor Urut BAP <input type="number" name="nomor_urut" min="1" value="<?= esc($b['nomor_urut']) ?>" required></label>
-          <label>Tanggal Pemeriksaan <input type="date" name="tanggal" value="<?= esc($b['tanggal'] ?? '') ?>"></label>
-          <label>Tanggal SPK <input type="date" value="<?= esc($s['tanggal'] ?? '') ?>" readonly></label>
-          <label>Tanggal Mulai SPK <input type="date" value="<?= esc($s['tgl_mulai'] ?? '') ?>" readonly></label>
-          <label>Tanggal Selesai SPK <input type="date" value="<?= esc($s['tgl_selesai'] ?? '') ?>" readonly></label>
-        </div>
-        <table style="margin-top:14px">
-          <tr><th>Nama Barang</th><th class="angka">Jumlah</th><th>Satuan</th><th>Kondisi</th><th>Keterangan</th></tr>
-          <?php foreach ($bap_items[$b['id']] ?? [] as $it): ?>
-          <tr>
-            <td><?= esc($it['nama']) ?></td>
-            <td class="angka"><?= number_format((float) $it['qty'], 2, ',', '.') ?></td>
-            <td><?= esc($it['satuan'] ?? '') ?></td>
-            <td>
-              <select data-select-cari name="kondisi[<?= (int) $it['bd_id'] ?>]" style="width:140px">
-                <?php foreach (['Baik', 'Cukup', 'Kurang', 'Tidak Sesuai'] as $k): ?>
-                  <option<?= $it['kondisi'] === $k ? ' selected' : '' ?>><?= $k ?></option>
-                <?php endforeach; ?>
-              </select>
-            </td>
-            <td><input name="keterangan[<?= (int) $it['bd_id'] ?>]" value="<?= esc($it['keterangan'] ?? '') ?>"></td>
-          </tr>
-          <?php endforeach; ?>
-        </table>
-        <div class="aksi" style="margin-top:14px"><button type="submit">Simpan BAP</button>
-        <button type="button" class="tombol abu" onclick="<?= $tutupModal('modal-bap-' . $b['id']) ?>">Batal</button></div>
-      </form>
-    </div>
-  </div>
+  <?php
+  $tabelItem = '<div class="bungkus-tabel"><table><tr><th>Nama Barang</th><th class="angka">Jumlah</th><th>Satuan</th><th>Kondisi</th><th>Keterangan</th></tr>';
+  foreach ($bap_items[$b['id']] ?? [] as $it) {
+      $selKondisi = '<select data-select-cari name="kondisi[' . (int) $it['bd_id'] . ']" style="width:140px">';
+      foreach (['Baik', 'Cukup', 'Kurang', 'Tidak Sesuai'] as $k) {
+          $selKondisi .= '<option' . ($it['kondisi'] === $k ? ' selected' : '') . '>' . $k . '</option>';
+      }
+      $selKondisi .= '</select>';
+      $tabelItem .= '<tr><td>' . esc($it['nama']) . '</td>'
+          . '<td class="angka">' . number_format((float) $it['qty'], 2, ',', '.') . '</td>'
+          . '<td>' . esc($it['satuan'] ?? '') . '</td>'
+          . '<td>' . $selKondisi . '</td>'
+          . '<td><input name="keterangan[' . (int) $it['bd_id'] . ']" value="' . esc($it['keterangan'] ?? '', 'attr') . '" style="width:100%"></td></tr>';
+  }
+  $tabelItem .= '</table></div>';
+  ?>
+  <?= form_modal([
+      'id' => 'modal-bap-' . (int) $b['id'],
+      'judul' => 'Ubah BAP',
+      'judul_ubah' => 'Ubah BAP urut ' . (int) $b['nomor_urut'] . ' — SPK Nomor ' . (int) $s['nomor'],
+      'aksi' => base_url('dokumen/bap-simpan/' . $b['id']),
+      'lebar' => 860,
+      'info_html' => '<p class="kecil-teks" style="margin:0 0 12px">Nomor surat: <strong>' . esc($b['surat'] ?? '') . '</strong> · SPK tanggal <strong>' . esc(tgl($s['tanggal'] ?? null)) . '</strong> · periode <strong>' . esc(tgl($s['tgl_mulai'] ?? null)) . ' s.d. ' . esc(tgl($s['tgl_selesai'] ?? null)) . '</strong></p>',
+      'kolom' => [
+          ['nama' => 'nomor_urut', 'label' => 'Nomor Urut BAP', 'jenis' => 'angka', 'wajib' => true],
+          ['nama' => 'tanggal', 'label' => 'Tanggal Pemeriksaan', 'jenis' => 'tanggal'],
+      ],
+      'catatan_html' => $tabelItem,
+      'tombol' => ['simpan_teks' => 'Simpan BAP', 'hapus' => false],
+  ]) ?>
   <?php endforeach; ?>
   <?php
   $daftarBast = $bast_umum[$s['id']] ?? [];
@@ -94,22 +93,35 @@ $tutupModal = static fn (string $id) => "document.getElementById('{$id}').hidden
   }
   ?>
   <?php foreach ($daftarBast as $bs): ?>
-  <div id="modal-bast-<?= (int) $bs['id'] ?>" class="mk-lapik" hidden onclick="if(event.target===this)this.hidden=true">
-    <div class="mk-kartu" role="dialog" aria-modal="true" style="max-width:640px;width:96vw;text-align:left">
-      <h3 style="margin-top:0">BAST Urut <?= (int) $bs['nomor_urut'] ?> — SPK Nomor <?= (int) $s['nomor'] ?></h3>
-      <form method="post" action="<?= base_url('dokumen/bast-simpan/' . $bs['id']) ?>">
-        <?= csrf_field() ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-          <label>Nomor Urut BAST <input type="number" name="nomor_urut" min="1" value="<?= esc($bs['nomor_urut']) ?>" required></label>
-          <label>Tanggal Serah Terima <input type="date" name="tanggal" value="<?= esc($bs['tanggal'] ?? '') ?>"></label>
-          <label>Tanggal SPK <input type="date" value="<?= esc($s['tanggal'] ?? '') ?>" readonly></label>
-          <label>Tanggal Mulai SPK <input type="date" value="<?= esc($s['tgl_mulai'] ?? '') ?>" readonly></label>
-          <label>Tanggal Selesai SPK <input type="date" value="<?= esc($s['tgl_selesai'] ?? '') ?>" readonly></label>
-        </div>
-        <div class="aksi" style="margin-top:14px"><button type="submit">Simpan BAST</button>
-        <button type="button" class="tombol abu" onclick="<?= $tutupModal('modal-bast-' . $bs['id']) ?>">Batal</button></div>
-      </form>
-    </div>
-  </div>
+  <?php
+  $infoBap = ! empty($bs['bap_id'])
+      ? ' · BAP urut ' . (int) ($bs['bap_nomor_urut'] ?? 0) . ' tanggal <strong>' . esc(tgl($bs['bap_tanggal'] ?? null, '(tanggal belum diisi)')) . '</strong>'
+      : ' · <em>belum tertaut BAP</em>';
+  ?>
+  <?= form_modal([
+      'id' => 'modal-bast-' . (int) $bs['id'],
+      'judul' => 'Ubah BAST',
+      'judul_ubah' => 'Ubah BAST urut ' . (int) $bs['nomor_urut'] . ' — SPK Nomor ' . (int) $s['nomor'],
+      'aksi' => base_url('dokumen/bast-simpan/' . $bs['id']),
+      'lebar' => 560,
+      'info_html' => '<p class="kecil-teks" style="margin:0 0 12px">Nomor surat: <strong>' . esc($bs['surat'] ?? '') . '</strong>' . $infoBap . ' · SPK tanggal <strong>' . esc(tgl($s['tanggal'] ?? null)) . '</strong> · periode <strong>' . esc(tgl($s['tgl_mulai'] ?? null)) . ' s.d. ' . esc(tgl($s['tgl_selesai'] ?? null)) . '</strong></p>',
+      'kolom' => [
+          ['nama' => 'nomor_urut', 'label' => 'Nomor Urut BAST', 'jenis' => 'angka', 'wajib' => true],
+          ['nama' => 'tanggal', 'label' => 'Tanggal Serah Terima', 'jenis' => 'tanggal'],
+      ],
+      'tombol' => ['simpan_teks' => 'Simpan BAST', 'hapus' => false],
+  ]) ?>
   <?php endforeach; ?>
 <?php endforeach; ?>
+
+<script>
+// Jembatan modal BAP: sesudah form_modal membuka (form.reset mengembalikan
+// pilihan kondisi ke nilai tersimpan), sinkronkan ulang widget select-cari.
+function bukaModalBap(id, data) {
+  window.bukaFormModal(id, data);
+  var m = document.getElementById(id);
+  if (m && window.perbaruiSelectCari) {
+    m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+  }
+}
+</script>

@@ -28,7 +28,7 @@
         <?php if (! empty($b['tanggal'])): ?><span><?= esc(tgl($b['tanggal'])) ?></span><?php else: ?><span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;font-size:11px">tanggal belum diisi</span><?php endif; ?>
         <span class="kecil-teks"><?= count($itemsB) ?> item diperiksa</span>
         <span style="margin-left:auto">
-          <button type="button" class="tombol kecil" onclick="bukaModalBap('modal-bap-<?= (int) $b['id'] ?>', <?= esc(json_encode(['id' => (int) $b['id'], 'nomor_urut' => (int) $b['nomor_urut'], 'tanggal' => (string) ($b['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)">Ubah BAP</button>
+          <button type="button" class="tombol kecil" onclick="bukaModalBap('modal-bap-<?= (int) $b['id'] ?>', <?= esc(json_encode(['id' => (int) $b['id'], 'nomor_urut' => (int) $b['nomor_urut'], 'tanggal' => (string) ($b['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAP</button>
           <a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-bap/' . $b['id']) ?>" target="_blank">Cetak BAP</a>
         </span>
       </div>
@@ -39,7 +39,7 @@
         <span class="kecil-teks"><?= esc($bs['surat']) ?></span>
         <?php if (! empty($bs['tanggal'])): ?><span><?= esc(tgl($bs['tanggal'])) ?></span><?php else: ?><span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;font-size:11px">tanggal belum diisi</span><?php endif; ?>
         <span style="margin-left:auto">
-          <button type="button" class="tombol kecil" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)">Ubah BAST</button>
+          <button type="button" class="tombol kecil" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAST</button>
           <a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank">Cetak BAST</a>
         </span>
       </div>
@@ -62,7 +62,7 @@
         <span class="kecil-teks"><?= esc($bs['surat']) ?> · belum tertaut BAP</span>
         <?php if (! empty($bs['tanggal'])): ?><span><?= esc(tgl($bs['tanggal'])) ?></span><?php else: ?><span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;font-size:11px">tanggal belum diisi</span><?php endif; ?>
         <span style="margin-left:auto">
-          <button type="button" class="tombol kecil" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)">Ubah BAST</button>
+          <button type="button" class="tombol kecil" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) ($bs['tanggal'] ?? '')], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAST</button>
           <a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank">Cetak BAST</a>
         </span>
       </div>
@@ -119,7 +119,7 @@ foreach ($bast_per_bap ?? [] as $daftarBs) {
     'judul_ubah' => 'Ubah BAST urut ' . (int) $bs['nomor_urut'] . ' — SPK Nomor ' . (int) $s['nomor'],
     'aksi' => base_url('dokumen/bast-simpan/' . $bs['id']),
     'lebar' => 560,
-    'info_html' => '<p class="kecil-teks" style="margin:0 0 12px">Nomor surat: <strong>' . esc($bs['surat']) . '</strong></p>',
+    'info_html' => '<p class="kecil-teks" style="margin:0 0 12px">Nomor surat: <strong>' . esc($bs['surat']) . '</strong>' . (! empty($bs['bap_id']) ? ' · BAP urut ' . (int) ($bs['bap_nomor_urut'] ?? 0) . ' tanggal <strong>' . esc(tgl($bs['bap_tanggal'] ?? null, '(tanggal belum diisi)')) . '</strong>' : ' · <em>belum tertaut BAP</em>') . '</p>',
     'kolom' => [
         ['nama' => 'nomor_urut', 'label' => 'Nomor Urut BAST', 'jenis' => 'angka', 'wajib' => true],
         ['nama' => 'tanggal', 'label' => 'Tanggal Serah Terima', 'jenis' => 'tanggal'],
