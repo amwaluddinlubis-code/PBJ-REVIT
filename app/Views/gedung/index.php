@@ -33,7 +33,7 @@
           (string) ($g['sumber_sheet'] ?? '—'),
           ['html' => '<a class="tombol kecil" href="' . base_url('gedung/' . $g['id']) . '">Buka</a> '
               . '<form class="inline" method="post" action="' . base_url('gedung/' . $g['id'] . '/didanai') . '">'
-              . csrf_field() . '<input type="hidden" name="didanai" value="' . ((int) ($g['didanai'] ?? 1) === 1 ? 0 : 1) . '"><button class="kecil abu" type="submit">' . ((int) ($g['didanai'] ?? 1) === 1 ? 'Tandai Tidak Didanai' : 'Tandai Didanai') . '</button></form> '
+              . csrf_field() . '<input type="hidden" name="didanai" value="' . ((int) ($g['didanai'] ?? 1) === 1 ? 0 : 1) . '"><button class="kecil abu" type="submit">' . ((int) ($g['didanai'] ?? 1) === 1 ? ' Tidak Didanai' : 'Didanai') . '</button></form> '
               . '<form class="inline" method="post" action="' . base_url('gedung/' . $g['id'] . '/hapus') . '" data-konfirmasi="Hapus gedung beserta seluruh BOQ dan realisasinya?">'
               . csrf_field() . '<button class="kecil bahaya" type="submit">Hapus</button></form>'],
       ]];
