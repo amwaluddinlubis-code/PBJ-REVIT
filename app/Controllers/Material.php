@@ -139,7 +139,21 @@ class Material extends BaseController
                 $maxBpb = max($maxBpb, (int) trim((string) $r['no_bpb']));
             }
         }
+        // Rekap pemakaian NON-GEDUNG: catatan keluar tanpa gedung tujuan
+        // (gudang bersama / pemakaian umum), per bahan + stok tersedianya.
+        $rekapNonGedung = [];
+        foreach ($db->query(
+            'SELECT b.id AS bahan_id, b.kode, b.nama, b.satuan, SUM(m.keluar) AS keluar
+             FROM buku_material m JOIN bahan b ON b.id = m.bahan_id
+             WHERE b.sekolah_id = ? AND m.is_deleted = 0 AND b.is_deleted = 0 AND m.keluar > 0 AND m.gedung_id IS NULL
+             GROUP BY b.id, b.kode, b.nama, b.satuan ORDER BY b.kode',
+            [$this->sid()]
+        )->getResultArray() as $r) {
+            $r['stok'] = $stok[(int) $r['bahan_id']] ?? 0.0;
+            $rekapNonGedung[] = $r;
+        }
         return $this->tampil('material/index', ['baris' => $baris, 'bahan' => $bahan, 'gedung' => $gedung, 'rekap_gedung' => $rekapGedung,
+            'rekap_non_gedung' => $rekapNonGedung,
             'bahan_pilih' => $bahanPilih, 'kebutuhan_gedung' => $kebutuhanTampil, 'semua_kebutuhan_gedung' => $kebutuhanGedung,
             'f_gedung' => $fGedung, 'peta_info' => $petaInfo, 'no_bpb_baru' => (string) ($maxBpb + 1)], 'Buku Material — Aplikasi PBJ Sekolah');
     }

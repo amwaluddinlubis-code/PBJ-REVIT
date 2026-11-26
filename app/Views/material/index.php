@@ -141,6 +141,32 @@
 </div>
 <?php endif; ?>
 
+<?php if (! empty($rekap_non_gedung)): ?>
+<div class="panel">
+  <h2>Rekap Pemakaian Non-Gedung</h2>
+  <p class="kecil-teks">Catatan keluar yang gedung tujuannya dikosongkan (gudang bersama / pemakaian umum, termasuk bahan dari SPK non-gedung). Pemakaian ini tidak punya acuan kebutuhan BOQ — dibatasi stok tersedia. Stok utama tetap gabungan se-sekolah (penerimaan BAST dikurangi total keluar).</p>
+  <?php
+  $barisNonGedung = [];
+  foreach ($rekap_non_gedung as $r) {
+      $barisNonGedung[] = ['sel' => [
+          $r['kode'] . ' — ' . $r['nama'] . ' (' . ($r['satuan'] ?? '') . ')',
+          ['teks' => $fmt($r['keluar']), 'angka' => true],
+          ['teks' => $fmt($r['stok']), 'angka' => true],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => 'Cari bahan…',
+      'kolom' => [
+          ['judul' => 'Bahan'],
+          ['judul' => 'Sudah Keluar (Non-Gedung)', 'angka' => true],
+          ['judul' => 'Stok Tersedia', 'angka' => true],
+      ],
+      'baris' => $barisNonGedung,
+  ]);
+  ?>
+</div>
+<?php endif; ?>
+
 <?php if (! empty($bahan_pilih)): ?>
 <?php
 $opsiGedung = ['' => '— gudang bersama / belum ditentukan —'];
