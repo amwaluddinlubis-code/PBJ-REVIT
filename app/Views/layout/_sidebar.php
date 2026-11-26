@@ -127,6 +127,7 @@ $svg = static fn (string $k): string => ikonSvg($k);
         <?php endif; ?>
       <?= $tutupInduk() ?>
       <?php endif; ?>
+      <a href="<?= base_url('panduan') ?>"<?= $aktif('panduan') ?> title="Panduan Penggunaan"><?= $svg('buku') ?><span class="judul-induk">Panduan Penggunaan</span></a>
     </nav>
     <div class="profil">
       <div class="ava"><?= esc(strtoupper(substr($pengguna['nama'] ?? 'A', 0, 1))) ?></div>

@@ -102,6 +102,12 @@ Sejak 2026-11-24 tampilan mengikuti pola komponen ala TALL tanpa mengganti frame
 - Jangan mengubah struktur data, nama field, route, atau perilaku submit sebagai bagian dari perapian visual kecuali memang diminta.
 - Untuk aset CSS/JavaScript yang di-cache, ikuti pola cache-busting `filemtime` pada layout.
 
+### Jejak Halaman, Peringatan Isian & Panduan (26 Nov 2026)
+
+- **Jejak halaman (breadcrumb)** dirender layout (`layout/_atas.php`, kelas `.remah`): diturunkan dari URI dengan peta label yang sama seperti menu sidebar, judul halaman menjadi remah terakhir (`aria-current="page"`). Modul baru WAJIB menambahkan segmennya ke peta jejak di `_atas.php` (dan sub-halaman dikenal ke peta sub) agar jejaknya benar; jangan membuat breadcrumb per halaman.
+- **Peringatan perubahan belum disimpan** (skrip layout `_skrip.php`): form POST yang diubah (isian teks/area/pilihan) ditandai kotor dan memicu peringatan peramban saat berpindah halaman; tanda dibersihkan saat form dikirim. Form yang memang tidak perlu dilacak (mis. form saring POST) diberi atribut `data-tanpa-peringatan`. **Peringatan sesi**: 10 menit sebelum sesi 120 menit berakhir (dihitung sejak halaman dimuat) dialog bersama menawarkan Perpanjang Sesi lewat endpoint `sesi/sentuh` (`Auth::sentuhSesi`, hanya menyentuh sesi) — jangan menghapus endpoint ini tanpa mengganti mekanisme peringatannya.
+- **Panduan dalam aplikasi** (menu Panduan Penggunaan, rute `panduan`): merender `docs/Panduan_Penggunaan.md` lewat `App\Libraries\MarkdownMini` — satu-satunya sumber isi panduan; perbarui berkas Markdown itu, bukan HTML terpisah. MarkdownMini hanya mendukung konstruksi yang dipakai panduan (judul, daftar, tabel, blok kode, kutipan, tautan aman); konstruksi baru di panduan harus didukung konverter ini dulu.
+
 ## Pengujian dan Penyelesaian
 
 - Jalankan lint PHP untuk view/controller yang disentuh dan `node --check` untuk JavaScript yang disentuh.

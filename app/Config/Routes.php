@@ -145,6 +145,10 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('pengaturan/penyedia-hapus/(:num)', 'Pengaturan::penyediaHapus/$1');
 $routes->post('pengaturan/penyedia-hapus-massal', 'Pengaturan::penyediaHapusMassal');
 $routes->post('pengaturan/penyedia-kosongkan', 'Pengaturan::penyediaKosongkan');
+
+    // Panduan penggunaan dalam aplikasi + sentuh sesi (peringatan sesi).
+    $routes->get('panduan', 'Panduan::index');
+    $routes->get('sesi/sentuh', 'Auth::sentuhSesi');
 });
 
 // Modul Analisa Perencana

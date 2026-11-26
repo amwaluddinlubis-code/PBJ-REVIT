@@ -187,4 +187,65 @@
     });
   }, true);
 })();
+// Peringatan perubahan belum disimpan + peringatan sesi akan berakhir.
+// Form POST yang diubah (isian teks/area/pilihan) ditandai kotor; berpindah
+// halaman sebelum menyimpan memicu peringatan bawaan peramban. Tanda kotor
+// dibersihkan saat form dikirim (kirim AJAX modal pun memicu event submit).
+// Form GET, form cari topbar, dan form ber-atribut data-tanpa-peringatan
+// tidak dilacak; centang/radio tidak menandai kotor agar form massal tidak
+// memicu peringatan palsu.
+(function () {
+  const kotor = new Set();
+  const layak = function (form) {
+    return !!form && !!form.method && form.method.toLowerCase() === 'post'
+      && !form.classList.contains('cari')
+      && !form.hasAttribute('data-tanpa-peringatan');
+  };
+  const tandai = function (e) {
+    const el = e.target;
+    if (!el || !el.form || !layak(el.form)) return;
+    const jenis = (el.type || '').toLowerCase();
+    if (el.tagName === 'INPUT' && ['checkbox', 'radio', 'hidden', 'submit', 'button', 'file'].includes(jenis)) return;
+    kotor.add(el.form);
+  };
+  document.addEventListener('input', tandai);
+  document.addEventListener('change', tandai);
+  document.addEventListener('submit', function (e) { kotor.delete(e.target); }, true);
+  window.addEventListener('beforeunload', function (e) {
+    if (kotor.size > 0) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // Sesi berlaku 120 menit (Config/Session). Sepuluh menit sebelum habis
+  // (dihitung sejak halaman dimuat — navigasi apa pun menyegarkan sesi)
+  // tampilkan dialog perpanjang sesi memakai gaya modal konfirmasi bersama.
+  const urlSentuh = <?= json_encode(base_url('sesi/sentuh')) ?>;
+  const urlKeluar = <?= json_encode(base_url('logout')) ?>;
+  let pewaktu = null;
+  const jadwalkan = function () {
+    clearTimeout(pewaktu);
+    pewaktu = setTimeout(tampilkanPeringatan, 110 * 60 * 1000);
+  };
+  const tampilkanPeringatan = function () {
+    if (document.getElementById('modal-sesi')) return;
+    const lapik = document.createElement('div');
+    lapik.id = 'modal-sesi';
+    lapik.className = 'mk-lapik';
+    lapik.innerHTML = '<div class="mk-kartu" role="alertdialog" aria-modal="true" aria-labelledby="sesi-judul" aria-describedby="sesi-pesan">'
+      + '<h3 id="sesi-judul">Sesi Hampir Berakhir</h3>'
+      + '<p id="sesi-pesan">Sesi Anda akan berakhir dalam ±10 menit. Perpanjang sesi agar isian yang belum disimpan tidak hilang.</p>'
+      + '<div class="mk-aksi"><a class="mk-tombol batal" href="' + urlKeluar + '">Keluar</a>'
+      + '<button type="button" class="mk-tombol" id="sesi-perpanjang">Perpanjang Sesi</button></div></div>';
+    document.body.appendChild(lapik);
+    const tombol = lapik.querySelector('#sesi-perpanjang');
+    tombol.focus();
+    tombol.addEventListener('click', function () {
+      tombol.disabled = true;
+      fetch(urlSentuh, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (res) { if (!res.ok) throw new Error('gagal'); return res.json(); })
+        .then(function () { lapik.remove(); jadwalkan(); })
+        .catch(function () { tombol.disabled = false; });
+    });
+  };
+  jadwalkan();
+})();
 </script>

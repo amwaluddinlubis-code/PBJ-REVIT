@@ -14,6 +14,7 @@
   --ta-garis: var(--ina-stroke-primary, #e5e5e5);
   --ta-garis-2: var(--ina-stroke-secondary, #a3a3a3);
   --ta-latar: #f9fafb;
+  --ta-latar-2: #eef5f7;
 }
 
 body {
@@ -1390,6 +1391,7 @@ html.gelap {
   --ta-garis: #22334f;
   --ta-garis-2: #3d5578;
   --ta-latar: #0a1120;
+  --ta-latar-2: #16263f;
   --ta-biru-50: rgba(9, 104, 246, .18);
 }
 
@@ -3799,6 +3801,7 @@ body:not(.login) .dashboard-hero .tombol.abu {
 .remah a { color: var(--ta-teks-2); font-weight: 550; }
 .remah a:hover { color: var(--ta-biru); text-decoration: none; }
 .remah span[aria-hidden] { opacity: .55; }
+.remah [aria-current="page"] { color: var(--ta-teks); font-weight: 600; }
 
 /* Keadaan kosong yang konsisten untuk panel tanpa data. */
 .kosong {
@@ -3942,3 +3945,24 @@ html.gelap .fm-kaki { background: rgba(255, 255, 255, .07); }
 .fm-tooltip { position: fixed; z-index: 500; max-width: 260px; background: #b42318; color: #fff; font-size: 11.5px; font-weight: 600; line-height: 1.35; padding: 6px 10px; border-radius: 8px; box-shadow: 0 8px 24px rgba(16, 24, 40, .25); pointer-events: none; }
 .fm-tooltip::after { content: ''; position: absolute; left: 16px; bottom: -5px; border: 5px solid transparent; border-top-color: #b42318; border-bottom: 0; }
 .fm-tooltip.bawah::after { bottom: auto; top: -5px; border-top: 0; border-bottom: 5px solid #b42318; }
+
+/* === Halaman Panduan Penggunaan (MarkdownMini) === */
+.panduan-bab { margin: 0; padding-left: 20px; line-height: 1.9; }
+.panduan-bab a { color: var(--ta-teks-2); font-weight: 550; }
+.panduan-bab a:hover { color: var(--ta-biru); text-decoration: none; }
+.panduan-isi { line-height: 1.65; }
+.panduan-isi h1 { font-size: 19px; margin: 4px 0 12px; }
+.panduan-isi h2 { font-size: 16px; margin: 26px 0 10px; padding-top: 14px; border-top: 1px solid var(--ta-garis); }
+.panduan-isi h2:first-of-type { border-top: 0; padding-top: 0; }
+.panduan-isi h3 { font-size: 14px; margin: 18px 0 8px; }
+.panduan-isi h4 { font-size: 13px; margin: 14px 0 6px; }
+.panduan-isi p { margin: 0 0 10px; }
+.panduan-isi ul, .panduan-isi ol { margin: 0 0 10px; padding-left: 22px; }
+.panduan-isi li { margin-bottom: 4px; }
+.panduan-isi code { background: var(--ta-latar-2, #eef5f7); border-radius: 4px; padding: 1px 5px; font-size: .92em; }
+.panduan-isi pre { background: var(--ta-latar-2, #eef5f7); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 0 0 12px; }
+.panduan-isi pre code { background: none; padding: 0; }
+.panduan-isi blockquote { margin: 0 0 12px; padding: 8px 14px; border-left: 3px solid var(--ta-biru); background: var(--ta-latar-2, #eef5f7); border-radius: 0 8px 8px 0; }
+.panduan-isi blockquote p { margin: 0; }
+.panduan-isi hr { border: 0; border-top: 1px solid var(--ta-garis); margin: 18px 0; }
+.panduan-isi .bungkus-tabel { margin-bottom: 12px; }

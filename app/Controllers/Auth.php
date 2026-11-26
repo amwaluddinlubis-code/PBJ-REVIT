@@ -74,4 +74,12 @@ class Auth extends BaseController
         session()->destroy();
         return redirect()->to('login')->with('sukses', 'Anda sudah keluar.');
     }
+
+    /** Sentuh sesi (dipanggil peringatan sesi di layout): menulis penanda
+     *  waktu agar sesi diperbarui tanpa mengubah data apa pun. */
+    public function sentuhSesi()
+    {
+        session()->set('sentuh_sesi', time());
+        return $this->response->setJSON(['ok' => true]);
+    }
 }

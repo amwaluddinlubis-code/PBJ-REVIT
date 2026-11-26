@@ -5,6 +5,82 @@
  * yang dibuka partial _sidebar.
  */
 $svg = static fn (string $k): string => ikonSvg($k);
+
+// Jejak halaman (breadcrumb): diturunkan dari URI dengan peta label yang
+// sama seperti menu sidebar; judul halaman menjadi remah terakhir.
+// Grup menu tidak punya halaman sendiri sehingga tampil tanpa tautan.
+$segJejak = array_values(array_filter(explode('/', uri_string()), static fn ($s) => $s !== ''));
+$jejak    = [];
+if ($segJejak !== []) {
+    $petaJejak = [
+        'impor'             => ['Perencanaan', 'Impor Dokumen Perencana'],
+        'analisa'           => ['Perencanaan', 'Analisa Pekerjaan'],
+        'acuan'             => ['Perencanaan', 'Acuan AHSP'],
+        'validasi-harga'    => ['Perencanaan', 'Validasi Harga Satuan'],
+        'bersih'            => ['Perencanaan', 'Pembersihan Hasil Impor'],
+        'rencana-belanja'   => ['Perencanaan', 'Rencana Belanja'],
+        'rencana-mingguan'  => ['Perencanaan', 'Rencana Mingguan'],
+        'simulasi'          => ['Perencanaan', 'Simulasi Mingguan'],
+        'biaya-non-gedung'  => ['Perencanaan', 'Biaya Non-Gedung'],
+        'gedung'            => ['Pembangunan Gedung', 'Kelola Gedung'],
+        'foto-progres'      => ['Pembangunan Gedung', 'Foto Progres'],
+        'kurva-s'           => ['Pembangunan Gedung', 'Kurva S'],
+        'laporan-kemajuan'  => ['Pembangunan Gedung', 'Laporan Kemajuan'],
+        'revisi-pekerjaan'  => ['Pembangunan Gedung', 'BA Revisi Pekerjaan'],
+        'spk'               => ['Belanja', 'Register SPK'],
+        'belum-bernomor'    => ['Belanja', 'Belum Bernomor SPK'],
+        'survei'            => ['Belanja', 'Survei Harga'],
+        'negosiasi'         => ['Belanja', 'Negosiasi'],
+        'dokumen'           => ['Belanja', 'BAP & BAST / Cetak'],
+        'bahan'             => ['Material', 'Master Bahan & Upah'],
+        'material'          => ['Material', 'Buku Material'],
+        'sisa-bahan'        => ['Material', 'Sisa Bahan'],
+        'penerimaan-dana'   => ['Keuangan', 'Penerimaan Dana'],
+        'invoice'           => ['Keuangan', 'Invoice'],
+        'buku-kas'          => ['Keuangan', 'Buku Kas (BKU)'],
+        'bukti-setor'       => ['Keuangan', 'Bukti Setor & Pajak'],
+        'upah'              => ['Keuangan', 'Pembayaran Upah'],
+        'lpj'               => ['Laporan', 'LPJ & Realisasi'],
+        'laporan'           => ['Laporan', 'Laporan & Ekspor'],
+        'template-laporan'  => ['Laporan', 'Template Laporan'],
+        'pengaturan'        => ['Pengaturan', 'Identitas & Pengaturan'],
+        'sekolah'           => ['Pengaturan', 'Kelola Sekolah'],
+        'pengguna'          => ['Pengaturan', 'Manajemen User'],
+        'pemeliharaan-db'   => ['Pengaturan', 'Pemeliharaan Database'],
+        'audit'             => ['Pengaturan', 'Jejak Audit'],
+        'profil'            => [null, 'Profil Saya'],
+        'panduan'           => [null, 'Panduan Penggunaan'],
+    ];
+    $petaSubJejak = [
+        'invoice/jurnal'        => 'Jurnal Pembayaran',
+        'lpj/rab-gabungan'      => 'RAB Gabungan',
+        'pengaturan/akses-menu' => 'Akses Menu',
+        'gedung/boq'            => 'BOQ',
+    ];
+    $judulBersih = trim(str_replace(' — Aplikasi PBJ Sekolah', '', (string) ($judul ?? '')));
+    if ($judulBersih === 'Aplikasi PBJ Sekolah') {
+        $judulBersih = ''; // judul bawaan tampil() — bukan nama halaman
+    }
+    $jejak[]     = ['label' => 'Dashboard', 'url' => base_url('/')];
+    $seg1        = $segJejak[0];
+    if (isset($petaJejak[$seg1])) {
+        [$grupJ, $labelJ] = $petaJejak[$seg1];
+        if ($grupJ !== null) {
+            $jejak[] = ['label' => $grupJ, 'url' => null];
+        }
+        $jejak[] = ['label' => $labelJ, 'url' => count($segJejak) > 1 ? base_url($seg1) : null];
+        $kunciSub = $seg1 . '/' . ($segJejak[1] ?? '');
+        if (count($segJejak) > 1 && isset($petaSubJejak[$kunciSub])) {
+            $jejak[] = ['label' => $petaSubJejak[$kunciSub], 'url' => count($segJejak) > 2 ? base_url($kunciSub) : null];
+        }
+    }
+    $labelTerakhir = $jejak[count($jejak) - 1]['label'] ?? '';
+    if ($judulBersih !== '' && $judulBersih !== $labelTerakhir) {
+        $jejak[] = ['label' => $judulBersih, 'url' => null];
+    }
+    // Remah terakhir selalu halaman saat ini (tanpa tautan).
+    $jejak[count($jejak) - 1]['url'] = null;
+}
 ?>
   <div class="utama">
     <div class="topbar">
@@ -47,6 +123,14 @@ $svg = static fn (string $k): string => ikonSvg($k);
       </div>
     </div>
     <main class="isi">
+      <?php if ($jejak !== []): ?>
+      <nav class="remah" aria-label="Jejak halaman">
+        <?php foreach ($jejak as $i => $remah): ?>
+          <?php if ($i > 0): ?><span aria-hidden="true">›</span><?php endif; ?>
+          <?php if ($remah['url'] !== null): ?><a href="<?= esc($remah['url']) ?>"><?= esc($remah['label']) ?></a><?php elseif ($i === count($jejak) - 1): ?><span aria-current="page"><?= esc($remah['label']) ?></span><?php else: ?><span><?= esc($remah['label']) ?></span><?php endif; ?>
+        <?php endforeach; ?>
+      </nav>
+      <?php endif; ?>
       <div class="atas"><?= esc($judul ?? '') ?></div>
       <div id="wadah-toast" aria-live="polite">
         <?php if (session()->getFlashdata('sukses')): ?>
