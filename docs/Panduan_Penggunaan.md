@@ -460,7 +460,7 @@ Jumlah penerimaan **terisi otomatis** sebesar sisa target tahap terpilih (target
 
 ### Buku Kas (BKU)
 
-Menu **Keuangan → Buku Kas** adalah pembukuan resmi menurut Juknis: **Buku Kas Umum (BKU), Buku Bank, dan Buku Pembantu Kas Tunai**. Isinya gabungan otomatis dari:
+Menu **Keuangan → Buku Kas** adalah pembukuan resmi menurut Juknis: **Buku Kas Umum (BKU), Buku Bank, Buku Pembantu Kas Tunai, dan Buku Pajak** (tab di bagian atas halaman). Baris pembayaran dicatat **bruto** dan pajak yang dipungut (PPN, PPh 22, PPh 21) tampil sebagai **baris pungut tersendiri** — tidak digabung ke baris pembayaran; setoran pajak tampil sebagai baris keluar dari Bukti Setor. **Buku Pajak** hanya menampilkan baris pungut (penerimaan) dan setor (pengeluaran) sehingga saldonya adalah pajak yang belum disetor. Isi buku gabungan otomatis dari:
 
 - transaksi manual yang dicatat di halaman ini (koreksi dan kas lain-lain),
 - penerimaan dana (modul Penerimaan Dana),

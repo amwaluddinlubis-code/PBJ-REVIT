@@ -1168,17 +1168,32 @@ abstract class BaseController extends Controller
             [$sid]
         )->getResultArray() as $r) {
             $pjk = $this->pajakPembelian((float) $r['nilai'], $this->ppnInvoice($peta, (int) $r['spk_id'], (float) $r['nilai']));
+            // Baris pembayaran (bruto) dan baris pungut pajak DIPISAH
+            // (instruksi Wilda 26 Nov 2026): pembayaran keluar sebesar
+            // nilai invoice, pajak yang dipungut masuk sebagai baris
+            // pungut tersendiri per jenis — saldo akhir sama, tetapi
+            // pungutan terlihat dan bisa dibaca di Buku Pajak.
+            $tglBayar = $r['tgl_bayar'] ?: $r['tgl_inv'];
             $entri[] = [
-                'tanggal' => $r['tgl_bayar'] ?: $r['tgl_inv'],
+                'tanggal' => $tglBayar,
                 'uraian' => 'Pembayaran Invoice ' . (int) $r['nomor_urut'] . ' (SPK ' . (int) $r['spk_nomor'] . ')'
-                    . ($r['penyedia'] ? ' — ' . $r['penyedia'] : '')
-                    . '; tagihan ' . $this->rp($r['nilai'])
-                    . ($pjk['ppn'] > 0 ? '; PPN dipungut ' . $this->rp($pjk['ppn']) : '')
-                    . ($pjk['pph22'] > 0 ? '; PPh 22 ' . $this->rp($pjk['pph22']) : ''),
-                'masuk' => 0.0, 'keluar' => $pjk['dibayar'],
+                    . ($r['penyedia'] ? ' — ' . $r['penyedia'] : ''),
+                'masuk' => 0.0, 'keluar' => (float) $r['nilai'],
                 'kanal' => 'bank', 'sumber' => 'invoice', 'ref_id' => (int) $r['nomor_urut'],
                 'kategori' => 'belanja',
             ];
+            foreach (['ppn' => 'PPN', 'pph22' => 'PPh 22'] as $kunciPjk => $labelPjk) {
+                if ($pjk[$kunciPjk] > 0) {
+                    $entri[] = [
+                        'tanggal' => $tglBayar,
+                        'uraian' => 'Pungut ' . $labelPjk . ' atas Invoice ' . (int) $r['nomor_urut'] . ' (SPK ' . (int) $r['spk_nomor'] . ')'
+                            . ($r['penyedia'] ? ' — ' . $r['penyedia'] : ''),
+                        'masuk' => (float) $pjk[$kunciPjk], 'keluar' => 0.0,
+                        'kanal' => 'bank', 'sumber' => 'pungut', 'ref_id' => (int) $r['nomor_urut'],
+                        'kategori' => 'pajak',
+                    ];
+                }
+            }
         }
 
         foreach ($db->table('upah_bayar')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $u) {
@@ -1186,12 +1201,20 @@ abstract class BaseController extends Controller
             $entri[] = [
                 'tanggal' => $u['tanggal'],
                 'uraian' => 'Upah ' . $u['jenis_tenaga'] . ($u['penerima'] ? ' — ' . $u['penerima'] : '')
-                    . ' (' . rtrim(rtrim(number_format((float) $u['orang_hari'], 2, ',', '.'), '0'), ',') . ' OH × ' . $this->rp($u['tarif']) . ')'
-                    . ($pph21 > 0 ? '; PPh 21 ' . $this->rp($pph21) : ''),
-                'masuk' => 0.0, 'keluar' => (float) $u['jumlah'] - $pph21,
+                    . ' (' . rtrim(rtrim(number_format((float) $u['orang_hari'], 2, ',', '.'), '0'), ',') . ' OH × ' . $this->rp($u['tarif']) . ')',
+                'masuk' => 0.0, 'keluar' => (float) $u['jumlah'],
                 'kanal' => 'tunai', 'sumber' => 'upah', 'ref_id' => (int) $u['id'],
                 'kategori' => 'belanja',
             ];
+            if ($pph21 > 0) {
+                $entri[] = [
+                    'tanggal' => $u['tanggal'],
+                    'uraian' => 'Pungut PPh 21 atas Upah ' . $u['jenis_tenaga'] . ($u['penerima'] ? ' — ' . $u['penerima'] : ''),
+                    'masuk' => $pph21, 'keluar' => 0.0,
+                    'kanal' => 'tunai', 'sumber' => 'pungut', 'ref_id' => (int) $u['id'],
+                    'kategori' => 'pajak',
+                ];
+            }
         }
 
         foreach ($db->table('bukti_setor')->where(['sekolah_id' => $sid, 'is_deleted' => 0])->get()->getResultArray() as $b) {

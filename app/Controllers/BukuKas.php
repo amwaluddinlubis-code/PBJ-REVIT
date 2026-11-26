@@ -14,7 +14,14 @@ class BukuKas extends BaseController
 {
     private function namaBuku(string $buku): string
     {
-        return ['bku' => 'Buku Kas Umum', 'bank' => 'Buku Bank', 'tunai' => 'Buku Pembantu Kas Tunai'][$buku] ?? 'Buku Kas Umum';
+        return ['bku' => 'Buku Kas Umum', 'bank' => 'Buku Bank', 'tunai' => 'Buku Pembantu Kas Tunai', 'pajak' => 'Buku Pajak'][$buku] ?? 'Buku Kas Umum';
+    }
+
+    /** Baris milik Buku Pajak: pungutan (masuk) + setoran pajak (keluar). */
+    private function barisPajak(array $e): bool
+    {
+        return ($e['sumber'] ?? '') === 'pungut'
+            || (($e['sumber'] ?? '') === 'setor' && ($e['kategori'] ?? '') === 'pajak');
     }
 
     private function kanalBuku(string $buku): ?string
@@ -55,6 +62,9 @@ class BukuKas extends BaseController
         $snap = $this->snapshotBulan($bulan);
         if ($snap !== null) {
             $semua = $this->gabungBukuKas($kanal);
+            if ($buku === 'pajak') {
+                $semua = array_values(array_filter($semua, fn ($e) => $this->barisPajak($e)));
+            }
             $awalBulan = $bulan . '-01';
             $saldo = 0.0;
             foreach ($semua as $e) {
@@ -71,12 +81,18 @@ class BukuKas extends BaseController
                 if ($kanal !== null && $e['kanal'] !== $kanal) {
                     continue;
                 }
+                if ($buku === 'pajak' && ! $this->barisPajak($e)) {
+                    continue;
+                }
                 $saldo += $e['masuk'] - $e['keluar'];
                 $baris[] = $e + ['saldo' => $saldo];
             }
             return [$saldoAwal, $baris, $saldo];
         }
         $semua = $this->gabungBukuKas($kanal);
+        if ($buku === 'pajak') {
+            $semua = array_values(array_filter($semua, fn ($e) => $this->barisPajak($e)));
+        }
         $awalBulan = $bulan . '-01';
         $akhirBulan = date('Y-m-t', strtotime($awalBulan));
         $saldo = 0.0;
@@ -97,7 +113,7 @@ class BukuKas extends BaseController
     public function index()
     {
         $buku = (string) ($this->request->getGet('buku') ?? 'bku');
-        if (! in_array($buku, ['bku', 'bank', 'tunai'], true)) {
+        if (! in_array($buku, ['bku', 'bank', 'tunai', 'pajak'], true)) {
             $buku = 'bku';
         }
         $bulan = (string) ($this->request->getGet('bulan') ?? '');
@@ -497,7 +513,7 @@ class BukuKas extends BaseController
     public function cetak()
     {
         $buku = (string) ($this->request->getGet('buku') ?? 'bku');
-        if (! in_array($buku, ['bku', 'bank', 'tunai'], true)) {
+        if (! in_array($buku, ['bku', 'bank', 'tunai', 'pajak'], true)) {
             $buku = 'bku';
         }
         $bulan = (string) ($this->request->getGet('bulan') ?? '');
