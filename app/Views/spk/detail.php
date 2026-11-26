@@ -5,7 +5,6 @@
 <?= $this->include('spk/_panel_tambah') ?>
 <?php endif; ?>
 <?= $this->include('spk/_panel_bap_bast') ?>
-<?= $this->include('spk/_panel_tuntaskan') ?>
 <?= $this->include('spk/_panel_tenaga') ?>
 <?= $this->include('spk/_panel_ceklis') ?>
 <?= $this->include('spk/_panel_ketentuan') ?>

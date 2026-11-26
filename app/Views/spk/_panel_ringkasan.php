@@ -2,7 +2,7 @@
 <details class="panel panel-lipat" data-lipat-id="spk-detail-spk-nomor" open>
   <summary>SPK Nomor <?= (int) $s['nomor'] ?> — <?= esc($s['paket'] ?? '') ?></summary>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-2" style="margin-top:4px">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-2" style="margin-top:4px">
     <div><span class="kecil-teks">Tanggal SPK</span><br><strong><?= esc(tgl($s['tanggal'] ?? null)) ?></strong></div>
     <div><span class="kecil-teks">Periode Pelaksanaan</span><br><strong><?= esc(tgl($s['tgl_mulai'] ?? null)) ?> s.d. <?= esc(tgl($s['tgl_selesai'] ?? null)) ?></strong></div>
     <div><span class="kecil-teks">Status</span><br><strong><?= esc($s['status']) ?></strong></div>

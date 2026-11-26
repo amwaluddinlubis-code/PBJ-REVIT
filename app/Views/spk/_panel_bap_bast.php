@@ -1,6 +1,6 @@
 <?php /* Partial spk/detail: panel BAP & BAST — pengisian lengkap di halaman ini (desain ulang 26 Nov 2026). Buat BAP/BAST memakai endpoint Dokumen dengan balik=spk; Ubah BAP/BAST lewat modal helper form_modal (simpan AJAX ke Dokumen::bapSimpan/bastSimpan). Aturan: satu BAP hanya satu BAST. */ ?>
 <details class="panel panel-lipat" data-lipat-id="spk-detail-bap-bast" id="panel-bap-bast" open>
-  <summary>BAP &amp; BAST — Pemeriksaan dan Serah Terima</summary>
+  <summary>BAP, BAST &amp; Invoice — Pemeriksaan, Serah Terima &amp; Penagihan</summary>
 
   <p class="kecil-teks" style="margin-top:0">BAP dibuat dari rincian SPK; lengkapi tanggal pemeriksaan dan kondisi setiap barang lewat tombol Ubah BAP. <strong>Satu BAP hanya mempunyai satu BAST.</strong> Nomor surat mengikuti pola 422/&lt;JENIS&gt;/&lt;urut&gt;/&lt;tahun&gt;. Pengelolaan yang sama juga tersedia di halaman <a href="<?= base_url('dokumen') ?>">Dokumen</a>.</p>
 
@@ -28,8 +28,8 @@
         <?php if (! empty($b['tanggal'])): ?><span><?= esc(tgl($b['tanggal'])) ?></span><?php else: ?><span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;font-size:11px">tanggal belum diisi</span><?php endif; ?>
         <span class="kecil-teks"><?= count($itemsB) ?> item diperiksa</span>
         <span style="margin-left:auto">
-          <button type="button" class="tombol kecil" onclick="bukaModalBap('modal-bap-<?= (int) $b['id'] ?>', <?= esc(json_encode(['id' => (int) $b['id'], 'nomor_urut' => (int) $b['nomor_urut'], 'tanggal' => (string) (! empty($b['tanggal']) ? $b['tanggal'] : ($s['tgl_selesai'] ?? date('Y-m-d')))], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAP</button>
-          <a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-bap/' . $b['id']) ?>" target="_blank">Cetak BAP</a>
+          <button type="button" class="tombol kecil" style="min-width:124px" onclick="bukaModalBap('modal-bap-<?= (int) $b['id'] ?>', <?= esc(json_encode(['id' => (int) $b['id'], 'nomor_urut' => (int) $b['nomor_urut'], 'tanggal' => (string) (! empty($b['tanggal']) ? $b['tanggal'] : ($s['tgl_selesai'] ?? date('Y-m-d')))], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAP</button>
+          <a class="tombol kecil abu" style="min-width:124px" href="<?= base_url('dokumen/cetak-bap/' . $b['id']) ?>" target="_blank">Cetak BAP</a>
         </span>
       </div>
       <?php foreach ($bast_per_bap[(int) $b['id']] ?? [] as $bs): ?>
@@ -39,8 +39,8 @@
         <span class="kecil-teks"><?= esc($bs['surat']) ?></span>
         <?php if (! empty($bs['tanggal'])): ?><span><?= esc(tgl($bs['tanggal'])) ?></span><?php else: ?><span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;font-size:11px">tanggal belum diisi</span><?php endif; ?>
         <span style="margin-left:auto">
-          <button type="button" class="tombol kecil" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) (! empty($bs['tanggal']) ? $bs['tanggal'] : ($bs['bap_tanggal'] ?? ''))], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAST</button>
-          <a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank">Cetak BAST</a>
+          <button type="button" class="tombol kecil" style="min-width:124px" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) (! empty($bs['tanggal']) ? $bs['tanggal'] : ($bs['bap_tanggal'] ?? ''))], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAST</button>
+          <a class="tombol kecil abu" style="min-width:124px" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank">Cetak BAST</a>
         </span>
       </div>
       <?php endforeach; ?>
@@ -62,13 +62,58 @@
         <span class="kecil-teks"><?= esc($bs['surat']) ?> · belum tertaut BAP</span>
         <?php if (! empty($bs['tanggal'])): ?><span><?= esc(tgl($bs['tanggal'])) ?></span><?php else: ?><span style="background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;font-size:11px">tanggal belum diisi</span><?php endif; ?>
         <span style="margin-left:auto">
-          <button type="button" class="tombol kecil" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) (! empty($bs['tanggal']) ? $bs['tanggal'] : ($bs['bap_tanggal'] ?? ''))], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAST</button>
-          <a class="tombol kecil abu" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank">Cetak BAST</a>
+          <button type="button" class="tombol kecil" style="min-width:124px" onclick="bukaFormModal('modal-bast-<?= (int) $bs['id'] ?>', <?= esc(json_encode(['id' => (int) $bs['id'], 'nomor_urut' => (int) $bs['nomor_urut'], 'tanggal' => (string) (! empty($bs['tanggal']) ? $bs['tanggal'] : ($bs['bap_tanggal'] ?? ''))], JSON_UNESCAPED_UNICODE), 'attr') ?>)"><span class="ikon-tombol" aria-hidden="true"><?= ikonSvg('pensil') ?></span> Ubah BAST</button>
+          <a class="tombol kecil abu" style="min-width:124px" href="<?= base_url('dokumen/cetak-bast/' . $bs['id']) ?>" target="_blank">Cetak BAST</a>
         </span>
       </div>
     </div>
     <?php endforeach; ?>
   <?php endif; ?>
+
+  <?php $adaBast = ! empty($bast_per_bap) || ! empty($bast_umum); ?>
+  <div style="border:1px solid var(--ta-garis);border-radius:10px;padding:12px 14px;margin-bottom:12px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <strong>Invoice</strong>
+      <?php if (! empty($tuntas['invoice'])): ?>
+        <span class="kecil-teks">urut <?= (int) $tuntas['invoice']['nomor_urut'] ?></span>
+        <span><?= rp($tuntas['invoice']['nilai']) ?></span>
+        <span class="lencana <?= $tuntas['invoice']['status'] === 'Sudah Bayar' ? 'hijau' : 'abu' ?>"><?= esc($tuntas['invoice']['status']) ?></span>
+        <span style="margin-left:auto"><a class="tombol kecil abu" style="min-width:124px" href="<?= base_url('invoice') ?>">Lihat Invoice</a></span>
+      <?php elseif ($adaBast): ?>
+        <span class="kecil-teks">belum dibuat — nilai terisi otomatis sebesar sisa nilai BAST</span>
+        <span style="margin-left:auto"><a class="tombol kecil" style="min-width:124px" href="<?= base_url('invoice/baru?spk=' . $s['id']) ?>">+ Buat Invoice</a></span>
+      <?php else: ?>
+        <span class="kecil-teks">dibuat sesudah BAST terbit</span>
+      <?php endif; ?>
+    </div>
+    <?php if (! empty($tuntas['invoice']) && $tuntas['invoice']['status'] === 'Sudah Bayar'): ?>
+      <p class="kecil-teks" style="margin:10px 0 0">Rantai SPK ini <strong>sudah selesai</strong>: BAP, BAST, Invoice, dan pembayaran tercatat. Tinggal cetak berkasnya.</p>
+    <?php elseif (! empty($tuntas['invoice'])): ?>
+      <p style="margin:10px 0 0">Invoice menunggu pembayaran.<?php if (! empty($tuntas['pajak'])): ?> DPP <?= rp($tuntas['pajak']['dpp']) ?> · PPN <?= rp($tuntas['pajak']['ppn']) ?> · PPh 22 <?= rp($tuntas['pajak']['pph22']) ?> · bersih diterima penyedia <strong><?= rp($tuntas['pajak']['dibayar']) ?></strong>.<?php endif; ?></p>
+      <form method="post" action="<?= base_url('spk/bayar-cepat/' . $s['id']) ?>" style="margin-top:8px">
+        <?= csrf_field() ?>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+          <label>Tanggal bayar<br><input type="date" name="tanggal_bayar" value="<?= esc($tuntas['tgl_bayar'] ?? date('Y-m-d')) ?>" min="<?= esc($tuntas['buku_min'] ?? '') ?>" max="<?= esc($tuntas['buku_max'] ?? '') ?>" required><span class="kecil-teks" style="display:block">Buku terbuka: <?= esc($tuntas['buku_label'] ?? '') ?></span></label>
+          <button class="tombol" type="submit">Catat Bayar</button>
+        </div>
+        <p class="kecil-teks">Pembayaran tercatat di Jurnal Pembayaran dan status invoice menjadi Sudah Bayar; kontrol pagu anggaran tetap berlaku.</p>
+      </form>
+    <?php elseif (($tuntas['jml_bap'] ?? 0) === 0 && $detail !== []): ?>
+      <form method="post" action="<?= base_url('spk/tuntaskan/' . $s['id']) ?>" style="margin-top:10px">
+        <?= csrf_field() ?>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+          <label>Tanggal terima barang (untuk BAP, BAST &amp; Invoice)<br><input type="date" name="tanggal_terima" value="<?= esc($tuntas['tgl_terima']) ?>" required></label>
+          <button class="tombol" type="submit">Buat BAP + BAST + Invoice Sekaligus</button>
+        </div>
+        <p class="kecil-teks">Satu klik membuat BAP (semua rincian, kondisi Cukup), BAST yang tertaut ke BAP itu, dan Invoice senilai total SPK <?= rp($nilai_paket) ?> — ketiganya bertanggal terima yang sama. Tanggal dan kondisi tetap bisa diubah belakangan dari halaman Dokumen.</p>
+      </form>
+    <?php endif; ?>
+  </div>
+
+  <p style="margin-bottom:0"><a class="tombol abu" href="<?= base_url('dokumen/cetak-spj/' . $s['id']) ?>" target="_blank">Cetak SPJ Lengkap (SPK + BAP + BAST + Invoice)</a>
+  <?php foreach ($template_spk ?? [] as $tpl): ?>
+    <a class="tombol abu" href="<?= base_url('template-laporan/render/' . $tpl['id'] . '?spk=' . $s['id']) ?>" title="Render SPK ini dari Template Laporan (.xlsx)">Unduh dari Template: <?= esc($tpl['nama']) ?></a>
+  <?php endforeach; ?></p>
 </details>
 
 <?php foreach ($daftar_bap ?? [] as $b): $itemsB = $items_per_bap[(int) $b['id']] ?? []; ?>

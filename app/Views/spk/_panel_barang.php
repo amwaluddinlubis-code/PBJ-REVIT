@@ -20,15 +20,15 @@
     <td class="angka"><?= rp($d['total']) ?></td>
     <td class="angka"><?= $d['ppn'] ? rp($d['ppn']) : '—' ?></td>
     <td>
-      <form class="inline" method="post" action="<?= base_url('spk/detail-ubah/' . $d['id']) ?>">
+      <form class="inline" id="form-ubah-detail-<?= (int) $d['id'] ?>" method="post" action="<?= base_url('spk/detail-ubah/' . $d['id']) ?>">
         <?= csrf_field() ?>
         <input type="number" name="qty" step="0.001" value="<?= esc($d['qty']) ?>" style="width:80px"<?= ! empty($rincian_terkunci) ? ' disabled' : '' ?>>
         <input type="text" inputmode="numeric" data-uang name="harga" step="1" value="<?= esc($d['harga']) ?>" style="width:110px"<?= ! empty($rincian_terkunci) ? ' disabled' : '' ?>>
         <label class="kecil-teks"><input type="checkbox" name="pajak" value="1" style="width:auto"<?= $d['pajak'] ? ' checked' : '' ?><?= ! empty($rincian_terkunci) ? ' disabled' : '' ?>> kena PPN</label>
-        <button type="submit" class="kecil abu"<?= ! empty($rincian_terkunci) ? ' disabled' : '' ?>>Simpan</button>
       </form>
     </td>
-    <td>
+    <td style="white-space:nowrap">
+      <button type="submit" form="form-ubah-detail-<?= (int) $d['id'] ?>" class="kecil"<?= ! empty($rincian_terkunci) ? ' disabled' : '' ?>>Simpan</button>
       <form class="inline" method="post" action="<?= base_url('spk/detail-hapus/' . $d['id']) ?>" data-konfirmasi="Hapus baris ini?">
         <?= csrf_field() ?>
         <button type="submit" class="kecil bahaya"<?= ! empty($rincian_terkunci) ? ' disabled' : '' ?>>Hapus</button>

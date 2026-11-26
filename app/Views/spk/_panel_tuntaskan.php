@@ -1,4 +1,4 @@
-<?php /* Partial spk/detail: panel Tuntaskan SPK satu panel (BAST, invoice, pembayaran, LPJ). */ ?>
+<?php /* TIDAK DIPAKAI LAGI sejak 26 Nov 2026: isi panel Tuntaskan SPK (invoice, bayar cepat, tuntaskan sekaligus, Cetak SPJ Lengkap) digabung ke panel BAP, BAST & Invoice di _panel_bap_bast.php atas instruksi Wilda. Berkas dibiarkan ada karena snapshot-push tidak bisa menghapus berkas. */ ?>
 <details class="panel panel-lipat" data-lipat-id="spk-detail-tuntaskan-spk-satu-panel">
   <summary>Tuntaskan SPK — Satu Panel</summary>
 
