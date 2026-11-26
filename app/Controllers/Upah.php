@@ -169,9 +169,9 @@ class Upah extends BaseController
      */
     public function cetakDaftar()
     {
-        $bulan = (string) ($this->request->getGet('bulan') ?? date('Y-m'));
+        $bulan = (string) ($this->request->getGet('bulan') ?? '');
         if (! preg_match('/^\d{4}-\d{2}$/', $bulan)) {
-            $bulan = date('Y-m');
+            $bulan = $this->bulanTerbuka()['ym'] ?? date('Y-m');
         }
         $rows = $this->db()->table('upah_bayar')
             ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])

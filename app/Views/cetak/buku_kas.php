@@ -2,7 +2,7 @@
 <?= view('cetak/_gaya') ?>
 <?= view('cetak/_kop', ['idn' => $idn]) ?>
 <h1><?= esc(strtoupper($nama_buku)) ?></h1>
-<div class="nomor">Bulan <?= esc(date('F Y', strtotime($bulan . '-01'))) ?> · <?= esc($idn['nama_sekolah'] ?? '') ?></div>
+<div class="nomor">Bulan <?= esc(bulanTahun($bulan)) ?> · <?= esc($idn['nama_sekolah'] ?? '') ?></div>
 <table class="baris">
   <tr><th style="width:110px">Tanggal</th><th>Uraian</th><th class="angka">Penerimaan</th><th class="angka">Pengeluaran</th><th class="angka">Saldo</th></tr>
   <tr><td></td><td><strong>Saldo awal bulan</strong></td><td></td><td></td><td class="angka"><strong><?= rp($saldo_awal) ?></strong></td></tr>

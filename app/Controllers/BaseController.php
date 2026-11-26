@@ -905,6 +905,7 @@ abstract class BaseController extends Controller
         return [
             'buku_min'   => $bt['awal'] ?? '',
             'buku_max'   => $bt['akhir'] ?? '',
+            'buku_ym'    => $bt['ym'] ?? '',
             'buku_label' => $bt['label'] ?? '— semua bulan sudah ditutup —',
         ];
     }

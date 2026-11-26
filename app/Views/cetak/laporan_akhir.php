@@ -20,6 +20,6 @@
 <p>Demikian laporan akhir pekerjaan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.</p>
 <div class="ttd">
   <div class="kol">Ketua P2SP<div class="ruang"></div><strong><?= esc($idn['ketua_nama'] ?? '') ?></strong></div>
-  <div class="kol tengah"><?= esc($idn['kabupaten'] ?? '') ?>, <?= esc(date('d F Y')) ?><br>Kepala <?= esc($idn['nama_sekolah'] ?? '') ?><div class="ruang"></div><strong><?= esc($idn['kepsek_nama'] ?? '') ?></strong><?= ! empty($idn['kepsek_nip']) ? '<br>NIP ' . esc($idn['kepsek_nip']) : '' ?></div>
+  <div class="kol tengah"><?= esc($idn['kabupaten'] ?? '') ?>, <?= esc(tglPanjang(date('Y-m-d'))) ?><br>Kepala <?= esc($idn['nama_sekolah'] ?? '') ?><div class="ruang"></div><strong><?= esc($idn['kepsek_nama'] ?? '') ?></strong><?= ! empty($idn['kepsek_nip']) ? '<br>NIP ' . esc($idn['kepsek_nip']) : '' ?></div>
 </div>
 </body></html>

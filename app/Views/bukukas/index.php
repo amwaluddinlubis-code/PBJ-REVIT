@@ -1,4 +1,4 @@
-<?php $namaBulan = static fn ($ym) => date('F Y', strtotime($ym . '-01')); ?>
+<?php $namaBulan = static fn ($ym) => bulanTahun($ym); ?>
 <details class="panel panel-lipat" data-lipat-id="bukukas-panel" open>
   <summary><?= esc($nama_buku) ?> — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></summary>
 

@@ -49,9 +49,10 @@ class BukuKas extends BaseController
         if (! in_array($buku, ['bku', 'bank', 'tunai'], true)) {
             $buku = 'bku';
         }
-        $bulan = (string) ($this->request->getGet('bulan') ?? date('Y-m'));
+        $bulan = (string) ($this->request->getGet('bulan') ?? '');
         if (! preg_match('/^\d{4}-\d{2}$/', $bulan)) {
-            $bulan = date('Y-m');
+            // Bawaan: Bulan Terbuka (bulan terkecil yang belum ditutup).
+            $bulan = $this->bulanTerbuka()['ym'] ?? date('Y-m');
         }
         [$saldoAwal, $baris, $saldoAkhir] = $this->susunBulan($buku, $bulan);
         $manual = $this->db()->table('kas_transaksi')
@@ -273,9 +274,10 @@ class BukuKas extends BaseController
         if (! in_array($buku, ['bku', 'bank', 'tunai'], true)) {
             $buku = 'bku';
         }
-        $bulan = (string) ($this->request->getGet('bulan') ?? date('Y-m'));
+        $bulan = (string) ($this->request->getGet('bulan') ?? '');
         if (! preg_match('/^\d{4}-\d{2}$/', $bulan)) {
-            $bulan = date('Y-m');
+            // Bawaan: Bulan Terbuka (bulan terkecil yang belum ditutup).
+            $bulan = $this->bulanTerbuka()['ym'] ?? date('Y-m');
         }
         [$saldoAwal, $baris, $saldoAkhir] = $this->susunBulan($buku, $bulan);
         return view('cetak/buku_kas', [

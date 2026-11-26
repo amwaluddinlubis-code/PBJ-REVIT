@@ -1,6 +1,6 @@
 <div class="panel" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
   <form method="get" action="<?= base_url('upah/cetak-daftar') ?>" target="_blank" style="display:flex;gap:8px;align-items:end">
-    <label>Bulan daftar upah <input type="month" name="bulan" value="<?= date('Y-m') ?>"></label>
+    <label>Bulan daftar upah <input type="month" name="bulan" value="<?= esc($buku_ym ?? date('Y-m')) ?>"></label>
     <button type="submit" class="kecil">Cetak Daftar Pembayaran Upah</button>
   </form>
   <span class="kecil-teks">Format dokumen pembayaran upah Juknis — lengkap dengan kolom tanda tangan penerima.</span>

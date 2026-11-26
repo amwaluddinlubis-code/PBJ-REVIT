@@ -3,7 +3,7 @@
 <?= view('cetak/_kop', ['idn' => $idn]) ?>
 <h1>BERITA ACARA REVISI PEKERJAAN</h1>
 <div class="nomor">Nomor : 422/REVISI/<?= (int) $r['id'] ?>/<?= esc(date('Y', strtotime($r['tanggal']))) ?></div>
-<p>Pada hari ini <?= esc(date('l', strtotime($r['tanggal']))) ?>, tanggal <?= esc(date('d F Y', strtotime($r['tanggal']))) ?>, kami yang bertanda tangan di bawah ini — Kepala <?= esc($idn['nama_sekolah'] ?? '') ?>, Ketua Panitia Pembangunan Satuan Pendidikan (P2SP), dan Tim Teknis — telah menyepakati revisi pekerjaan pada Program Revitalisasi Satuan Pendidikan Tahun <?= esc($idn['tahun_anggaran'] ?? '2026') ?> dengan rincian sebagai berikut:</p>
+<p>Pada hari ini <?= esc(namaHariIndo($r['tanggal'])) ?>, tanggal <?= esc(tglPanjang($r['tanggal'])) ?>, kami yang bertanda tangan di bawah ini — Kepala <?= esc($idn['nama_sekolah'] ?? '') ?>, Ketua Panitia Pembangunan Satuan Pendidikan (P2SP), dan Tim Teknis — telah menyepakati revisi pekerjaan pada Program Revitalisasi Satuan Pendidikan Tahun <?= esc($idn['tahun_anggaran'] ?? '2026') ?> dengan rincian sebagai berikut:</p>
 <table class="baris">
   <tr><td style="width:180px">Gedung / Paket</td><td><?= esc($r['gedung_nama']) ?></td></tr>
   <?php if (! empty($r['pekerjaan_nama'])): ?><tr><td>Pekerjaan</td><td><?= esc($r['pekerjaan_nama']) ?></td></tr><?php endif; ?>

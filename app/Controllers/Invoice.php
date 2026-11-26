@@ -26,7 +26,8 @@ class Invoice extends BaseController
             'inv'        => $inv,
             'spk'        => $this->daftarSpk(),
             'nomor_baru' => ((int) $row->m) + 1,
-        ], 'Register Invoice — Aplikasi PBJ Sekolah');
+            'tgl_bayar_default' => $this->tanggalBulanBekerja(),
+        ] + $this->batasBuku(), 'Register Invoice — Aplikasi PBJ Sekolah');
     }
 
     public function baru()
@@ -36,10 +37,10 @@ class Invoice extends BaseController
         // ?spk=<id> agar formulir langsung memilih SPK itu.
         $spkPilih = (int) $this->request->getGet('spk') ?: null;
         return $this->tampil('invoice/form', [
-            'i' => ['nomor_urut' => ((int) $row->m) + 1, 'status' => 'Belum Bayar', 'spk_id' => $spkPilih],
+            'i' => ['nomor_urut' => ((int) $row->m) + 1, 'status' => 'Belum Bayar', 'spk_id' => $spkPilih, 'tanggal' => $this->tanggalBulanBekerja()],
             'spk' => $this->daftarSpk(),
             'aksi' => 'invoice/simpan',
-        ], 'Invoice Baru');
+        ] + $this->batasBuku(), 'Invoice Baru');
     }
 
     /** Balasan form modal (pola balasForm): AJAX -> JSON {ok, pesan}. */
@@ -70,6 +71,11 @@ class Invoice extends BaseController
             return $this->balasForm(false, 'Invoice ini sudah dibayar dan terkunci. Koreksi dilakukan dengan menghapus jurnal pembayaran terlebih dahulu.');
         }
         $data = $this->ambilForm();
+        // Invoice adalah entitas uang: tanggalnya mengikuti Bulan Terbuka
+        // yang sama dengan pencatatan arus kas (instruksi Wilda 26 Nov 2026).
+        if (! empty($data['tanggal']) && ($g = $this->galatBulanTertutup((string) $data['tanggal']))) {
+            return $this->balasForm(false, $g);
+        }
         if ($this->nomorDipakai((int) $data['nomor_urut'], $id)) {
             return $this->balasForm(false, 'Nomor urut invoice ' . $data['nomor_urut'] . ' sudah dipakai di sekolah ini.');
         }
@@ -102,7 +108,7 @@ class Invoice extends BaseController
         }
         return $this->tampil('invoice/form', [
             'i' => $i, 'spk' => $this->daftarSpk(), 'aksi' => 'invoice/perbarui/' . $id,
-        ], 'Ubah Invoice ' . $i['nomor_urut']);
+        ] + $this->batasBuku(), 'Ubah Invoice ' . $i['nomor_urut']);
     }
 
     /** Invoice terkunci bila sudah memiliki jurnal pembayaran aktif. */

@@ -3,7 +3,7 @@
 <?= view('cetak/_kop', ['idn' => $idn]) ?>
 <?php $angka = static fn ($n) => rtrim(rtrim(number_format((float) $n, 2, ',', '.'), '0'), ','); ?>
 <h1>DAFTAR PEMBAYARAN UPAH</h1>
-<div class="nomor">Bulan <?= esc(date('F Y', strtotime($bulan . '-01'))) ?> · Program Revitalisasi Satuan Pendidikan SMP Tahun <?= esc($idn['tahun_anggaran'] ?? '2026') ?></div>
+<div class="nomor">Bulan <?= esc(bulanTahun($bulan)) ?> · Program Revitalisasi Satuan Pendidikan SMP Tahun <?= esc($idn['tahun_anggaran'] ?? '2026') ?></div>
 <table class="baris">
   <tr><th style="width:34px">No</th><th>Tanggal</th><th>Jenis Tenaga</th><th>Penerima</th><th class="angka">OH</th><th class="angka">Tarif/OH</th><th class="angka">Jumlah Bruto</th><th class="angka">PPh 21</th><th class="angka">Bersih Diterima</th><th style="width:130px">Tanda Tangan Penerima</th></tr>
   <?php $no = 0; foreach ($rows as $u): $no++; ?>

@@ -42,7 +42,7 @@ foreach ($spk['bast'] ?? [] as $sid => $daftar) {
     'kolom' => [
         ['nama' => 'nomor_urut', 'label' => 'Nomor Urut', 'jenis' => 'angka', 'wajib' => true],
         ['nama' => 'no_toko', 'label' => 'No. Invoice Toko', 'jenis' => 'teks'],
-        ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal'],
+        ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal', 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
         ['nama' => 'spk_id', 'label' => 'SPK', 'jenis' => 'pilihan', 'wajib' => true, 'opsi' => $opsiSpk],
         ['nama' => 'bap_id', 'label' => 'BAP', 'jenis' => 'pilihan', 'opsi' => $opsiBap],
         ['nama' => 'bast_id', 'label' => 'BAST', 'jenis' => 'pilihan', 'opsi' => $opsiBast],
@@ -65,7 +65,7 @@ foreach ($spk['bast'] ?? [] as $sid => $daftar) {
     }
   }
   window.bukaInvoiceBaru = function () {
-    window.bukaFormModal('modal-invoice', { nomor_urut: <?= (int) ($nomor_baru ?? 1) ?>, status: 'Belum Bayar' });
+    window.bukaFormModal('modal-invoice', { nomor_urut: <?= (int) ($nomor_baru ?? 1) ?>, status: 'Belum Bayar', tanggal: <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?> });
     sinkronSelect();
   };
   window.bukaInvoiceUbah = function (id) {

@@ -119,7 +119,7 @@
 // Jembatan modal setor: tanggal bawaan mengikuti Bulan Terbuka, lalu
 // sinkronkan widget select-cari sesudah modal dibuka.
 function bukaSetorBaru() {
-  window.bukaFormModal('modal-setor', { tanggal_setor: <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?> });
+  window.bukaFormModal('modal-setor', { tanggal_setor: <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?>, masa: <?= json_encode($buku_ym ?? '') ?> });
   var m = document.getElementById('modal-setor');
   if (m && window.perbaruiSelectCari) {
     m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });

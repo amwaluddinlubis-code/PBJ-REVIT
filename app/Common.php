@@ -42,6 +42,44 @@ if (! function_exists('tglWaktu')) {
     }
 }
 
+if (! function_exists('namaBulanIndo')) {
+    /** Nama bulan bahasa Indonesia dari nomor bulan 1–12. */
+    function namaBulanIndo(int $b): string
+    {
+        return [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][$b] ?? '';
+    }
+}
+
+if (! function_exists('bulanTahun')) {
+    /** "Mei 2026" dari string 'Y-m' atau tanggal ISO — nama bulan selalu bahasa Indonesia. */
+    function bulanTahun($ym): string
+    {
+        $t = strtotime(substr((string) $ym, 0, 7) . '-01');
+        return $t === false ? (string) $ym : namaBulanIndo((int) date('n', $t)) . ' ' . date('Y', $t);
+    }
+}
+
+if (! function_exists('tglPanjang')) {
+    /** Tanggal panjang bahasa Indonesia: "26 November 2026". */
+    function tglPanjang($iso): string
+    {
+        $t = strtotime((string) $iso);
+        return $t === false ? (string) $iso : (int) date('j', $t) . ' ' . namaBulanIndo((int) date('n', $t)) . ' ' . date('Y', $t);
+    }
+}
+
+if (! function_exists('namaHariIndo')) {
+    /** Nama hari bahasa Indonesia dari tanggal ISO: "Kamis". */
+    function namaHariIndo($iso): string
+    {
+        $t = strtotime((string) $iso);
+        if ($t === false) {
+            return '';
+        }
+        return ['Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'][date('l', $t)] ?? '';
+    }
+}
+
 if (! function_exists('ikonSvg')) {
     /**
      * Ikon SVG bersama (peta path 24x24) untuk seluruh tampilan —

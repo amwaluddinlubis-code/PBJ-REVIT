@@ -3,7 +3,7 @@
 <?= view('cetak/_kop', ['idn' => $idn]) ?>
 <h1>LAPORAN KEMAJUAN PENYELESAIAN PEKERJAAN</h1>
 <div class="nomor">No. : .................................................</div>
-<p>Pada hari ini <?= esc(date('l')) ?>, tanggal <?= esc(date('d')) ?> bulan <?= esc(date('F')) ?> tahun <?= esc(date('Y')) ?>, yang bertanda tangan di bawah ini kami:</p>
+<p>Pada hari ini <?= esc(namaHariIndo(date('Y-m-d'))) ?>, tanggal <?= esc(date('d')) ?> bulan <?= esc(namaBulanIndo((int) date('n'))) ?> tahun <?= esc(date('Y')) ?>, yang bertanda tangan di bawah ini kami:</p>
 <table>
   <tr><td style="width:120px">Nama</td><td>: <?= esc($idn['kepsek_nama'] ?? '') ?></td></tr>
   <tr><td>Jabatan</td><td>: Kepala <?= esc($idn['nama_sekolah'] ?? '') ?></td></tr>
@@ -12,13 +12,13 @@
 <p>dengan ini menyatakan sebagai berikut:</p>
 <p>Berdasarkan Surat Keputusan Pejabat Pembuat Komitmen Direktorat Sekolah Menengah Pertama tentang Penetapan Penerima Bantuan Pemerintah Program Revitalisasi Satuan Pendidikan Sekolah Menengah Pertama (SMP) Nomor ............................ Tanggal ............................ dan Perjanjian Kerja Sama Pemberian Bantuan Pemerintah Program Revitalisasi Nomor ............................ Tanggal ............................ untuk Revitalisasi Satuan <?= esc($idn['nama_sekolah'] ?? '') ?> dengan nilai bantuan sebesar <?= rp($pagu) ?>.</p>
 <ol>
-  <li>Sampai dengan tanggal <?= esc(date('d F Y')) ?>, kemajuan penyelesaian pekerjaan Revitalisasi Satuan Pendidikan sebesar <strong><?= number_format($fisik, 1, ',', '.') ?>%</strong>.</li>
+  <li>Sampai dengan tanggal <?= esc(tglPanjang(date('Y-m-d'))) ?>, kemajuan penyelesaian pekerjaan Revitalisasi Satuan Pendidikan sebesar <strong><?= number_format($fisik, 1, ',', '.') ?>%</strong>.</li>
   <li>Apabila di kemudian hari, atas laporan penyelesaian pekerjaan yang telah dibuat mengakibatkan kerugian negara maka saya bersedia untuk dituntut penggantian kerugian negara sesuai dengan ketentuan peraturan perundang-undangan.</li>
 </ol>
 <p>Demikian Laporan Kemajuan Penyelesaian Pekerjaan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.</p>
 <div class="ttd">
   <div class="kol"></div>
-  <div class="kol tengah"><?= esc($idn['kabupaten'] ?? '') ?>, <?= esc(date('d F Y')) ?><br>Kepala <?= esc($idn['nama_sekolah'] ?? '') ?><div class="ruang"></div><strong><?= esc($idn['kepsek_nama'] ?? '') ?></strong><?= ! empty($idn['kepsek_nip']) ? '<br>NIP ' . esc($idn['kepsek_nip']) : '' ?></div>
+  <div class="kol tengah"><?= esc($idn['kabupaten'] ?? '') ?>, <?= esc(tglPanjang(date('Y-m-d'))) ?><br>Kepala <?= esc($idn['nama_sekolah'] ?? '') ?><div class="ruang"></div><strong><?= esc($idn['kepsek_nama'] ?? '') ?></strong><?= ! empty($idn['kepsek_nip']) ? '<br>NIP ' . esc($idn['kepsek_nip']) : '' ?></div>
 </div>
 
 <h2 style="margin-top:28px">Lampiran — Rincian Kemajuan per Gedung</h2>

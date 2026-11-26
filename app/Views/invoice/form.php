@@ -3,7 +3,7 @@
   <?= csrf_field() ?>
   <label>Nomor Urut <input type="number" name="nomor_urut" min="1" value="<?= esc(old('nomor_urut', $i['nomor_urut'] ?? '')) ?>" required></label>
   <label>No. Invoice Toko <input name="no_toko" value="<?= esc(old('no_toko', $i['no_toko'] ?? '')) ?>"></label>
-  <label>Tanggal <input type="date" name="tanggal" value="<?= esc(old('tanggal', $i['tanggal'] ?? '')) ?>"></label>
+  <label>Tanggal <input type="date" name="tanggal" value="<?= esc(old('tanggal', $i['tanggal'] ?? '')) ?>" min="<?= esc($buku_min ?? '') ?>" max="<?= esc($buku_max ?? '') ?>"><span class="kecil-teks" style="display:block">Buku terbuka: <?= esc($buku_label ?? '') ?></span></label>
   <label>SPK
     <select name="spk_id" id="pilihSpk" required data-select-cari data-placeholder="— pilih SPK —">
       <?php foreach ($spk['list'] as $s): ?>
