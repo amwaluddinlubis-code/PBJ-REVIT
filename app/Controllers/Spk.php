@@ -597,6 +597,9 @@ class Spk extends BaseController
 
     public function detailTambah($spkId)
     {
+        if ($kunci = $this->rincianTerkunci((int) $spkId)) {
+            return redirect()->to('spk/detail/' . $spkId)->with('galat', $kunci);
+        }
         $bahanId = (int) $this->request->getPost('bahan_id');
         $qty = (float) str_replace(',', '.', (string) ($this->request->getPost('qty') ?: 0));
         $harga = $this->request->getPost('harga');

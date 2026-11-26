@@ -2,7 +2,7 @@
 <details class="panel panel-lipat" data-lipat-id="bukukas-panel" open>
   <summary><?= esc($nama_buku) ?> — <?= esc($sekolahAktif['nama_sekolah'] ?? '') ?></summary>
 
-  <p style="margin-top:0;color:var(--ta-teks-2)">Pembukuan menurut Juknis Revitalisasi SMP 2026. Isi buku tergabung otomatis dari pembayaran invoice (bank), pembayaran upah (tunai), bukti setor ke kas negara, dan transaksi manual di bawah. Baris pembayaran dan baris pungut/setor pajak dicatat terpisah — pungutan pajak tampil sebagai baris penerimaan tersendiri dan dirangkum di Buku Pajak (saldo = pajak belum disetor). Buku ditutup setiap akhir bulan.</p>
+  <p style="margin-top:0;color:var(--ta-teks-2)">Pembukuan menurut Juknis Revitalisasi SMP 2026. Isi buku tergabung otomatis dari pembayaran invoice (sesuai kanal pembayarannya — tunai atau bank), pembayaran upah (tunai), bukti setor ke kas negara, dan transaksi manual di bawah. Baris pembayaran dan baris pungut/setor pajak dicatat terpisah — pungutan pajak tampil sebagai baris penerimaan tersendiri dan dirangkum di Buku Pajak (saldo = pajak belum disetor). Buku ditutup setiap akhir bulan.</p>
   <div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center">
     <div class="tab">
       <?php foreach (['bku' => 'Buku Kas Umum', 'bank' => 'Buku Bank', 'tunai' => 'Buku Kas Tunai', 'pajak' => 'Buku Pajak'] as $k => $label): ?>
