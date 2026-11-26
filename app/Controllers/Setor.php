@@ -92,7 +92,7 @@ class Setor extends BaseController
             'baris' => $baris, 'setor' => $setor,
             'sisa' => $sisa, 'setor_sisa' => $setorSisa,
             'tgl_bayar_default' => $this->tanggalBulanBekerja(),
-        ], 'Bukti Setor & Pajak — Aplikasi PBJ Sekolah');
+        ] + $this->batasBuku(), 'Bukti Setor & Pajak — Aplikasi PBJ Sekolah');
     }
 
     /** Balasan form modal (pola Bahan::balasForm): AJAX -> JSON {ok, pesan}; biasa -> redirect flash. */
@@ -116,7 +116,7 @@ class Setor extends BaseController
             || $jumlah <= 0 || ! $r->getPost('tanggal_setor')) {
             return $this->balasForm(false, 'Jenis setoran, tanggal setor, dan jumlah wajib diisi.');
         }
-        if ($g = $this->galatBulanBekerja((string) $r->getPost('tanggal_setor'))) {
+        if ($g = $this->galatBulanTertutup((string) $r->getPost('tanggal_setor'))) {
             return $this->balasForm(false, $g);
         }
         $masa = trim((string) $r->getPost('masa'));
@@ -137,6 +137,10 @@ class Setor extends BaseController
 
     public function hapus($id)
     {
+        $row = $this->db()->table('bukti_setor')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        if ($row && ($g = $this->galatBulanTertutup($row['tanggal_setor']))) {
+            return redirect()->to('/bukti-setor')->with('galat', $g);
+        }
         $this->hapusLunak('bukti_setor', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
         $this->catatAudit('bukti_setor', (int) $id, 'hapus', 'Bukti setor dihapus.');
         return redirect()->to('/bukti-setor')->with('sukses', 'Bukti setor dihapus.');
@@ -145,15 +149,23 @@ class Setor extends BaseController
     public function hapusMassal()
     {
         $n = 0;
+        $terkunci = 0;
         foreach ($this->idsTerpilih() as $id) {
-            $ada = $this->db()->table('bukti_setor')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults();
-            if ($ada > 0) {
+            $row = $this->db()->table('bukti_setor')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+            if ($row) {
+                if ($this->galatBulanTertutup($row['tanggal_setor'])) {
+                    $terkunci++;
+                    continue;
+                }
                 $this->hapusLunak('bukti_setor', ['id' => $id, 'sekolah_id' => $this->sid()]);
                 $n++;
             }
         }
-        return redirect()->to('/bukti-setor')->with($n > 0 ? 'sukses' : 'galat',
-            $n > 0 ? $n . ' bukti setor terpilih dihapus.' : 'Tidak ada bukti setor yang diproses.');
+        $pesan = $n > 0 ? $n . ' bukti setor terpilih dihapus.' : 'Tidak ada bukti setor yang diproses.';
+        if ($terkunci > 0) {
+            $pesan .= ' ' . $terkunci . ' bukti setor dilewati karena bukunya sudah ditutup.';
+        }
+        return redirect()->to('/bukti-setor')->with($n > 0 ? 'sukses' : 'galat', $pesan);
     }
 
     public function kosongkan()
@@ -162,11 +174,22 @@ class Setor extends BaseController
             return $d;
         }
         $this->catatAudit('bukti_setor', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
-        $ids = array_column($this->db()->table('bukti_setor')->select('id')
-            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
-        foreach ($ids as $id) {
-            $this->hapusLunak('bukti_setor', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        $rows = $this->db()->table('bukti_setor')->select('id, tanggal_setor')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray();
+        $n = 0;
+        $terkunci = 0;
+        foreach ($rows as $row) {
+            if ($this->galatBulanTertutup($row['tanggal_setor'])) {
+                $terkunci++;
+                continue;
+            }
+            $this->hapusLunak('bukti_setor', ['id' => (int) $row['id'], 'sekolah_id' => $this->sid()]);
+            $n++;
         }
-        return redirect()->to('/bukti-setor')->with('sukses', 'Bukti setor dikosongkan: ' . count($ids) . ' catatan dihapus.');
+        $pesan = 'Bukti setor dikosongkan: ' . $n . ' catatan dihapus.';
+        if ($terkunci > 0) {
+            $pesan .= ' ' . $terkunci . ' catatan bulan tertutup tidak ikut terhapus.';
+        }
+        return redirect()->to('/bukti-setor')->with('sukses', $pesan);
     }
 }

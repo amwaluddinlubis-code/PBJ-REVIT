@@ -34,7 +34,8 @@ class Penerimaan extends BaseController
             'target1' => round($pagu * 0.7), 'target2' => round($pagu * 0.3),
             'terima1' => $per[1], 'terima2' => $per[2], 'terimaLain' => $per['lain'],
             'daftar' => $daftar, 'fisik' => $fisik,
-        ], 'Penerimaan Dana Bantuan — Aplikasi PBJ Sekolah');
+            'tgl_bayar_default' => $this->tanggalBulanBekerja(),
+        ] + $this->batasBuku(), 'Penerimaan Dana Bantuan — Aplikasi PBJ Sekolah');
     }
 
     /** Balasan form modal (pola Bahan::balasForm): AJAX -> JSON {ok, pesan}; biasa -> redirect flash. */
@@ -56,6 +57,9 @@ class Penerimaan extends BaseController
         $tahap = (int) $r->getPost('tahap');
         if ($jumlah <= 0 || ! $r->getPost('tanggal') || ! in_array($tahap, [1, 2], true)) {
             return $this->balasForm(false, 'Tanggal, tahap (1/2), dan jumlah penerimaan wajib diisi.');
+        }
+        if ($g = $this->galatBulanTertutup((string) $r->getPost('tanggal'))) {
+            return $this->balasForm(false, $g);
         }
         $kanal = (string) $r->getPost('kanal') === 'tunai' ? 'tunai' : 'bank';
         $this->db()->table('kas_transaksi')->insert([
@@ -83,15 +87,23 @@ class Penerimaan extends BaseController
     public function hapusMassal()
     {
         $n = 0;
+        $terkunci = 0;
         foreach ($this->idsTerpilih() as $id) {
-            $ada = $this->db()->table('kas_transaksi')->where(['id' => $id] + $this->syaratPenerimaan())->countAllResults();
-            if ($ada > 0) {
+            $row = $this->db()->table('kas_transaksi')->where(['id' => $id] + $this->syaratPenerimaan())->get()->getRowArray();
+            if ($row) {
+                if ($this->galatBulanTertutup($row['tanggal'])) {
+                    $terkunci++;
+                    continue;
+                }
                 $this->hapusLunak('kas_transaksi', ['id' => $id, 'sekolah_id' => $this->sid()]);
                 $n++;
             }
         }
-        return redirect()->to('/penerimaan-dana')->with($n > 0 ? 'sukses' : 'galat',
-            $n > 0 ? $n . ' catatan penerimaan terpilih dihapus (ikut hilang dari Buku Kas).' : 'Tidak ada catatan yang diproses.');
+        $pesan = $n > 0 ? $n . ' catatan penerimaan terpilih dihapus (ikut hilang dari Buku Kas).' : 'Tidak ada catatan yang diproses.';
+        if ($terkunci > 0) {
+            $pesan .= ' ' . $terkunci . ' catatan dilewati karena bukunya sudah ditutup.';
+        }
+        return redirect()->to('/penerimaan-dana')->with($n > 0 ? 'sukses' : 'galat', $pesan);
     }
 
     public function kosongkan()
@@ -100,12 +112,23 @@ class Penerimaan extends BaseController
             return $d;
         }
         $this->catatAudit('penerimaan', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
-        $ids = array_column($this->db()->table('kas_transaksi')->select('id')
-            ->where($this->syaratPenerimaan())->get()->getResultArray(), 'id');
-        foreach ($ids as $id) {
-            $this->hapusLunak('kas_transaksi', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        $rows = $this->db()->table('kas_transaksi')->select('id, tanggal')
+            ->where($this->syaratPenerimaan())->get()->getResultArray();
+        $n = 0;
+        $terkunci = 0;
+        foreach ($rows as $row) {
+            if ($this->galatBulanTertutup($row['tanggal'])) {
+                $terkunci++;
+                continue;
+            }
+            $this->hapusLunak('kas_transaksi', ['id' => (int) $row['id'], 'sekolah_id' => $this->sid()]);
+            $n++;
         }
-        return redirect()->to('/penerimaan-dana')->with('sukses', 'Catatan penerimaan dikosongkan: ' . count($ids) . ' catatan dihapus (ikut hilang dari Buku Kas).');
+        $pesan = 'Catatan penerimaan dikosongkan: ' . $n . ' catatan dihapus (ikut hilang dari Buku Kas).';
+        if ($terkunci > 0) {
+            $pesan .= ' ' . $terkunci . ' catatan bulan tertutup tidak ikut terhapus.';
+        }
+        return redirect()->to('/penerimaan-dana')->with('sukses', $pesan);
     }
 
     /** Cetak kuitansi bukti penerimaan uang (format dokumen Juknis). */

@@ -801,53 +801,120 @@ abstract class BaseController extends Controller
      * Kontrol pagu (Aturan 4): total belanja tidak boleh melebihi total anggaran.
      * Mengembalikan [boleh, sisa_sebelum, total_anggaran].
      */
-    /**
-     * Bulan Bekerja sekolah aktif (keputusan AMWAL 26 Nov 2026): bulan
-     * dalam tahun_anggaran yang terbuka untuk pencatatan uang, diatur di
-     * Pengaturan. null bila belum diatur (kunci belum berlaku).
-     *
-     * @return array{bulan:int, tahun:int, ym:string, label:string}|null
-     */
-    protected function bulanBekerja(): ?array
+    /** Nama bulan Indonesia 1–12. */
+    protected function namaBulan(int $b): string
     {
-        $idn = $this->sekolahAktif();
-        $b = (int) ($idn['bulan_bekerja'] ?? 0);
-        if ($b < 1 || $b > 12) {
-            return null;
-        }
-        $tahun = (int) ($idn['tahun_anggaran'] ?? date('Y'));
-        $nama = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-        return ['bulan' => $b, 'tahun' => $tahun, 'ym' => sprintf('%04d-%02d', $tahun, $b), 'label' => $nama[$b] . ' ' . $tahun];
+        return [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][$b] ?? '';
     }
 
     /**
-     * Penjaga Bulan Bekerja: kembalikan pesan galat bila tanggal (ISO;
-     * kosong = hari ini) berada di luar bulan bekerja, null bila lolos
-     * atau bulan bekerja belum diatur. Dipakai semua pencatatan arus kas.
+     * Bulan buku yang sudah ditutup pada tahun anggaran sekolah aktif
+     * (tabel tutup_buku). Mengembalikan peta bulan (1–12) => baris tutup.
      */
-    protected function galatBulanBekerja(?string $tanggal): ?string
+    protected function petaTutupBuku(): array
     {
-        $bb = $this->bulanBekerja();
-        if ($bb === null) {
-            return null;
+        $tahun = (int) ($this->sekolahAktif()['tahun_anggaran'] ?? date('Y'));
+        $peta = [];
+        if ($this->db()->tableExists('tutup_buku')) {
+            foreach ($this->db()->table('tutup_buku')
+                ->where(['sekolah_id' => $this->sid(), 'tahun' => $tahun, 'is_deleted' => 0])
+                ->orderBy('bulan')->get()->getResultArray() as $r) {
+                $peta[(int) $r['bulan']] = $r;
+            }
         }
-        $t = $tanggal ?: date('Y-m-d');
-        if (substr((string) $t, 0, 7) !== $bb['ym']) {
-            return 'Tanggal ' . tgl($t) . ' berada di luar Bulan Bekerja ' . $bb['label']
-                . ' — pencatatan uang dikunci pada bulan bekerja. Ubah tanggalnya, atau pindah Bulan Bekerja lewat Pengaturan.';
+        return $peta;
+    }
+
+    /**
+     * Bulan Terbuka (keputusan AMWAL 26 Nov 2026 — Tutup Buku bulanan):
+     * bulan terkecil dalam tahun_anggaran yang belum ditutup. Semua
+     * pencatatan arus kas hanya diterima bertanggal dalam bulan ini;
+     * sesudah buku bulan n ditutup, pencatatan berikutnya langsung masuk
+     * bulan n+1. null bila kedua belas bulan sudah ditutup.
+     *
+     * @return array{bulan:int, tahun:int, ym:string, label:string, awal:string, akhir:string}|null
+     */
+    protected function bulanTerbuka(): ?array
+    {
+        $tahun = (int) ($this->sekolahAktif()['tahun_anggaran'] ?? date('Y'));
+        $tertutup = $this->petaTutupBuku();
+        for ($b = 1; $b <= 12; $b++) {
+            if (! isset($tertutup[$b])) {
+                $ym = sprintf('%04d-%02d', $tahun, $b);
+                return [
+                    'bulan' => $b, 'tahun' => $tahun, 'ym' => $ym,
+                    'label' => $this->namaBulan($b) . ' ' . $tahun,
+                    'awal' => $ym . '-01', 'akhir' => date('Y-m-t', strtotime($ym . '-01')),
+                ];
+            }
         }
         return null;
     }
 
-    /** Tanggal bawaan formulir pembayaran: hari ini bila di dalam bulan bekerja, selain itu hari terakhir bulan bekerja. */
+    /**
+     * Penjaga Tutup Buku: kembalikan pesan galat bila tanggal (ISO;
+     * kosong = hari ini) tidak jatuh di Bulan Terbuka — bulan sudah
+     * ditutup, bulan sesudah bulan terbuka (belum dibuka), atau di luar
+     * tahun anggaran. null bila lolos. WAJIB dipanggil setiap endpoint
+     * pencatatan DAN penghapusan transaksi uang.
+     */
+    protected function galatBulanTertutup(?string $tanggal): ?string
+    {
+        $tahun = (int) ($this->sekolahAktif()['tahun_anggaran'] ?? date('Y'));
+        $bt = $this->bulanTerbuka();
+        if ($bt === null) {
+            return 'Semua bulan tahun anggaran ' . $tahun . ' sudah ditutup — pencatatan uang tidak diterima lagi. '
+                . 'Buka kembali buku lewat menu Buku Kas (admin) bila memang perlu koreksi.';
+        }
+        $t = $tanggal ?: date('Y-m-d');
+        $ym = substr((string) $t, 0, 7);
+        if ($ym === $bt['ym']) {
+            return null;
+        }
+        if ((int) substr($ym, 0, 4) !== $tahun) {
+            return 'Tanggal ' . tgl($t) . ' berada di luar tahun anggaran ' . $tahun
+                . ' — pencatatan uang hanya diterima dalam Bulan Terbuka ' . $bt['label'] . '.';
+        }
+        if ($ym < $bt['ym']) {
+            return 'Buku bulan ' . $this->namaBulan((int) substr($ym, 5, 2)) . ' ' . $tahun . ' sudah ditutup — '
+                . 'tanggal ' . tgl($t) . ' tidak bisa dicatat/diubah lagi. Pencatatan masuk Bulan Terbuka ' . $bt['label'] . '.';
+        }
+        return 'Bulan ' . $this->namaBulan((int) substr($ym, 5, 2)) . ' ' . $tahun . ' belum dibuka — '
+            . 'tutup buku ' . $bt['label'] . ' lebih dulu lewat menu Buku Kas. Pencatatan saat ini masuk Bulan Terbuka ' . $bt['label'] . '.';
+    }
+
+    /**
+     * Tanggal bawaan formulir pencatatan uang: hari ini bila berada di
+     * Bulan Terbuka, selain itu hari pertama Bulan Terbuka — sehingga
+     * sesudah tutup buku, formulir langsung mengarah ke bulan n+1.
+     */
     protected function tanggalBulanBekerja(): string
     {
-        $bb = $this->bulanBekerja();
+        $bt = $this->bulanTerbuka();
         $hariIni = date('Y-m-d');
-        if ($bb === null || substr($hariIni, 0, 7) === $bb['ym']) {
+        if ($bt === null || substr($hariIni, 0, 7) === $bt['ym']) {
             return $hariIni;
         }
-        return date('Y-m-t', strtotime($bb['ym'] . '-01'));
+        return $bt['awal'];
+    }
+
+    /** Batas pemilih tanggal + label Bulan Terbuka untuk formulir pencatatan uang. */
+    protected function batasBuku(): array
+    {
+        $bt = $this->bulanTerbuka();
+        return [
+            'buku_min'   => $bt['awal'] ?? '',
+            'buku_max'   => $bt['akhir'] ?? '',
+            'buku_label' => $bt['label'] ?? '— semua bulan sudah ditutup —',
+        ];
+    }
+
+    /** Samakan kolom cache sekolah.bulan_bekerja dengan Bulan Terbuka (dipakai tampilan lama). */
+    protected function selaraskanBulanBekerja(): void
+    {
+        $bt = $this->bulanTerbuka();
+        $this->db()->table('sekolah')->where('id', $this->sid())
+            ->update(['bulan_bekerja' => $bt['bulan'] ?? null, 'updated_at' => date('Y-m-d H:i:s')]);
     }
 
     protected function cekPagu(float $tambahan): array

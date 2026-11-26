@@ -103,7 +103,7 @@
     'aksi' => base_url('penerimaan-dana/simpan'),
     'lebar' => 720,
     'kolom' => [
-        ['nama' => 'tanggal', 'label' => 'Tanggal Terima', 'jenis' => 'tanggal', 'wajib' => true],
+        ['nama' => 'tanggal', 'label' => 'Tanggal Terima', 'jenis' => 'tanggal', 'wajib' => true, 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
         ['nama' => 'tahap', 'label' => 'Tahap', 'jenis' => 'pilihan', 'opsi' => ['1' => 'Tahap 1 (70%)', '2' => 'Tahap 2 (30%)']],
         ['nama' => 'jumlah', 'label' => 'Jumlah Diterima (Rp)', 'jenis' => 'uang', 'wajib' => true, 'placeholder' => '437500000'],
         ['nama' => 'kanal', 'label' => 'Kanal', 'jenis' => 'pilihan', 'opsi' => ['bank' => 'Bank (rekening sekolah)', 'tunai' => 'Tunai']],

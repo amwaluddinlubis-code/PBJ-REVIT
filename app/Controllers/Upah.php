@@ -32,7 +32,7 @@ class Upah extends BaseController
             'master' => $db->table('upah_master')->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->orderBy('jenis')->get()->getResultArray(),
             'pekerjaan_per_gedung' => $this->pekerjaanPerGedung(),
             'tgl_bayar_default' => $this->tanggalBulanBekerja(),
-        ], 'Pembayaran Upah');
+        ] + $this->batasBuku(), 'Pembayaran Upah');
     }
 
     private function pekerjaanPerGedung(): array
@@ -78,7 +78,7 @@ class Upah extends BaseController
             return $this->balasForm(false, 'Jenis tenaga, orang-hari, dan tarif wajib terisi benar.');
         }
         $tanggalUpah = (string) ($r->getPost('tanggal') ?: date('Y-m-d'));
-        if ($g = $this->galatBulanBekerja($tanggalUpah)) {
+        if ($g = $this->galatBulanTertutup($tanggalUpah)) {
             return $this->balasForm(false, $g);
         }
         [$boleh, $sisaPagu, $anggaran] = $this->cekPagu($jumlah);
@@ -106,6 +106,10 @@ class Upah extends BaseController
 
     public function hapus($id)
     {
+        $row = $this->db()->table('upah_bayar')->where(['id' => (int) $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+        if ($row && ($g = $this->galatBulanTertutup($row['tanggal']))) {
+            return redirect()->to('/upah')->with('galat', $g);
+        }
         $this->hapusLunak('upah_bayar', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
         $this->catatAudit('upah_bayar', (int) $id, 'hapus', 'Catatan pembayaran upah dihapus.');
         return redirect()->to('/upah')->with('sukses', 'Catatan pembayaran upah dihapus.');
@@ -114,15 +118,23 @@ class Upah extends BaseController
     public function hapusMassal()
     {
         $n = 0;
+        $terkunci = 0;
         foreach ($this->idsTerpilih() as $id) {
-            $ada = $this->db()->table('upah_bayar')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->countAllResults();
-            if ($ada > 0) {
+            $row = $this->db()->table('upah_bayar')->where(['id' => $id, 'sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getRowArray();
+            if ($row) {
+                if ($this->galatBulanTertutup($row['tanggal'])) {
+                    $terkunci++;
+                    continue;
+                }
                 $this->hapusLunak('upah_bayar', ['id' => $id, 'sekolah_id' => $this->sid()]);
                 $n++;
             }
         }
-        return redirect()->to('/upah')->with($n > 0 ? 'sukses' : 'galat',
-            $n > 0 ? $n . ' catatan pembayaran upah terpilih dihapus.' : 'Tidak ada catatan yang diproses.');
+        $pesan = $n > 0 ? $n . ' catatan pembayaran upah terpilih dihapus.' : 'Tidak ada catatan yang diproses.';
+        if ($terkunci > 0) {
+            $pesan .= ' ' . $terkunci . ' catatan dilewati karena bukunya sudah ditutup.';
+        }
+        return redirect()->to('/upah')->with($n > 0 ? 'sukses' : 'galat', $pesan);
     }
 
     public function kosongkan()
@@ -131,12 +143,23 @@ class Upah extends BaseController
             return $d;
         }
         $this->catatAudit('upah_bayar', null, 'kosongkan', 'Modul dikosongkan oleh admin.');
-        $ids = array_column($this->db()->table('upah_bayar')->select('id')
-            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray(), 'id');
-        foreach ($ids as $id) {
-            $this->hapusLunak('upah_bayar', ['id' => (int) $id, 'sekolah_id' => $this->sid()]);
+        $rows = $this->db()->table('upah_bayar')->select('id, tanggal')
+            ->where(['sekolah_id' => $this->sid(), 'is_deleted' => 0])->get()->getResultArray();
+        $n = 0;
+        $terkunci = 0;
+        foreach ($rows as $row) {
+            if ($this->galatBulanTertutup($row['tanggal'])) {
+                $terkunci++;
+                continue;
+            }
+            $this->hapusLunak('upah_bayar', ['id' => (int) $row['id'], 'sekolah_id' => $this->sid()]);
+            $n++;
         }
-        return redirect()->to('/upah')->with('sukses', 'Catatan pembayaran upah dikosongkan: ' . count($ids) . ' catatan dihapus.');
+        $pesan = 'Catatan pembayaran upah dikosongkan: ' . $n . ' catatan dihapus.';
+        if ($terkunci > 0) {
+            $pesan .= ' ' . $terkunci . ' catatan bulan tertutup tidak ikut terhapus.';
+        }
+        return redirect()->to('/upah')->with('sukses', $pesan);
     }
 
     /**

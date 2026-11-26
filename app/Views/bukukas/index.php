@@ -63,6 +63,71 @@
   ?>
 </details>
 
+<details class="panel panel-lipat" data-lipat-id="bukukas-tutup-buku" open>
+  <summary>Tutup Buku Bulanan</summary>
+
+  <?php if ($buku_terbuka !== null): ?>
+  <p style="margin-top:0">Buku terbuka: <strong><?= esc($buku_terbuka['label']) ?></strong> — semua pencatatan uang masuk bulan ini. Sesudah ditutup, pencatatan berikutnya langsung masuk bulan berikutnya dan bulan ini tidak bisa diubah lagi.</p>
+  <div class="kartu-kpi">
+    <div class="kpi"><div class="label">Saldo Awal</div><div class="nilai"><?= rp($ringkas_terbuka['saldo_awal']) ?></div></div>
+    <div class="kpi"><div class="label">Total Masuk</div><div class="nilai"><?= rp($ringkas_terbuka['total_masuk']) ?></div></div>
+    <div class="kpi"><div class="label">Total Keluar</div><div class="nilai"><?= rp($ringkas_terbuka['total_keluar']) ?></div></div>
+    <div class="kpi"><div class="label">Saldo Akhir</div><div class="nilai"><?= rp($ringkas_terbuka['saldo_akhir']) ?></div></div>
+    <div class="kpi"><div class="label">Baris BKU</div><div class="nilai"><?= (int) $ringkas_terbuka['jumlah_baris'] ?></div></div>
+  </div>
+  <?php if ($belum_bayar_bulan > 0): ?>
+  <p class="kecil-teks">Perhatian: masih ada <?= (int) $belum_bayar_bulan ?> invoice belum dibayar bertanggal bulan ini. Periksa juga kewajiban pajak masa ini di menu Bukti Setor &amp; Pajak sebelum menutup buku.</p>
+  <?php else: ?>
+  <p class="kecil-teks">Periksa kewajiban pajak masa ini di menu Bukti Setor &amp; Pajak sebelum menutup buku.</p>
+  <?php endif; ?>
+  <form method="post" action="<?= base_url('buku-kas/tutup') ?>" data-konfirmasi="Tutup buku <?= esc($buku_terbuka['label']) ?> dengan saldo akhir <?= rp($ringkas_terbuka['saldo_akhir']) ?>? Sesudah ditutup, transaksi bulan ini tidak bisa dicatat/diubah/dihapus lagi dan pencatatan berikutnya masuk bulan berikutnya." data-konfirmasi-judul="Tutup Buku <?= esc($buku_terbuka['label']) ?>" data-konfirmasi-tombol="Ya, Tutup Buku" style="display:inline">
+    <?= csrf_field() ?>
+    <button type="submit">Tutup Buku <?= esc($buku_terbuka['label']) ?></button>
+  </form>
+  <?php else: ?>
+  <p style="margin-top:0">Seluruh bulan tahun anggaran ini sudah ditutup. Pencatatan uang tidak diterima lagi; buka kembali buku (admin) bila memang perlu koreksi.</p>
+  <?php endif; ?>
+
+  <?php if ($daftar_tutup !== []): ?>
+  <h3 style="margin:16px 0 8px">Bulan yang Sudah Ditutup</h3>
+  <?php
+  $barisTutup = [];
+  foreach ($daftar_tutup as $b => $t) {
+      $aksi = '<span class="kecil-teks">—</span>';
+      if ($saya_admin) {
+          $aksi = '<form class="inline" method="post" action="' . base_url('buku-kas/buka-kembali/' . $t['id']) . '" data-konfirmasi="Buka kembali buku bulan ini? Bulan ini dan bulan-bulan sesudahnya kembali terbuka dan harus ditutup ulang berurutan." data-konfirmasi-judul="Buka Kembali Buku" data-konfirmasi-tombol="Ya, Buka Kembali">'
+              . csrf_field()
+              . '<input type="text" name="alasan" placeholder="Alasan (wajib)" required style="max-width:190px"> '
+              . '<button class="kecil" type="submit">Buka Kembali</button></form>';
+      }
+      $barisTutup[] = ['sel' => [
+          $namaBulan(sprintf('%04d-%02d', (int) $t['tahun'], (int) $b)),
+          ['teks' => rp($t['saldo_awal']), 'angka' => true],
+          ['teks' => rp($t['total_masuk']), 'angka' => true],
+          ['teks' => rp($t['total_keluar']), 'angka' => true],
+          ['teks' => rp($t['saldo_akhir']), 'angka' => true],
+          (string) ($t['ditutup_oleh'] ?? '—') . ' · ' . (string) tglWaktu($t['ditutup_pada'] ?? null),
+          ['html' => $aksi],
+      ]];
+  }
+  echo tabel_bantu([
+      'cari' => false,
+      'paginasi' => false,
+      'kolom' => [
+          ['judul' => 'Bulan'],
+          ['judul' => 'Saldo Awal', 'angka' => true],
+          ['judul' => 'Masuk', 'angka' => true],
+          ['judul' => 'Keluar', 'angka' => true],
+          ['judul' => 'Saldo Akhir', 'angka' => true],
+          ['judul' => 'Ditutup Oleh'],
+          ['judul' => ''],
+      ],
+      'baris' => $barisTutup,
+  ]);
+  ?>
+  <?php endif; ?>
+</details>
+
 <details class="panel panel-lipat" data-lipat-id="bukukas-catat-transaksi-kas-manual">
   <summary>Catat Transaksi Kas Manual</summary>
 
@@ -121,7 +186,7 @@
     'aksi' => base_url('buku-kas/simpan'),
     'lebar' => 720,
     'kolom' => [
-        ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal', 'wajib' => true],
+        ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal', 'wajib' => true, 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
         ['nama' => 'uraian', 'label' => 'Uraian', 'jenis' => 'teks', 'wajib' => true, 'penuh' => true, 'placeholder' => 'cth. Penerimaan dana bantuan tahap 1'],
         ['nama' => 'kategori', 'label' => 'Kategori', 'jenis' => 'pilihan', 'opsi' => [
             'penerimaan' => 'Penerimaan dana bantuan',
@@ -138,7 +203,7 @@
     'tombol' => ['hapus' => false, 'simpan_teks' => 'Catat Transaksi'],
 ]) ?>
 <script>
-// Jembatan modal kas: tanggal bawaan mengikuti Bulan Bekerja, lalu
+// Jembatan modal kas: tanggal bawaan mengikuti Bulan Terbuka, lalu
 // sinkronkan widget select-cari sesudah modal dibuka.
 function bukaKasBaru() {
   window.bukaFormModal('modal-kas', { tanggal: <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?> });

@@ -16,15 +16,9 @@ $anggaran = (float) ($idn['total_anggaran'] ?? 0);
       <?= $f('nama_sekolah', 'Nama Sekolah') ?>
       <?= $f('npsn', 'NPSN') ?>
       <?= $f('tahun_anggaran', 'Tahun Anggaran') ?>
-      <label>Bulan Bekerja (Kunci Pencatatan)
-        <select data-select-cari name="bulan_bekerja">
-          <option value="">— belum diatur (belum mengunci) —</option>
-          <?php $namaBulan = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']; $bbAktif = (int) ($idn['bulan_bekerja'] ?? 0); ?>
-          <?php for ($b = 1; $b <= 12; $b++): ?>
-            <option value="<?= $b ?>"<?= $bbAktif === $b ? ' selected' : '' ?>><?= $namaBulan[$b] ?> <?= esc($idn['tahun_anggaran'] ?? '') ?></option>
-          <?php endfor; ?>
-        </select>
-        <span class="kecil-teks">Pencatatan uang — pembayaran invoice &amp; upah, transaksi kas manual, bukti setor — hanya diterima bertanggal dalam bulan ini; tanggal di luar bulan bekerja ditolak aplikasi. Pindahkan ke bulan berikutnya bila periode berganti (tercatat di Jejak Audit).</span>
+      <label>Buku Terbuka (Kunci Pencatatan)
+        <input value="<?= esc($buku_terbuka['label'] ?? '— semua bulan sudah ditutup —') ?>" readonly>
+        <span class="kecil-teks">Buku kas ditutup per bulan Januari–Desember secara berurutan lewat menu <a href="<?= base_url('buku-kas') ?>">Buku Kas</a> (panel Tutup Buku Bulanan). Pencatatan uang — penerimaan dana, pembayaran invoice &amp; upah, transaksi kas manual, bukti setor — hanya diterima bertanggal dalam buku terbuka ini; sesudah tutup buku, pencatatan berikutnya langsung masuk bulan berikutnya.</span>
       </label>
       <?= $f('paket_pekerjaan', 'Paket Pekerjaan', 'mis. Revitalisasi 3 Gedung') ?>
       <?= $f('alamat', 'Alamat') ?>

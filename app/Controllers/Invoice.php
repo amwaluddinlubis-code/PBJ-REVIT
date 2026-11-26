@@ -262,7 +262,7 @@ class Invoice extends BaseController
              JOIN spk s ON s.id = i.spk_id AND s.is_deleted = 0 WHERE i.status = 'Belum Bayar' AND s.sekolah_id = ? AND i.is_deleted = 0 ORDER BY i.nomor_urut",
             [$this->sid()]
         )->getResultArray();
-        return $this->tampil('invoice/jurnal', ['baris' => $baris, 'belum' => $belum, 'tgl_bayar_default' => $this->tanggalBulanBekerja()], 'Jurnal Pembayaran — Aplikasi PBJ Sekolah');
+        return $this->tampil('invoice/jurnal', ['baris' => $baris, 'belum' => $belum, 'tgl_bayar_default' => $this->tanggalBulanBekerja()] + $this->batasBuku(), 'Jurnal Pembayaran — Aplikasi PBJ Sekolah');
     }
 
     /** Balasan form modal jurnal: AJAX -> JSON {ok, pesan}; non-AJAX -> redirect ke halaman jurnal seperti semula. */
@@ -290,7 +290,7 @@ class Invoice extends BaseController
         if ($inv === null) {
             return $this->balasJurnal(false, 'Invoice tidak ditemukan.');
         }
-        if ($g = $this->galatBulanBekerja($this->request->getPost('tanggal') ?: null)) {
+        if ($g = $this->galatBulanTertutup($this->request->getPost('tanggal') ?: null)) {
             return $this->balasJurnal(false, $g);
         }
         // Kontrol pagu: total belanja terbayar tidak boleh melewati total anggaran
@@ -322,6 +322,12 @@ class Invoice extends BaseController
             return $d;
         }
         $p = $this->db()->table('pembayaran')->where(['id' => (int) $id, 'is_deleted' => 0])->get()->getRowArray();
+        if ($p) {
+            $invTgl = $this->db()->table('invoice')->select('tanggal')->where('id', $p['invoice_id'])->get()->getRowArray();
+            if ($g = $this->galatBulanTertutup($p['tanggal'] ?: ($invTgl['tanggal'] ?? null))) {
+                return redirect()->to('invoice/jurnal')->with('galat', $g);
+            }
+        }
         if ($p) {
             $this->db()->transStart();
             $this->hapusLunak('pembayaran', ['id' => (int) $id]);

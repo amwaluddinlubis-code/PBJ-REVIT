@@ -202,7 +202,7 @@ class Spk extends BaseController
             'pajak' => $pajakTuntas,
             'tgl_terima' => $s['tgl_selesai'] ?: date('Y-m-d'),
             'tgl_bayar' => $this->tanggalBulanBekerja(),
-        ];
+        ] + $this->batasBuku();
         // Catatan kebutuhan tenaga kerja SPK (panel + cetak).
         $tenaga = [];
         try {
@@ -409,7 +409,7 @@ class Spk extends BaseController
         if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $tgl)) {
             $tgl = date('Y-m-d');
         }
-        if ($g = $this->galatBulanBekerja($tgl)) {
+        if ($g = $this->galatBulanTertutup($tgl)) {
             return redirect()->to('spk/detail/' . (int) $id)->with('galat', $g);
         }
         $now = date('Y-m-d H:i:s');

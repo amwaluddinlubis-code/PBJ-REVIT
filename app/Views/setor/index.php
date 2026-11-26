@@ -107,7 +107,7 @@
     'kolom' => [
         ['nama' => 'jenis', 'label' => 'Jenis Setoran', 'jenis' => 'pilihan', 'opsi' => $label],
         ['nama' => 'masa', 'label' => 'Masa Pajak', 'jenis' => 'teks', 'placeholder' => 'YYYY-MM', 'petunjuk' => 'Bulan masa pajak, format YYYY-MM (cth. 2026-11).'],
-        ['nama' => 'tanggal_setor', 'label' => 'Tanggal Setor', 'jenis' => 'tanggal', 'wajib' => true],
+        ['nama' => 'tanggal_setor', 'label' => 'Tanggal Setor', 'jenis' => 'tanggal', 'wajib' => true, 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
         ['nama' => 'jumlah', 'label' => 'Jumlah Disetor (Rp)', 'jenis' => 'uang', 'wajib' => true],
         ['nama' => 'kode_billing', 'label' => 'Kode Billing', 'jenis' => 'teks', 'placeholder' => 'dari e-billing / SIMPONI'],
         ['nama' => 'ntpn', 'label' => 'NTPN', 'jenis' => 'teks', 'placeholder' => 'Nomor Transaksi Penerimaan Negara'],
@@ -116,7 +116,7 @@
     'tombol' => ['hapus' => false, 'simpan_teks' => 'Catat Bukti Setor'],
 ]) ?>
 <script>
-// Jembatan modal setor: tanggal bawaan mengikuti Bulan Bekerja, lalu
+// Jembatan modal setor: tanggal bawaan mengikuti Bulan Terbuka, lalu
 // sinkronkan widget select-cari sesudah modal dibuka.
 function bukaSetorBaru() {
   window.bukaFormModal('modal-setor', { tanggal_setor: <?= json_encode($tgl_bayar_default ?? date('Y-m-d')) ?> });

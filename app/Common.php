@@ -293,6 +293,15 @@ if (! function_exists('form_modal')) {
                 $h .= '<textarea id="' . esc($idField, 'attr') . '" name="' . esc($nama, 'attr') . '" data-label="' . esc($label, 'attr') . '" rows="' . (int) ($f['baris'] ?? 3) . '"' . $wajib . $ph . '></textarea>';
             } else {
                 $h .= '<input type="' . ($jenis === 'tanggal' ? 'date' : 'text') . '" id="' . esc($idField, 'attr') . '" name="' . esc($nama, 'attr') . '" data-label="' . esc($label, 'attr') . '"' . $wajib . $ph;
+                if ($jenis === 'tanggal') {
+                    // Batas tanggal opsional (mis. Bulan Terbuka pada pencatatan uang).
+                    if (! empty($f['min'])) {
+                        $h .= ' min="' . esc((string) $f['min'], 'attr') . '"';
+                    }
+                    if (! empty($f['max'])) {
+                        $h .= ' max="' . esc((string) $f['max'], 'attr') . '"';
+                    }
+                }
                 if ($jenis === 'uang') {
                     $h .= ' data-uang inputmode="numeric"';
                 } elseif ($jenis === 'angka') {

@@ -119,7 +119,7 @@ foreach ($semuaGedung ?? [] as $gd) {
     'aksi' => base_url('upah/simpan'),
     'lebar' => 720,
     'kolom' => [
-        ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal', 'wajib' => true],
+        ['nama' => 'tanggal', 'label' => 'Tanggal', 'jenis' => 'tanggal', 'wajib' => true, 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
         ['nama' => 'gedung_id', 'label' => 'Gedung', 'jenis' => 'pilihan', 'opsi' => $opsiGedung],
         ['nama' => 'pekerjaan_id', 'label' => 'Pekerjaan (opsional)', 'jenis' => 'pilihan', 'opsi' => ['' => '— tidak tertaut pekerjaan —']],
         ['nama' => 'jenis_tenaga', 'label' => 'Jenis tenaga', 'jenis' => 'teks', 'wajib' => true, 'placeholder' => 'mis. Pekerja / Tukang', 'saran' => array_map(static fn ($m) => (string) $m['jenis'], $master)],
@@ -145,7 +145,7 @@ foreach ($semuaGedung ?? [] as $gd) {
 <script>
 // Jembatan modal upah: pilihan pekerjaan mengikuti gedung terpilih
 // (peta pekerjaanPerGedung dari server), tanggal bawaan mengikuti
-// Bulan Bekerja, dan widget select-cari disinkronkan sesudah buka.
+// Bulan Terbuka, dan widget select-cari disinkronkan sesudah buka.
 const pekerjaanPerGedung = <?= json_encode($pekerjaan_per_gedung) ?>;
 function segarkanPekerjaan() {
   var selGedung = document.getElementById('modal-upah-gedung_id');

@@ -5,7 +5,7 @@
 <div class="panel">
   <h2>Catat Pembayaran</h2>
   <button type="button" class="tombol" onclick="bukaJurnalBaru()">+ Catat Pembayaran</button>
-  <span class="kecil-teks">Tanggal bayar bawaan mengikuti Bulan Bekerja; hanya bendahara yang dapat mencatat pembayaran.</span>
+  <span class="kecil-teks">Tanggal bayar bawaan mengikuti Bulan Terbuka; hanya bendahara yang dapat mencatat pembayaran.</span>
 </div>
 <?php
 $opsiBelum = ['' => '— pilih invoice —'];
@@ -19,13 +19,13 @@ foreach ($belum as $b) {
     'aksi' => base_url('invoice/jurnal-tambah'),
     'kolom' => [
         ['nama' => 'invoice_id', 'label' => 'Invoice Belum Bayar', 'jenis' => 'pilihan', 'wajib' => true, 'opsi' => $opsiBelum],
-        ['nama' => 'tanggal', 'label' => 'Tanggal Bayar', 'jenis' => 'tanggal'],
+        ['nama' => 'tanggal', 'label' => 'Tanggal Bayar', 'jenis' => 'tanggal', 'min' => $buku_min ?? '', 'max' => $buku_max ?? '', 'petunjuk' => 'Buku terbuka: ' . ($buku_label ?? '')],
         ['nama' => 'keterangan', 'label' => 'Keterangan', 'jenis' => 'teks'],
     ],
     'tombol' => ['simpan_teks' => 'Catat Bayar', 'hapus' => false],
 ]) ?>
 <script>
-// Jembatan modal Jurnal: tanggal bawaan (Bulan Bekerja) dioper lewat data
+// Jembatan modal Jurnal: tanggal bawaan (Bulan Terbuka) dioper lewat data
 // bukaFormModal; sesudahnya sinkronkan widget select-cari.
 function bukaJurnalBaru() {
   window.bukaFormModal('modal-jurnal', { tanggal: '<?= esc($tgl_bayar_default ?? date('Y-m-d'), 'js') ?>' });
