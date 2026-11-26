@@ -2,7 +2,7 @@
 
 **Aplikasi pengelolaan pembangunan/revitalisasi sekolah berbasis dokumen perencana** — dari impor RAB perencana, perhitungan kebutuhan bahan & upah, perencanaan belanja, sampai LPJ.
 
-Versi panduan: 24 November 2026 · Terakhir diverifikasi terhadap kode: 24 November 2026 (migrasi 000028) · Aplikasi: PBJ-REVIT (CodeIgniter 4) · Contoh data: SMP Negeri 3 Ranto Baek SATAP
+Versi panduan: 26 November 2026 · Terakhir diverifikasi terhadap kode: 26 November 2026 (migrasi 000033) · Aplikasi: PBJ-REVIT (CodeIgniter 4) · Contoh data: SMP Negeri 3 Ranto Baek SATAP
 
 > Catatan: tangkapan layar belum disertakan pada versi ini. Setiap bab menyebut menu, tombol, dan hasil yang harus terlihat agar tetap dapat diikuti.
 
@@ -59,8 +59,8 @@ Prinsip-prinsip penting:
 - **Referensi resmi berasal dari dokumen perencana.** Satuan dan harga bahan/upah diambil dari **sheet Analisa** (setiap komponen analisa mencantumkan satuan dan harga satuannya), dan harga satuan pekerjaan resmi diambil dari **sheet Harsat Pekerjaan**.
 - **Harga satuan belanja boleh melebihi harga dokumen** (fluktuasi lapangan wajar; selisihnya ditampilkan), tetapi **total belanja keseluruhan tidak boleh melebihi pagu anggaran sekolah** — aplikasi menahan transaksi yang menembus pagu.
 - **Rencana belanja adalah turunan kebutuhan**, bukan daftar bebas: paket belanja dibuat dari hitungan kebutuhan bahan/upah per pekerjaan, dan terhitung ulang bila volume pekerjaan berubah.
-- **Alur SPK → SPJ bisa diselesaikan dari satu panel.** Sesudah barang diterima, panel **Tuntaskan SPK** di halaman rincian SPK membuat BAP, BAST, dan Invoice sekaligus dari satu tanggal terima, mencatat pembayarannya, dan mencetak keempat dokumen dalam satu berkas — lihat Bab 13.
-- **Setiap peringatan membawa jalan keluarnya.** Bila suatu halaman menyatakan ada yang kurang — SPK belum punya rincian, bahan belum punya harga, komponen belum tertaut, invoice belum cocok — kalimatnya selalu disertai tautan langsung ke halaman tempat kekurangan itu dilengkapi, jadi tidak perlu bolak-balik mencari menu. Ceklis dokumen di Detail SPK juga menaut ke modul pemilik tiap dokumen (Survei, Negosiasi, Invoice, Jurnal); khusus BAP & BAST, tautannya menuju panel **BAP & BAST** di halaman Detail SPK itu sendiri karena pengisiannya kini lengkap di sana.
+- **Alur SPK → SPJ bisa diselesaikan dari satu panel.** Sesudah barang diterima, panel gabungan **BAP, BAST & Invoice** di halaman rincian SPK membuat BAP, BAST, dan Invoice sekaligus dari satu tanggal terima (tombol **Buat BAP + BAST + Invoice Sekaligus** bila belum ada BAP), mencatat pembayarannya, dan mencetak keempat dokumen dalam satu berkas — lihat Bab 13.
+- **Setiap peringatan membawa jalan keluarnya.** Bila suatu halaman menyatakan ada yang kurang — SPK belum punya rincian, bahan belum punya harga, komponen belum tertaut, invoice belum cocok — kalimatnya selalu disertai tautan langsung ke halaman tempat kekurangan itu dilengkapi, jadi tidak perlu bolak-balik mencari menu. Ceklis dokumen di Detail SPK juga menaut ke modul pemilik tiap dokumen (Survei, Negosiasi, Invoice, Jurnal); khusus BAP & BAST, tautannya menuju panel **BAP, BAST & Invoice** di halaman Detail SPK itu sendiri karena pengisiannya kini lengkap di sana.
 
 ## 2. Memulai — masuk, tampilan, profil & sandi
 
@@ -88,12 +88,12 @@ Klik avatar/nama Anda di topbar → **Profil**: ubah nama tampilan, dan ganti ka
 Agar panduan ini tidak mengulang hal yang sama di setiap bab, berikut konvensi yang berlaku di seluruh aplikasi:
 
 - **Tanggal tampil dd/mm/yyyy.** Semua tanggal yang tampil (tabel, laporan, cetakan) memakai format hari/bulan/tahun. Penyimpanan tetap yyyy-mm-dd. Input tanggal berpola **dd-mm-yyyy**: ketik langsung (pemisah ditambahkan otomatis) atau klik **tombol kalender** di sampingnya untuk memilih tanggal dari kalender; nilai otomatis dikonversi saat formulir dikirim — jangan mengetik format ISO manual.
-- **Isian uang berformat ribuan.** Field harga/rupiah memakai atribut `data-uang`: nilai tampil dengan pemisah ribuan Indonesia saat diketik dan saat halaman dimuat, dan otomatis dikembalikan ke angka polos sebelum formulir terkirim. Gunakan `type="text"` + `inputmode="numeric"` (bukan `type="number"`).
+- **Isian uang berformat ribuan dan rata kanan.** Field harga/rupiah memakai atribut `data-uang`: nilai tampil dengan pemisah ribuan Indonesia saat diketik dan saat halaman dimuat, dan otomatis dikembalikan ke angka polos sebelum formulir terkirim. Semua isian angka rupiah tampil **rata kanan** dengan angka tabular. Gunakan `type="text"` + `inputmode="numeric"` (bukan `type="number"`).
 - **Select pencarian.** Semua select tunggal otomatis menjadi searchable. Untuk placeholder khusus, pakai `data-placeholder` atau helper `select_cari()`. Panel dropdown dirender sebagai lapisan tetap di `<body>` (portal) agar tidak terpotong. **Pengecualian:** select "Per halaman" pada paginasi tabel adalah select biasa (nilai 10/25/50/100) agar cepat diganti tanpa membuka panel pencarian.
 - **Tabel Standar v2.** Setiap tabel daftar mendapat: pencarian langsung, paginasi, pengurutan klik-header (sadar angka format Indonesia, tanggal, teks; kolom berisi kontrol formulir tidak bisa diurutkan atau ditandai `data-tanpa-urut`), empty state seragam saat saringan kosong, baris judul grup mengikuti baris anaknya, baris total selalu tampil dan tidak dihitung, baris rincian tersinkron dengan pemiliknya, "pilih semua" hanya mencentang baris yang terlihat, dan semua baris tercetak saat print. Status tabel (kata cari, urutan, ukuran halaman, halaman) tersimpan per sesi; tombol Ekspor CSV mengunduh baris yang sedang tersaring; header urut membawa `aria-sort`; kotak cari berlabel aksesibel.
-- **Tabel lebar** boleh memiliki scroll horizontal pada pembungkusnya; jangan membuat seluruh halaman ikut melebar. Header tabel menempel (sticky) bila tabel cukup tinggi.
+- **Tabel lebar** otomatis dibungkus aplikasi dengan wadah gulir horizontal — kolom paling kanan tetap dapat dicapai dengan menggeser tabelnya, dan seluruh halaman tidak ikut melebar. Pada tabel yang tidak dibungkus, kepala tabel menempel (sticky) saat digulir.
 - **Modal konfirmasi.** Setiap tombol Hapus membuka modal konfirmasi gaya TailAdmin; data tidak terhapus sebelum menekan **Ya, Hapus**. Esc atau klik di luar menutup.
-- **Formulir modal CRUD.** Tambah/Ubah pada modul yang sudah memakai pola ini (Biaya Non-Gedung, Analisa, dan modul berikutnya) terbuka sebagai modal berisi tombol **Batal**, **Simpan**, dan — pada mode Ubah — **Hapus**; judul modal rata kiri pada pita kepala yang sedikit lebih gelap (kaki tombol juga), label isian duduk di garis tepi kotak isian dengan tanda * merah untuk isian wajib, dan bila isian wajib masih kosong muncul tooltip merah penunjuk isiannya. Menyimpan tidak memuat ulang seluruh halaman secara kasar, dan pesan galat tampil di dalam modal.
+- **Formulir modal CRUD.** Tambah/Ubah pada semua modul kini terbuka sebagai modal berisi tombol **Batal**, **Simpan**, dan — pada mode Ubah — **Hapus**; judul modal rata kiri pada pita kepala yang sedikit lebih gelap (kaki tombol juga), label isian duduk di garis tepi kotak isian dengan tanda * merah untuk isian wajib, dan bila isian wajib masih kosong muncul tooltip merah penunjuk isiannya. Menyimpan tidak memuat ulang seluruh halaman secara kasar, dan pesan galat tampil di dalam modal.
 - **Tema terang/gelap** (tombol bulan di topbar) dan **ukuran huruf** (A−/A+) diingat oleh peramban. Saat zoom in/out, ukuran logo dan blok profil di sidebar tetap (zoom balik).
 - **Tautan lintas modul.** Setiap peringatan/keadaan kosong menyertakan tautan langsung ke halaman tempat kekurangan itu dilengkapi (mis. bahan tanpa harga → Master Bahan, SPK tanpa rincian → Detail SPK, invoice tak cocok → Register Invoice).
 
@@ -235,7 +235,6 @@ Hal yang perlu diketahui:
 - **Lipat bab**: tombol panah di awal baris judul bab melipat/membuka seluruh baris pekerjaan bab itu — subtotal bab tetap terlihat saat terlipat, jadi daftar panjang bisa diringkas per bab. Keadaan lipatan diingat per gedung di peramban yang sama. Mengarahkan kursor ke nama pekerjaan mengubah warna hurufnya menjadi kuning (tanpa latar biru).
 - **Kode analisa** pada baris pekerjaan adalah tautan ke halaman analisa itu; nama pekerjaan yang punya analisa dapat diklik untuk membuka rincian bahan & upah di tempat.
 - **Dasar nilai pekerjaan** adalah hasil AHSP: harga berjalan = harga revisi yang disahkan (bila ada) > jumlah koefisien × tarif komponen analisa terkini (tarif upah memakai yang terbesar antara tarif komponen dan Master Upah) > harga satuan dokumen BOQ (hanya untuk pekerjaan tanpa analisa/komponen). Total BOQ dashboard, verifikasi anggaran, nilai realisasi, Kurva S, dan RAB Gabungan LPJ semuanya memakai dasar ini.
-- Nama pekerjaan yang punya analisa dapat diklik untuk membuka rincian bahan & upahnya di tempat.
 
 ### Tab Kebutuhan Bahan
 
@@ -318,7 +317,7 @@ Menu **Perencanaan → Rencana Mingguan** memecah pekerjaan menjadi target per m
 
 **SPK gabungan** (tombol **Gabungkan Beberapa Rencana Jadi 1 SPK** di halaman ini): beberapa rencana mingguan beda gedung disatukan jadi satu SPK. Kebutuhan kotor per bahan per gedung dijumlahkan, stok tersedia & pesanan berjalan (sifatnya se-sekolah) dikurangkan **satu kali** dari gabungan lalu dialokasikan ke gedung menurut porsi kebutuhannya (sisa pembulatan ke gedung berporsi terbesar). SPK gabungan ber-gedung NULL; rinciannya terpisah per (bahan, gedung) dengan keterangan "Untuk <gedung>", Detail SPK menampilkan kolom Gedung Tujuan, dan cetakan SPK mengelompokkan rincian per gedung hanya bila multi-gedung.
 
-**Buku Material per gedung**: keluar-masuk material dicatat per gedung (kolom Gedung Tujuan pada formulir, boleh kosong untuk gudang bersama) dan halaman Buku Material menampilkan Rekap per Gedung; saldo stok utama tetap gabungan se-sekolah.
+**Buku Material per gedung**: barang masuk tercatat otomatis dari BAST, sedangkan barang keluar dicatat per gedung (kolom Gedung Tujuan pada formulir, boleh kosong untuk gudang bersama); halaman Buku Material menampilkan panel **Rekap Keluar per Gedung** dan **Rekap Pemakaian Non-Gedung** (pemakaian tanpa gedung tujuan); saldo stok utama tetap gabungan se-sekolah.
 
 ### Simulasi Mingguan
 
@@ -338,7 +337,7 @@ Bila rencana mingguan beberapa gedung sudah dibuat dan belanjanya mau disatukan 
 2. Di pratinjau, kebutuhan bahan semua rencana dijumlahkan; **stok tersedia & pesanan berjalan dikurangkan satu kali** dari gabungan (bukan sekali per gedung), lalu sisanya dibagi ke tiap gedung menurut porsi kebutuhannya. Jumlah beli masih bisa disesuaikan per baris.
 3. Klik **Buat 1 SPK dari Gabungan Ini**. SPK terbentuk sebagai SPK gabungan: rincian di dalamnya **terpisah per gedung tujuan** — Detail SPK menampilkan kolom Gedung Tujuan dan cetakan SPK mengelompokkan rincian menurut gedungnya.
 
-Keluar–masuk material per gedung dicatat di **Buku Material**: kolom **Gedung Tujuan** pada formulir catatan (boleh dikosongkan untuk gudang bersama). Halaman Buku Material menampilkan **Rekap Keluar–Masuk per Gedung** — dari situlah terlihat berapa bahan yang diterima dan dipakai masing-masing gedung, termasuk bahan yang dibeli lewat SPK gabungan. Saldo stok utama tetap gabungan se-sekolah.
+Pemakaian material per gedung dicatat di **Buku Material** (barang masuk tercatat otomatis dari BAST): kolom **Gedung Tujuan** pada formulir catatan keluar (boleh dikosongkan untuk gudang bersama). Halaman Buku Material menampilkan **Rekap Keluar per Gedung** dan **Rekap Pemakaian Non-Gedung** — dari situlah terlihat berapa bahan yang dipakai masing-masing gedung dan berapa yang keluar tanpa gedung tujuan, termasuk bahan yang dibeli lewat SPK gabungan. Saldo stok utama tetap gabungan se-sekolah.
 
 ## 9. Pembayaran Upah
 
@@ -370,7 +369,7 @@ Halaman Master Bahan terbagi dua tab: **Dipakai Gedung** (bahan yang dipakai ana
 
 - **Tarif Analisa per Gedung** (kolom di tabel Master Bahan): menampilkan tarif komponen analisa per gedung didanai, dengan lencana **Sama/Beda** terhadap harga acuan bahan. Bila seragam di semua gedung, diringkas "Semua Gedung". Perbandingan menormalkan tarif komponen ke satuan master lewat faktor konversi, sehingga tarif per kg yang setara per zak tetap terbaca Sama.
 
-- **Rapikan ke 2 Jenis (Master Upah):** menyeragamkan semua varian upah menjadi **Pekerja** dan **Tukang**, menghapus komponen Mandor/Kepala Tukang, menautkan ulang komponen ke master kanonik, dan menghapus lunak master lain. Jalankan sekali sesudah impor data lama.>
+- **Rapikan ke 2 Jenis (Master Upah):** menyeragamkan semua varian upah menjadi **Pekerja** dan **Tukang**, menghapus komponen Mandor/Kepala Tukang, menautkan ulang komponen ke master kanonik, dan menghapus lunak master lain. Jalankan sekali sesudah impor data lama.
 
 ## 11. SPK & Rincian — termasuk Belum Bernomor
 
@@ -384,7 +383,7 @@ Menu **Belanja → Register SPK**: register Surat Perintah Kerja. Tambah SPK (no
 
 Klik nomor SPK untuk membuka rinciannya: tambah baris bahan, isi jumlah dan harga. **Harga acuan berjenjang**: aplikasi menyarankan harga dari negosiasi → penawaran survei → harga RAB, dan Anda tetap dapat mengetik harga lain. Total SPK dan PPN (11% dari dasar pengenaan) terhitung otomatis.
 
-**Rincian terkunci sesudah serah terima/pembayaran.** Bila SPK sudah punya BAST atau invoice yang sudah dibayar, rincian yang ada tidak dapat diubah atau dihapus (menambah baris baru tetap boleh — baris baru masuk BAP berikutnya). Jumlah (qty) harus lebih dari 0 dan harga tidak boleh negatif. Saat menambah bahan, qty **terisi otomatis sebesar sisa kebutuhan** gedung SPK untuk bahan itu.
+**Rincian terkunci sesudah serah terima/pembayaran.** Bila SPK sudah punya BAST atau invoice yang sudah dibayar, rincian yang ada tidak dapat diubah atau dihapus, dan panel **Tambah Baris Barang** disembunyikan selama rincian terkunci. Jumlah (qty) harus lebih dari 0 dan harga tidak boleh negatif. Saat menambah bahan, qty **terisi otomatis sebesar sisa kebutuhan** gedung SPK untuk bahan itu. Pada tiap baris rincian, tombol **Simpan** (biru) berada di sebelah kiri tombol **Hapus**.
 
 ### Kebutuhan Tenaga Kerja
 
@@ -406,25 +405,26 @@ Menu **Belanja → Belum Bernomor SPK** mengumpulkan baris rincian yang belum ma
 
 ## 13. BAP & BAST — dan mencetak dokumen
 
-### Alur tercepat: Tuntaskan SPK satu panel
+### Alur tercepat: panel BAP, BAST & Invoice di Detail SPK
 
-Sesudah barang SPK diterima, seluruh rantai SPJ dapat diselesaikan **tanpa berpindah menu**, dari panel **Tuntaskan SPK — Satu Panel** di halaman rincian SPK:
+Sesudah barang SPK diterima, seluruh rantai SPJ dapat diselesaikan **tanpa berpindah menu**, dari panel gabungan **BAP, BAST & Invoice — Pemeriksaan, Serah Terima & Penagihan** di halaman rincian SPK (Informasi SPK di bagian atas halaman tampil dua kolom):
 
-1. Isi **Tanggal terima barang** (otomatis terisi tanggal selesai SPK; tidak boleh sebelum tanggal SPK), lalu klik **Buat BAP + BAST + Invoice Sekaligus**. Aplikasi membuat dalam satu langkah: **BAP** berisi semua rincian SPK dengan kondisi "Cukup", **BAST** yang tertaut ke BAP itu, dan **Invoice** senilai total SPK — masing-masing bernomor urut berikutnya.
-2. Panel berubah menampilkan ringkasan invoice (nilai, DPP, PPN, PPh 22, dan bersih yang diterima penyedia). Klik **Catat Bayar** di panel yang sama untuk mencatat pembayarannya — aturan pajak dan pemeriksaan pagu sama persis dengan Jurnal Pembayaran (Bab 14).
-3. Klik **Cetak SPJ Lengkap (SPK + BAP + BAST + Invoice)** untuk mencetak keempat dokumen dalam **satu berkas**, masing-masing mulai di halaman baru.
+1. Bila SPK **belum mempunyai BAP**, isi **Tanggal terima barang** (otomatis terisi tanggal selesai SPK; tidak boleh sebelum tanggal SPK), lalu klik **Buat BAP + BAST + Invoice Sekaligus**. Aplikasi membuat dalam satu langkah: **BAP** berisi semua rincian SPK dengan kondisi "Cukup", **BAST** yang tertaut ke BAP itu, dan **Invoice** senilai total SPK — masing-masing bernomor urut berikutnya.
+2. BAP dan BAST juga dapat dibuat dan diubah bertahap di panel yang sama: **Buat BAP**, lalu per BAP ada tombol **Ubah BAP**/**Cetak BAP** dan **Buat BAST** dengan **Ubah BAST**/**Cetak BAST** (tombol-tombol BAP/BAST tampil sama lebar).
+3. Di seksi **Invoice** pada panel yang sama: klik **+ Buat Invoice** untuk membuka formulir modal pembuatan invoice (SPK langsung terpilih, informasi BAP/BAST warisannya tampil, dan nilai terisi otomatis sebesar sisa nilai BAST); bila invoice sudah ada, seksi ini menampilkan statusnya dan tombol **Lihat Invoice**. Klik **Catat Bayar** untuk mencatat pembayarannya (termasuk pilihan **Kanal**: Tunai/Bank) — aturan pajak dan pemeriksaan pagu sama persis dengan Jurnal Pembayaran (Bab 14).
+4. Klik **Cetak SPJ Lengkap (SPK + BAP + BAST + Invoice)** di bagian bawah panel untuk mencetak keempat dokumen dalam **satu berkas**, masing-masing mulai di halaman baru.
 
-Syaratnya: SPK **belum mempunyai BAP maupun Invoice**. SPK yang rantainya sudah berjalan sebagian (mis. BAP sudah dibuat lewat menu Dokumen) tidak memakai panel ini — lanjutkan lewat jalur manual di bawah. Panel juga menampilkan **ceklis kelengkapan** SPK (SPK/BAP/BAST/Invoice/bukti bayar dan penanda manual seperti kuitansi fisik), sehingga kekurangan berkas terlihat sekilas.
+Syarat jalur sekaligus pada langkah 1: SPK **belum mempunyai BAP maupun Invoice**. SPK yang rantainya sudah berjalan sebagian (mis. BAP sudah dibuat lewat menu Dokumen) dilanjutkan bertahap di panel yang sama atau lewat jalur manual di bawah. Halaman Detail SPK juga menampilkan **ceklis kelengkapan** SPK (SPK/BAP/BAST/Invoice/bukti bayar dan penanda manual seperti kuitansi fisik), sehingga kekurangan berkas terlihat sekilas.
 
 ### Jalur manual lewat menu Dokumen
 
-Pengisian BAP & BAST kini juga lengkap **langsung di halaman Detail SPK** (panel **BAP & BAST**): buat BAP, ubah tanggal + kondisi/keterangan tiap barang, buat BAST dari BAP-nya, dan ubah tanggal BAST — tanpa berpindah menu; kepala SPK pun diubah dari tombol **Ubah SPK** di panel ringkasannya. Menu **Belanja → BAP & BAST / Cetak** (halaman Dokumen, satu baris per SPK) tetap tersedia dengan isi yang sama: untuk setiap SPK, buat **BAP** (Berita Acara Pemeriksaan hasil pekerjaan), periksa/ubah isinya (termasuk rincian hasil pemeriksaan), lalu buat **BAST** (Berita Acara Serah Terima) dari BAP itu. Aturannya ketat: tombol Buat BAP hilang bila seluruh rincian sudah ter-BAP, dan **satu BAP hanya mempunyai satu BAST**.
+Pengisian BAP & BAST kini juga lengkap **langsung di halaman Detail SPK** (panel **BAP, BAST & Invoice**): buat BAP, ubah tanggal + kondisi/keterangan tiap barang, buat BAST dari BAP-nya, dan ubah tanggal BAST — tanpa berpindah menu; kepala SPK pun diubah dari tombol **Ubah SPK** di panel ringkasannya. Menu **Belanja → BAP & BAST / Cetak** (halaman Dokumen, satu baris per SPK) tetap tersedia dengan isi yang sama: untuk setiap SPK, buat **BAP** (Berita Acara Pemeriksaan hasil pekerjaan), periksa/ubah isinya (termasuk rincian hasil pemeriksaan), lalu buat **BAST** (Berita Acara Serah Terima) dari BAP itu. Aturannya ketat: tombol Buat BAP hilang bila seluruh rincian sudah ter-BAP, dan **satu BAP hanya mempunyai satu BAST**.
 
 **Rantai tanggal dan penomoran dijaga server.** Tanggal BAP tidak boleh sebelum tanggal SPK, dan tanggal BAST tidak boleh sebelum tanggal BAP-nya. Tanggal bawaan formulir mengikuti rantai itu (BAP berawalan tanggal selesai SPK, BAST berawalan tanggal BAP). **Nomor urut BAP/BAST unik per sekolah** — nomor yang sudah dipakai ditolak. **BAP berikutnya hanya berisi rincian yang belum ter-BAP**, sehingga nilai BAP/BAST tidak tergandakan saat SPK diperiksa bertahap. SPK berstatus **Batal** tidak dapat dibuatkan BAP baru. **Nilai BAP/BAST hanya dihitung dari barang yang diterima baik** (kondisi **Baik/Cukup**); barang berkondisi **Kurang** atau **Tidak Sesuai** tidak ikut nilai BAP/BAST, tidak ikut sisa yang boleh di-invoice, dan tidak masuk stok Buku Material. SPK yang sudah mempunyai BAP/BAST/invoice **tidak bisa dihapus** — batalkan lewat status **Batal** (pencadangan pagunya ikut bebas). Register SPK dan Dashboard menampilkan **pencadangan pagu**: pagu tersedia = total anggaran − sudah terbayar − nilai SPK aktif yang belum terbayar; SPK yang membuat pencadangan melewati anggaran diberi **peringatan** saat disimpan. Dokumen yang dapat dicetak dari aplikasi (berkop sekolah, lengkap dengan terbilang dan blok tanda tangan):
 
 - **SPK**, **BAP**, **BAST** — dari halaman ini (nomor surat format `422/<JENIS>/<urut>/<tahun>`),
 - **Invoice** — dari halaman Invoice,
-- **SPJ Lengkap** (SPK + BAP + BAST + Invoice dalam satu berkas) — dari panel Tuntaskan SPK di rincian SPK,
+- **SPJ Lengkap** (SPK + BAP + BAST + Invoice dalam satu berkas) — dari panel BAP, BAST & Invoice di rincian SPK,
 - **Papan Nama Proyek** — dari halaman Dokumen, untuk dipasang di lokasi pekerjaan,
 - **Laporan** dan **LPJ** — dari halaman masing-masing.
 
@@ -450,7 +450,7 @@ Menu **Keuangan → Jurnal Pembayaran** mencatat pembayaran invoice: pilih invoi
 
 **Tanggal bayar bawaan merekomendasikan tanggal jurnal terakhir** yang tercatat (atau tanggal invoice bila lebih baru), dijepit ke Bulan Terbuka — jadi jurnal berikutnya berawalan tanggal yang sama dengan jurnal sebelumnya. Server juga menolak pembayaran ganda untuk invoice yang sudah berstatus Sudah Bayar, dan tanggal bayar tidak boleh sebelum tanggal invoice.
 
-Pembayaran invoice sebuah SPK juga dapat dicatat langsung dari panel **Tuntaskan SPK** di rincian SPK (Bab 13) — hasil dan aturannya sama, panel hanya menghemat perpindahan menu.
+Pembayaran invoice sebuah SPK juga dapat dicatat langsung dari panel **BAP, BAST & Invoice** di rincian SPK (Bab 13) — hasil dan aturannya sama, panel hanya menghemat perpindahan menu.
 
 > **Kunci Bulan Terbuka.** Tanggal bayar harus jatuh di Bulan Terbuka (Bab 3) — ini berlaku untuk jurnal pembayaran, pembayaran upah, transaksi kas manual, bukti setor, penerimaan dana, dan tanggal invoice. Pencatatan bertanggal di bulan tertutup ditolak aplikasi.
 
@@ -470,7 +470,7 @@ Menu **Keuangan → Buku Kas** adalah pembukuan resmi menurut Juknis: **Buku Kas
 - pembayaran upah, dan
 - bukti setor pajak.
 
-Tata letak halaman: kartu ringkasan satu baris di atas, tabel buku bulan berjalan, panel **Catat Transaksi Kas Manual** (tombol catat sejajar dengan tombol hapus; daftar transaksi manual berada dalam panel yang sama), dan panel **Tutup Buku Bulanan** paling bawah. Nama bulan dan hari di seluruh aplikasi dan cetakan memakai **bahasa Indonesia**.
+Tata letak halaman: tab empat buku di kiri sejajar sebaris dengan baris aksi di kanan (pemilih bulan, tombol **Tampilkan**, dan **Cetak Bulan Ini**), tabel buku bulan berjalan, panel **Catat Transaksi Kas Manual** (tombol catat sejajar dengan tombol hapus; daftar transaksi manual berada dalam panel yang sama), dan panel **Tutup Buku Bulanan** paling bawah (kartu ringkasan saldo satu baris berada di dalamnya). Nama bulan dan hari di seluruh aplikasi dan cetakan memakai **bahasa Indonesia**.
 
 Transaksi manual **hanya untuk koreksi/kas lain-lain**: kategori penerimaan dana, pajak, dan sisa dana tidak lagi dicatat di sini — gunakan modul pemiliknya (Penerimaan Dana, Bukti Setor, Jurnal Pembayaran, Pembayaran Upah; tautannya tersedia di panel catat). Pengeluaran manual yang melewati sisa pagu diberi **peringatan** saat dicatat.
 
@@ -498,6 +498,7 @@ Panel **Buku Pembantu Pajak** di halaman yang sama membandingkan kewajiban vs se
 
 - **Buku Material** (menu **Material → Buku Material**): buku besar bahan menjadi dasar stok. Barang **masuk tercatat OTOMATIS dari BAST** — tanggalnya mengikuti tanggal BAST dan jumlahnya sebesar rincian SPK yang diterima — sehingga yang dicatat manual di sini hanya barang **keluar** (tanggal diisi sendiri). Baris dari BAST bertanda **Otomatis** dan tidak bisa dihapus dari halaman ini. Catatan masuk manual lama tidak lagi ditampilkan dan tidak dihitung. Kolom **Gedung Tujuan** boleh diisi untuk mencatat pemakaian per gedung; stok utama tetap se-sekolah (total penerimaan BAST dikurangi total keluar).
 - Panel **Kebutuhan Bahan per Gedung** membandingkan kebutuhan BOQ tiap gedung dengan yang sudah keluar ke gedung itu (sisa kebutuhan; baris merah berarti keluar sudah melebihi kebutuhan atau bahan itu bukan kebutuhan gedung tersebut) — periksa panel ini sebelum mencatat agar tidak salah gedung. Panel dapat **disaring per gedung**, dan gedung **diurutkan dari persentase sisa kebutuhan terbesar** (yang paling belum terpenuhi tampil lebih dulu; persennya tertulis pada judul tiap gedung).
+- Panel **Rekap Keluar per Gedung** merangkum total bahan yang sudah keluar ke masing-masing gedung. Panel **Rekap Pemakaian Non-Gedung** (tampil hanya bila ada pemakaian non-gedung) merangkum per bahan total yang sudah keluar **tanpa gedung tujuan** — gudang bersama/pemakaian umum, termasuk bahan dari SPK non-gedung — beserta stok yang masih tersedia.
 - Pada form catat keluar, **pilihan bahan hanya menampilkan bahan yang masih berstok** (penerimaan BAST dikurangi yang sudah keluar) beserta sisa stoknya; sesudah gedung dan bahan dipilih, petunjuk di bawah form menampilkan stok tersedia serta kebutuhan, sudah keluar, dan sisa kebutuhan gedung itu untuk bahan tersebut. Jumlah **Keluar** yang melebihi stok tersedia **ditolak** aplikasi. Jumlah keluar **terisi otomatis** sebesar yang lebih kecil antara stok dan sisa kebutuhan gedung terpilih (tetap boleh diubah), **tanggal wajib diisi** (berawalan hari ini), dan **nomor BPB disarankan** nomor berikutnya.
 - **Sisa Bahan** (menu **Material → Sisa Bahan**): perbandingan kebutuhan RAB dengan realisasi pemakaian per bahan; sisa negatif ditandai (juga muncul di panel Perlu Perhatian dashboard). Bahan tanpa kebutuhan (Qty RAB 0 dan belum pernah masuk SPK) disembunyikan secara bawaan — tautan **Tampilkan semua** di atas tabel membukanya kembali.
 
@@ -600,7 +601,7 @@ Pengujian browser menyeluruh terakhir: **22 November 2026**, terhadap halaman da
 - Uji impor-balik template: template terisi SMP Negeri 3 Ranto Baek SATAP diimpor kembali dengan selisih nilai **Rp 0**; jalur harga Harsat saja berselisih +1,7% (sisa selisih berasal dari inkonsistensi dokumen perencana sendiri).
 - Catatan data (bukan kerusakan aplikasi): panel Perlu Perhatian menandai data warisan yang menunggu keputusan sekolah — 159 baris rincian belum bernomor, ketidaksamaan nilai Invoice No. 1 dengan SPK 1, dan dua sisa bahan negatif.
 
-**Belum diuji ulang secara menyeluruh** (fitur sesudah 22 November): Acuan AHSP Nasional, Validasi Harga Satuan, Simulasi Mingguan, SPK Gabungan dari Rencana Mingguan, Tuntaskan SPK satu panel, dan Template Laporan. Langkah kerjanya sudah ditulis di panduan ini berdasarkan kode dan uji coba terbatas, tetapi belum melewati putaran QA browser penuh. Selain itu, **9 tes unit** (`composer test`) mencakup fungsi dasar `BaseController` (terbilang, rupiah, pajak, ketentuan PBJ, faktor satuan) — bukan pengganti QA antarmuka.
+**Belum diuji ulang secara menyeluruh** (fitur sesudah 22 November): Acuan AHSP Nasional, Validasi Harga Satuan, Simulasi Mingguan, SPK Gabungan dari Rencana Mingguan, panel BAP, BAST & Invoice di Detail SPK, dan Template Laporan. Langkah kerjanya sudah ditulis di panduan ini berdasarkan kode dan uji coba terbatas, tetapi belum melewati putaran QA browser penuh. Selain itu, uji otomatis (`composer test`) mencakup **12 tes unit** (9 tes fungsi dasar `BaseController` — terbilang, rupiah, pajak, ketentuan PBJ, faktor satuan — dan 3 tes konsistensi dokumentasi) serta **23 tes basis data** untuk mesin uang (harga berjalan, penomoran SPK, kunci invoice berjurnal, hitung kebutuhan Rencana Belanja) — bukan pengganti QA antarmuka.
 
 ---
 
@@ -617,4 +618,4 @@ Pengujian browser menyeluruh terakhir: **22 November 2026**, terhadap halaman da
 - **Pagu**: batas total belanja yang boleh dikeluarkan.
 - **Soft delete**: penghapusan lunak (baris ditandai terhapus, dapat dipulihkan).
 
-*Panduan ini diperbarui 24 November 2026 mengikuti kode aplikasi (hingga migrasi 000028). Data contoh yang disebut berasal dari SMP Negeri 3 Ranto Baek SATAP; tampilan sekolah Anda sama, isinya mengikuti data sekolah Anda.*
+*Panduan ini diperbarui 26 November 2026 mengikuti kode aplikasi (hingga migrasi 000033). Data contoh yang disebut berasal dari SMP Negeri 3 Ranto Baek SATAP; tampilan sekolah Anda sama, isinya mengikuti data sekolah Anda.*

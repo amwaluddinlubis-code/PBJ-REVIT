@@ -1,6 +1,6 @@
 # Panduan Instalasi & Upgrade
 
-- Terakhir diverifikasi: 24 November 2026 (migrasi 000028)
+- Terakhir diverifikasi: 26 November 2026 (migrasi 000033)
 - Sumber: `README.md`, `app/Database/Migrations/`, `app/Commands/`
 
 ## 1. Prasyarat
@@ -34,7 +34,7 @@ Pastikan folder `writable/cache`, `writable/logs`, `writable/session`,
 
 1. Backup database dulu (Pemeliharaan Database → Backup SQL, atau ekspor
    phpMyAdmin).
-2. Jalankan `php spark migrate` (migrasi terakhir saat ini **000028**; semua
+2. Jalankan `php spark migrate` (migrasi terakhir saat ini **000033**; semua
    migrasi bersifat idempoten dan menambahkan kolom bila belum ada).
 3. Bila tampilan masih versi lama: tekan Ctrl+F5 di peramban.
 4. Untuk data lama pasca-upgrade, jalankan sekali tombol **Rapikan ke 2 Jenis**
@@ -47,7 +47,7 @@ Pastikan folder `writable/cache`, `writable/logs`, `writable/session`,
 | `php spark impor:json [file] [sekolah_id]` | Mengimpor ekstrak workbook v4 (`writable/impor.json` secara bawaan). |
 | `php spark impor:perencana <file> [sekolah_id]` | Mengimpor workbook RAB perencana langsung dari berkas. |
 | `php spark impor:kurva-s <file.json> [sekolah_id]` | Mengimpor rencana Kurva S resmi dari berkas JSON (menggantikan rencana lama sekolah, tercatat di audit). |
-| `php spark impor:acuan` | Memuat master Acuan AHSP Nasional dari `app/Data/ahsp_acuan.json` (idempoten, cocok lewat `kode_kita`). Jalankan sekali setelah instalasi. |
+| `php spark impor:acuan [sekolah_id\|semua]` | Memuat master Acuan AHSP Nasional dari `app/Data/ahsp_acuan.json` (idempoten, cocok lewat `kode_kita`). Tanpa argumen memuat templat nasional; dengan id sekolah memuat set sekolah itu; `semua` memuat templat + semua sekolah. Jalankan sekali setelah instalasi. |
 
 ## 5. Folder writable penting
 
@@ -59,9 +59,11 @@ Pastikan folder `writable/cache`, `writable/logs`, `writable/session`,
 
 ## 6. Pengujian
 
-- `composer test` — PHPUnit, 9 tes fungsi dasar `BaseController` (terbilang,
-  rupiah, pajak, ketentuan PBJ, faktor satuan). Peringatan "No code coverage
-  driver available" tidak menggagalkan tes.
+- `composer test` — PHPUnit, 12 tes unit (9 fungsi dasar `BaseController`:
+  terbilang, rupiah, pajak, ketentuan PBJ, faktor satuan; 3 konsistensi
+  dokumentasi) + 23 tes basis data mesin uang (butuh database tes `pbj_test`,
+  lihat README). Peringatan "No code coverage driver available" tidak
+  menggagalkan tes.
 - Cek sintaks PHP: `php -l <berkas>`.
 - Cek JavaScript: `node --check <berkas>`.
 

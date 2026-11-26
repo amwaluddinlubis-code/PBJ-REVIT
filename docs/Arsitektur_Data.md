@@ -1,36 +1,36 @@
 # Arsitektur Data — Aplikasi Analisa Perencana
 
-- Terakhir diverifikasi: 24 November 2026 (migrasi 000028)
+- Terakhir diverifikasi: 26 November 2026 (migrasi 000033)
 - Cakupan: tabel aplikasi, relasi, soft delete, isolasi sekolah
 - Sumber aturan: `AGENTS.md` (bagian Data dan Database), `app/Database/Migrations/`
 
 ## 1. Ringkasan
 
-Aplikasi memakai **41 tabel aplikasi** (42 termasuk tabel `migrations` yang dicatat
+Aplikasi memakai **43 tabel aplikasi** (44 termasuk tabel `migrations` yang dicatat
 CodeIgniter). Semua perubahan skema dibuat sebagai **migration baru** di
-`app/Database/Migrations/` (000001–000028); migration lama tidak diubah. Operasi
+`app/Database/Migrations/` (000001–000033); migration lama tidak diubah. Operasi
 yang menyentuh beberapa tabel memakai **transaksi** dengan rollback saat gagal.
 
-## 2. Tabel aplikasi (41)
+## 2. Tabel aplikasi (43)
 
 | Kelompok | Tabel |
 |---|---|
-| Inti multi-sekolah | `sekolah`, `users`, `identitas`, `aplikasi_pengaturan`, `akses_menu` |
+| Inti multi-sekolah | `sekolah` (hasil rename `identitas` di migrasi 000002), `users`, `aplikasi_pengaturan`, `akses_menu` |
 | Gedung & BOQ | `gedung`, `pekerjaan`, `realisasi`, `revisi_pekerjaan`, `dokumen_spk` |
 | Analisa AHSP | `analisa`, `analisa_komponen`, `ahsp_acuan`, `ahsp_acuan_komponen` |
 | Bahan & konversi | `bahan`, `bahan_konversi`, `upah_master`, `upah_bayar` |
-| SPK & belanja | `spk`, `spk_detail`, `spk_tenaga`, `survei_harga`, `negosiasi`, `biaya_lain` |
+| SPK & belanja | `spk`, `spk_detail`, `spk_tenaga`, `survei_harga`, `negosiasi`, `biaya_lain`, `penyedia` |
 | Dokumen SPJ | `bap`, `bap_detail`, `bast`, `invoice`, `pembayaran` |
 | Material & stok | `buku_material`, `rencana_mingguan`, `rencana_mingguan_detail`, `simulasi_realisasi` |
 | Kurva S | `kurva_minggu`, `kurva_rencana` |
-| Keuangan & kas | `kas_transaksi`, `penerimaan_dana` (jika ada), `bukti_setor` |
+| Keuangan & kas | `kas_transaksi` (termasuk penerimaan dana), `bukti_setor`, `tutup_buku`, `tutup_buku_baris` |
 | Audit & impor | `audit_events`, `impor_log`, `foto_progres` |
 | Laporan | `laporan_template` |
 
-> Daftar lengkap terverifikasi lewat `SHOW TABLES` pada database dev (42 baris
-> termasuk `migrations`). Nama tabel yang tidak dipakai modul (mis. `penerimaan_dana`
-> bila belum ada di instalasi) tergantung migrasi yang dijalankan — selalu jalankan
-> `php spark migrate` sampai 000028.
+> Daftar lengkap terverifikasi dari berkas migrasi (44 baris termasuk
+> `migrations` pada `SHOW TABLES`). Penerimaan dana tidak mempunyai tabel
+> sendiri — modul Penerimaan Dana mencatat ke `kas_transaksi`. Selalu
+> jalankan `php spark migrate` sampai 000033.
 
 ## 3. Isolasi sekolah (wajib)
 
@@ -94,7 +94,7 @@ agar tidak menabrak kunci unik.
 
 ## 8. Catatan upgrade
 
-- Selalu jalankan `php spark migrate` sampai 000028.
+- Selalu jalankan `php spark migrate` sampai 000033.
 - Backup database sebelum migrasi besar (Pemeliharaan Database → Backup SQL).
 - Migration bersifat idempoten untuk kolom yang ditambahkan (menambahkan bila belum ada).
 

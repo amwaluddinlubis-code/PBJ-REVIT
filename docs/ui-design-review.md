@@ -11,13 +11,13 @@
 > **26 November 2026 — lapisan token desain:** `public/assets/app.css` kini memakai satu blok token `--ui-*` (warna, tipografi, radius, bayangan, gerak) dengan `--ta-*`/`--fm-*` sebagai alias; tema gelap menukar token, bukan menambah selektor per komponen. **Skala huruf kini 7 langkah** (teks isi 14.5px, isi tabel/tombol/isian 13px, judul halaman 20px) dan seluruh `font-size` literal di `app.css` sudah dipetakan ke token. Rincian kontrak dan sisa pekerjaan ada di `docs/Desain_Token.md`.
 
 - Tanggal tinjauan asli: 2026-11-21 (pull `66ab742..7b5b10d`); catatan status di atas diperbarui 24 November 2026
-- Terakhir diverifikasi: 24 November 2026
+- Terakhir diverifikasi: 26 November 2026
 - Tema: TailAdmin + IDDS, tema gelap (CSS var), zoom font 80–130%, scroll & overlay global
 - Struktur utama: sidebar utama (7 grup menu + daftar gedung) → topbar utama → konten (panel/tabel/kartu)
 
 ## Kesimpulan Singkat
 
-Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** dipakai dengan disiplin tinggi (sidebar terang berikon, topbar, panel putih, KPI berikon, badge, tombol radius 8–12px, skala font 80–130%). **Bahasa visual kompak dan cepat dicerna** — proses admin yang sering dijalankan terbaca jelas. Fitur impor yang baru tadi (impor dari folder + template + verifikasi) juga sudah membaiki beberapa hal standar dari sebelumnya. Fitur drawer mobile (P1) **sudah diimplementasi & diverifikasi** (2026-11-21): drawer dari kiri, lapik overlay, aria-expanded, Escape, tombol sembunyikan/tunjukkan sidebar di desktop. Fitur Dark theme (P2) **sudah selesai & diverifikasi** (2026-11-21): palet `--ina-neutral-*` gelap dipasangkan — hover seperti `.tombol.abu:hover`, `.paginasi button:hover` terlihat di gelap. Masih tersisa: **UX feedback saat impor berjalan** (P6).
+Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** dipakai dengan disiplin tinggi (sidebar berikon — sekarang gradasi hijau, lihat catatan status di atas — topbar, panel putih, KPI berikon, badge, tombol radius 8–12px, skala font 80–130%). **Bahasa visual kompak dan cepat dicerna** — proses admin yang sering dijalankan terbaca jelas. Fitur impor yang baru tadi (impor dari folder + template + verifikasi) juga sudah membaiki beberapa hal standar dari sebelumnya. Fitur drawer mobile (P1) **sudah diimplementasi & diverifikasi** (2026-11-21): drawer dari kiri, lapik overlay, aria-expanded, Escape, tombol sembunyikan/tunjukkan sidebar di desktop. Fitur Dark theme (P2) **sudah selesai & diverifikasi** (2026-11-21): palet `--ina-neutral-*` gelap dipasangkan — hover seperti `.tombol.abu:hover`, `.paginasi button:hover` terlihat di gelap. Masih tersisa: **UX feedback saat impor berjalan** (P6).
 
 ## Kekuatan
 
@@ -80,7 +80,7 @@ Desainnya solid, profesional, dan konsisten: kulit **TailAdmin + token IDDS** di
 
 ~~1.~~ **Mobile drawer** (P1) — **sudah selesai & diverifikasi** (2026-11-21): click menambah class `sanding-boka` + aria-expanded true, Escape menutupnya; drawer CSS lengkap ada di media ≤760px dan cocok dengan class DOM.
 ~~2.~~ **Dark theme vars** (P2) — **sudah selesai & diverifikasi** (2026-11-21): tambah override `--ina-neutral-50/100/200/300/400` gelap — hover seperti `.tombol.abu:hover`, `.paginasi button:hover` terlihat di gelap.
-~~3.~~ **Overflow-x tabel** (P3) — **sudah selesai & diverifikasi** (2026-11-21): `.panel { overflow-x: auto }` — tabel di dalam panel mempunyai scroll horizontal (termasuk tabel impor baru).
+~~3.~~ **Overflow-x tabel** (P3) — **sudah selesai & diverifikasi** (2026-11-21): `.panel { overflow-x: auto }` — tabel di dalam panel mempunyai scroll horizontal (termasuk tabel impor baru). *(Digantikan 24–26 November 2026: `.panel` kini `overflow: clip` dan gulir horizontal tabel disediakan pembungkusan otomatis `.bungkus-tabel` oleh `paginasi.js` — lihat catatan status di atas.)*
 ~~4.~~ **Touch target 44px** (P4) — **sudah selesai & diverifikasi** (2026-11-21): computed `44px` pada akses sidebar & menu parent>child (diperiksa di browser).
 ~~5.~~ **A11y polis** (P5) — **sudah selesai & diverifikasi** (2026-11-21): aria-label pencarian, `aria-expanded` pada tombol user (diperiksa: true saat buka, false saat tutup), fokus via `focus-visible`.
 ~~6.~~ **Feedback impor (P6)** — **sudah selesai & diverifikasi** (2026-11-21): `onsubmit` pada 3 form impor → `muatAwal(form)` — disable tombol + teks "Mengimpor…"; diuji di browser.

@@ -2,6 +2,27 @@
 
 Format: rilis per migrasi. Rincian lengkap ada di `git log` dan `AGENTS.md`.
 
+## 26 November 2026 — migrasi 000029–000033
+
+- 000029: Acuan AHSP per sekolah (`ahsp_acuan.sekolah_id`, unik
+  `sekolah_id` + `kode_kita`).
+- 000030: `sekolah.bulan_bekerja` (cache Bulan Terbuka).
+- 000031: Tutup Buku bulanan (`tutup_buku` + `tutup_buku_baris`); Bulan
+  Terbuka = bulan terkecil yang belum ditutup.
+- 000032: Fase 2 keuangan — kolom rekonsiliasi `tutup_buku`,
+  `kas_transaksi.koreksi_ref` (jurnal balik), `penyedia.no_rekening` /
+  `nama_bank`; snapshot beku + nomor bukti BKU, SPJ Bulanan, Buku Pajak,
+  saldo per kanal tidak boleh minus.
+- 000033: kanal pembayaran (`pembayaran.kanal`, bawaan tunai — hanya
+  pembayaran non-tunai masuk Buku Bank); baris pembayaran bruto + baris
+  pungut pajak terpisah.
+- Di luar migrasi: panel gabungan BAP, BAST & Invoice di Detail SPK
+  (tombol Buat Invoice membuka modal), isian rupiah rata kanan
+  (`data-uang`), Rekap Pemakaian Non-Gedung, tab empat buku gaya BOQ
+  sejajar baris aksi, lapisan token desain `--ui-*` + skala huruf
+  7 langkah (`docs/Desain_Token.md`), pembungkusan gulir tabel otomatis
+  oleh `paginasi.js`.
+
 ## 24 November 2026 — migrasi 000028 (Mesin Laporan / Template Laporan)
 
 - Template .xlsx berformat bebas dengan penanda `{{KUNCI}}`, baris berulang

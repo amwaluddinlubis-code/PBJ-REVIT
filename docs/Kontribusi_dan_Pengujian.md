@@ -1,6 +1,6 @@
 # Kontribusi dan Pengujian
 
-- Terakhir diverifikasi: 24 November 2026
+- Terakhir diverifikasi: 26 November 2026
 - Sumber: `AGENTS.md` (bagian Pengujian dan Penyelesaian), `phpunit.dist.xml`, `composer.json`
 
 ## 1. Standar sebelum mengirim perubahan
@@ -52,6 +52,17 @@ perubahan CSS pada tema terang dan gelap bila selector terkait. Uji zoom A−/A+
 - `terbilang`, `rp`, `pajakPembelian` (PPh 22), ketentuan PBJ (ambang dokumen &
   penyedia), `faktorSatuan`.
 
+`tests/Unit/DocsConsistencyTest.php` (3 tes) menjaga dokumentasi tetap selaras:
+- setiap kunci katalog `AksesMenu` muncul sebagai tautan di sidebar,
+- gambar yang dirujuk berkas markdown benar-benar ada,
+- tautan lokal antar-berkas markdown tidak putus.
+
+`tests/Database/` (23 tes, memakai database tes `pbj_test`) mencakup mesin uang:
+- `HargaBerjalanTest` — harga berjalan/AHSP dan total BOQ,
+- `NomorSpkTest` — penomoran SPK termasuk aturan nomor SPK terhapus,
+- `KunciInvoiceTest` — kunci invoice yang punya jurnal pembayaran aktif,
+- `HitungPilihanTest` — hitungan kebutuhan bersih Rencana Belanja (`hitungPilihan`).
+
 `tests/_support/TestableBaseController.php` menyediakan controller uji yang
 memakai `id` bahan 0 agar `faktorSatuan()` tidak menyentuh database.
 
@@ -60,9 +71,10 @@ hanya karena peringatan itu.
 
 ## 6. Cakupan yang belum teruji otomatis
 
-- Tidak ada tes untuk controller/route/view (DB diperlukan); QA dilakukan via
-  browser manual.
-- Tidak ada pemeriksaan otomatis tautan/gambar markdown atau kesesuaian katalog
-  menu dengan sidebar (lihat P3.7 pada rencana dokumentasi).
+- Tes basis data hanya mencakup mesin uang di atas; alur controller/route/view
+  lainnya tetap diuji via browser manual.
+- Pemeriksaan otomatis tautan/gambar markdown dan kesesuaian katalog menu
+  dengan sidebar sudah ada (`DocsConsistencyTest`, P3.7 rencana dokumentasi),
+  tetapi tidak memeriksa kesesuaian isi teks dokumentasi dengan perilaku kode.
 
 Rujuk `AGENTS.md` (bagian Pengujian dan Penyelesaian) untuk aturan lengkap.

@@ -5,6 +5,16 @@
 - Cakupan: `README.md`, `docs/Panduan_Penggunaan.md`, `docs/ui-design-review.md`, `AGENTS.md`, rute, menu, migrasi, dan view terkait
 - Sifat dokumen: rencana kerja prioritas, bukan panduan pengguna
 
+> **Status per 26 November 2026:** rencana ini sebagian besar sudah
+> dijalankan — dokumen P3.2–P3.6 (`Arsitektur_Data.md`,
+> `Matriks_Hak_Akses.md`, `Panduan_Instalasi_Upgrade.md`,
+> `Kontribusi_dan_Pengujian.md`, `CHANGELOG.md`) sudah ada, otomatisasi
+> P3.7 terwujud sebagai `tests/Unit/DocsConsistencyTest.php` (katalog
+> menu ↔ sidebar, tautan/gambar markdown), dan penyelarasan isi terhadap
+> kode hingga migrasi 000033 sudah dilakukan. Dokumen ini disimpan
+> sebagai catatan historis; angka dan temuan di dalamnya adalah keadaan
+> 24 November 2026, bukan keadaan sekarang.
+
 ## 1. Ringkasan
 
 Dokumentasi belum mengikuti kecepatan pengembangan. `AGENTS.md` adalah satu-satunya

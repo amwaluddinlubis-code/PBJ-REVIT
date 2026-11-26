@@ -1,6 +1,6 @@
 # Matriks Hak Akses — Aplikasi Analisa Perencana
 
-- Terakhir diverifikasi: 24 November 2026
+- Terakhir diverifikasi: 26 November 2026
 - Sumber: `app/Libraries/AksesMenu.php`, `app/Filters/AuthFilter.php`, `app/Controllers/*`
   (`penjagaPeran`), `app/Views/layout/main.php`
 
@@ -43,7 +43,7 @@ hanya disembunyikan di tampilan). Daftar dari kode:
 | Aksi | Peran yang diizinkan |
 |---|---|
 | Pengesahan BA Revisi Pekerjaan | ketua, kepsek, admin |
-| Jurnal pembayaran, penerimaan dana, bukti setor, pembayaran upah, transaksi manual Buku Kas, bayar cepat dari panel Tuntaskan | bendahara, admin |
+| Jurnal pembayaran, penerimaan dana, bukti setor, pembayaran upah, transaksi manual Buku Kas, bayar cepat dari panel BAP, BAST & Invoice di Detail SPK | bendahara, admin |
 | Impor dokumen, impor Kurva S, sinkron harga ke analisa, Rapikan ke 2 Jenis, samakan harga di Validasi Harga | operator, admin |
 | Mengosongkan master/modul (Kosongkan Bahan/Upah/Buku Kas/BOQ gedung, dll.) | admin |
 | Akses Menu, Manajemen User, Pemeliharaan Database, Jejak Audit | admin |

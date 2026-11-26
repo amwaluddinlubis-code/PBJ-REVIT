@@ -9,7 +9,8 @@ lihat [`docs/Panduan_Penggunaan.md`](docs/Panduan_Penggunaan.md) (panduan penggu
 [`docs/Arsitektur_Data.md`](docs/Arsitektur_Data.md) (skema data),
 [`docs/Matriks_Hak_Akses.md`](docs/Matriks_Hak_Akses.md) (peran & akses),
 [`docs/Kontribusi_dan_Pengujian.md`](docs/Kontribusi_dan_Pengujian.md) (kontribusi/uji),
-[`docs/CHANGELOG.md`](docs/CHANGELOG.md) (riwayat migrasi), dan
+[`docs/CHANGELOG.md`](docs/CHANGELOG.md) (riwayat migrasi),
+[`docs/Desain_Token.md`](docs/Desain_Token.md) (token desain `--ui-*`), dan
 [`AGENTS.md`](AGENTS.md) (aturan pengembangan wajib).
 
 ## Pengujian Otomatis & CI
@@ -76,7 +77,7 @@ Antarmuka memakai **INA Digital Design System (IDDS)** dikombinasikan dengan **T
 
 - `public/assets/idds.css` — token resmi IDDS (`@idds/styles` v1.6.41): variabel warna `--ina-*`, font Inter.
 - `public/assets/tailwind.css` — Tailwind v4 hasil build (preflight + utilitas yang dipakai view + palet IDDS sebagai utilitas, mis. `bg-blue-600` = biru IDDS `#0049b8`). Membangun ulang: `npx @tailwindcss/cli -i input.css -o public/assets/tailwind.css` dengan `@source` menunjuk `app/Views` dan tema dari `@idds/styles/tailwind/css/idds.css`.
-- `public/assets/app.css` — komponen aplikasi (sidebar, tombol, panel, tabel) ditulis di atas token `--ina-*`.
+- `public/assets/app.css` — komponen aplikasi (sidebar, tombol, panel, tabel) ditulis di atas lapisan token `--ui-*` (lihat `docs/Desain_Token.md`), yang memetakan token resmi `--ina-*`.
 - Form memakai grid Tailwind 2 kolom (`grid md:grid-cols-2`); tabel data memakai paginasi klien (`public/assets/paginasi.js`, atribut `data-paginasi` pada tabel; baris total beri kelas `baris-total`).
 - Struktur view mengikuti pola komponen ala TALL di CI4 (Tailwind + Alpine.js + partial server): view panjang dipecah menjadi partial `_<nama>.php` di folder yang sama dan dirangkai dengan `$this->include()`; layout utama dirangkai dari `app/Views/layout/_*.php`. Formatter bersama (`rp()`, `tgl()`, `ikonSvg()`) ada di `app/Common.php`. Aturan lengkapnya di AGENTS.md bagian "Komponen View".
 
@@ -86,7 +87,7 @@ Antarmuka memakai **INA Digital Design System (IDDS)** dikombinasikan dengan **T
   (alur kerja per modul, konvensi antarmuka, FAQ, dan lampiran QA).
 - Rencana pengembangan dokumentasi: [`docs/Rencana_Pengembangan_Dokumentasi.md`](docs/Rencana_Pengembangan_Dokumentasi.md).
 - Aturan pengembangan wajib: [`AGENTS.md`](AGENTS.md).
-- Uji otomatis: `composer test` (PHPUnit, 9 tes fungsi dasar `BaseController`).
+- Uji otomatis: `composer test` (PHPUnit, 12 tes unit — 9 fungsi dasar `BaseController` + 3 konsistensi dokumentasi — dan 23 tes basis data mesin uang).
   Cek sintaks PHP: `php -l <berkas>`; cek JavaScript: `node --check <berkas>`.
 
 ## Status
@@ -112,15 +113,15 @@ Antarmuka memakai **INA Digital Design System (IDDS)** dikombinasikan dengan **T
   merekomendasikan tanggal jurnal terakhir), Buku Material (saldo berjalan) & Sisa Bahan,
   Identitas & Pengaturan + master Penyedia.
 
-Skema: 41 tabel aplikasi (42 termasuk tabel `migrations` yang dicatat CodeIgniter),
-dimulai dari 14 tabel inti di atas dan bertambah melalui migrasi 000002–000032:
+Skema: 43 tabel aplikasi (44 termasuk tabel `migrations` yang dicatat CodeIgniter),
+dimulai dari 14 tabel inti di atas dan bertambah melalui migrasi 000002–000033:
 gedung, pekerjaan, analisa, analisa_komponen, upah_master, realisasi, upah_bayar,
 impor_log, sekolah, biaya_lain, kas_transaksi, bukti_setor, foto_progres,
 dokumen_spk, revisi_pekerjaan, bahan_konversi, audit_events, rencana_mingguan,
 rencana_mingguan_detail, aplikasi_pengaturan, kurva_minggu, kurva_rencana,
 akses_menu, ahsp_acuan, ahsp_acuan_komponen, spk_tenaga, simulasi_realisasi,
-laporan_template, dan lain-lain. Lihat `app/Database/Migrations/` untuk urutan
-dan detail kolom.
+laporan_template, tutup_buku, tutup_buku_baris, dan lain-lain. Lihat
+`app/Database/Migrations/` untuk urutan dan detail kolom.
 
 ---
 
@@ -154,7 +155,7 @@ Catatan impor: konversi satuan mengikuti praktik AHSP — semen kg→zak (÷50),
 (÷1.400), kerikil/batu kg→m³ (÷1.600), keramik bh→ktk (menurut ukuran). Baris yang satuannya
 berbeda tanpa aturan konversi ditandai "satuan beda" agar diperiksa pengguna.
 
-Langkah sesudah `git pull`: jalankan `php spark migrate` (migrasi terakhir saat ini 000032),
+Langkah sesudah `git pull`: jalankan `php spark migrate` (migrasi terakhir saat ini 000033),
 lalu buka menu **Impor Dokumen Perencana** dan unggah workbook RAB perencana sekolah.
 
 ## Kesesuaian dengan Juknis Revitalisasi SMP 2026
@@ -187,10 +188,13 @@ Pendidikan 2026 (Direktorat SMP) yang kini diterapkan aplikasi:
 
 Pengembangan lanjutan berdasarkan Juknis (migrasi 000008–000011):
 
-- **Pembukuan (menu Buku Kas)**: Buku Kas Umum, Buku Bank, dan Buku
-  Pembantu Kas Tunai yang ditutup setiap akhir bulan, tergabung otomatis
-  dari pembayaran invoice (bank), pembayaran upah (tunai), bukti setor,
-  dan transaksi kas manual; cetak mengikuti format dokumen Juknis.
+- **Pembukuan (menu Buku Kas)**: Buku Kas Umum, Buku Bank, Buku
+  Pembantu Kas Tunai, dan Buku Pajak yang ditutup setiap akhir bulan,
+  tergabung otomatis dari pembayaran invoice (kanal per pembayaran,
+  bawaan tunai — hanya non-tunai yang masuk Buku Bank), pembayaran upah
+  (tunai), bukti setor, dan transaksi kas manual; baris pembayaran
+  dicatat bruto dan pungutan pajak (PPN/PPh 22/PPh 21) tampil sebagai
+  baris pungut tersendiri; cetak mengikuti format dokumen Juknis.
   **Tutup Buku bulanan** (migrasi 000031): bulan ditutup berurutan
   Jan–Des dari panel di Buku Kas; **Bulan Terbuka** (bulan terkecil yang
   belum ditutup) menjadi satu-satunya bulan pencatatan uang — termasuk
@@ -206,6 +210,9 @@ Pengembangan lanjutan berdasarkan Juknis (migrasi 000008–000011):
   SPK (batal lewat status); SPJ Bulanan dari snapshot; panel Perlu
   Tindak Lanjut di Dashboard; nilai BAP/BAST hanya dari barang diterima
   baik; pembayaran bank mensyaratkan nomor rekening penyedia.
+  **Kanal pembayaran** (migrasi 000033): tiap pembayaran invoice
+  mencatat kanal tunai/bank (bawaan tunai) yang menentukan buku
+  tujuannya.
 - **Penerimaan Dana**: pencairan bertahap Tahap 1 (70%) dan Tahap 2 (30%,
   syarat kemajuan fisik ≥ 50%) dengan target, status, peringatan jatuh
   tempo di Dashboard, dan cetak Kuitansi Penerimaan Uang format Juknis.
@@ -257,5 +264,5 @@ Pengembangan lanjutan berdasarkan Juknis (migrasi 000008–000011):
   nilai BOQ gedung dihitung ulang dari pekerjaan yang tersisa.
 
 Langkah sesudah `git pull` versi ini: jalankan `php spark migrate`
-(migrasi 000001–000028; semua migrasi bersifat idempoten dan menambahkan kolom
+(migrasi 000001–000033; semua migrasi bersifat idempoten dan menambahkan kolom
 bila belum ada).
