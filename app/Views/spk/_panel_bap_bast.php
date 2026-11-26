@@ -81,7 +81,7 @@
         <span style="margin-left:auto"><a class="tombol kecil abu" style="min-width:124px" href="<?= base_url('invoice') ?>">Lihat Invoice</a></span>
       <?php elseif ($adaBast): ?>
         <span class="kecil-teks">belum dibuat — nilai terisi otomatis sebesar sisa nilai BAST</span>
-        <span style="margin-left:auto"><a class="tombol kecil" style="min-width:124px" href="<?= base_url('invoice/baru?spk=' . $s['id']) ?>">+ Buat Invoice</a></span>
+        <span style="margin-left:auto"><button type="button" class="tombol kecil" style="min-width:124px" onclick="bukaInvoiceSpkIni()">+ Buat Invoice</button></span>
       <?php else: ?>
         <span class="kecil-teks">dibuat sesudah BAST terbit</span>
       <?php endif; ?>
@@ -181,6 +181,20 @@ function bukaModalBap(id, data) {
   var m = document.getElementById(id);
   if (m && window.perbaruiSelectCari) {
     m.querySelectorAll('select[data-select-cari]').forEach(function (sel) { window.perbaruiSelectCari(sel); });
+  }
+}
+// Tombol + Buat Invoice: membuka modal form Invoice yang sama seperti
+// di Register Invoice (invoice/_modal_form), dengan SPK ini langsung
+// terpilih — warisan BAP/BAST dan nilai sisa terisi otomatis.
+function bukaInvoiceSpkIni() {
+  if (!window.bukaInvoiceBaru) return;
+  window.bukaInvoiceBaru();
+  var m = document.getElementById('modal-invoice');
+  var sel = m ? m.querySelector('select[name="spk_id"]') : null;
+  if (sel) {
+    sel.value = <?= json_encode((string) $s['id']) ?>;
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    if (window.perbaruiSelectCari) window.perbaruiSelectCari(sel);
   }
 }
 </script>

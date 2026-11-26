@@ -8,5 +8,6 @@
 <?= $this->include('spk/_panel_tenaga') ?>
 <?= $this->include('spk/_panel_ceklis') ?>
 <?= $this->include('spk/_panel_ketentuan') ?>
+<?= $this->include('invoice/_modal_form') ?>
 <?= $this->include('spk/_modal_ubah_spk') ?>
 <?= $this->include('spk/_skrip') ?>

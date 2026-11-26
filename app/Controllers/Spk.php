@@ -332,7 +332,7 @@ class Spk extends BaseController
             'jml_terbap' => $jmlTerbap,
             'penyedia_list' => $penyediaList, 'gedung_list' => $gedungList,
             'gedung_spk' => $s['gedung_id'] ? (array_column($gedungList, 'nama', 'id')[(int) $s['gedung_id']] ?? null) : null,
-        ], 'SPK ' . $s['nomor']);
+        ] + $this->dataModalInvoice($s, $daftarBap, $bastPerBap, $bastUmum, $nilaiPaket) + $this->batasBuku(), 'SPK ' . $s['nomor']);
     }
 
     /** Simpan penanda manual ceklis kelengkapan dokumen SPK. */
@@ -532,6 +532,65 @@ class Spk extends BaseController
             return 'Rincian SPK ini terkunci karena sudah ada invoice yang terbayar — koreksi pembayaran lewat Jurnal Pembayaran terlebih dahulu.';
         }
         return null;
+    }
+
+    /**
+     * Data untuk modal form Invoice (invoice/_modal_form) di halaman
+     * detail SPK — tombol "+ Buat Invoice" membuka modal yang sama
+     * seperti di Register Invoice, dengan SPK ini sebagai satu-satunya
+     * pilihan. Warisan (BAP/BAST terakhir + sisa nilai BAST) dihitung
+     * sama seperti Invoice::daftarSpk, khusus SPK ini.
+     */
+    private function dataModalInvoice(array $s, array $daftarBap, array $bastPerBap, array $bastUmum, float $nilaiPaket): array
+    {
+        $db = $this->db();
+        $spkId = (int) $s['id'];
+        $bapW = $daftarBap !== [] ? end($daftarBap) : null;
+        $bastW = null;
+        if ($bapW !== null && ! empty($bastPerBap[(int) $bapW['id']])) {
+            $bastW = end($bastPerBap[(int) $bapW['id']]);
+        } elseif ($bastUmum !== []) {
+            $bastW = end($bastUmum);
+        }
+        $nilaiBap = [];
+        foreach ($db->query(
+            "SELECT bd.bap_id, COALESCE(SUM(d.qty*d.harga),0) v FROM bap_detail bd
+             JOIN spk_detail d ON d.id = bd.detail_id JOIN bap bp ON bp.id = bd.bap_id
+             WHERE bp.spk_id = ? AND bd.is_deleted = 0 AND d.is_deleted = 0 AND bp.is_deleted = 0
+               AND bd.kondisi NOT IN ('Kurang', 'Tidak Sesuai') GROUP BY bd.bap_id",
+            [$spkId]
+        )->getResultArray() as $r) {
+            $nilaiBap[(int) $r['bap_id']] = (float) $r['v'];
+        }
+        $terinvoice = (float) ($db->query(
+            'SELECT COALESCE(SUM(nilai),0) v FROM invoice WHERE spk_id = ? AND is_deleted = 0',
+            [$spkId]
+        )->getRowArray()['v'] ?? 0);
+        $nilaiBast = 0.0;
+        if ($bastW !== null) {
+            $nilaiBast = ! empty($bastW['bap_id']) ? ($nilaiBap[(int) $bastW['bap_id']] ?? 0.0) : $nilaiPaket;
+        }
+        $row = $db->query('SELECT MAX(nomor_urut) m FROM invoice')->getRow();
+        return [
+            'spk' => [
+                'list' => [[
+                    'id' => $spkId, 'nomor' => (int) $s['nomor'], 'paket' => (string) ($s['paket'] ?? ''),
+                    'total' => $nilaiPaket, 'status' => (string) ($s['status'] ?? 'Aktif'),
+                ]],
+                'warisan' => [$spkId => [
+                    'tanggal'    => $s['tanggal'] ?? null,
+                    'bap'        => $bapW,
+                    'bast'       => $bastW,
+                    'nilai_bap'  => $bapW !== null ? ($nilaiBap[(int) $bapW['id']] ?? 0.0) : 0.0,
+                    'nilai_bast' => $nilaiBast,
+                    'sisa'       => $nilaiBast - $terinvoice,
+                ]],
+            ],
+            'inv' => [],
+            'nomor_baru' => ((int) $row->m) + 1,
+            'tgl_bayar_default' => $this->tanggalBulanBekerja(),
+            'tgl_jurnal_terakhir' => $this->tanggalPembayaranTerakhir(),
+        ];
     }
 
     public function detailTambah($spkId)

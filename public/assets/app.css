@@ -442,6 +442,14 @@ th.angka {
   font-variant-numeric: tabular-nums;
 }
 
+/* Semua isian angka rupiah rata kanan (instruksi Wilda 26 Nov 2026) —
+   penanda data-uang dipakai form_modal jenis 'uang' dan isian uang
+   manual di seluruh aplikasi. */
+input[data-uang] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 tr.negatif td {
   background: var(--ina-red-100, #fdeded);
 }
