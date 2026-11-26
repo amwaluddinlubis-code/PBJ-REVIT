@@ -44,7 +44,7 @@ a:hover {
 .samping {
   width: 248px;
   flex-shrink: 0;
-  background: linear-gradient(145deg,#092b55 0%,#075b83 52%,#16a19a 100%);
+  background: linear-gradient(145deg, #092b55 0%, #075b83 52%, #16a19a 100%);
   border: none;
   padding: 16px 14px;
   display: flex;
@@ -64,6 +64,7 @@ a:hover {
   position: static;
   zoom: var(--ap-zoom-balik, 1);
 }
+
 .samping nav {
   flex: 1 1 auto;
   min-height: 0;
@@ -79,11 +80,13 @@ a:hover {
   border-bottom: 1px solid var(--ina-neutral-100, #f2f2f2);
   margin-bottom: 12px;
 }
+
 .logo .baris-ap {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .logo select {
   width: 100%;
 }
@@ -1052,6 +1055,7 @@ form.inline button {
 }
 
 @media (min-width: 761px) {
+
   /* Terlipat = rel ikon: lebar menyusut, ikon grup tetap tampil dan bisa
      diklik untuk membuka lagi (nama grup muncul sebagai title). Label,
      isi grup, pemilih sekolah, dan nama pengguna disembunyikan. */
@@ -1424,8 +1428,9 @@ html.gelap {
 }
 
 html.gelap .samping {
-  background: linear-gradient(145deg,#081f2e 0%,#0b3a33 100%);
+  background: linear-gradient(145deg, #081f2e 0%, #0b3a33 100%);
 }
+
 html.gelap .topbar,
 html.gelap .panel,
 html.gelap .kpi {
@@ -3169,23 +3174,456 @@ table.satu-baris tr.baris-detail>td {
   font-weight: 600;
   background: rgba(120, 140, 170, .05);
 }
+
 /* === Tabel Standar v1 (paginasi.js) === */
-th.bisa-urut { cursor: pointer; }
-th.bisa-urut:hover { text-decoration: underline; }
-th .panah-urut { font-size: 10px; opacity: .75; }
-tr.baris-kosong td { text-align: center; color: var(--ta-teks-2); padding: 18px 10px; font-style: italic; }
+th.bisa-urut {
+  cursor: pointer;
+}
+
+th.bisa-urut:hover {
+  text-decoration: underline;
+}
+
+th .panah-urut {
+  font-size: 10px;
+  opacity: .75;
+}
+
+tr.baris-kosong td {
+  text-align: center;
+  color: var(--ta-teks-2);
+  padding: 18px 10px;
+  font-style: italic;
+}
 
 /* Login v2 dan pemilih versi login administrator. */
-.login-v2{background:var(--ta-latar,#f3f6fb);color:var(--ta-teks,#172033)}
-.login-v2-shell{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,480px);max-width:1320px;margin:auto;padding:30px;gap:30px;align-items:stretch}
-.login-v2-intro{position:relative;overflow:hidden;border-radius:28px;padding:clamp(34px,6vw,92px);display:flex;flex-direction:column;justify-content:center;background:linear-gradient(145deg,#092b55 0%,#075b83 52%,#16a19a 100%);color:#fff;box-shadow:0 24px 70px rgba(17,53,91,.18)}
-.login-v2-intro:after{content:"";position:absolute;width:480px;height:480px;border:1px solid rgba(255,255,255,.18);border-radius:50%;right:-180px;bottom:-180px;box-shadow:0 0 0 48px rgba(255,255,255,.05),0 0 0 96px rgba(255,255,255,.035)}
-.login-v2-mark{display:flex;align-items:center;gap:10px;margin-bottom:34px;font-weight:800}.login-v2-mark span{display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(255,255,255,.5);border-radius:14px;font-size:14px;letter-spacing:.08em}.login-v2-mark i{display:block;width:42px;height:1px;background:rgba(255,255,255,.4)}
-.login-v2-eyebrow,.login-v2-kicker{margin:0 0 14px;color:#8de4d4;text-transform:uppercase;font-size:11px;letter-spacing:.16em;font-weight:800}.login-v2-intro h1{max-width:690px;margin:0;font-size:clamp(36px,5vw,70px);line-height:1.03;letter-spacing:-.055em}.login-v2-intro h1 em{color:#9ee9d3;font-style:normal}.login-v2-lead{max-width:580px;margin:25px 0 40px;color:rgba(255,255,255,.78);font-size:16px;line-height:1.7}.login-v2-proof{position:relative;z-index:1;display:flex;gap:16px;max-width:550px;padding:16px 0;border-top:1px solid rgba(255,255,255,.16)}.login-v2-proof span{color:#8de4d4;font-size:11px;font-weight:800;letter-spacing:.1em}.login-v2-proof b,.login-v2-proof small{display:block}.login-v2-proof b{font-size:14px}.login-v2-proof small{margin-top:5px;color:rgba(255,255,255,.65);line-height:1.5}.login-v2-footer{position:absolute;bottom:30px;margin:0;color:rgba(255,255,255,.55);font-size:11px}
-.login-v2-card{align-self:center;width:100%;padding:34px;border:1px solid rgba(24,53,85,.1);border-radius:24px;background:var(--ta-panel,#fff);box-shadow:0 20px 55px rgba(24,53,85,.1)}.login-v2-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:58px;color:var(--ta-teks-2,#667085);font-size:11px}.login-v2-status{display:flex;align-items:center;gap:7px}.login-v2-status i{width:7px;height:7px;border-radius:50%;background:#20a47b;box-shadow:0 0 0 4px rgba(32,164,123,.12)}.login-v2-year{text-transform:uppercase;letter-spacing:.12em}.login-v2-heading h2{margin:0;font-size:30px;letter-spacing:-.04em}.login-v2-heading>p:last-child{margin:10px 0 0;color:var(--ta-teks-2,#667085);font-size:13px}.login-v2-form{margin-top:35px}.login-v2-form label{display:block;margin:0 0 8px;font-size:12px;font-weight:700}.login-v2-input{display:flex;align-items:center;gap:10px;min-height:50px;margin-bottom:20px;border:1px solid var(--ta-garis,#d9e0ea);border-radius:12px;background:var(--ta-input,#fff);transition:border-color .2s,box-shadow .2s}.login-v2-input:focus-within{border-color:#087b8b;box-shadow:0 0 0 4px rgba(8,123,139,.11)}.login-v2-input>span{width:20px;margin-left:15px;color:#087b8b;font-weight:800}.login-v2-input input{min-width:0;flex:1;border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;padding:13px 0!important}.login-v2-input button{margin-right:8px;padding:7px 8px;border:0;background:transparent;color:#087b8b;font-size:11px;font-weight:800;cursor:pointer}.login-v2-submit{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:8px;padding:15px 17px;border:0;border-radius:12px;background:#087b8b;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(8,123,139,.2)}.login-v2-submit:hover{background:#076875}.login-v2-submit b{font-size:21px;font-weight:500}.login-v2-note{margin:25px 0 0;color:var(--ta-teks-2,#667085);font-size:11px;line-height:1.5;text-align:center}.login-version-settings{margin-top:18px}.login-version-heading{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.login-version-heading h2{margin:4px 0}.login-version-heading p{margin:0}.login-version-active{white-space:nowrap;padding:7px 10px;border-radius:999px;background:var(--ta-latar-2,#eef5f7);color:#087b8b;font-size:11px;font-weight:800}.login-version-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}.login-version-option{display:flex;gap:10px;align-items:flex-start;padding:14px;border:1px solid var(--ta-garis,#d9e0ea);border-radius:12px;cursor:pointer}.login-version-option input{margin-top:3px}.login-version-option b,.login-version-option small{display:block}.login-version-option small{margin-top:5px;color:var(--ta-teks-2,#667085);line-height:1.45}.login-version-option:has(input:checked){border-color:#087b8b;background:rgba(8,123,139,.05)}
-html.gelap .login-v2{background:#101923;color:#edf4fa}.gelap .login-v2-card{background:#172331;border-color:rgba(255,255,255,.1)}.gelap .login-v2-input{background:#101923;border-color:#344455}.gelap .login-v2-heading>p:last-child,.gelap .login-v2-note,.gelap .login-v2-card-top{color:#aab8c5}
-@media(max-width:860px){.login-v2-shell{grid-template-columns:1fr;max-width:620px;padding:16px}.login-v2-intro{min-height:420px;padding:32px}.login-v2-intro h1{font-size:42px}.login-v2-footer{position:static;margin-top:28px}.login-v2-card{align-self:auto}.login-v2-card-top{margin-bottom:40px}.login-version-options{grid-template-columns:1fr}}
-@media(max-width:520px){.login-v2-intro{min-height:390px;border-radius:20px;padding:25px}.login-v2-intro h1{font-size:35px}.login-v2-lead{font-size:14px;margin:18px 0 24px}.login-v2-proof{padding:11px 0}.login-v2-card{padding:24px;border-radius:20px}.login-v2-heading h2{font-size:26px}}
+.login-v2 {
+  background: var(--ta-latar, #f3f6fb);
+  color: var(--ta-teks, #172033)
+}
+
+.login-v2-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 480px);
+  max-width: 1320px;
+  margin: auto;
+  padding: 30px;
+  gap: 30px;
+  align-items: stretch
+}
+
+.login-v2-intro {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: clamp(34px, 6vw, 92px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(145deg, #092b55 0%, #075b83 52%, #16a19a 100%);
+  color: #fff;
+  box-shadow: 0 24px 70px rgba(17, 53, 91, .18)
+}
+
+.login-v2-intro:after {
+  content: "";
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 50%;
+  right: -180px;
+  bottom: -180px;
+  box-shadow: 0 0 0 48px rgba(255, 255, 255, .05), 0 0 0 96px rgba(255, 255, 255, .035)
+}
+
+.login-v2-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 34px;
+  font-weight: 800
+}
+
+.login-v2-mark span {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 14px;
+  font-size: 14px;
+  letter-spacing: .08em
+}
+
+.login-v2-mark i {
+  display: block;
+  width: 42px;
+  height: 1px;
+  background: rgba(255, 255, 255, .4)
+}
+
+.login-v2-eyebrow,
+.login-v2-kicker {
+  margin: 0 0 14px;
+  color: #8de4d4;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: .16em;
+  font-weight: 800
+}
+
+.login-v2-intro h1 {
+  max-width: 690px;
+  margin: 0;
+  font-size: clamp(36px, 5vw, 70px);
+  line-height: 1.03;
+  letter-spacing: -.055em
+}
+
+.login-v2-intro h1 em {
+  color: #9ee9d3;
+  font-style: normal
+}
+
+.login-v2-lead {
+  max-width: 580px;
+  margin: 25px 0 40px;
+  color: rgba(255, 255, 255, .78);
+  font-size: 16px;
+  line-height: 1.7
+}
+
+.login-v2-proof {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 16px;
+  max-width: 550px;
+  padding: 16px 0;
+  border-top: 1px solid rgba(255, 255, 255, .16)
+}
+
+.login-v2-proof span {
+  color: #8de4d4;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .1em
+}
+
+.login-v2-proof b,
+.login-v2-proof small {
+  display: block
+}
+
+.login-v2-proof b {
+  font-size: 14px
+}
+
+.login-v2-proof small {
+  margin-top: 5px;
+  color: rgba(255, 255, 255, .65);
+  line-height: 1.5
+}
+
+.login-v2-footer {
+  position: absolute;
+  bottom: 30px;
+  margin: 0;
+  color: rgba(255, 255, 255, .55);
+  font-size: 11px
+}
+
+.login-v2-card {
+  align-self: center;
+  width: 100%;
+  padding: 34px;
+  border: 1px solid rgba(24, 53, 85, .1);
+  border-radius: 24px;
+  background: var(--ta-panel, #fff);
+  box-shadow: 0 20px 55px rgba(24, 53, 85, .1)
+}
+
+.login-v2-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 58px;
+  color: var(--ta-teks-2, #667085);
+  font-size: 11px
+}
+
+.login-v2-status {
+  display: flex;
+  align-items: center;
+  gap: 7px
+}
+
+.login-v2-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #20a47b;
+  box-shadow: 0 0 0 4px rgba(32, 164, 123, .12)
+}
+
+.login-v2-year {
+  text-transform: uppercase;
+  letter-spacing: .12em
+}
+
+.login-v2-heading h2 {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: -.04em
+}
+
+.login-v2-heading>p:last-child {
+  margin: 10px 0 0;
+  color: var(--ta-teks-2, #667085);
+  font-size: 13px
+}
+
+.login-v2-form {
+  margin-top: 35px
+}
+
+.login-v2-form label {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700
+}
+
+.login-v2-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  margin-bottom: 20px;
+  border: 1px solid var(--ta-garis, #d9e0ea);
+  border-radius: 12px;
+  background: var(--ta-input, #fff);
+  transition: border-color .2s, box-shadow .2s
+}
+
+.login-v2-input:focus-within {
+  border-color: #087b8b;
+  box-shadow: 0 0 0 4px rgba(8, 123, 139, .11)
+}
+
+.login-v2-input>span {
+  width: 20px;
+  margin-left: 15px;
+  color: #087b8b;
+  font-weight: 800
+}
+
+.login-v2-input input {
+  min-width: 0;
+  flex: 1;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 13px 0 !important
+}
+
+.login-v2-input button {
+  margin-right: 8px;
+  padding: 7px 8px;
+  border: 0;
+  background: transparent;
+  color: #087b8b;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer
+}
+
+.login-v2-submit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 8px;
+  padding: 15px 17px;
+  border: 0;
+  border-radius: 12px;
+  background: #087b8b;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(8, 123, 139, .2)
+}
+
+.login-v2-submit:hover {
+  background: #076875
+}
+
+.login-v2-submit b {
+  font-size: 21px;
+  font-weight: 500
+}
+
+.login-v2-note {
+  margin: 25px 0 0;
+  color: var(--ta-teks-2, #667085);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center
+}
+
+.login-version-settings {
+  margin-top: 18px
+}
+
+.login-version-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start
+}
+
+.login-version-heading h2 {
+  margin: 4px 0
+}
+
+.login-version-heading p {
+  margin: 0
+}
+
+.login-version-active {
+  white-space: nowrap;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--ta-latar-2, #eef5f7);
+  color: #087b8b;
+  font-size: 11px;
+  font-weight: 800
+}
+
+.login-version-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px
+}
+
+.login-version-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px;
+  border: 1px solid var(--ta-garis, #d9e0ea);
+  border-radius: 12px;
+  cursor: pointer
+}
+
+.login-version-option input {
+  margin-top: 3px
+}
+
+.login-version-option b,
+.login-version-option small {
+  display: block
+}
+
+.login-version-option small {
+  margin-top: 5px;
+  color: var(--ta-teks-2, #667085);
+  line-height: 1.45
+}
+
+.login-version-option:has(input:checked) {
+  border-color: #087b8b;
+  background: rgba(8, 123, 139, .05)
+}
+
+html.gelap .login-v2 {
+  background: #101923;
+  color: #edf4fa
+}
+
+.gelap .login-v2-card {
+  background: #172331;
+  border-color: rgba(255, 255, 255, .1)
+}
+
+.gelap .login-v2-input {
+  background: #101923;
+  border-color: #344455
+}
+
+.gelap .login-v2-heading>p:last-child,
+.gelap .login-v2-note,
+.gelap .login-v2-card-top {
+  color: #aab8c5
+}
+
+@media(max-width:860px) {
+  .login-v2-shell {
+    grid-template-columns: 1fr;
+    max-width: 620px;
+    padding: 16px
+  }
+
+  .login-v2-intro {
+    min-height: 420px;
+    padding: 32px
+  }
+
+  .login-v2-intro h1 {
+    font-size: 42px
+  }
+
+  .login-v2-footer {
+    position: static;
+    margin-top: 28px
+  }
+
+  .login-v2-card {
+    align-self: auto
+  }
+
+  .login-v2-card-top {
+    margin-bottom: 40px
+  }
+
+  .login-version-options {
+    grid-template-columns: 1fr
+  }
+}
+
+@media(max-width:520px) {
+  .login-v2-intro {
+    min-height: 390px;
+    border-radius: 20px;
+    padding: 25px
+  }
+
+  .login-v2-intro h1 {
+    font-size: 35px
+  }
+
+  .login-v2-lead {
+    font-size: 14px;
+    margin: 18px 0 24px
+  }
+
+  .login-v2-proof {
+    padding: 11px 0
+  }
+
+  .login-v2-card {
+    padding: 24px;
+    border-radius: 20px
+  }
+
+  .login-v2-heading h2 {
+    font-size: 26px
+  }
+}
 
 /* === Kulit bersama v2: penyegaran seluruh modul === */
 :root {
@@ -3325,13 +3763,25 @@ body:not(.login) td {
   border-bottom-color: #edf1f5;
 }
 
-body:not(.login) tbody tr:last-child td { border-bottom: 0; }
-body:not(.login) tbody tr:hover td,
-body:not(.login) table tr:hover td { background: #f8fbff; }
-body:not(.login) tr.total td,
-body:not(.login) tr.baris-total td { background: #f3f7fc; border-top: 1px solid #dfe8f2; }
+body:not(.login) tbody tr:last-child td {
+  border-bottom: 0;
+}
 
-body:not(.login) label { color: #526175; font-weight: 600; }
+body:not(.login) tbody tr:hover td,
+body:not(.login) table tr:hover td {
+  background: #f8fbff;
+}
+
+body:not(.login) tr.total td,
+body:not(.login) tr.baris-total td {
+  background: #f3f7fc;
+  border-top: 1px solid #dfe8f2;
+}
+
+body:not(.login) label {
+  color: #526175;
+  font-weight: 600;
+}
 
 body:not(.login) input,
 body:not(.login) select,
@@ -3345,10 +3795,17 @@ body:not(.login) textarea {
 
 body:not(.login) input:hover,
 body:not(.login) select:hover,
-body:not(.login) textarea:hover { border-color: #b9c8da; }
+body:not(.login) textarea:hover {
+  border-color: #b9c8da;
+}
+
 body:not(.login) input:focus,
 body:not(.login) select:focus,
-body:not(.login) textarea:focus { background: #fff; border-color: #77a5ed; box-shadow: 0 0 0 4px rgba(9, 104, 246, .09); }
+body:not(.login) textarea:focus {
+  background: #fff;
+  border-color: #77a5ed;
+  box-shadow: 0 0 0 4px rgba(9, 104, 246, .09);
+}
 
 body:not(.login) input[type="checkbox"],
 body:not(.login) input[type="radio"] {
@@ -3371,12 +3828,30 @@ body:not(.login) .tombol-buka-form {
 
 body:not(.login) button:hover,
 body:not(.login) .tombol:hover,
-body:not(.login) .tombol-buka-form:hover { box-shadow: 0 9px 18px rgba(9, 104, 246, .14); }
+body:not(.login) .tombol-buka-form:hover {
+  box-shadow: 0 9px 18px rgba(9, 104, 246, .14);
+}
+
 body:not(.login) button.abu,
-body:not(.login) .tombol.abu { background: #fff; border-color: var(--ui-border-strong); box-shadow: none; }
-body:not(.login) button.bahaya { box-shadow: 0 5px 12px rgba(128, 0, 0, .18); }
-body:not(.login) button.ekspor { background: #cdeac0; border-color: #a9d69a; color: #1e5631; }
-body:not(.login) button.ekspor:hover { background: #bce0ab; }
+body:not(.login) .tombol.abu {
+  background: #fff;
+  border-color: var(--ui-border-strong);
+  box-shadow: none;
+}
+
+body:not(.login) button.bahaya {
+  box-shadow: 0 5px 12px rgba(128, 0, 0, .18);
+}
+
+body:not(.login) button.ekspor {
+  background: #cdeac0;
+  border-color: #a9d69a;
+  color: #1e5631;
+}
+
+body:not(.login) button.ekspor:hover {
+  background: #bce0ab;
+}
 
 body:not(.login) .aksi {
   align-items: center;
@@ -3389,9 +3864,18 @@ body:not(.login) .toast {
   box-shadow: 0 6px 16px rgba(16, 34, 62, .05);
 }
 
-body:not(.login) .lencana { min-height: 23px; align-items: center; }
-body:not(.login) .paginasi { padding-top: 4px; }
-body:not(.login) .paginasi button { min-height: 34px; }
+body:not(.login) .lencana {
+  min-height: 23px;
+  align-items: center;
+}
+
+body:not(.login) .paginasi {
+  padding-top: 4px;
+}
+
+body:not(.login) .paginasi button {
+  min-height: 34px;
+}
 
 html.gelap body:not(.login) {
   background: radial-gradient(circle at 100% 0, rgba(40, 126, 255, .08), transparent 28rem), #0c1524;
@@ -3401,82 +3885,254 @@ html.gelap body:not(.login) .samping,
 html.gelap body:not(.login) .topbar,
 html.gelap body:not(.login) .panel,
 html.gelap body:not(.login) .kpi,
-html.gelap body:not(.login) table { background: rgba(15, 26, 46, .94); border-color: #243653; }
-html.gelap body:not(.login) .topbar { background: rgba(15, 26, 46, .84); }
-html.gelap body:not(.login) .samping .logo { border-bottom-color: #243653; }
+html.gelap body:not(.login) table {
+  background: rgba(15, 26, 46, .94);
+  border-color: #243653;
+}
+
+html.gelap body:not(.login) .topbar {
+  background: rgba(15, 26, 46, .84);
+}
+
+html.gelap body:not(.login) .samping .logo {
+  border-bottom-color: #243653;
+}
+
 html.gelap body:not(.login) .samping nav a:hover,
-html.gelap body:not(.login) .samping nav .parent:hover { background: #16263f; }
+html.gelap body:not(.login) .samping nav .parent:hover {
+  background: #16263f;
+}
+
 html.gelap body:not(.login) .samping nav a.aktif,
-html.gelap body:not(.login) .samping nav .parent.aktif { background: #142744; border-color: #24466f; }
-html.gelap body:not(.login) th { background: #14233b; border-bottom-color: #263b5b; color: #a7b6c9; }
-html.gelap body:not(.login) td { border-bottom-color: #243653; }
+html.gelap body:not(.login) .samping nav .parent.aktif {
+  background: #142744;
+  border-color: #24466f;
+}
+
+html.gelap body:not(.login) th {
+  background: #14233b;
+  border-bottom-color: #263b5b;
+  color: #a7b6c9;
+}
+
+html.gelap body:not(.login) td {
+  border-bottom-color: #243653;
+}
+
 html.gelap body:not(.login) tbody tr:hover td,
-html.gelap body:not(.login) table tr:hover td { background: #142844; }
+html.gelap body:not(.login) table tr:hover td {
+  background: #142844;
+}
+
 html.gelap body:not(.login) tr.total td,
-html.gelap body:not(.login) tr.baris-total td { background: #14233b; border-top-color: #2a4264; }
+html.gelap body:not(.login) tr.baris-total td {
+  background: #14233b;
+  border-top-color: #2a4264;
+}
+
 html.gelap body:not(.login) input,
 html.gelap body:not(.login) select,
-html.gelap body:not(.login) textarea { background: #101c30; border-color: #344a68; color: #edf4fa; }
+html.gelap body:not(.login) textarea {
+  background: #101c30;
+  border-color: #344a68;
+  color: #edf4fa;
+}
+
 html.gelap body:not(.login) input:focus,
 html.gelap body:not(.login) select:focus,
-html.gelap body:not(.login) textarea:focus { background: #14243c; }
+html.gelap body:not(.login) textarea:focus {
+  background: #14243c;
+}
+
 html.gelap body:not(.login) button.abu,
-html.gelap body:not(.login) .tombol.abu { background: #15243a; border-color: #344a68; color: #edf4fa; }
+html.gelap body:not(.login) .tombol.abu {
+  background: #15243a;
+  border-color: #344a68;
+  color: #edf4fa;
+}
 
 @media (max-width: 760px) {
-  body:not(.login) .isi { padding: 22px 16px 36px; }
-  body:not(.login) .atas { font-size: 17px; margin-bottom: 17px; }
-  body:not(.login) .panel { padding: 16px 14px; border-radius: 14px; }
-  body:not(.login) .kartu-kpi { gap: 10px; }
-  body:not(.login) .kpi { min-height: 132px; padding: 14px; }
-  body:not(.login) .kpi .nilai { font-size: 15px; }
-  body:not(.login) .aksi { flex-wrap: wrap; }
+  body:not(.login) .isi {
+    padding: 22px 16px 36px;
+  }
+
+  body:not(.login) .atas {
+    font-size: 17px;
+    margin-bottom: 17px;
+  }
+
+  body:not(.login) .panel {
+    padding: 16px 14px;
+    border-radius: 14px;
+  }
+
+  body:not(.login) .kartu-kpi {
+    gap: 10px;
+  }
+
+  body:not(.login) .kpi {
+    min-height: 132px;
+    padding: 14px;
+  }
+
+  body:not(.login) .kpi .nilai {
+    font-size: 15px;
+  }
+
+  body:not(.login) .aksi {
+    flex-wrap: wrap;
+  }
 }
+
 /* v2: header sticky + sorotan baris untuk tabel standar */
-table.kepala-tempel thead th { position: sticky; top: var(--top-tempel, 56px); z-index: 5; }
-table[data-cari] tbody tr, table[data-paginasi] tbody tr { scroll-margin-top: 128px; }
-table[data-cari] tbody tr:hover td, table[data-paginasi] tbody tr:hover td { background-color: rgba(100, 116, 139, .07); }
+table.kepala-tempel thead th {
+  position: sticky;
+  top: var(--top-tempel, 56px);
+  z-index: 5;
+}
+
+table[data-cari] tbody tr,
+table[data-paginasi] tbody tr {
+  scroll-margin-top: 128px;
+}
+
+table[data-cari] tbody tr:hover td,
+table[data-paginasi] tbody tr:hover td {
+  background-color: rgba(100, 116, 139, .07);
+}
 
 /* Kepadatan kerja: jarak vertikal ringkas untuk modul aplikasi */
 body:not(.login) .samping nav a,
-body:not(.login) .samping nav .parent { min-height: 34px; }
-body:not(.login) .isi { padding-top: 16px; }
-body:not(.login) .atas { min-height: 26px; margin-bottom: 10px; }
+body:not(.login) .samping nav .parent {
+  min-height: 34px;
+}
+
+body:not(.login) .isi {
+  padding-top: 16px;
+}
+
+body:not(.login) .atas {
+  min-height: 26px;
+  margin-bottom: 10px;
+}
+
 body:not(.login) .panel,
-body:not(.login) .peringatan { padding-top: 10px; padding-bottom: 10px; margin-bottom: 10px; }
-body:not(.login) .panel h2 { min-height: 18px; margin-top: 0; margin-bottom: 7px; }
-body:not(.login) .kartu-kpi { gap: 10px; margin-bottom: 10px; }
-body:not(.login) .kpi { min-height: 100px; padding: 11px; }
-body:not(.login) th { height: 32px; padding-top: 5px; padding-bottom: 5px; }
-body:not(.login) td { height: 36px; padding-top: 5px; padding-bottom: 5px; }
+body:not(.login) .peringatan {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+body:not(.login) .panel h2 {
+  min-height: 18px;
+  margin-top: 0;
+  margin-bottom: 7px;
+}
+
+body:not(.login) .kartu-kpi {
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+body:not(.login) .kpi {
+  min-height: 100px;
+  padding: 11px;
+}
+
+body:not(.login) th {
+  height: 32px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+body:not(.login) td {
+  height: 36px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
 body:not(.login) input:not([type="checkbox"]):not([type="radio"]),
-body:not(.login) select { min-height: 32px; padding-top: 5px; padding-bottom: 5px; }
-body:not(.login) textarea { min-height: 60px; padding-top: 6px; padding-bottom: 6px; }
+body:not(.login) select {
+  min-height: 27px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+body:not(.login) textarea {
+  min-height: 60px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
 body:not(.login) button,
 body:not(.login) .tombol,
-body:not(.login) .tombol-buka-form { min-height: 30px; padding-top: 5px; padding-bottom: 5px; }
-body:not(.login) .aksi { padding-top: 0; gap: 4px; }
+body:not(.login) .tombol-buka-form {
+  min-height: 27px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+body:not(.login) .aksi {
+  padding-top: 0;
+  gap: 4px;
+}
+
 body:not(.login) .pesan,
-body:not(.login) .toast { padding-top: 7px; padding-bottom: 7px; }
-body:not(.login) .lencana { min-height: 19px; }
-body:not(.login) .paginasi { padding-top: 0; padding-bottom: 0; }
-body:not(.login) .paginasi button { min-height: 28px; padding-top: 4px; padding-bottom: 4px; }
+body:not(.login) .toast {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+body:not(.login) .lencana {
+  min-height: 22px;
+}
+
+body:not(.login) .paginasi {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+body:not(.login) .paginasi button {
+  min-height: 28px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
 
 @media print {
-  .paginasi { display: none !important; }
-  table[data-paginasi] tr, table[data-cari] tr { display: table-row !important; }
-  table[data-paginasi] tr.baris-detail:not(.terbuka), table[data-cari] tr.baris-detail:not(.terbuka) { display: none !important; }
-  table[data-paginasi] tr.baris-kosong, table[data-cari] tr.baris-kosong { display: none !important; }
+  .paginasi {
+    display: none !important;
+  }
+
+  table[data-paginasi] tr,
+  table[data-cari] tr {
+    display: table-row !important;
+  }
+
+  table[data-paginasi] tr.baris-detail:not(.terbuka),
+  table[data-cari] tr.baris-detail:not(.terbuka) {
+    display: none !important;
+  }
+
+  table[data-paginasi] tr.baris-kosong,
+  table[data-cari] tr.baris-kosong {
+    display: none !important;
+  }
 }
 
 @media (max-width: 760px) {
+
   body:not(.login) .samping nav a,
-  body:not(.login) .samping nav .parent { min-height: 38px; }
+  body:not(.login) .samping nav .parent {
+    min-height: 38px;
+  }
+
   body:not(.login) input:not([type="checkbox"]):not([type="radio"]),
   body:not(.login) select,
   body:not(.login) button,
   body:not(.login) .tombol,
-  body:not(.login) .tombol-buka-form { min-height: 38px; }
+  body:not(.login) .tombol-buka-form {
+    min-height: 38px;
+  }
 }
 
 /* Sidebar: identitas kuat, navigasi ringan, dan hierarki menu lebih jelas */
@@ -3500,13 +4156,18 @@ body:not(.login) .samping .kotak-logo {
   box-shadow: 0 8px 18px rgba(0, 0, 0, .16);
 }
 
-body:not(.login) .samping .nama-logo { color: #fff; }
+body:not(.login) .samping .nama-logo {
+  color: #fff;
+}
+
 body:not(.login) .samping .nama-logo small,
 body:not(.login) .samping .label-samping,
-body:not(.login) .samping .grup { color: rgba(231, 247, 255, .68); }
+body:not(.login) .samping .grup {
+  color: rgba(231, 247, 255, .68);
+}
 
 body:not(.login) .samping .sc-tombol,
-body:not(.login) .samping > .logo select {
+body:not(.login) .samping>.logo select {
   min-height: 32px;
   padding: 6px 9px;
   border-color: rgba(255, 255, 255, .2);
@@ -3517,9 +4178,14 @@ body:not(.login) .samping > .logo select {
 }
 
 body:not(.login) .samping .sc-tombol:hover,
-body:not(.login) .samping .sc-tombol:focus-visible { background: rgba(3, 26, 54, .46); }
+body:not(.login) .samping .sc-tombol:focus-visible {
+  background: rgba(3, 26, 54, .46);
+}
+
 body:not(.login) .samping .sc-label.sc-kosong-teks,
-body:not(.login) .samping .sc-panah { color: rgba(231, 247, 255, .72); }
+body:not(.login) .samping .sc-panah {
+  color: rgba(231, 247, 255, .72);
+}
 
 body:not(.login) .samping nav {
   padding: 0 1px;
@@ -3528,6 +4194,7 @@ body:not(.login) .samping nav {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, .25) transparent;
 }
+
 body:not(.login) .samping nav a,
 body:not(.login) .samping nav .parent {
   min-height: 34px;
@@ -3540,9 +4207,19 @@ body:not(.login) .samping nav .parent {
 }
 
 body:not(.login) .samping nav a svg,
-body:not(.login) .samping nav .parent > svg { width: 17px; height: 17px; color: rgba(218, 244, 255, .82); }
+body:not(.login) .samping nav .parent>svg {
+  width: 17px;
+  height: 17px;
+  color: rgba(218, 244, 255, .82);
+}
+
 body:not(.login) .samping nav a:hover,
-body:not(.login) .samping nav .parent:hover { background: rgba(255, 255, 255, .1); color: #fff; transform: translateX(2px); }
+body:not(.login) .samping nav .parent:hover {
+  background: rgba(255, 255, 255, .1);
+  color: #fff;
+  transform: translateX(2px);
+}
+
 body:not(.login) .samping nav a.aktif,
 body:not(.login) .samping nav .parent.aktif {
   background: linear-gradient(90deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .07));
@@ -3551,33 +4228,89 @@ body:not(.login) .samping nav .parent.aktif {
   color: #fff;
 }
 
-body:not(.login) .samping nav .grup { margin: 12px 9px 5px; }
+body:not(.login) .samping nav .grup {
+  margin: 12px 9px 5px;
+}
+
 body:not(.login) .samping nav .anak {
   margin: 0 0 5px 17px;
   padding-left: 8px;
   border-left-color: rgba(220, 246, 255, .22);
 }
-body:not(.login) .samping nav .anak a { min-height: 29px; padding: 5px 8px; color: rgba(239, 249, 255, .72); font-size: 10.5px; }
-body:not(.login) .samping nav .anak a.aktif { color: #fff; }
-body:not(.login) .samping nav a .hitung { background: #64e0d5; color: #073a55; }
+
+body:not(.login) .samping nav .anak a {
+  min-height: 29px;
+  padding: 5px 8px;
+  color: rgba(239, 249, 255, .72);
+  font-size: 10.5px;
+}
+
+body:not(.login) .samping nav .anak a.aktif {
+  color: #fff;
+}
+
+body:not(.login) .samping nav a .hitung {
+  background: #64e0d5;
+  color: #073a55;
+}
 
 body:not(.login) .samping .profil {
   padding: 10px 6px 1px;
   border-top-color: rgba(255, 255, 255, .16);
 }
-body:not(.login) .samping .profil .siapa { color: #fff; }
-body:not(.login) .samping .profil .siapa small { color: rgba(231, 247, 255, .68); }
+
+body:not(.login) .samping .profil .siapa {
+  color: #fff;
+}
+
+body:not(.login) .samping .profil .siapa small {
+  color: rgba(231, 247, 255, .68);
+}
 
 /* === Fase 0+1 (2026-11-22): perbaikan kontras + fondasi polish ala Apple ===
    Lapisan penimpa terakhir: font lokal, token permukaan, panel berlipat. */
 
 /* Font Inter lokal (sebelumnya @import Google Fonts di idds.css:
    render-blocking dan bergantung internet). */
-@font-face { font-family: "Inter"; src: url("fonts/inter-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Inter"; src: url("fonts/inter-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: "Inter"; src: url("fonts/inter-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
-@font-face { font-family: "Inter"; src: url("fonts/inter-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
-@font-face { font-family: "Inter"; src: url("fonts/inter-800.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/inter-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/inter-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/inter-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/inter-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/inter-800.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   --ui-radius: 18px;
@@ -3587,9 +4320,18 @@ body:not(.login) .samping .profil .siapa small { color: rgba(231, 247, 255, .68)
   --ui-shadow-hover: 0 2px 4px rgba(16, 34, 62, .05), 0 18px 38px rgba(16, 34, 62, .10);
 }
 
-body { font-size: 13.5px; }
-td, .kpi .nilai { font-variant-numeric: tabular-nums; }
-.mk-kartu { border-radius: 20px; }
+body {
+  font-size: 13.5px;
+}
+
+td,
+.kpi .nilai {
+  font-variant-numeric: tabular-nums;
+}
+
+.mk-kartu {
+  border-radius: 20px;
+}
 
 /* Hero Dashboard: tombol sekunder harus terbaca di atas gradasi biru
    (aturan .tombol.abu generik menimpanya menjadi pil putih teks putih). */
@@ -3600,17 +4342,32 @@ body:not(.login) .dashboard-hero .tombol.abu {
   box-shadow: none;
   backdrop-filter: blur(8px);
 }
+
 body:not(.login) .dashboard-hero .tombol.abu:hover {
   background: rgba(255, 255, 255, .2);
   border-color: rgba(255, 255, 255, .38);
 }
 
 /* Angka perubahan & status pagu: kontras aman di terang dan gelap. */
-.perubahan-buruk { color: #b42318; }
-.perubahan-baik { color: #067647; }
-html.gelap .perubahan-buruk { color: #f97066; }
-html.gelap .perubahan-baik { color: #32d583; }
-html.gelap .peringatan a { color: #7cc4ff; }
+.perubahan-buruk {
+  color: #b42318;
+}
+
+.perubahan-baik {
+  color: #067647;
+}
+
+html.gelap .perubahan-buruk {
+  color: #f97066;
+}
+
+html.gelap .perubahan-baik {
+  color: #32d583;
+}
+
+html.gelap .peringatan a {
+  color: #7cc4ff;
+}
 
 /* Panel peringatan berbasis tint (ikut tema; tanpa warna literal di view). */
 .panel-waspada {
@@ -3618,6 +4375,7 @@ html.gelap .peringatan a { color: #7cc4ff; }
   border: 1px solid rgba(245, 158, 11, .45);
   border-left: 4px solid var(--ina-amber-500, #f59e0b);
 }
+
 html.gelap .panel-waspada {
   background: rgba(245, 158, 11, .10);
   border-color: rgba(245, 158, 11, .35);
@@ -3625,7 +4383,7 @@ html.gelap .panel-waspada {
 
 /* Panel berlipat (details.panel-lipat): kepala panel menjadi summary
    bergaya h2 panel, isi dilipat; keadaan tersimpan per panel di layout. */
-details.panel-lipat > summary {
+details.panel-lipat>summary {
   list-style: none;
   cursor: pointer;
   display: flex;
@@ -3638,8 +4396,12 @@ details.panel-lipat > summary {
   color: var(--ta-teks);
   user-select: none;
 }
-details.panel-lipat > summary::-webkit-details-marker { display: none; }
-details.panel-lipat > summary::before {
+
+details.panel-lipat>summary::-webkit-details-marker {
+  display: none;
+}
+
+details.panel-lipat>summary::before {
   content: "";
   width: 4px;
   height: 17px;
@@ -3647,7 +4409,8 @@ details.panel-lipat > summary::before {
   border-radius: 5px;
   background: linear-gradient(180deg, #0968f6, #18a5a1);
 }
-details.panel-lipat > summary::after {
+
+details.panel-lipat>summary::after {
   content: "";
   margin-left: auto;
   width: 8px;
@@ -3658,17 +4421,31 @@ details.panel-lipat > summary::after {
   transform: rotate(45deg);
   transition: transform .25s ease;
 }
-details.panel-lipat[open] > summary { margin-bottom: 14px; }
-details.panel-lipat[open] > summary::after { transform: rotate(225deg); }
-details.panel-lipat > summary .kecil-teks { font-weight: 500; }
+
+details.panel-lipat[open]>summary {
+  margin-bottom: 14px;
+}
+
+details.panel-lipat[open]>summary::after {
+  transform: rotate(225deg);
+}
+
+details.panel-lipat>summary .kecil-teks {
+  font-weight: 500;
+}
 
 /* Toast di ponsel: jangan menutupi topbar. */
 @media (max-width: 760px) {
-  #wadah-toast { top: 70px; right: 12px; }
+  #wadah-toast {
+    top: 70px;
+    right: 12px;
+  }
 }
 
 @media print {
-  details.panel-lipat > summary::after { display: none; }
+  details.panel-lipat>summary::after {
+    display: none;
+  }
 }
 
 /* === Fase 2 (2026-11-22): komponen ala Apple ===
@@ -3679,14 +4456,22 @@ body:not(.login) .tombol,
 body:not(.login) button:not(.sc-tombol):not(.toast-tutup):not(.parent) {
   border-radius: 999px;
 }
+
 body:not(.login) .tombol:active,
 body:not(.login) button:not(.sc-tombol):not(.toast-tutup):not(.parent):active {
   transform: scale(.98);
 }
+
 @media (max-width: 760px) {
-  body:not(.login) .paginasi button { min-height: 40px; min-width: 40px; }
+  body:not(.login) .paginasi button {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
   body:not(.login) .aksi .tombol,
-  body:not(.login) .aksi button { min-height: 44px; }
+  body:not(.login) .aksi button {
+    min-height: 44px;
+  }
 }
 
 /* 2) Segmented control untuk grup .tab (mis. tab Master Bahan):
@@ -3701,6 +4486,7 @@ body:not(.login) button:not(.sc-tombol):not(.toast-tutup):not(.parent):active {
   border-radius: 999px;
   background: rgba(15, 35, 70, .06);
 }
+
 .tab a,
 .tab span {
   padding: 7px 14px;
@@ -3710,7 +4496,12 @@ body:not(.login) button:not(.sc-tombol):not(.toast-tutup):not(.parent):active {
   color: var(--ta-teks-2);
   font-weight: 550;
 }
-.tab a:hover { color: var(--ta-teks); text-decoration: none; }
+
+.tab a:hover {
+  color: var(--ta-teks);
+  text-decoration: none;
+}
+
 .tab .aktif {
   background: #fff;
   color: var(--ta-teks);
@@ -3718,9 +4509,16 @@ body:not(.login) button:not(.sc-tombol):not(.toast-tutup):not(.parent):active {
   border-bottom-color: transparent;
   box-shadow: 0 1px 3px rgba(16, 34, 62, .14);
 }
-html.gelap .tab { background: rgba(255, 255, 255, .08); }
+
+html.gelap .tab {
+  background: rgba(255, 255, 255, .08);
+}
+
 html.gelap .tab a,
-html.gelap .tab span { color: rgba(255, 255, 255, .75); }
+html.gelap .tab span {
+  color: rgba(255, 255, 255, .75);
+}
+
 html.gelap .tab .aktif {
   background: rgba(255, 255, 255, .18);
   color: #fff;
@@ -3736,10 +4534,12 @@ body:not(.login) .samping nav .parent.aktif {
   border-radius: 10px;
   color: #fff;
 }
+
 body:not(.login) .samping nav .anak a.aktif {
   background: rgba(255, 255, 255, .16);
   border-radius: 8px;
 }
+
 html.gelap body:not(.login) .samping nav a.aktif,
 html.gelap body:not(.login) .samping nav .parent.aktif {
   background: rgba(255, 255, 255, .16);
@@ -3748,21 +4548,32 @@ html.gelap body:not(.login) .samping nav .parent.aktif {
 }
 
 /* 4) Kartu KPI: ikon menjadi lingkaran tint, angka lebih besar. */
-.kpi::before { border-radius: 50%; }
+.kpi::before {
+  border-radius: 50%;
+}
+
 body:not(.login) .kpi .nilai {
   font-size: 21px;
   font-weight: 650;
   letter-spacing: -.01em;
 }
-body:not(.login) .kpi .label { font-size: 11px; }
+
+body:not(.login) .kpi .label {
+  font-size: 11px;
+}
 
 /* 5) Modal: latar blur; di ponsel menjadi sheet menempel di bawah. */
 .mk-lapik {
   backdrop-filter: blur(6px);
   background: rgba(13, 22, 38, .48);
 }
+
 @media (max-width: 760px) {
-  .mk-lapik { align-items: flex-end; padding: 0; }
+  .mk-lapik {
+    align-items: flex-end;
+    padding: 0;
+  }
+
   .mk-kartu {
     width: 100% !important;
     max-width: 100% !important;
@@ -3780,6 +4591,7 @@ body:not(.login) textarea {
   background: var(--ui-surface-soft);
   border-color: rgba(15, 35, 70, .10);
 }
+
 body:not(.login) input:focus,
 body:not(.login) select:focus,
 body:not(.login) textarea:focus {
@@ -3787,12 +4599,14 @@ body:not(.login) textarea:focus {
   border-color: #77a5ed;
   box-shadow: 0 0 0 4px rgba(9, 104, 246, .12);
 }
+
 html.gelap body:not(.login) input,
 html.gelap body:not(.login) select,
 html.gelap body:not(.login) textarea {
   background: rgba(255, 255, 255, .05);
   border-color: rgba(255, 255, 255, .12);
 }
+
 html.gelap body:not(.login) input:focus,
 html.gelap body:not(.login) select:focus,
 html.gelap body:not(.login) textarea:focus {
@@ -3817,10 +4631,25 @@ body:not(.login) .dashboard-hero .tombol.abu {
   color: var(--ta-teks-3);
   margin-bottom: 12px;
 }
-.remah a { color: var(--ta-teks-2); font-weight: 550; }
-.remah a:hover { color: var(--ta-biru); text-decoration: none; }
-.remah span[aria-hidden] { opacity: .55; }
-.remah [aria-current="page"] { color: var(--ta-teks); font-weight: 600; }
+
+.remah a {
+  color: var(--ta-teks-2);
+  font-weight: 550;
+}
+
+.remah a:hover {
+  color: var(--ta-biru);
+  text-decoration: none;
+}
+
+.remah span[aria-hidden] {
+  opacity: .55;
+}
+
+.remah [aria-current="page"] {
+  color: var(--ta-teks);
+  font-weight: 600;
+}
 
 /* Keadaan kosong yang konsisten untuk panel tanpa data. */
 .kosong {
@@ -3828,7 +4657,10 @@ body:not(.login) .dashboard-hero .tombol.abu {
   padding: 34px 22px;
   color: var(--ta-teks-2);
 }
-.kosong p { margin: 0 0 12px; }
+
+.kosong p {
+  margin: 0 0 12px;
+}
 
 /* Kerangka berkilau (skeleton) saat tabel Bahan dimuat ulang via AJAX. */
 .tulang {
@@ -3837,6 +4669,7 @@ body:not(.login) .dashboard-hero .tombol.abu {
   gap: 10px;
   padding: 6px 0;
 }
+
 .tulang span {
   display: block;
   height: 16px;
@@ -3845,18 +4678,34 @@ body:not(.login) .dashboard-hero .tombol.abu {
   background-size: 200% 100%;
   animation: tulang-geser 1.2s ease-in-out infinite;
 }
-.tulang span:nth-child(2n) { width: 82%; }
-.tulang span:nth-child(3n) { width: 64%; }
-@keyframes tulang-geser {
-  0% { background-position: 120% 0; }
-  100% { background-position: -80% 0; }
+
+.tulang span:nth-child(2n) {
+  width: 82%;
 }
+
+.tulang span:nth-child(3n) {
+  width: 64%;
+}
+
+@keyframes tulang-geser {
+  0% {
+    background-position: 120% 0;
+  }
+
+  100% {
+    background-position: -80% 0;
+  }
+}
+
 html.gelap .tulang span {
   background: linear-gradient(90deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .12), rgba(255, 255, 255, .05));
   background-size: 200% 100%;
 }
+
 @media (prefers-reduced-motion: reduce) {
-  .tulang span { animation: none; }
+  .tulang span {
+    animation: none;
+  }
 }
 
 /* === Audit visual (2026-11-22): pemadatan compact-elegan ===
@@ -3865,7 +4714,9 @@ html.gelap .tulang span {
    keterbacaan teks kecil diperbaiki. */
 
 /* Hero dashboard adalah komponen paling lega (tinggi 150px): diketatkan. */
-body:not(.login) .dashboard-hero { padding: 20px 24px; }
+body:not(.login) .dashboard-hero {
+  padding: 20px 24px;
+}
 
 /* Kartu KPI: ikon 44 -> 38px dan jarak bawahnya lebih ramping. */
 .kpi::before {
@@ -3889,33 +4740,58 @@ body:not(.login) .isi {
 }
 
 /* Modal sedikit lebih ramping; bantalan bawah sheet ponsel dipertahankan. */
-.mk-kartu { padding: 20px; }
+.mk-kartu {
+  padding: 20px;
+}
+
 @media (max-width: 760px) {
-  .mk-kartu { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+  .mk-kartu {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
 }
 
 /* Baris aksi: jarak antar tombol 4 -> 8px agar tidak berdempetan. */
-body:not(.login) .aksi { gap: 8px; }
+body:not(.login) .aksi {
+  gap: 8px;
+}
 
 /* Paginasi desktop: tinggi tombol 28 -> 32px, selaras tombol kecil. */
-body:not(.login) .paginasi button { min-height: 32px; }
+body:not(.login) .paginasi button {
+  min-height: 32px;
+}
 
 /* Teks kecil di area isi: warna lama #a3a3a3 terlalu pudar di latar
    terang (kontras sekitar 2,5:1); digelapkan khusus mode terang. */
-html:not(.gelap) body:not(.login) .isi .kecil-teks { color: #5b6b82; }
+html:not(.gelap) body:not(.login) .isi .kecil-teks {
+  color: #5b6b82;
+}
 
 /* Koreksi audit: hero memiliki min-height 150px dari aturan dasar,
    jadi pemadatan padding saja tidak menurunkannya. */
-body:not(.login) .dashboard-hero { min-height: 118px; }
+body:not(.login) .dashboard-hero {
+  min-height: 118px;
+}
 
 /* Tabel Acuan AHSP: lebar pas wadah/layar, teks membungkus (tidak melebar).
    Selektor WAJIB berbentuk table.tabel-acuan: tabelnya juga memakai kelas
    satu-baris (white-space: nowrap) dan aturan ini harus MENANG atasnya —
    spesifisitas setara + urutan sesudahnya. Bila selektor disederhanakan,
    nama panjang kembali meluber menimpa kolom berikutnya. */
-.tabel-acuan { table-layout: fixed; width: 100%; }
-table.tabel-acuan th, table.tabel-acuan td { white-space: normal; overflow-wrap: break-word; }
-table.tabel-acuan th.angka, table.tabel-acuan td.angka { white-space: nowrap; }
+.tabel-acuan {
+  table-layout: fixed;
+  width: 100%;
+}
+
+table.tabel-acuan th,
+table.tabel-acuan td {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+table.tabel-acuan th.angka,
+table.tabel-acuan td.angka {
+  white-space: nowrap;
+}
 
 /* Tombol cetak gaya Apple per jenis dokumen di halaman BAP & BAST:
    pil penuh + bayangan halus + efek tekan, sama seperti keluarga
@@ -3939,14 +4815,40 @@ table.tabel-acuan th.angka, table.tabel-acuan td.angka { white-space: nowrap; }
   box-shadow: 0 1px 2px rgba(16, 24, 40, .08), 0 1px 3px rgba(16, 24, 40, .06);
   transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .12s ease, filter .18s ease;
 }
-.tombol-cetak:hover { filter: brightness(1.12); color: #fff; text-decoration: none; box-shadow: 0 2px 6px rgba(16, 24, 40, .12), 0 1px 3px rgba(16, 24, 40, .08); }
-.tombol-cetak:active { transform: scale(.97); box-shadow: 0 0 0 rgba(16, 24, 40, 0); }
-.tc-bap { background: #2563eb; border-color: #2563eb; }
-.tc-bast { background: #059669; border-color: #059669; }
-.tc-spk { background: #7c3aed; border-color: #7c3aed; }
+
+.tombol-cetak:hover {
+  filter: brightness(1.12);
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(16, 24, 40, .12), 0 1px 3px rgba(16, 24, 40, .08);
+}
+
+.tombol-cetak:active {
+  transform: scale(.97);
+  box-shadow: 0 0 0 rgba(16, 24, 40, 0);
+}
+
+.tc-bap {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.tc-bast {
+  background: #059669;
+  border-color: #059669;
+}
+
+.tc-spk {
+  background: #7c3aed;
+  border-color: #7c3aed;
+}
 
 /* Ikon di dalam tombol (mis. pensil pada tombol Ubah). */
-.ikon-tombol { display: inline-flex; vertical-align: -2px; }
+.ikon-tombol {
+  display: inline-flex;
+  vertical-align: -2px;
+}
+
 .ikon-tombol svg {
   width: 13px;
   height: 13px;
@@ -3962,46 +4864,257 @@ table.tabel-acuan th.angka, table.tabel-acuan td.angka { white-space: nowrap; }
    Judul rata kiri di pita kepala yang sedikit lebih gelap; kaki tombol
    juga sedikit lebih gelap; label field duduk DI BORDER isian
    (label-on-border); validasi wajib tampil sebagai tooltip merah. */
-.fm-kartu { padding: 0; overflow: hidden; --fm-latar: #fff; }
-html.gelap .fm-kartu { --fm-latar: #1c2534; }
-.fm-kepala { padding: 13px 20px; background: rgba(16, 24, 40, .055); border-bottom: 1px solid var(--ta-garis); }
-html.gelap .fm-kepala { background: rgba(255, 255, 255, .07); }
-.fm-kepala h3 { margin: 0; text-align: left; }
-.fm-isi { padding: 20px 20px 8px; }
-.fm-isi .grid { row-gap: 23px; }
-.tanggal-bungkus { display: inline-flex; gap: 4px; align-items: stretch; width: 100%; position: relative; }
-.tanggal-bungkus .isian-tanggal { flex: 1 1 auto; min-width: 0; }
-.tanggal-bungkus .tanggal-pilih { position: absolute; right: 40px; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.tmbl-kalender { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; padding: 0 9px; cursor: pointer; }
-.fm-kaki { display: flex; gap: 8px; justify-content: flex-end; align-items: center; padding: 12px 20px; margin-top: 10px; background: rgba(16, 24, 40, .055); border-top: 1px solid var(--ta-garis); }
-html.gelap .fm-kaki { background: rgba(255, 255, 255, .07); }
-.fm-kotak-field { position: relative; }
-.fm-kotak-field input, .fm-kotak-field select, .fm-kotak-field textarea { width: 100%; }
-.fm-label { position: absolute; top: 0; left: 10px; transform: translateY(-50%); background: var(--fm-latar); padding: 0 5px; font-size: 11px; font-weight: 600; line-height: 1.4; color: var(--ta-teks-2); pointer-events: none; z-index: 2; white-space: nowrap; }
-.fm-kotak-field:focus-within .fm-label { color: var(--ta-biru); }
-.fm-wajib { color: #d92d20; }
-.fm-salah { border-color: #d92d20 !important; box-shadow: 0 0 0 3px rgba(217, 45, 32, .15); }
-.fm-tooltip { position: fixed; z-index: 500; max-width: 260px; background: #b42318; color: #fff; font-size: 11.5px; font-weight: 600; line-height: 1.35; padding: 6px 10px; border-radius: 8px; box-shadow: 0 8px 24px rgba(16, 24, 40, .25); pointer-events: none; }
-.fm-tooltip::after { content: ''; position: absolute; left: 16px; bottom: -5px; border: 5px solid transparent; border-top-color: #b42318; border-bottom: 0; }
-.fm-tooltip.bawah::after { bottom: auto; top: -5px; border-top: 0; border-bottom: 5px solid #b42318; }
+.fm-kartu {
+  padding: 0;
+  overflow: hidden;
+  --fm-latar: #fff;
+}
+
+html.gelap .fm-kartu {
+  --fm-latar: #1c2534;
+}
+
+.fm-kepala {
+  padding: 13px 20px;
+  background: rgba(16, 24, 40, .055);
+  border-bottom: 1px solid var(--ta-garis);
+}
+
+html.gelap .fm-kepala {
+  background: rgba(255, 255, 255, .07);
+}
+
+.fm-kepala h3 {
+  margin: 0;
+  text-align: left;
+}
+
+.fm-isi {
+  padding: 20px 20px 8px;
+}
+
+.fm-isi .grid {
+  row-gap: 23px;
+}
+
+.tanggal-bungkus {
+  display: inline-flex;
+  gap: 4px;
+  align-items: stretch;
+  width: 100%;
+  position: relative;
+}
+
+.tanggal-bungkus .isian-tanggal {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tanggal-bungkus .tanggal-pilih {
+  position: absolute;
+  right: 40px;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tmbl-kalender {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 9px;
+  cursor: pointer;
+}
+
+.fm-kaki {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 12px 20px;
+  margin-top: 10px;
+  background: rgba(16, 24, 40, .055);
+  border-top: 1px solid var(--ta-garis);
+}
+
+html.gelap .fm-kaki {
+  background: rgba(255, 255, 255, .07);
+}
+
+.fm-kotak-field {
+  position: relative;
+}
+
+.fm-kotak-field input,
+.fm-kotak-field select,
+.fm-kotak-field textarea {
+  width: 100%;
+}
+
+.fm-label {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  transform: translateY(-50%);
+  background: var(--fm-latar);
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ta-teks-2);
+  pointer-events: none;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.fm-kotak-field:focus-within .fm-label {
+  color: var(--ta-biru);
+}
+
+.fm-wajib {
+  color: #d92d20;
+}
+
+.fm-salah {
+  border-color: #d92d20 !important;
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, .15);
+}
+
+.fm-tooltip {
+  position: fixed;
+  z-index: 500;
+  max-width: 260px;
+  background: #b42318;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, .25);
+  pointer-events: none;
+}
+
+.fm-tooltip::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  bottom: -5px;
+  border: 5px solid transparent;
+  border-top-color: #b42318;
+  border-bottom: 0;
+}
+
+.fm-tooltip.bawah::after {
+  bottom: auto;
+  top: -5px;
+  border-top: 0;
+  border-bottom: 5px solid #b42318;
+}
 
 /* === Halaman Panduan Penggunaan (MarkdownMini) === */
-.panduan-bab { margin: 0; padding-left: 20px; line-height: 1.9; }
-.panduan-bab a { color: var(--ta-teks-2); font-weight: 550; }
-.panduan-bab a:hover { color: var(--ta-biru); text-decoration: none; }
-.panduan-isi { line-height: 1.65; }
-.panduan-isi h1 { font-size: 19px; margin: 4px 0 12px; }
-.panduan-isi h2 { font-size: 16px; margin: 26px 0 10px; padding-top: 14px; border-top: 1px solid var(--ta-garis); }
-.panduan-isi h2:first-of-type { border-top: 0; padding-top: 0; }
-.panduan-isi h3 { font-size: 14px; margin: 18px 0 8px; }
-.panduan-isi h4 { font-size: 13px; margin: 14px 0 6px; }
-.panduan-isi p { margin: 0 0 10px; }
-.panduan-isi ul, .panduan-isi ol { margin: 0 0 10px; padding-left: 22px; }
-.panduan-isi li { margin-bottom: 4px; }
-.panduan-isi code { background: var(--ta-latar-2, #eef5f7); border-radius: 4px; padding: 1px 5px; font-size: .92em; }
-.panduan-isi pre { background: var(--ta-latar-2, #eef5f7); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 0 0 12px; }
-.panduan-isi pre code { background: none; padding: 0; }
-.panduan-isi blockquote { margin: 0 0 12px; padding: 8px 14px; border-left: 3px solid var(--ta-biru); background: var(--ta-latar-2, #eef5f7); border-radius: 0 8px 8px 0; }
-.panduan-isi blockquote p { margin: 0; }
-.panduan-isi hr { border: 0; border-top: 1px solid var(--ta-garis); margin: 18px 0; }
-.panduan-isi .bungkus-tabel { margin-bottom: 12px; }
+.panduan-bab {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.9;
+}
+
+.panduan-bab a {
+  color: var(--ta-teks-2);
+  font-weight: 550;
+}
+
+.panduan-bab a:hover {
+  color: var(--ta-biru);
+  text-decoration: none;
+}
+
+.panduan-isi {
+  line-height: 1.65;
+}
+
+.panduan-isi h1 {
+  font-size: 19px;
+  margin: 4px 0 12px;
+}
+
+.panduan-isi h2 {
+  font-size: 16px;
+  margin: 26px 0 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ta-garis);
+}
+
+.panduan-isi h2:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.panduan-isi h3 {
+  font-size: 14px;
+  margin: 18px 0 8px;
+}
+
+.panduan-isi h4 {
+  font-size: 13px;
+  margin: 14px 0 6px;
+}
+
+.panduan-isi p {
+  margin: 0 0 10px;
+}
+
+.panduan-isi ul,
+.panduan-isi ol {
+  margin: 0 0 10px;
+  padding-left: 22px;
+}
+
+.panduan-isi li {
+  margin-bottom: 4px;
+}
+
+.panduan-isi code {
+  background: var(--ta-latar-2, #eef5f7);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: .92em;
+}
+
+.panduan-isi pre {
+  background: var(--ta-latar-2, #eef5f7);
+  border-radius: 8px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 0 0 12px;
+}
+
+.panduan-isi pre code {
+  background: none;
+  padding: 0;
+}
+
+.panduan-isi blockquote {
+  margin: 0 0 12px;
+  padding: 8px 14px;
+  border-left: 3px solid var(--ta-biru);
+  background: var(--ta-latar-2, #eef5f7);
+  border-radius: 0 8px 8px 0;
+}
+
+.panduan-isi blockquote p {
+  margin: 0;
+}
+
+.panduan-isi hr {
+  border: 0;
+  border-top: 1px solid var(--ta-garis);
+  margin: 18px 0;
+}
+
+.panduan-isi .bungkus-tabel {
+  margin-bottom: 12px;
+}
