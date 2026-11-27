@@ -158,7 +158,7 @@ window.inisiasiPaginasi = function (akar) {
         '<span class="tombol-halaman"></span>' +
         // Pengecualian AGENTS.md: select Per halaman SENGAJA select biasa,
         // bukan searchable — jangan tambahkan data-select-cari di sini.
-        '<label>Per halaman <select>' +
+        '<label>Per halaman <select data-native-select>' +
         [10, 25, 50, 100].map(function (n) { return '<option value="' + n + '"' + (n === ukuran ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
         '</select></label>';
       indukKontrol.insertBefore(wadah, titikSisip.nextSibling);

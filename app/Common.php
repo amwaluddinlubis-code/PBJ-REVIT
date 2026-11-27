@@ -313,7 +313,7 @@ if (! function_exists('form_modal')) {
             $ph = isset($f['placeholder']) ? ' placeholder="' . esc((string) $f['placeholder'], 'attr') . '"' : '';
             $h .= '<div class="fm-field' . (! empty($f['penuh']) ? ' md:col-span-2' : '') . '"><div class="fm-kotak-field">';
             if ($jenis === 'pilihan') {
-                $h .= '<select data-select-cari id="' . esc($idField, 'attr') . '" name="' . esc($nama, 'attr') . '" data-label="' . esc($label, 'attr') . '"' . $wajib . '>';
+                $h .= '<select data-select-cari data-native-select id="' . esc($idField, 'attr') . '" name="' . esc($nama, 'attr') . '" data-label="' . esc($label, 'attr') . '"' . $wajib . '>';
                 foreach ($f['opsi'] ?? [] as $nilai => $labelOpsi) {
                     $dataOpsi = '';
                     if (is_array($labelOpsi)) {

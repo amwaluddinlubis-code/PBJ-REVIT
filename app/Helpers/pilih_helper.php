@@ -23,7 +23,7 @@ function select_cari(string $name, array $options, $selected = null, array $attr
     $placeholder = (string) ($attrs['placeholder'] ?? '— pilih —');
     unset($attrs['placeholder']);
 
-    $html = '<select name="' . esc($name, 'attr') . '" data-select-cari data-placeholder="' . esc($placeholder, 'attr') . '"';
+    $html = '<select name="' . esc($name, 'attr') . '" data-select-cari data-native-select data-placeholder="' . esc($placeholder, 'attr') . '"';
     foreach ($attrs as $k => $v) {
         if ($v === true) {
             $html .= ' ' . esc($k, 'attr');
