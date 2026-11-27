@@ -133,7 +133,7 @@ window.inisiasiPaginasi = function (akar) {
       kotak.appendChild(masukan);
       var btnCsv = document.createElement('button');
       btnCsv.type = 'button';
-      btnCsv.className = 'kecil ekspor';
+      btnCsv.className = 'tombol kecil ekspor';
       btnCsv.textContent = 'Ekspor CSV';
       btnCsv.title = 'Unduh baris yang sedang tersaring sebagai CSV';
       btnCsv.addEventListener('click', eksporCsv);

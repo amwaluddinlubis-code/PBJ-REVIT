@@ -202,9 +202,7 @@ if (! function_exists('tabel_bantu')) {
         if (isset($konfig['paginasi']) && $konfig['paginasi'] !== false) {
             $atribut .= ' data-paginasi="' . (int) $konfig['paginasi'] . '"';
         }
-        if (! empty($konfig['class'])) {
-            $atribut .= ' class="' . esc((string) $konfig['class'], 'attr') . '"';
-        }
+        $atribut .= ' class="tf-tabel' . (! empty($konfig['class']) ? ' ' . esc((string) $konfig['class'], 'attr') : '') . '"';
         $h = '<table' . $atribut . '><thead><tr>';
         foreach ($kolom as $k) {
             $ka = '';
