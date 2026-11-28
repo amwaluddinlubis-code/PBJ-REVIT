@@ -179,6 +179,12 @@ window.inisiasiSelectCari = function (akar) {
       if (!panel.hidden && !bungkus.contains(e.target) && !panel.contains(e.target)) tutup();
     });
     sel.addEventListener('change', segarkan);
+    // form.reset() mengembalikan nilai select ke bawaan HTML TANPA
+    // memicu 'change' — tanpa penyegaran ini label widget basi (mis.
+    // modal Tambah sesudah modal Ubah menampilkan induk baris sebelumnya
+    // sementara nilai select sudah kembali ke bawaan). Peristiwa reset
+    // terbit sebelum nilai dipulihkan, jadi segarkan pada giliran berikut.
+    if (sel.form) sel.form.addEventListener('reset', function () { setTimeout(segarkan, 0); });
     segarkan();
   });
 };
